@@ -1,0 +1,22 @@
+Package: quantico
+Type: Package
+Title: Quantitive Mathematics and Financial Prediction
+Version: 0.1.0
+Author: Andre Mikulec
+Maintainer: Andre Mikulec <Andre_Mikulec@Hotmail.com>
+Description: Currently, this is EXPERIMENTAL and NOT WORKING.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 3.5.1),
+    quantmod (>= 0.4-3),
+    PerformanceAnalytics (>= 1.5.2)
+Imports:
+    Hmisc, 
+    lubridate, 
+    magrittr,
+    tryCatchLog,
+    futile.logger
+RoxygenNote: 6.1.0
+Suggests: testthat
