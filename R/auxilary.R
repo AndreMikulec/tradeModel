@@ -1,28 +1,4 @@
 
-# TODO
-
-# [x] examples structure
-# [x] tests - structure
-# [x] examples && [x] tests
-
-# [NO] Kranz restorepoint
-# [X] tryCatchLog
-# [X] add TESTS ... [ONES THAT MATTTER] convert that ONE example
-# [ ] quantmod functions that return a warning SHOULD remerge with the MISSING
-# [ ] fix CashLogReturns being 1 too early
-#   [ ] need to KEEP next months preduction
-# [ ] fix input to Return.porfolio: should it be last/day or first day?
-# [ ] MATH does not match what is IN BEE.R
-
-# [ ] fledge ( I have to be working on dev THEN push to master,
-#       then do it there ( on master )
-# https://www.rdocumentation.org/packages/fledge/versions/0.0.0.9005
-
-
-# [ ] foodweb and FuncMap
-
-
-
 
 #' garentee a date is a date or and empty date
 #'
