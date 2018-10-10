@@ -25,7 +25,7 @@ returnsUnRateEyeBall <- function() {
   addUnRateEomData %>%                 # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addWillShire5000Wts  %>%             # will5000logrets_wts
+  addWillShire5000EyeBallWts  %>%             # will5000logrets_wts
   addCashWts           %>%             # cashlogres_wts      (excess)
   # ret
 

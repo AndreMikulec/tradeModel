@@ -61,4 +61,4 @@
 #'
 #' @docType package
 #' @name quantico
-NULL
+"_PACKAGE"

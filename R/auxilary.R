@@ -608,7 +608,7 @@ addWts  <- function(xTs = NULL, xTs1 = NULL) {
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
-willShire5000Wts <- function(xTs = NULL) {
+willShire5000EyeBallWts <- function(xTs = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -634,12 +634,12 @@ willShire5000Wts <- function(xTs = NULL) {
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
-addWillShire5000Wts <- function(xTs = NULL) {
+addWillShire5000EyeBallWts <- function(xTs = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
   xTs <- initXts(xTs)
 
-  addWts(xTs,willShire5000Wts(xTs))
+  addWts(xTs,willShire5000EyeBallWts(xTs))
 
 })}
 
