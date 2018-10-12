@@ -2,16 +2,60 @@
 % Please edit documentation in R/auxilary.R
 \name{nextMonthfromYesterday}
 \alias{nextMonthfromYesterday}
+\alias{nextMonthfromYesterday.default}
+\alias{nextMonthfromYesterday.Date}
+\alias{nextMonthfromYesterday.xts}
 \title{change the index date to the future}
 \usage{
 nextMonthfromYesterday(xTs = NULL)
+
+\method{nextMonthfromYesterday}{default}(xTs = NULL)
+
+\method{nextMonthfromYesterday}{Date}(date = NULL)
+
+\method{nextMonthfromYesterday}{xts}(xTs = NULL)
 }
 \arguments{
+\item{xTs}{xts object}
+
+\item{date}{date object}
+
+\item{xTs}{default object}
+
 \item{xTs}{xts object}
 }
 \value{
 xts object with the index moved up
+
+stop
+
+date object
+
+date object
 }
 \description{
 change the index date to the future
+
+attempt to change the index date to the future
+
+change the date to the future
+
+change the date to the future
+}
+\examples{
+\dontrun{
+# > require(xts)
+# > nextMonthfromYesterday(zoo::as.Date("1970-01-12"))
+# [1] "1970-01-31"
+}
+\dontrun{
+# > require(xts)
+# > xTs <- xts(, zoo::as.Date("1970-01-12"))
+# > nextMonthfromYesterday(xTs)
+# Data:
+# numeric(0)
+#
+# Index:
+#  Date[1:1], format: "1970-01-31"
+}
 }

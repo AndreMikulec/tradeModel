@@ -1,33 +1,167 @@
 
 
 
-# quantmod getSymbols with source.envir
+#' safely make a xts into a df and safely make df into an xts
+#'
+#' library(xts)
+#' sample_xts <- as.xts(sample_matrix)
+#' str(head(xtsize(dfize(sample_xts))))
+#'
+#' edge case tests
+#'
+#' xts1 <- xts(NA_real_, zoo::as.Date(0))
+#' colnames(xts1) <- "col1"
+#' xts1 <- xts1[0,]
+#'
+#' exiting from: dfize(xts1)
+#' 'data.frame':   0 obs. of  2 variables:
+#'  $ datetime:Class 'Date'  num(0)
+#'  $ col1    : num
+#'
+#' > xtsize(dfize(xts1))
+#'      col1
+#' > str(xtsize(dfize(xts1)))
+#' An 'xts' object of zero-width
+#' > index(xtsize(dfize(xts1)))
+#' [1] "Date of length 0"
+#' @rdname converting
+#' @export
+dfize <- function(xtso) {
+  require(xts)
+  df <- as.data.frame(xtso)  # zoo::as.data.frame.zoo # xts:::as.data.frame.xts
+  # rn <- as.numeric( zoo::as.Date( row.names(df) ) )
+  rn <- index(xtso)
+  cb <- cbind(rn,df)
+  colnames(cb)[1] <- "datetime"
+  # attributes(cb) <- list(tindex = index)
+  return(cb)
+}
 
-# get some Symbols from an environment (source.envir)
-#   will search first in (source.envir)
-#   if the Symbol is not found in the enviroment (source.envir),
-#   then get the Symbol from elsewhere
-# NOTE: do not do: "source.envir = e, "env = e"
-#       when auto.assign = TRUE(default), .GetSymbols is placed where "env = e"
-#
-# e <- new.env()
-# NOT the same as "env = e"
-# assign("AAPL", getSymbols(list(AAPL = "yahoo"), auto.assign = F), envir = e)
-# ls.str(e)
-# AAPL : An 'xts' object on 2007-01-03/2018-04-24 containing:
-#   Data: num [1:2847, 1:6] 12.3 12 12.3 12.3 12.3 ...
-#  - attr(*, "dimnames")=List of 2
-#   ..$ : NULL
-#   ..$ : chr [1:6] "AAPL.Open" "AAPL.High" "AAPL.Low" "AAPL.Close" ...
-#   Indexed by objects of class: [Date] TZ: UTC
-#   xts Attributes:
-# List of 2
-#  $ src    : chr "yahoo"
-#  $ updated: POSIXct[1:1], format: "2018-04-25 18:12:26"
-#
-# getSymbols(list(AAPL = "yahoo", MSFT = "yahoo"), source.envir = e)
-# AAPLSymbol <- getSymbols(list(AAPL = "yahoo"), auto.assign = FALSE, source.envir = e)
-#
+
+#' safely make df into an xts
+#'
+#' @rdname converting
+#' @export
+xtsize <- function(dfo) {
+  require(xts)
+  id <-  dfo[["datetime"]]
+  # drop column
+  dfo[,"datetime"] <- NULL
+  cd <- coredata(as.matrix(dfo))
+  xts(cd,id)  # could be 'zoo'
+}
+
+
+
+
+#' inside and exts environment
+#'
+#' unstable structure to debug inside: holds for 2 seconds then bounces out
+#' within.xts IS TOO VOLITILE: CAN NOT browser()/rstudio debug inside: SOMETHING IS NOT RIGHT
+#' @export
+within.xts <- function (data, expr, ...) {
+  data <- dfize(data)
+  # tindex <- attrib(data, "tindex")
+  parent <- environment()    # JUST CHANGED parent.frame() to environment()
+  e <- evalq(environment(), data, parent)
+  eval(substitute(expr), e)
+  l <- as.list(e, all.names = TRUE)
+  l <- l[!vapply(l, is.null, NA, USE.NAMES = FALSE)]
+  nD <- length(del <- setdiff(names(data), (nl <- names(l))))
+  data[nl] <- l
+  if (nD)
+    data[del] <- if (nD == 1)
+      NULL
+  else
+    vector("list", nD)
+
+  xtsize(data)
+}
+
+
+
+#' comparison of two objects
+#'
+#' @param test boolean test
+#' @param yes result of pass
+#' @param no result of no-pass
+#' @return xts object with the same index as xTs1
+#' @rdname ifelse
+#' @export
+ifelse         <- function(test, yes, no) UseMethod("ifelse")
+#' @rdname ifelse
+#' @export
+ifelse.default <- function(test, yes, no) base::ifelse(test, yes, no )
+#' @rdname ifelse
+#' @export
+ifelse.xts    <- function(test, yes, no) {
+
+  require(xts)
+
+  if(!is.xts(yes)) {
+    if(NROW(yes) == 1) yes <- rep(yes,NROW(test))
+    yes <- xts(yes, index(test))
+  }
+  if(!is.xts(no)) {
+    if(NROW(no) == 1) no <- rep(no,NROW(test))
+    no <- xts(no, index(test))
+  }
+  test.yes.no <- merge(test,yes,no)
+  colnames(test.yes.no) <- c("test", "yes", "no" )
+  res <- within( test.yes.no, { res <- ifelse(test,yes,no);rm(test,yes,no);return(res) } )
+  colnames(res) <-"result"
+  return(res)
+
+}
+
+
+#' difference of two xTs objects
+#'
+#' @param xTs1 leading xts object
+#' @param xTs2 trailing xts object
+#' @return xts object with the same index as xTs1
+#' @export
+Less <- function(xTs1 = NULL, xTs2 = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  xTs1  <- initXts(xTs1)
+  xTs2  <- initXts(xTs2)
+
+  xTs1 - xTs2
+
+})}
+
+
+
+#' quantmod getSymbols with source.envir
+#'
+#' get some Symbols from an environment (source.envir)
+#'   will search first in (source.envir)
+#'   if the Symbol is not found in the enviroment (source.envir),
+#'   then get the Symbol from elsewhere
+#' NOTE: do not do: "source.envir = e, "env = e"
+#'       when auto.assign = TRUE(default), .GetSymbols is placed where "env = e"
+#'
+#' e <- new.env()
+#' NOT the same as "env = e"
+#' assign("AAPL", getSymbols(list(AAPL = "yahoo"), auto.assign = F), envir = e)
+#' ls.str(e)
+#' AAPL : An 'xts' object on 2007-01-03/2018-04-24 containing:
+#'   Data: num [1:2847, 1:6] 12.3 12 12.3 12.3 12.3 ...
+#'  - attr(*, "dimnames")=List of 2
+#'   ..$ : NULL
+#'   ..$ : chr [1:6] "AAPL.Open" "AAPL.High" "AAPL.Low" "AAPL.Close" ...
+#'   Indexed by objects of class: [Date] TZ: UTC
+#'   xts Attributes:
+#' List of 2
+#'  $ src    : chr "yahoo"
+#'  $ updated: POSIXct[1:1], format: "2018-04-25 18:12:26"
+#'
+#' getSymbols(list(AAPL = "yahoo", MSFT = "yahoo"), source.envir = e)
+#' AAPLSymbol <- getSymbols(list(AAPL = "yahoo"), auto.assign = FALSE, source.envir = e)
+#'
+#' @export
 getSymbols <- function (Symbols = NULL, env = parent.frame(), reload.Symbols = FALSE,
     verbose = FALSE, warnings = TRUE, src = "yahoo", symbol.lookup = TRUE,
     auto.assign = getOption("getSymbols.auto.assign", TRUE), source.envir = NULL, # BEGIN/END NEW CODE
@@ -154,22 +288,23 @@ getSymbols <- function (Symbols = NULL, env = parent.frame(), reload.Symbols = F
 
 
 
-# quantmod getModelData with parameter source.envir
-#
-# get some Symbols from an environment (source.envir)
-#   will search first in (source.envir)
-#   if the Symbol is not found in the enviroment (source.envir),
-#   then get the Symbol from elsewhere
-# ...
-# passed to getSymbols
-#         useful: from, to
-#   maybe useful: src
-#   maybe useful: set per Symbol src using setSymbolLookup
-#
-# specifyModel(getModelData)
-# if na.rm == TRUE, then does 'na.exclude',
-#   BUT 'without rules' PUTS back (rbind) the last observation
-#
+#' quantmod getModelData with parameter source.envir
+#'
+#' get some Symbols from an environment (source.envir)
+#'   will search first in (source.envir)
+#'   if the Symbol is not found in the enviroment (source.envir),
+#'   then get the Symbol from elsewhere
+#' ...
+#' passed to getSymbols
+#'         useful: from, to
+#'   maybe useful: src
+#'   maybe useful: set per Symbol src using setSymbolLookup
+#'
+#' specifyModel(getModelData)
+#' if na.rm == TRUE, then does 'na.exclude',
+#'   BUT 'without rules' PUTS back (rbind) the last observation
+#'
+#' @export
 getModelData <- function (x, na.rm = TRUE, source.envir = NULL, ...) {
 
     model <- x
@@ -236,45 +371,46 @@ getModelData <- function (x, na.rm = TRUE, source.envir = NULL, ...) {
 
 
 
-# quantmod specifyModel with parameter source.envir
-#
-# get some Symbols from an environment (source.envir)
-#   will search first in (source.envir)
-#   if the Symbol is not found in the enviroment (source.envir),
-#   then get the Symbol from elsewhere
-# ...
-# passed to getSymbols
-#         useful: from, to
-#   maybe useful: src
-#   maybe useful: set per Symbol src using setSymbolLookup
-#
-# specifyModel(getModelData) original code ( not changed by me )
-# if na.rm == TRUE,  then does 'na.exclude'
-#   BUT 'without rules' PUTS back (rbind) the last observation
-#
-# NOTE
-# TTR acceptable
-# avoid
-# specifyModel
-# Error in runSum(x, n) : Series contains non-leading NAs
-# zoo::na.trim(tail(x), sides = "right")
-#
-# example ( better: try a do.call )
-# Symbols <- unlist(lapply( c("MSFT","AAPL","WMT","COST"), function(x) {
-#                           l <- list(); l[[x]] <- getSymbols(x, auto.assign = FALSE); l
-#                           }), recursive = FALSE)
-# Symbols <- list2env(Symbols)
-# ls.str(Symbols)
-#
-# getSymbols( c("AAPL","ORCL"), source.envir = Symbols)
-# rm("AAPL","ORCL")
-#
-# quantmod <- specifyModel(Next(ClCl(WMT)) ~ Lag(OpCl(AAPL)) + Lag(LoHi(COST),0:2)
-#   , source.envir = Symbols
-#   , from ="2007-01-01"
-#   , to   ="2011-12-31"
-#   )
-#
+#' quantmod specifyModel with parameter source.envir
+#'
+#' get some Symbols from an environment (source.envir)
+#'   will search first in (source.envir)
+#'   if the Symbol is not found in the enviroment (source.envir),
+#'   then get the Symbol from elsewhere
+#' ...
+#' passed to getSymbols
+#'         useful: from, to
+#'   maybe useful: src
+#'   maybe useful: set per Symbol src using setSymbolLookup
+#'
+#' specifyModel(getModelData) original code ( not changed by me )
+#' if na.rm == TRUE,  then does 'na.exclude'
+#'   BUT 'without rules' PUTS back (rbind) the last observation
+#'
+#' NOTE
+#' TTR acceptable
+#' avoid
+#' specifyModel
+#' Error in runSum(x, n) : Series contains non-leading NAs
+#' zoo::na.trim(tail(x), sides = "right")
+#'
+#' example ( better: try a do.call )
+#' Symbols <- unlist(lapply( c("MSFT","AAPL","WMT","COST"), function(x) {
+#'                           l <- list(); l[[x]] <- getSymbols(x, auto.assign = FALSE); l
+#'                           }), recursive = FALSE)
+#' Symbols <- list2env(Symbols)
+#' ls.str(Symbols)
+#'
+#' getSymbols( c("AAPL","ORCL"), source.envir = Symbols)
+#' rm("AAPL","ORCL")
+#'
+#' quantmod <- specifyModel(Next(ClCl(WMT)) ~ Lag(OpCl(AAPL)) + Lag(LoHi(COST),0:2)
+#'   , source.envir = Symbols
+#'   , from ="2007-01-01"
+#'   , to   ="2011-12-31"
+#'   )
+#'
+#' @export
 specifyModel <- function (formula, na.rm = TRUE, source.envir = NULL, ...) {
 
     new.quantmod <- new("quantmod")
@@ -301,16 +437,17 @@ specifyModel <- function (formula, na.rm = TRUE, source.envir = NULL, ...) {
 
 
 
-
+#' converts to a quantmod object
+#'
+#' @rdname as.quantmod
+#' @export
 as.quantmod.default <- function(x, outcomename, order.by, na.rm = TRUE, ...) { invisible() }
-
-
-
+#' @rdname as.quantmod
+#' @export
 as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { UseMethod("as.quantmod") }
 
 
-
-# from a data.frame, create a quantmod object directly
+# from a data.frame, covert to a quantmod object directly
 #
 # if I have to do preprocessing ( e.g. a treatment )
 #   therefore the situation may be cheaper to make a quantmod object
@@ -323,6 +460,8 @@ as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { U
 #' sample_xts <- as.xts(sample_matrix)
 #' quantmodSample <- as.quantmod(as.data.frame(sample_xts), outcomename = "Close", order.by = index(sample_xts))
 #'
+#' @rdname as.quantmod
+#' @export
 as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...) {
 
   x <- DataCombine::MoveFront(x, outcomename )
@@ -364,57 +503,70 @@ as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...)
 }
 
 
-# S3 method buildModel.train
-#
-# # tuneGrid ( production tester )
-# tg <- expand.grid(
-#   nrounds   =  10, # TEN TREES
-#   eta       =  c(0.1,0.01),
-#   max_depth =  c(4,6,8,10),
-#   gamma     =  0,
-#   colsample_bytree = c(1,0.5),
-#   min_child_weight = 1,
-#   subsample        = c(1,0.5)
-# )
-# # tuneGrid ( non-production tester )
-# tg <- expand.grid(
-#   nrounds   =  50, # TEST 10 trees - DEV 50 trees - OTHER 500 trees
-#   eta       =  c(0.1,0.01),
-#   max_depth =  c(4,7,10),
-#   gamma     =  0,
-#   colsample_bytree = 1,
-#   min_child_weight = 1,
-#   subsample        = 1
-# )
-#
-# tc <- caret::trainControl(method = "cv", number = 5)
-#
-# TODO [ ] : fully WORKED EXAMPLE: combine WITH below
-# builtModel <- buildModel(specmodel, method="train", training.per=c("1970-12-31","2006-12-31")
-#   , method_train = 'xgbTree', tuneGrid = tg, trControl = tc)
-#
+#' S3-like method buildModel.train
+#'
+#' # tuneGrid ( production tester )
+#' tg <- expand.grid(
+#'   nrounds   =  10, # TEN TREES
+#'   eta       =  c(0.1,0.01),
+#'   max_depth =  c(4,6,8,10),
+#'   gamma     =  0,
+#'   colsample_bytree = c(1,0.5),
+#'   min_child_weight = 1,
+#'   subsample        = c(1,0.5)
+#' )
+#' # tuneGrid ( non-production tester )
+#' tg <- expand.grid(
+#'   nrounds   =  50, # TEST 10 trees - DEV 50 trees - OTHER 500 trees
+#'   eta       =  c(0.1,0.01),
+#'   max_depth =  c(4,7,10),
+#'   gamma     =  0,
+#'   colsample_bytree = 1,
+#'   min_child_weight = 1,
+#'   subsample        = 1
+#' )
+#'
+#' tc <- caret::trainControl(method = "cv", number = 5)
+#'
+#' TODO [ ] : fully WORKED EXAMPLE: combine WITH below
+#' builtModel <- buildModel(specmodel, method="train", training.per=c("1970-12-31","2006-12-31")
+#'   , method_train = 'xgbTree', tuneGrid = tg, trControl = tc)
+#'
+#' @export
 buildModel.train <- function(quantmod,training.data,...) {
 
-  if(is.method.available('train','caret')) {
-    rp <- do.call(train,list(quantmod@model.formula,data=training.data,method = list(...)[["method_train"]], ...))
+  if(is.method.available("train","caret")) {
+    # TODO [ ] INVESTIGATE
+    # Error in nominalTrainWorkflow(x = x, y = y, wts = weights, info = trainInfo,  :
+    # (converted from warning) There were missing values in resampled performance measures.
+    if(!all(complete.cases(training.data))) print("NOTE: in buildModel.train, training.data is missing some data.")
+    rp <- suppressWarnings( do.call(train,list(quantmod@model.formula,data=training.data,method = list(...)[["method_train"]], ...)) )
     return(list("fitted"=rp, "inputs"=attr(terms(rp),"term.labels")))
   }
 }
 
+#' determine the future
+#'
+#' @rdname predictModel
+#' @export
+predictModel <- function(object, data, ...) {
+    UseMethod("predictModel")
+}
 
-
+#' @rdname predictModel
+#' @export
 predictModel.default <- function (object, data, ...) {
     predict(object, data, ...)
 }
 
 
-predictModel <- function(object, data, ...) {
-    UseMethod("predictModel")
-}
-
-# extracted because this is *not public*
-#
-quantmod___is.method.available <- function(method, package) {
+#' check the .libPaths() to see a package has a training function
+#'
+#' extracted because quantmod does not export this
+#'
+#' @rdname is.method.available
+#' @export
+quantmod___is.method.available <- function (method, package) {
     if (!package %in% .packages()) {
         if (package %in% .packages(all.available = TRUE)) {
             cat(paste("loading required package:", package, "\n"))
@@ -427,6 +579,10 @@ quantmod___is.method.available <- function(method, package) {
     }
     return(TRUE)
 }
+#' @rdname is.method.available
+#' @export
+is.method.available <- function(method, package) quantmod___is.method.available(method = method, package = package)
+
 
 #
 # example (TODO [ ]) simplify

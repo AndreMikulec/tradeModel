@@ -57,7 +57,7 @@
 #'
 #' @section full strategies and results:
 #'
-#' returnsUnRateEyeBall
+#' UnRateEyeBalltradeModel
 #'
 #' @docType package
 #' @name quantico

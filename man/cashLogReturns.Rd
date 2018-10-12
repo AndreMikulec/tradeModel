@@ -7,7 +7,7 @@
 cashLogReturns(xTs = NULL)
 }
 \arguments{
-\item{xTs}{xts object}
+\item{xTs}{xts object (only takes the index)}
 }
 \value{
 xts object with the same index as xTs

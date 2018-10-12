@@ -84,6 +84,6 @@ printCalendar
 \section{full strategies and results}{
 
 
-returnsUnRateEyeBall
+UnRateEyeBalltradeModel
 }
 

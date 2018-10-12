@@ -19,5 +19,8 @@ garentee a date is a date or and empty date
 \dontrun{
 # > initDate(date = NULL)
 # Date of length 0
+
+# > initDate(c())
+# Date of length 0
 }
 }

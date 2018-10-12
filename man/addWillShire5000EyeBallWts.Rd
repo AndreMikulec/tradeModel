@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{addWillShire5000EyeBallWts}
 \alias{addWillShire5000EyeBallWts}
-\title{add Willshire 5000 Index log weights returns (will5000idxlogrets)}
+\title{add Willshire 5000 Index log weights returns using eyeball (will5000idxlogrets)}
 \usage{
 addWillShire5000EyeBallWts(xTs = NULL)
 }
@@ -13,5 +13,5 @@ addWillShire5000EyeBallWts(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add Willshire 5000 Index log weights returns (will5000idxlogrets)
+add Willshire 5000 Index log weights returns using eyeball (will5000idxlogrets)
 }

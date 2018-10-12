@@ -8,11 +8,14 @@
 #' \dontrun{
 #' # > initDate(date = NULL)
 #' # Date of length 0
+#'
+#' # > initDate(c())
+#' # Date of length 0
 #' }
 #' @export
 initDate <- function(date = NULL) {
   tryCatchLog::tryCatchLog({
-  if(is.null(date)) {
+  if(is.null(date) | !(length(date))) {
     date <- zoo::as.Date(0L)[0]
   }
   date
@@ -123,8 +126,9 @@ Coredata <- function(xTs = NULL) {
 #' @export
 initEnv <- function(init = NULL, envir = parent.frame()) {
   tryCatchLog::tryCatchLog({
+
+  require(quantmod) # zoo, xts, TTR
   require(PerformanceAnalytics)
-  require(quantmod)
 
   # debugging
   # 1st round (where the error occurs)
@@ -134,11 +138,16 @@ initEnv <- function(init = NULL, envir = parent.frame()) {
   # utils/html/debugger.html
   # 3rd round
   # browser(expr = { <where condition> }
-  eval(parse(text="assign(\"env\", environment())"), envir = parent.frame())
 
   # convenience
-  assign("%>%",   magrittr::`%>%` , envir = envir)
+  assign("%>%",  magrittr::`%>%` , envir = envir)
   assign("%m+%", lubridate::`%m+%`, envir = envir)
+
+  assign("parse_expr", rlang::parse_expr, envir = environment())
+  assign("eval_bare",  rlang::eval_bare,  envir = environment())
+  assign("caller_env", rlang::caller_env, envir = environment())
+  action <- parse_expr("assign(\"env\", environment())")
+  eval_bare(action, caller_env())
 
   ops <- options()
 
@@ -268,7 +277,7 @@ fredData <- function(Symbol = NULL) {
 
   xTs
 
-})}
+  })}
 
 
 #' get the latest value in the month
@@ -296,14 +305,27 @@ eomData <- function(xTs = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
+  xTsOrig <- xTs
 
   if(NCOL(xTs) > 1) stop("(currently) eomData only works on single column xtx objects")
   xTs <- to.monthly(xTs[!is.na(xTs)], OHLC = FALSE, indexAt = "lastof")
-  # xTs <- xTs[index(xTs) <= Sys.Date()] # LEFT_OFF
+  xTs <- xTs[index(xTs) <= tail(index(xTsOrig),1)] # LEFT_OFF
 
   xTs
 
 })}
+
+
+
+#' leading
+#'
+#' @export
+Leading <- function(xTs = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+  xTs %>% { lag(.,-1) }
+})}
+
 
 
 #' get the latest value in the month from FRED
@@ -333,6 +355,9 @@ fredEomData <- function(Symbol = NULL) {
 })}
 
 
+
+
+
 #' Wilshire 5000 Index price
 #'
 #' @return xts object of end of month returns
@@ -346,10 +371,14 @@ wilshire5000indEomData <- function() {
 })}
 
 
+
+# NOTE: I may want to change to function(x, ...)
+
 #' change the index date to the future
 #'
 #' @param xTs xts object
 #' @return xts object with the index moved up
+#' @rdname nextMonthfromYesterday
 #' @export
 nextMonthfromYesterday <- function(xTs = NULL) {
   # tryCatchLog is not allowed here
@@ -362,6 +391,7 @@ nextMonthfromYesterday <- function(xTs = NULL) {
 #'
 #' @param xTs default object
 #' @return stop
+#' @rdname nextMonthfromYesterday
 #' @export
 nextMonthfromYesterday.default <- function(xTs = NULL) {
   tryCatchLog::tryCatchLog({
@@ -372,7 +402,8 @@ nextMonthfromYesterday.default <- function(xTs = NULL) {
 
 #' change the date to the future
 #'
-#' @param date object object
+#' @param date date object
+#' @rdname nextMonthfromYesterday
 #' @return date object
 #' @examples
 #' \dontrun{
@@ -397,6 +428,7 @@ nextMonthfromYesterday.Date <- function(date = NULL) {
 #' change the date to the future
 #'
 #' @param xTs xts object
+#' @rdname nextMonthfromYesterday
 #' @return date object
 #' @examples
 #' \dontrun{
@@ -514,7 +546,7 @@ combineLogReturns <- function(xTs = NULL, xTs1 = NULL) {
 
 #' cash log returns (cashlogrets)
 #'
-#' @param xTs xts object
+#' @param xTs xts object (only takes the index)
 #' @return xts object with the same index as xTs
 #' @export
 cashLogReturns <- function(xTs = NULL) {
@@ -531,9 +563,12 @@ cashLogReturns <- function(xTs = NULL) {
 })}
 
 
+
 #' add cash log returns (cashlogrets)
 #'
-#' @param xTs xts object
+#' currently not used anywhere
+#'
+#' @param xTs xts object (only takes the index)
 #' @return xts object with merged data into xTs
 #' @export
 addCashLogReturns <- function(xTs = NULL) {
@@ -546,6 +581,42 @@ addCashLogReturns <- function(xTs = NULL) {
   combineLogReturns(xTs, cashLogReturns(xTs))
 
 })}
+
+#' leading cash log returns (cashlogrets)
+#'
+#' @param xTs xts object (only takes the index)
+#' @return leading xts object
+#' @export
+leadingCashLogReturns <- function(xTs = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+  cashLogReturns(xTs) %>%
+    Leading -> xTs
+  xTs
+
+})}
+
+
+
+#' add cash log returns (cashlogrets)
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+addLeadingCashLogReturns <- function(xTs = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+                         # cashlogrets"
+  combineLogReturns(xTs, leadingCashLogReturns(xTs))
+
+})}
+
 
 
 #' get the Wilshare 5000 Index log returns
@@ -564,7 +635,10 @@ wilshire5000LogReturns <- function() {
 })}
 
 
+
 #' add Willshire 5000 Index log returns (will5000idxlogrets)
+#'
+#' currently not used anywhere
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -579,6 +653,39 @@ addWilshire5000LogReturns <- function(xTs = NULL) {
   combineLogReturns(xTs, wilshire5000LogReturns())
 
 })}
+
+
+
+#' get the Wilshare 5000 Index log returns
+#'
+#' @return xts object
+#' @export
+leadingWilshire5000LogReturns <- function() {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  wilshire5000LogReturns() %>% Leading
+
+})}
+
+
+
+#' add Willshire 5000 Index log returns (will5000idxlogrets)
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+addLeadingWilshire5000LogReturns <- function(xTs = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+                         # will5000idxlogrets
+  combineLogReturns(xTs, leadingWilshire5000LogReturns())
+
+})}
+
 
 
 #' add weights (_wts)
@@ -598,7 +705,7 @@ addWts  <- function(xTs = NULL, xTs1 = NULL) {
 })}
 
 
-#' add Willshire 5000 Index weights
+#' add Willshire 5000 Index weights using eyeball
 #'
 #' This is the workhorse function. This is where the magic/logic happens.
 #' Use any other columns (called indicators) that do not have the weights (_wts)
@@ -629,7 +736,103 @@ willShire5000EyeBallWts <- function(xTs = NULL) {
 })}
 
 
-#' add Willshire 5000 Index log weights returns (will5000idxlogrets)
+
+#' add Willshire 5000 Index weights using Machine learning
+#'
+#' This is the workhorse function. This is where the magic/logic happens.
+#' Use any other columns (called indicators) that do not have the weights (_wts)
+#' suffix and do not have the same root name compared to each and every
+#' other *_wts column.
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+willShire5000MachineWts <- function(xTs = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  # received xTs( will5000idxlogrets, cashlogrets, unrate )
+  # merge.xts target, indictors, and predictors into merged xTs
+
+  unrate <- xTs[,"unrate"]
+
+  # can not do math on leading NAs
+  # (actually can not do any math on 'any' NAs)
+  unrate <- na.trim(unrate)
+
+  unrate1Indicator <- Less(SMA(    unrate   ,2), SMA(    unrate   ,6))
+  colnames(unrate1Indicator) <- "unrate1"
+  unrate2Indicator <- Less(SMA(lag(unrate)  ,2), SMA(lag(unrate  ),6))
+  colnames(unrate2Indicator) <- "unrate2"
+  unrate3Indicator <- Less(SMA(lag(unrate,2),2), SMA(lag(unrate,2),6))
+  colnames(unrate3Indicator) <- "unrate3"
+
+  xTs <- merge(xTs, unrate1Indicator, unrate2Indicator, unrate3Indicator)
+  xTs <- initXts(xTs)
+  # will5000idxlogrets late partial return is not useful
+  # unrate NA at will5000idxlogrets late partial return is not useful
+  # cashlogrets             obvious [future] return is not useful
+  ### xTs <- initXts(na.trim(xTs))
+  ### xTs <- initXts(xTs[index(xTs) <= Sys.Date()])
+
+  # modelData does not automatically
+  #   add 'dates through now' (if they do not alread exist)
+  # so I will do that here
+  # seq(from = tail(index(xTs),1) + 1, to = Sys.Date(), by = "1 month") - 1 %>%
+  #   initDate -> datesThroughNow
+  # xTs <- initXts(merge(xTs, xts(, datesThroughNow)))
+  # #   add 'future] dates'
+  # datesNowThroughLater <- seq(from = last(index(xTs)) + 1, to = Sys.Date() + 134 , by = "1 month") - 1 %>%
+  #   initDate -> datesNowThroughLater
+  # # Date overlap is O.K.
+  # xTs <- initXts(merge(xTs, xts(, datesNowThroughLater)))
+
+  # create an environment of xts objects
+  Symbols <- lapply(as.data.frame(xTs), function(x) {
+    as.xts(x, order.by = index(xTs))
+  })
+  Symbols <- list2env(Symbols)
+
+  specifiedUnrateModel <- specifyModel(formula = will5000idxlogrets ~ unrate1 + unrate2 + unrate3
+                                     , na.rm = FALSE, source.envir = Symbols)
+                                     # remove the last record
+  tg <- expand.grid(
+    nrounds   =  100,
+    eta       =  c(0.1,0.01),
+    max_depth =  c(4,6,8,10),
+    gamma     =  0,
+    colsample_bytree = c(1,0.5),
+    min_child_weight = 1,
+    subsample        = c(1,0.5)
+  )
+  tc <- caret::trainControl(method = "cv", number = 5)
+
+  builtUnrateModel <- buildModel(specifiedUnrateModel,method="train", training.per=c("1970-12-31","2006-12-31")
+                               , method_train = 'xgbTree', tuneGrid = tg, trControl = tc)
+
+  # Update currently specified or built model with most recent data
+  UpdatedModelData <- getModelData(builtUnrateModel, na.rm = FALSE, source.envir = Symbols)
+                                                             # remove the last record
+
+  modelData <- modelData(UpdatedModelData, data.window = c("2007-01-31", as.character(tail(index(xTs),1))), exclude.training = TRUE)
+
+  Fitted  <- predictModel(UpdatedModelData@fitted.model, modelData)
+  Fitted  <- as.xts(Fitted, index(modelData))
+
+  # uses S3 ifelse.xts
+  # strategy/rule weights
+  Fitted <- ifelse(Fitted > 0, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
+
+  colnames(Fitted)[1] <- "will5000idxlogrets_wts"
+
+  Fitted
+
+})}
+
+
+
+
+#' add Willshire 5000 Index log weights returns using eyeball (will5000idxlogrets)
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -640,6 +843,21 @@ addWillShire5000EyeBallWts <- function(xTs = NULL) {
   xTs <- initXts(xTs)
 
   addWts(xTs,willShire5000EyeBallWts(xTs))
+
+})}
+
+
+#' add Willshire 5000 Index log weights returns using Machine learning (will5000idxlogrets)
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+addWillShire5000MachineWts <- function(xTs = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+  xTs <- initXts(xTs)
+
+  addWts(xTs,willShire5000MachineWts(xTs))
 
 })}
 
