@@ -124,11 +124,14 @@ Coredata <- function(xTs = NULL) {
 #' # [1] 99999
 #' }
 #' @export
-initEnv <- function(init = NULL, envir = parent.frame()) {
+initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   tryCatchLog::tryCatchLog({
 
-  require(quantmod) # zoo, xts, TTR
-  require(PerformanceAnalytics)
+  # require(quantmod) # zoo, xts, TTR
+  # require(PerformanceAnalytics)
+  # so, I can use rstudio projects of packages
+  if(!"quantmod" %in% search())             require(quantmod)
+  if(!"PerformanceAnalytics" %in% search()) require(PerformanceAnalytics)
 
   # debugging
   # 1st round (where the error occurs)
@@ -140,12 +143,24 @@ initEnv <- function(init = NULL, envir = parent.frame()) {
   # browser(expr = { <where condition> }
 
   # convenience
-  assign("%>%",  magrittr::`%>%` , envir = envir)
-  assign("%m+%", lubridate::`%m+%`, envir = envir)
-
+  assign("syms", rlang::syms, envir = envir)
+  assign("!!!", rlang::`!!!`, envir = envir)
   assign("parse_expr", rlang::parse_expr, envir = environment())
   assign("eval_bare",  rlang::eval_bare,  envir = environment())
   assign("caller_env", rlang::caller_env, envir = environment())
+
+  assign("%>%",  magrittr::`%>%` , envir = envir)
+  assign("%m+%", lubridate::`%m+%`, envir = envir)
+  assign("str_detect", stringr::str_detect, envir = envir)
+  assign("str_replace", stringr::str_replace, envir = envir)
+  assign("str_c", stringr::str_c, envir = envir)
+  assign("as_tibble", tibble::as_tibble,  envir = envir)
+  assign("arrange", dplyr::arrange, envir = envir)
+  assign("map", purrr::map, envir = envir)
+  assign("invoke_map", purrr::invoke_map, envir = envir)
+  assign("Day", DescTools::Day, envir = envir)
+  assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
+
   action <- parse_expr("assign(\"env\", environment())")
   eval_bare(action, caller_env())
 
@@ -316,14 +331,56 @@ eomData <- function(xTs = NULL) {
 })}
 
 
+#' lagging
+#'
+#' @export
+Lagging <- function(xTs = NULL, Shift = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+  xTs <- initXts(xTs)
+  if(is.null(Shift)) Shift = 1
+  # compare to quantmod:::Lag.xts
+  if(periodicity(xTs)[["scale"]] == "monthly") {
+    if(Day(head(index(xTs),1)) %in% c(28:31)) {
+      refDates <- LastDayOfMonth(tail(index(xTs),1) %m+% months( 1 * seq_len(Shift)) )
+    }
+    xTs <- merge(xTs, xts(, refDates) )
+  }
+  xTs %>% { lag(., 1 * Shift) } -> xTs
+  if(str_detect(colnames(xTs)[1], "leadingrets$")) {
+    colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "leadingrets$", "rets")
+  } else {
+    colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "rets$", "laggingrets")
+  }
+  xTs
+})}
+
+
 
 #' leading
 #'
+#' pads beginning date as necessary
+#'
 #' @export
-Leading <- function(xTs = NULL) {
+Leading <- function(xTs = NULL, Shift = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
-  xTs %>% { lag(.,-1) }
+  xTs <- initXts(xTs)
+  if(is.null(Shift)) Shift = 1
+  # compare to quantmod:::Lag.xts
+  if(periodicity(xTs)[["scale"]] == "monthly") {
+    if(Day(head(index(xTs),1)) %in% c(28:31)) {
+      refDates <- LastDayOfMonth(head(index(xTs),1) %m+% months(-1 * seq_len(Shift)) )
+    }
+    xTs <- merge(xTs, xts(, refDates) )
+  }
+  xTs %>% { lag(.,-1 * Shift) } -> xTs
+  if(str_detect(colnames(xTs)[1], "leadingrets$")) {
+    colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "laggingrets$", "rets")
+  } else {
+    colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "rets$", "leadingrets")
+  }
+  xTs
 })}
 
 
@@ -729,12 +786,36 @@ willShire5000EyeBallWts <- function(xTs = NULL) {
                         ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
   unrate_wts[is.na(unrate_wts)] <- 1 # 100% allocated
 
-  colnames(unrate_wts)[1] <- "will5000idxlogrets_wts"
+  colnames(unrate_wts)[1] <- str_c(colnames(xTs)[str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
 
   unrate_wts
 
 })}
 
+
+#' SMAs of the unrate Eyeball Indicator
+#'
+#' @export
+unrateEyeballIndicators <- function(unrate = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  unrate <- initXts(unrate)
+
+  # can not do math on leading NAs
+  # (actually can not do any math on 'any' NAs)
+  unrate <- na.trim(unrate)
+
+  unrate1Indicator <- Less(SMA(    unrate   ,2), SMA(    unrate   ,6))
+  colnames(unrate1Indicator) <- "unrate1"
+  unrate2Indicator <- Less(SMA(lag(unrate)  ,2), SMA(lag(unrate  ),6))
+  colnames(unrate2Indicator) <- "unrate2"
+  unrate3Indicator <- Less(SMA(lag(unrate,2),2), SMA(lag(unrate,2),6))
+  colnames(unrate3Indicator) <- "unrate3"
+
+  merge(unrate1Indicator, unrate2Indicator, unrate3Indicator)
+
+})}
 
 
 #' add Willshire 5000 Index weights using Machine learning
@@ -755,64 +836,40 @@ willShire5000MachineWts <- function(xTs = NULL) {
   # merge.xts target, indictors, and predictors into merged xTs
 
   unrate <- xTs[,"unrate"]
+  unrateIndicators <- unrateEyeballIndicators(unrate)
+  unrateIndicators <- initXts(unrateIndicators)
 
-  # can not do math on leading NAs
-  # (actually can not do any math on 'any' NAs)
-  unrate <- na.trim(unrate)
+  # all indicators
+  Indicators <- unrateIndicators
+  xTs <- merge(xTs, Indicators)
 
-  unrate1Indicator <- Less(SMA(    unrate   ,2), SMA(    unrate   ,6))
-  colnames(unrate1Indicator) <- "unrate1"
-  unrate2Indicator <- Less(SMA(lag(unrate)  ,2), SMA(lag(unrate  ),6))
-  colnames(unrate2Indicator) <- "unrate2"
-  unrate3Indicator <- Less(SMA(lag(unrate,2),2), SMA(lag(unrate,2),6))
-  colnames(unrate3Indicator) <- "unrate3"
-
-  xTs <- merge(xTs, unrate1Indicator, unrate2Indicator, unrate3Indicator)
   xTs <- initXts(xTs)
+
   # will5000idxlogrets late partial return is not useful
   # unrate NA at will5000idxlogrets late partial return is not useful
   # cashlogrets             obvious [future] return is not useful
-  ### xTs <- initXts(na.trim(xTs))
-  ### xTs <- initXts(xTs[index(xTs) <= Sys.Date()])
-
-  # modelData does not automatically
-  #   add 'dates through now' (if they do not alread exist)
-  # so I will do that here
-  # seq(from = tail(index(xTs),1) + 1, to = Sys.Date(), by = "1 month") - 1 %>%
-  #   initDate -> datesThroughNow
-  # xTs <- initXts(merge(xTs, xts(, datesThroughNow)))
-  # #   add 'future] dates'
-  # datesNowThroughLater <- seq(from = last(index(xTs)) + 1, to = Sys.Date() + 134 , by = "1 month") - 1 %>%
-  #   initDate -> datesNowThroughLater
-  # # Date overlap is O.K.
-  # xTs <- initXts(merge(xTs, xts(, datesNowThroughLater)))
 
   # create an environment of xts objects
-  Symbols <- lapply(as.data.frame(xTs), function(x) {
-    as.xts(x, order.by = index(xTs))
-  })
+  map(as.data.frame(xTs),
+    ~ (function(x) {
+        as.xts(x, order.by = index(xTs))
+      })(x = .x)
+  ) -> Symbols
+
+  # reorders in alphabetical order
   Symbols <- list2env(Symbols)
 
-  specifiedUnrateModel <- specifyModel(formula = will5000idxlogrets ~ unrate1 + unrate2 + unrate3
-                                     , na.rm = FALSE, source.envir = Symbols)
-                                     # remove the last record
-  tg <- expand.grid(
-    nrounds   =  100,
-    eta       =  c(0.1,0.01),
-    max_depth =  c(4,6,8,10),
-    gamma     =  0,
-    colsample_bytree = c(1,0.5),
-    min_child_weight = 1,
-    subsample        = c(1,0.5)
-  )
-  tc <- caret::trainControl(method = "cv", number = 5)
+  # traditionally the first column is the target variable
+  specifyModel(formula = as.formula(str_c( colnames(xTs)[1], " ~ ",str_c(colnames(Indicators), collapse = " + ")))
+            , na.rm = FALSE, source.envir = Symbols) ->
+              # remove the last record(NO)
+  specifiedUnrateModel
 
-  builtUnrateModel <- buildModel(specifiedUnrateModel,method="train", training.per=c("1970-12-31","2006-12-31")
-                               , method_train = 'xgbTree', tuneGrid = tg, trControl = tc)
+  builtUnrateModel <- buildModel(specifiedUnrateModel, method="train", training.per=c("1970-12-31","2006-12-31"))
 
   # Update currently specified or built model with most recent data
   UpdatedModelData <- getModelData(builtUnrateModel, na.rm = FALSE, source.envir = Symbols)
-                                                             # remove the last record
+                                                     # remove the last record(NO)
 
   modelData <- modelData(UpdatedModelData, data.window = c("2007-01-31", as.character(tail(index(xTs),1))), exclude.training = TRUE)
 
@@ -823,12 +880,11 @@ willShire5000MachineWts <- function(xTs = NULL) {
   # strategy/rule weights
   Fitted <- ifelse(Fitted > 0, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
 
-  colnames(Fitted)[1] <- "will5000idxlogrets_wts"
+  colnames(Fitted)[1] <- str_c(colnames(xTs)[str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
 
   Fitted
 
 })}
-
 
 
 
@@ -877,7 +933,7 @@ cashWts <- function(xTs = NULL) {
 
   # excess left over
   cash_wts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[,wtsClms(xTs)], na.rm = TRUE)
-  colnames(cash_wts)[1] <- "cashlogrets_wts"
+  colnames(cash_wts)[1] <- str_c(colnames(xTs)[str_detect(colnames(xTs), "^cash.*rets$")], "_wts")
 
   cash_wts
 
@@ -938,6 +994,24 @@ initPorfVal <- function(initVal = NULL) {
   } else { }
 
   initVal
+
+})}
+
+
+#' sort
+#'
+#' @export
+Sort <- function(x) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  vars <- syms("value")
+  as_tibble(x) %>%
+    arrange(!!!vars)  %>%
+      list %>%
+        { invoke_map(c, .)[[1]] } -> ret
+
+   ret
 
 })}
 
@@ -1011,9 +1085,11 @@ valueClms <- function(xTs = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
-  clms <- safeClms(xTs)
 
-  sub("_wts$", "", clms)[grepl("_wts$", clms)]
+  clms <- safeClms(xTs)
+  clms <- Sort(clms)
+
+  str_replace(clms, "_wts$", "")[str_detect(clms, "_wts$")]
 
 })}
 
@@ -1039,8 +1115,9 @@ wtsClms  <- function(xTs = NULL) {
   xTs  <- initXts(xTs)
 
   clms <- safeClms(xTs)
+  clms <- Sort(clms)
 
-  clms[grepl("_wts$",clms)]
+  clms[str_detect(clms, "_wts$")]
 
 })}
 # clms <- c("b_wts","b","a_wts","a", "c")

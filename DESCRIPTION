@@ -13,9 +13,15 @@ Depends:
     quantmod (>= 0.4-3),
     PerformanceAnalytics (>= 1.5.2)
 Imports:
-    Hmisc, 
-    lubridate, 
+    rlang,
     magrittr,
+    stringr,
+    lubridate, 
+    tibble,
+    dplyr,
+    purrr,
+    Hmisc, 
+    DescTools,
     tryCatchLog,
     futile.logger
 RoxygenNote: 6.1.0.9000

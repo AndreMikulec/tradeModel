@@ -16,24 +16,24 @@ UnRateEyeBalltradeModel <- function() {
   # http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html
 
   # (1) data 'value' (try to optimize)
-  addWilshire5000LogReturns() %>%      # will5000idxlogrets
-  addCashLogReturns           %>%      # cashlogrets
+  addLeadingWilshire5000LogReturns() %>%      #
+  addLeadingCashLogReturns           %>%      #
 
   # (2) indicator(s)
   addUnRateEomData %>%                 # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addWillShire5000EyeBallWts  %>%      # will5000logrets_wts
-  addCashWts           %>%             # cashlogres_wts      (excess)
+  addWillShire5000EyeBallWts  %>%      #
+  addCashWts                  %>%      # (excess)
   # ret
 
-  printTail("UnRateEyeBall") %>%
+  printTail("Exact Schedule of Leading of Eye Ball returns and decisions") %>%
 
   # (4) apply in action
   portfolioMonthlyReturns %>%
 
   # (5) evaluate performance
-  printCalendar("UnRateEyeBall")
+  Lagging %>% printCalendar("Lagging Eye Ball returns")
 
 })}
 # UnRateEyeBalltradeModel()
@@ -56,24 +56,25 @@ UnRateMachinetradeModel <- function() {
   # http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html
 
   # (1) data 'value' (try to optimize)
-  addLeadingWilshire5000LogReturns() %>%      # will5000idxlogrets
-  addLeadingCashLogReturns           %>%      # cashlogrets
+  addLeadingWilshire5000LogReturns() %>%      #
+  addLeadingCashLogReturns           %>%      #
 
   # (2) indicator(s)
   addUnRateEomData %>%                 # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addWillShire5000MachineWts  %>%      # will5000logrets_wts
-  addCashWts           %>%             # cashlogres_wts      (excess)
+  addWillShire5000MachineWts  %>%      #
+  addCashWts                  %>%      # (excess)
   # ret
 
-  printTail("UnRateMachine") %>%
+  printTail("Exact Schedule of Leading of UnRateMachine returns and decisions") %>%
 
   # (4) apply in action
   portfolioMonthlyReturns %>%
 
   # (5) evaluate performance
-  printCalendar("UnRateMachine")
+  # Lagging %>% # Always chops off Sep ( WHY? )
+  Lagging %>% printCalendar("Lagging UnRateMachine returns")
 
 })}
 # UnRateMachinetradeModel()

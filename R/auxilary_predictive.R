@@ -536,11 +536,41 @@ as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...)
 buildModel.train <- function(quantmod,training.data,...) {
 
   if(is.method.available("train","caret")) {
-    # TODO [ ] INVESTIGATE
+
+    Dots <- list()
+    Dots <- c(Dots, list(...))
+    DotsOrigNames <- names(list(...))
+
+    if(!"method_train" %in% DotsOrigNames) {
+      Dots[["method"]] <- "xgbTree"
+    } else {
+      Dots[["method_train"]] <- NULL
+      Dots[["method"]] <- list(...)[["method_train"]]
+    }
+
+    if((Dots[["method"]] == "xgbTree") & (!"tuneGrid" %in% DotsOrigNames)) {
+      tuneGrid <- expand.grid(
+        nrounds   =  100,
+        eta       =  c(0.1,0.01),
+        max_depth =  c(4,6,8,10),
+        gamma     =  0,
+        colsample_bytree = c(1,0.5),
+        min_child_weight = 1,
+        subsample        = c(1,0.5)
+      )
+      Dots[["tuneGrid"]] <- tuneGrid
+    }
+
+    if(!"trControl" %in% DotsOrigNames) {
+      trControl <- caret::trainControl(method = "cv", number = 5)
+      Dots[["trControl"]] <- trControl
+    }
+
+    # TODO [ ] INVESTIGATE (MOST likely? I need MORE trees!)
     # Error in nominalTrainWorkflow(x = x, y = y, wts = weights, info = trainInfo,  :
     # (converted from warning) There were missing values in resampled performance measures.
     if(!all(complete.cases(training.data))) print("NOTE: in buildModel.train, training.data is missing some data.")
-    rp <- suppressWarnings( do.call(train,list(quantmod@model.formula,data=training.data,method = list(...)[["method_train"]], ...)) )
+    rp <- suppressWarnings( do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots) ) )
     return(list("fitted"=rp, "inputs"=attr(terms(rp),"term.labels")))
   }
 }
