@@ -209,6 +209,19 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
   assign("DoCall", DescTools::DoCall, envir = envir)
 
+  assign("vars_select", tidyselect::vars_select, envir = envir)
+  assign("matches", tidyselect::matches, envir = envir)
+
+  assign("select", dplyr::select, envir = envir)
+
+  assign("select_se", seplyr::select_se, envir = envir)
+  assign("deselect", seplyr::deselect, envir = envir)
+  assign("let", wrapr::let, envir = envir)
+
+  assign("wrap", R.utils::wrap, envir = envir)
+
+  assign("unite", tidyr::unite, envir = envir)
+
   action <- parse_expr("assign(\"env\", environment())")
   eval_bare(action, caller_env())
 
@@ -556,6 +569,91 @@ interleave <- function (x, y)
     iY <- 2 * seq_along(y)
     c(x, y)[order(c(iX, iY))]
 }
+
+#' flatten a data.frame to (hopfully) ONE row
+#'
+#' @examples
+#' \dontrun{
+#'#
+#'# data.frame(
+#'#   dateindexid = c(17000, 17000, 17000, 17000),
+#'#   dateindexFact = c("2016-07-18", "2016-07-18", "2016-07-18", "2016-07-18"),
+#'#   ActionFact = c("Morn", "Morn", "Night", "Night"),
+#'#   ActionAtFact = c("Sell", "Buy", "Sell", "Buy"),
+#'#   INSTR1 = c(8, 16, 32, 64),
+#'#   INSTR2 = c(10008, 10016, 10032, 10064)
+#'# , stringsAsFactors = FALSE
+#'# )  -> DFS
+#'#
+#'# > DFS
+#'#   dateindexid dateindexFact ActionFact ActionAtFact INSTR1 INSTR2
+#'# 1       17000    2016-07-18       Morn         Sell      8  10008
+#'# 2       17000    2016-07-18       Morn          Buy     16  10016
+#'# 3       17000    2016-07-18      Night         Sell     32  10032
+#'# 4       17000    2016-07-18      Night          Buy     64  10064
+#'#
+#'#
+#'# > liquifyDF(DFS)
+#'#   dateindexid dateindexFact Morn.Sell.INSTR1 Morn.Buy.INSTR1 Night.Sell.INSTR1 Night.Buy.INSTR1
+#'# 1       17000    2016-07-18                8              16                32               64
+#'#   Morn.Sell.INSTR2 Morn.Buy.INSTR2 Night.Sell.INSTR2 Night.Buy.INSTR2
+#'# 1            10008           10016             10032            10064
+#'#
+#'#
+#' }
+#'@export
+liquifyDF <- function(x, ConstColsRegex = "^dateindex", FactorColsRegex = "Fact$"
+                       , FactorColsNAReplace = NULL
+                       , FactorColsFixedSep = "."
+                       , DetailColsFixedSep = "."
+                       , SpaceFixedSep = "."
+                       , AmperstandFixedSep = "And"
+                      ) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  if(NROW(x) == 0) { message("liquifyDF found zero rows"); return(data.frame()) }
+
+  # typically "id" columns
+  ConstCols <- vars_select(names(x), matches(ConstColsRegex))
+                     # garantee no 'id' columns ( and the [rest of] factors )
+  FCT_COLS_VECTOR <- setdiff(tidyselect::vars_select(names(x), matches(FactorColsRegex)), ConstCols)
+  FCT_COLS_NAME   <- str_c(FCT_COLS_VECTOR, collapse = FactorColsFixedSep)
+  FCT_COLS_SEP    <- str_c(FCT_COLS_VECTOR, collapse = ", ")
+
+  if(!is.null(FactorColsNAReplace)) {
+    for(coli in FCT_COLS_VECTOR) {
+      x[is.na(x[, coli, drop = TRUE]),coli] <- FactorColsNAReplace
+    }
+  }
+
+  LeftSideRow1  <-  select_se(x, ConstCols)[1, , drop = FALSE]
+  NotLeftSide   <-  deselect(x, ConstCols)
+
+  UNITE <- function(x) {
+    let(list(FCT_COLS_NAME = FCT_COLS_NAME, FCT_COLS_SEP = FCT_COLS_SEP),
+      unite(x, FCT_COLS_NAME, FCT_COLS_SEP, sep = FactorColsFixedSep)
+    , subsMethod = "stringsubs", strict = FALSE)
+    }
+
+  # make ONE column to represent all factors
+  NotLeftSide %>% UNITE %>%
+    # change row.names to FCT_COLS_NAME, drop column 1
+    `row.names<-`(.[[1]]) %>% select(-1) %>%
+      # to one dimension : one BIG wide ROW
+      as.matrix %>% wrap(sep = DetailColsFixedSep) -> NotLeftSide
+
+  cbind(LeftSideRow1,as.data.frame(t(NotLeftSide))) -> results
+
+  colnames(results) <- str_replace_all(colnames(results),"[ ]", SpaceFixedSep)
+  colnames(results) <- str_replace_all(colnames(results),"&"  , AmperstandFixedSep)
+
+  return(results)
+
+})}
+
+
+
 
 
 #' expland out xts
