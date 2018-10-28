@@ -106,7 +106,52 @@ Coredata <- function(xTs = NULL) {
   })}
 
 
+#' number of variables
+#'
+#' currently NOT USED
+#'
+#' @param x xts object
+#' @return integer number of variables
+#' @rdname NVAR
+#' @export
+NVAR <- function(x = NULL) {
+  # tryCatchLog is not allowed here
+  UseMethod("NVAR")
 
+}
+
+
+
+#' @rdname NVAR
+#' @export
+NVAR.default <- function(x = NULL) {
+  tryCatchLog::tryCatchLog({
+  base::NCOL(x)
+
+})}
+
+
+#' @rdname NVAR
+#' @examples
+#' \dontrun{
+#' # > require(xts)
+#' # > NVAR(xts(, zoo::as.Date("1970-01-12")))
+#' # [1] 0
+#' }
+#' @export
+NVAR.xts <- function(x = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+  x <- initXts(x)
+
+  if(length(coredata(x))) {
+    res <- NCOL(coredata(x))
+  } else {
+    res <- 0L
+  }
+  return(res)
+
+})}
 
 
 #' sets the enviroment
@@ -153,13 +198,16 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   assign("%m+%", lubridate::`%m+%`, envir = envir)
   assign("str_detect", stringr::str_detect, envir = envir)
   assign("str_replace", stringr::str_replace, envir = envir)
+  assign("str_replace_all", stringr::str_replace_all, envir = envir)
   assign("str_c", stringr::str_c, envir = envir)
   assign("as_tibble", tibble::as_tibble,  envir = envir)
   assign("arrange", dplyr::arrange, envir = envir)
   assign("map", purrr::map, envir = envir)
-  assign("invoke_map", purrr::invoke_map, envir = envir)
+  assign("transpose", purrr::transpose, envir = envir)
+  # assign("invoke_map", purrr::invoke_map, envir = envir)
   assign("Day", DescTools::Day, envir = envir)
   assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
+  assign("DoCall", DescTools::DoCall, envir = envir)
 
   action <- parse_expr("assign(\"env\", environment())")
   eval_bare(action, caller_env())
@@ -357,6 +405,248 @@ Lagging <- function(xTs = NULL, Shift = NULL) {
 
 
 
+#' generate a good xts column name
+#'
+#' @param x single column xts with the old column name
+#' @return single column xts with  the new column name
+#' @examples
+#' \dontrun{
+#'
+#' }
+#' @export
+newXtsColName <- function(xTs = NULL, Fun =  NULL, isCharFun = NULL, xTs1 = NULL, xTs2 = NULL, WhichCombo =  NULL, AltName = NULL, Prefix = NULL, FixedSep = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  if(is.null(isCharFun)) stop("newXtsColName need actual paramter isCharFun")
+
+  if(is.null(AltName)) {
+    if(isCharFun) {
+      NewName <- str_replace_all(Fun,"[.]|::",FixedSep)
+    } else {
+      NewName <- "anon"
+    }
+  } else {
+    NewName <- AltName
+  }
+
+  str_c(
+  c(
+    if(!is.null(xTs1) && (NCOL(xTs1) > 0)) { colnames(xTs1)[1] } else { NULL },
+    if(!is.null(xTs2) && (NCOL(xTs2) > 0)) { colnames(xTs2)[1] } else { NULL }
+  ), collapse = FixedSep) -> Colnames
+
+  if(length(WhichCombo)) {
+    WhichCombo <-  str_c(c(interleave(names(WhichCombo), unlist(WhichCombo))), collapse = FixedSep)
+  } else {
+    WhichCombo <- NULL
+  }
+
+  PreName <- NULL; PostName <- NULL
+  NewNameWhichCombo <- str_c(c(NewName, WhichCombo), collapse = FixedSep)
+  if(is.null(Prefix) || (Prefix == FALSE)) {
+    PostName <- NewNameWhichCombo
+  } else {
+    PreName  <- NewNameWhichCombo
+  }
+  NewName <- str_c(c(PreName, Colnames, PostName), collapse = FixedSep)
+  colnames(xTs)[1] <-NewName
+
+  xTs
+
+})}
+
+
+
+#' pairwise interleave of columns
+#'
+#' works better on xts objects ( lapply structure is held together )
+#'
+#' @param x1 data.frame or xts object
+#' @param x2 data.frame or xts object
+#' @return list of length two of two data.frames or xts objects
+#' @examples
+#' \dontrun{
+#'#
+#'# > list(iris[1:2,1:2], airquality[1:2,1:2])
+#'# [[1]]
+#'#   Sepal.Length Sepal.Width
+#'# 1          5.1         3.5
+#'# 2          4.9         3.0
+#'#
+#'# [[2]]
+#'#   Ozone Solar.R
+#'# 1    41     190
+#'# 2    36     118
+#'#
+#'# > str( pairWise( iris[1:2,1:2], airquality[1:2,1:2] ) )
+#'# List of 2
+#'#  $ :List of 2
+#'#   ..$ Sepal.Length: num [1:2] 5.1 4.9
+#'#   ..$ Ozone       : int [1:2] 41 36
+#'#  $ :List of 2
+#'#   ..$ Sepal.Width: num [1:2] 3.5 3
+#'#   ..$ Solar.R    : int [1:2] 190 118
+#'#
+#'# > require(xts)
+#'# > data("sample_matrix", package = "xts")
+#'# > str( pairWise(as.xts(sample_matrix)[,1:2], as.xts(sample_matrix)[,3:4] ) )
+#'# List of 2
+#'#  $ :List of 2
+#'#   ..$ Open:An 'xts' object on 2007-01-02/2007-06-30 containing:
+#'#   Data: num [1:180, 1] 50 50.2 50.4 50.4 50.2 ...
+#'#  - attr(*, "dimnames")=List of 2
+#'#   ..$ : NULL
+#'#   ..$ : chr "Open"
+#'#   Indexed by objects of class: [POSIXct,POSIXt] TZ:
+#'#   xts Attributes:
+#'#  NULL
+#'#   ..$ Low :An 'xts' object on 2007-01-02/2007-06-30 containing:
+#'#   Data: num [1:180, 1] 50 50.2 50.3 50.2 50.1 ...
+#'#  - attr(*, "dimnames")=List of 2
+#'#   ..$ : NULL
+#'#   ..$ : chr "Low"
+#'#   Indexed by objects of class: [POSIXct,POSIXt] TZ:
+#'#   xts Attributes:
+#'#  NULL
+#'#  $ :List of 2
+#'#   ..$ High :An 'xts' object on 2007-01-02/2007-06-30 containing:
+#'#   Data: num [1:180, 1] 50.1 50.4 50.4 50.4 50.2 ...
+#'#  - attr(*, "dimnames")=List of 2
+#'#   ..$ : NULL
+#'#   ..$ : chr "High"
+#'#   Indexed by objects of class: [POSIXct,POSIXt] TZ:
+#'#   xts Attributes:
+#'#  NULL
+#'#   ..$ Close:An 'xts' object on 2007-01-02/2007-06-30 containing:
+#'#   Data: num [1:180, 1] 50.1 50.4 50.3 50.3 50.2 ...
+#'#  - attr(*, "dimnames")=List of 2
+#'#   ..$ : NULL
+#'#   ..$ : chr "Close"
+#'#   Indexed by objects of class: [POSIXct,POSIXt] TZ:
+#'#   xts Attributes:
+#'#  NULL
+#'#
+#' }
+#' @export
+pairWise <- function(x1, x2) {
+
+  List <- c(list(),lapply(x1, identity), lapply(x2, identity))
+  # also works and parallelizable
+  # List <- c(list(), plyr::llply(x1, identity), plyr::llply(x2, identity))
+  # xts FAILS . . .
+  # List <- c(list(), purrr::map(x1, ~{identity(x = .x)}), purrr::map(x2, ~{identity(x = .x)}))
+
+  L1coord <- seq(from = 1, by = 2, length.out = 0.5*length(List))
+  L2coord <- seq(from = 2, by = 2, length.out = 0.5*length(List))
+
+  c(list(List[L1coord]),list(List[L2coord]))
+
+}
+
+
+#' Interleave two vectors of arbitrary length
+#'
+#' from R CRAN package rmngb
+#'
+#' @export
+interleave <- function (x, y)
+{
+    iX <- 2 * seq_along(x) - 1
+    iY <- 2 * seq_along(y)
+    c(x, y)[order(c(iX, iY))]
+}
+
+
+#' expland out xts
+#'
+#' from an xts function stub, create an ets object of derived columns
+#'
+#' Meant to create many package TTR technical trading column results
+#' CURRENTLY NOT USED
+#'
+#' Ideas are from
+#'
+#' Time series cross-validation 5
+#' January 24, 2013
+#' By Deane-Mayer
+#' http://www.r-bloggers.com/time-series-cross-validation-5/
+#' http://moderntoolmaking.blogspot.com/2013/01/time-series-cross-validation-5.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+ModernToolMaking+%28Modern+Tool+Making%29
+#'
+#' xTs1 (and xTs2 'if any' are paired/matched column position to column position)
+#'
+#'
+#' @param xTs1 xts object
+#' @param xTs2 xts object
+#' @param Fun function name in the "bare" or in literal quotes("")
+#' @param Whiches list of possible varying parameters that are expanded
+#' to all possible combinations by expand.grid
+#' @param AltName string alternate name for "Fun"
+#' @param Prefix boolan default is FALSE.  TRUE would place the column meta before the column name
+#' @param FixedSep string divider of meta items
+#' @param quote boolean passed to DescTools DoCall
+#' @param envir calling environment
+#' @return new xts object of new derived columns
+#' @examples
+#' \dontrun{
+#'
+#' # require(quantmod)
+#' # ibm <- getSymbols("IBM", from = "1970-01-01", to = "1970-01-13", auto.assign = FALSE)
+#' # explodeXts(ibm[,c("IBM.Open","IBM.Close")], Fun = "TTR::SMA", Whiches = list(n = 2:3))
+#' }
+#' @export
+explodeXts <- function(  xTs1 = NULL, xTs2 = NULL, Fun = function(x) { x }
+                       , Whiches   = NULL
+                       , AltName   = NULL, Prefix = NULL , FixedSep  = NULL
+                       , quote     = FALSE, envir = parent.frame(2)
+                       , ...){
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  xTs1  <- initXts(xTs1)
+  xTs2  <- initXts(xTs2)
+  if(is.null(FixedSep)) FixedSep = "."
+
+  DoCall(expand.grid, Whiches) %>%
+      as.list %>%
+        transpose -> WhichesCombinations
+  if(!NCOL(WhichesCombinations)){ return(initXts()) }
+
+  if(mode(Fun) == "function") {
+    Fun = match.fun(Fun)
+    isCharFun <- FALSE
+  } else {
+    isCharFun <- TRUE
+  }
+
+  xTs <- initXts()
+  FunctionEnv <- environment()
+
+  lapply(WhichesCombinations, function(WhichCombo) {
+
+    lapply(pairWise(xTs1, xTs2), function(xTsColumnSet) {
+      xTs1 <- xTsColumnSet[[1]]; xTs2 <- xTsColumnSet[[2]]
+
+      if(NVAR(xTs2)) { xTs2List <- list(xTs2) } else { xTs2List <- NULL }
+      Temp <- DoCall(Fun, args = c(list(), list(xTs1), xTs2List, WhichCombo, list(...)), quote = quote, envir = envir)
+
+      Temp <- newXtsColName( Temp, Fun = Fun, isCharFun = isCharFun, xTs1 = xTs1, xTs2 = xTs2, WhichCombo = WhichCombo
+                           , AltName = AltName, Prefix = Prefix, FixedSep = FixedSep)
+
+      assign("xTs", merge(xTs, Temp), envir = FunctionEnv)
+
+      invisible()
+
+    }) -> Empty
+
+  }) -> Empty
+
+  xTs
+
+})}
+
+
+
 #' leading
 #'
 #' pads beginning date as necessary
@@ -382,6 +672,8 @@ Leading <- function(xTs = NULL, Shift = NULL) {
   }
   xTs
 })}
+
+
 
 
 
@@ -428,13 +720,12 @@ wilshire5000indEomData <- function() {
 })}
 
 
-
 # NOTE: I may want to change to function(x, ...)
 
 #' change the index date to the future
 #'
-#' @param xTs xts object
-#' @return xts object with the index moved up
+#' @param xTs xts object or data object
+#' @return xts object or data object with the index moved up
 #' @rdname nextMonthfromYesterday
 #' @export
 nextMonthfromYesterday <- function(xTs = NULL) {
@@ -444,24 +735,17 @@ nextMonthfromYesterday <- function(xTs = NULL) {
 }
 
 
-#' attempt to change the index date to the future
-#'
-#' @param xTs default object
-#' @return stop
 #' @rdname nextMonthfromYesterday
 #' @export
 nextMonthfromYesterday.default <- function(xTs = NULL) {
   tryCatchLog::tryCatchLog({
-  stop("No nextMonthfromYesterday method for xTs")
+  stop("No nextMonthfromYesterday method for <input>")
 
 })}
 
 
-#' change the date to the future
-#'
 #' @param date date object
 #' @rdname nextMonthfromYesterday
-#' @return date object
 #' @examples
 #' \dontrun{
 #' # > require(xts)
@@ -482,11 +766,7 @@ nextMonthfromYesterday.Date <- function(date = NULL) {
 })}
 
 
-#' change the date to the future
-#'
-#' @param xTs xts object
 #' @rdname nextMonthfromYesterday
-#' @return date object
 #' @examples
 #' \dontrun{
 #' # > require(xts)
@@ -1009,7 +1289,7 @@ Sort <- function(x) {
   as_tibble(x) %>%
     arrange(!!!vars)  %>%
       list %>%
-        { invoke_map(c, .)[[1]] } -> ret
+        { DoCall(c, .) } -> ret
 
    ret
 

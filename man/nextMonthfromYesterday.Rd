@@ -16,31 +16,15 @@ nextMonthfromYesterday(xTs = NULL)
 \method{nextMonthfromYesterday}{xts}(xTs = NULL)
 }
 \arguments{
-\item{xTs}{xts object}
+\item{xTs}{xts object or data object}
 
 \item{date}{date object}
-
-\item{xTs}{default object}
-
-\item{xTs}{xts object}
 }
 \value{
-xts object with the index moved up
-
-stop
-
-date object
-
-date object
+xts object or data object with the index moved up
 }
 \description{
 change the index date to the future
-
-attempt to change the index date to the future
-
-change the date to the future
-
-change the date to the future
 }
 \examples{
 \dontrun{
