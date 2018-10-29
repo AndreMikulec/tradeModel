@@ -572,6 +572,13 @@ interleave <- function (x, y)
 
 #' flatten a data.frame to (hopfully) ONE row
 #'
+#' NOTE: only WORKS with ONE unique primary key value
+#' If I want to work with many primary key valuess,
+#' then one would need to split the data upon those values
+#' then next apply this function individually to each chunk
+#' Last, 'smart' merge all of the data.frames together (while
+#' adding new columns contributed by each data.frame).
+#'
 #' @examples
 #' \dontrun{
 #'#
@@ -654,6 +661,192 @@ liquifyDF <- function(x, ConstColsRegex = "^dateindex", FactorColsRegex = "Fact$
 
 
 
+#' (true) sortino ratio
+#'
+#' Sortino Ratio: Are you calculating it wrong?
+#' https://www.rcmalternatives.com/2013/09/sortino-ratio-are-you-calculating-it-wrong/
+#'
+#' @examples
+#' \dontrun{
+#' # trueSortinoRatio(x, n, rf = 0.0, na.rm = FALSE)
+#' }
+#'@export
+trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
+                                            # any NA, then entire thing returns NA
+  # if not too short
+  if(MinRows <=  NROW(x)) {
+    (mean(x, na.rm = na.rm) - rf )/sd( local({x[x > 0] <- 0; x } ), na.rm = na.rm)
+  } else { # too short
+    NA_real_
+  }
+}
+
+
+
+#' apply rolling
+#'
+#' The best roller can roll anything with the most features
+#' The idea is that I can control(change) the INTERIOR data OF NAs founds
+#' within the middle of the data.
+#' This data and middle of data is meant to be sent
+#' to package TTR/PerformanceAnaltics functions.
+#' TTR functions reject(error out) on NAs found in the interior.
+#'
+#' Here I can estimate or replace those NAs found in the middle of the data
+#' before that data reaches TTR functions
+#'
+#' @param xTs xts object
+#' @return modified xts object
+#'
+#' @examples
+#' \dontrun{
+#'#
+#'#
+#'# > require(TTR)
+#'# > SMA(xts(c(0,1,2,3,NA), zoo::as.Date(0:4)), n = 2)
+#'# Error in runSum(x, n) : Series contains non-leading NAs
+#'#
+#'# > SMA(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), n = 2)
+#'# Error in runSum(x, n) : Series contains non-leading NAs
+#'#
+#'# > SMA(xts(c(NA,1,2,3,4), zoo::as.Date(0:4)), n = 2)
+#'#            SMA
+#'# 1970-01-01  NA
+#'# 1970-01-02  NA
+#'# 1970-01-03 1.5
+#'# 1970-01-04 2.5
+#'# 1970-01-05 3.5
+#'#
+#'# > rollApply(xts(c(0,-1,2,-3,4), zoo::as.Date(0:4)), Fun = trueSortinoRatio, AltName = "SRTN", partial = TRUE, width = 2, MinRows = 2)
+#'#
+#'#                          SRTN.2
+#'# 1970-01-01                   NA
+#'# 1970-01-02 -0.70710678118654746
+#'# 1970-01-03  0.70710678118654746
+#'# 1970-01-04 -0.23570226039551587
+#'# 1970-01-05  0.23570226039551587
+#'#
+#'# # dimunitive SMA ( removes NA values )
+#'# DSMA <- function(x, n, QTY) {
+#'#                        # SMA requirement
+#'#   if((n <= NROW(x)) && (2 <= NROW(x))) {
+#'#
+#'#     # remove data
+#'#     if(is.vector(x))       x <- x[!is.na(x)]
+#'#     if(inherits(x, "zoo")) x <- x[coredata(!is.na(x)),]
+#'#
+#'#                           # SMA requirement
+#'#     if((n <= NROW(x)) && (2 <= NROW(x))) {
+#'#       result <- TTR::SMA(x = x, n = n)
+#'#       if(QTY == "All") {
+#'#         result
+#'#       } else if(QTY == "Last") {
+#'#         tail(result,1)
+#'#       } else { stop("Need to provide QTY") }
+#'#     } else {
+#'#       return(NA_real_)  # too short
+#'#     }
+#'#
+#'#   } else {
+#'#     return(NA_real_)  # too short
+#'#   }
+#'#
+#'# }
+#'# > xts(c(0,1,NA,3,4), zoo::as.Date(0:4))
+#'#            [,1]
+#'# 1970-01-01    0
+#'# 1970-01-02    1
+#'# 1970-01-03   NA
+#'# 1970-01-04    3
+#'# 1970-01-05    4
+#'#
+#'# DSMA(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), 2, QTY = "All")
+#'#
+#'#            SMA
+#'# 1970-01-01  NA
+#'# 1970-01-02 0.5  # I programmed to loose NA observations ( and its index entries)
+#'# 1970-01-04 2.0  # unless, I come up with a *better way* to re-organize 'around' the [NA] data
+#'# 1970-01-05 3.5  # then that is the best answer I have NOW.
+#'#
+#'# rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), Fun = DSMA, AltName = "MATH", partial = FALSE, width = 2, n = 2, QTY = "Last")
+#'#                                                                              # because I programmed around THIS
+#'# rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), Fun = DSMA, AltName = "MATH", partial = TRUE, width = 2, n = 2,QTY = "Last")
+#'#
+#'#            MATH.2
+#'# 1970-01-01     NA
+#'# 1970-01-02    0.5
+#'# 1970-01-03     NA
+#'# 1970-01-04     NA
+#'# 1970-01-05    3.5
+#'#
+#'#
+#'#
+#' }
+#' @export
+rollApply <- function(
+        xTs = NULL, width = NULL, partial = NULL, align = NULL, Fun = NULL
+      , by = NULL, by.column = NULL, fill = NULL, coredata = NULL
+      , AltName = NULL, FixedSep  = NULL
+      , ...) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  xTsOrig <- xTs
+  tryXtsSuccess <- FALSE
+  tryXts <- try(try.xts(xTsOrig), silent = T)
+  if(any(class(xTs) %in% "try-error")) {
+    stop("rollApply can not make an xts object")
+  } else {
+    tryXtsSuccess <- TRUE;
+    xTs <- tryXts
+  }
+
+  if(mode(Fun) == "function") {
+    Fun = match.fun(Fun)
+    isCharFun <- FALSE
+  } else {
+    isCharFun <- TRUE
+  }
+
+  if(is.null(width))   { width <- 2 }
+  if(is.null(partial)) { partial <- TRUE }
+  if(is.null(align))   { align <- "right" }
+  if(is.null(Fun))     { Fun   <- trueSortinoRatio }
+
+  if(is.null(by))        { by <- 1 }
+  if(is.null(by.column)) { by.column <- TRUE }
+  if(is.null(fill))      { fill <- NA }
+  if(is.null(coredata))  { coredata <- TRUE }
+
+  # I must be explicit (I do not want to use xts:::rollapply.xts)
+  zoo::rollapply(as.zoo(xTs)
+      , width = width
+      , partial = partial
+      , align = align
+      , FUN = Fun
+      , by = by
+      , by.column = by.column
+      , fill = fill
+      , coredata = coredata
+      , ...) -> xTsResult
+
+  # would/should always be/been true else I may/have/never ever made it his far
+  if(tryXtsSuccess) {
+    reclass(xTsResult, xTsOrig)
+  } -> xTsResult
+
+  NewName <- "rollApply"
+  if(!is.null(AltName)) NewName <- AltName
+  if(is.null(FixedSep)) FixedSep <- "."
+
+  colnames(xTsResult) <-  str_c( colnames(xTsResult), str_c(c(NewName, width), collapse = FixedSep), collapse = FixedSep)
+
+  return(xTsResult)
+
+})}
+
+
+
 
 
 #' expland out xts
@@ -693,9 +886,9 @@ liquifyDF <- function(x, ConstColsRegex = "^dateindex", FactorColsRegex = "Fact$
 #' # explodeXts(ibm[,c("IBM.Open","IBM.Close")], Fun = "TTR::SMA", Whiches = list(n = 2:3))
 #' }
 #' @export
-explodeXts <- function(  xTs1 = NULL, xTs2 = NULL, Fun = function(x) { x }
+explodeXts <- function(  xTs1 = NULL, xTs2 = NULL, Fun = NULL
                        , Whiches   = NULL
-                       , AltName   = NULL, Prefix = NULL , FixedSep  = NULL
+                       , AltName   = NULL, Prefix = NULL, FixedSep  = NULL
                        , quote     = FALSE, envir = parent.frame(2)
                        , ...){
   tryCatchLog::tryCatchLog({

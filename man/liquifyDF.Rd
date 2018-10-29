@@ -4,39 +4,46 @@
 \alias{liquifyDF}
 \title{flatten a data.frame to (hopfully) ONE row}
 \usage{
-liquifyDF(x, ConstColsRegex = "^id", FactorColsRegex = "(fct|Fact)$",
+liquifyDF(x, ConstColsRegex = "^dateindex", FactorColsRegex = "Fact$",
   FactorColsNAReplace = NULL, FactorColsFixedSep = ".",
   DetailColsFixedSep = ".", SpaceFixedSep = ".",
   AmperstandFixedSep = "And")
 }
 \description{
-flatten a data.frame to (hopfully) ONE row
+NOTE: only WORKS with ONE unique primary key value
+If I want to work with many primary key valuess,
+then one would need to split the data upon those values
+then next apply this function individually to each chunk
+Last, 'smart' merge all of the data.frames together (while
+adding new columns contributed by each data.frame).
 }
 \examples{
 \dontrun{
-
+#
 # data.frame(
-#   id = c(1, 1, 1, 1),
-#   id_fct = c("1", "1", "1", "1"),
-#   col1_fct = c('A1', 'A1', 'A2', 'A2'),
-#   col2_fct = c('B1', 'B2', 'B1', 'B2'),
-#   aggr1 = c(8, 16, 32, 64),
-#   aggr2 = c(10008, 10016, 10032, 10064)
+#   dateindexid = c(17000, 17000, 17000, 17000),
+#   dateindexFact = c("2016-07-18", "2016-07-18", "2016-07-18", "2016-07-18"),
+#   ActionFact = c("Morn", "Morn", "Night", "Night"),
+#   ActionAtFact = c("Sell", "Buy", "Sell", "Buy"),
+#   INSTR1 = c(8, 16, 32, 64),
+#   INSTR2 = c(10008, 10016, 10032, 10064)
 # , stringsAsFactors = FALSE
 # )  -> DFS
 #
 # > DFS
-#   id id_fct col1_fct col2_fct aggr1 aggr2
-# 1  1      1       A1       B1     8 10008
-# 2  1      1       A1       B2    16 10016
-# 3  1      1       A2       B1    32 10032
-# 4  1      1       A2       B2    64 10064
+#   dateindexid dateindexFact ActionFact ActionAtFact INSTR1 INSTR2
+# 1       17000    2016-07-18       Morn         Sell      8  10008
+# 2       17000    2016-07-18       Morn          Buy     16  10016
+# 3       17000    2016-07-18      Night         Sell     32  10032
+# 4       17000    2016-07-18      Night          Buy     64  10064
+#
 #
 # > liquifyDF(DFS)
-#   id id_fct a1__b1____aggr1 a1__b2____aggr1 a2__b1____aggr1 a2__b2____aggr1 a1__b1____aggr2 a1__b2____aggr2 a2__b1____aggr2
-# 1  1      1               8              16              32              64           10008           10016           10032
-#   a2__b2____aggr2
-# 1           10064
+#   dateindexid dateindexFact Morn.Sell.INSTR1 Morn.Buy.INSTR1 Night.Sell.INSTR1 Night.Buy.INSTR1
+# 1       17000    2016-07-18                8              16                32               64
+#   Morn.Sell.INSTR2 Morn.Buy.INSTR2 Night.Sell.INSTR2 Night.Buy.INSTR2
+# 1            10008           10016             10032            10064
+#
 #
 }
 }

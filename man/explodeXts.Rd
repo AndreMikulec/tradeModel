@@ -4,9 +4,9 @@
 \alias{explodeXts}
 \title{expland out xts}
 \usage{
-explodeXts(xTs1 = NULL, xTs2 = NULL, Fun = function(x) {     x },
-  Whiches = NULL, AltName = NULL, Prefix = NULL, FixedSep = NULL,
-  quote = FALSE, envir = parent.frame(2), ...)
+explodeXts(xTs1 = NULL, xTs2 = NULL, Fun = NULL, Whiches = NULL,
+  AltName = NULL, Prefix = NULL, FixedSep = NULL, quote = FALSE,
+  envir = parent.frame(2), ...)
 }
 \arguments{
 \item{xTs1}{xts object}
