@@ -194,6 +194,8 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   assign("eval_bare",  rlang::eval_bare,  envir = environment())
   assign("caller_env", rlang::caller_env, envir = environment())
 
+  assign("as.Date", zoo::as.Date, envir = envir)
+
   assign("%>%",  magrittr::`%>%` , envir = envir)
   assign("%m+%", lubridate::`%m+%`, envir = envir)
   assign("str_detect", stringr::str_detect, envir = envir)
@@ -221,6 +223,8 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   assign("wrap", R.utils::wrap, envir = envir)
 
   assign("unite", tidyr::unite, envir = envir)
+
+  assign("nberDates", tis::nberDates, envir = envir)
 
   action <- parse_expr("assign(\"env\", environment())")
   eval_bare(action, caller_env())
@@ -675,7 +679,7 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
                                             # any NA, then entire thing returns NA
   # if not too short
   if(MinRows <=  NROW(x)) {
-    (mean(x, na.rm = na.rm) - rf )/sd( local({x[x > 0] <- 0; x } ), na.rm = na.rm)
+    (mean(x, na.rm = na.rm) - rf )/sd( local({x[x > rf] <- 0; x } ), na.rm = na.rm)
   } else { # too short
     NA_real_
   }
@@ -965,6 +969,77 @@ Leading <- function(xTs = NULL, Shift = NULL) {
 })}
 
 
+#' NBER timeslices
+#'
+#'@param allSlicesStart NULL(default), Date of the earlies possbile date.
+#'This Date is the first day(1st) of a month. Note: this filter is applied late.
+#'@param allSlicesEnd NULL(default), Date of the latest possbile date.
+#'This Date is the last day(last) of a month. Note: this filter is applied late.
+#'@param LongTimeSlices FALSE(default), if TRUE, include non-recession range that
+#'is before this recession range.
+#'@param LongestTimeSlice FALSE(default), if TRUE then the start value is the
+#'beginning of "NBER dates" (and limited by allSlicesStart)
+#'LongestTimeSlice = TRUE and LongTimeSlices = TRUE ARE mutually exclusive choices
+#'of each other
+#' @return a list of vectors of Dates of recession Ranges
+#' @examples
+#' \dontrun{
+#' # str(timeSliceNBER())
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")))
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE))
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE))
+#' }
+#' @export
+timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  if(!length(LongTimeSlices))   LongTimeSlices <- FALSE
+  if(!length(LongestTimeSlice)) LongestTimeSlice <- FALSE
+
+  NBERTISMatrix <-  tis::nberDates()
+  datesFromTIS <-  function(x) as.Date(as.character(x), format = "%Y%m%d")
+  beginNBERDates <- datesFromTIS(NBERTISMatrix[, "Start"])
+    endNBERDates <- datesFromTIS(NBERTISMatrix[, "End"  ])
+  xts(
+      matrix(c(
+          as.numeric(beginNBERDates)
+        , as.numeric(endNBERDates)
+        )
+        , ncol = 2, dimnames = list(NULL, c("Start","End"))
+      )
+    , beginNBERDates
+  ) -> NBERDates
+  # prevous recession's end
+  LongStart <- lag(NBERDates[,"End"]) + 1; colnames(LongStart)[1] <- "LongStart"
+  NBERDates <- merge(LongStart, NBERDates)
+
+  # filter out
+  if(length(allSlicesStart)) NBERDates <- NBERDates[allSlicesStart <= index(NBERDates)]
+    if(!NROW(NBERDates)) stop("timeSliceNBER allSlicesStart removed all data")
+  if(length(allSlicesEnd))   NBERDates <- NBERDates[index()        <= allSlicesEnd]
+    if(!NROW(NBERDates)) stop("timeSliceNBER allSlicesEnd removed all data")
+
+  # determine
+  split(as.data.frame(NBERDates), seq_len(NROW(NBERDates))) %>%
+     lapply(function(x) {
+
+       if(LongestTimeSlice) {
+         ActualStart <- index(NBERDates[1,"Start"])
+       } else if(LongTimeSlices) {
+         ActualStart <- as.Date(x[["LongStart"]])[allSlicesStart <= as.Date(x[["LongStart"]])]
+       } else {
+         ActualStart <- as.Date(x[["Start"]])
+       }
+       # single case (earliest record)
+       if(!length(ActualStart)) ActualStart <- as.Date(x[["Start"]])
+       DateSeq <- seq(from = ActualStart, to = zoo::as.Date(x[["End"]]) + 1, by = "month") - 1
+
+     }) -> ListOfNBERDateRanges
+
+     ListOfNBERDateRanges
+
+})}
 
 
 
