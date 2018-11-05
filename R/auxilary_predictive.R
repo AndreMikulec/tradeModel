@@ -464,6 +464,7 @@ as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { U
 #' @export
 as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...) {
 
+  # TODO[] # instead of passing outcomename, pass instead, a formula
   x <- DataCombine::MoveFront(x, outcomename )
 
   # place single column where specifyModel ( getModelData ( exists ) ) can find
@@ -530,7 +531,7 @@ as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...)
 #'
 #' TODO [ ] : fully WORKED EXAMPLE: combine WITH below
 #' builtModel <- buildModel(specmodel, method="train", training.per=c("1970-12-31","2006-12-31")
-#'   , method_train = 'xgbTree', tuneGrid = tg, trControl = tc)
+#'   , method_train = "xgbTree", tuneGrid = tg, trControl = tc)
 #'
 #' @export
 buildModel.train <- function(quantmod,training.data,...) {
@@ -566,9 +567,15 @@ buildModel.train <- function(quantmod,training.data,...) {
       Dots[["trControl"]] <- trControl
     }
 
-    # TODO [ ] INVESTIGATE (MOST likely? I need MORE trees!)
+    # suppressWarnings
     # Error in nominalTrainWorkflow(x = x, y = y, wts = weights, info = trainInfo,  :
     # (converted from warning) There were missing values in resampled performance measures.
+    # SOLVED:
+    #   caret postResample.R#132
+    #   if(length(unique(pred)) < 2 || length(unique(obs)) < 2)
+    # for a sample (size 86) # xgboost ONLY made one(1) distinct numeric prediction
+    # therefore, Rsquared could not be calculated therefore it is set to NA
+    # This happens in ~ 30% of all samples sent
     if(!all(complete.cases(training.data))) print("NOTE: in buildModel.train, training.data is missing some data.")
     rp <- suppressWarnings( do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots) ) )
     return(list("fitted"=rp, "inputs"=attr(terms(rp),"term.labels")))

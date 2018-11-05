@@ -9,10 +9,10 @@ timeSliceNBER(allSlicesStart = NULL, allSlicesEnd = NULL,
 }
 \arguments{
 \item{allSlicesStart}{NULL(default), Date of the earlies possbile date.
-This Date is the first day(1st) of a month.}
+This Date is the first day(1st) of a month. Note: this filter is applied late.}
 
 \item{allSlicesEnd}{NULL(default), Date of the latest possbile date.
-This Date is the last day(last) of a month.}
+This Date is the last day(last) of a month. Note: this filter is applied late.}
 
 \item{LongTimeSlices}{FALSE(default), if TRUE, include non-recession range that
 is before this recession range.}
@@ -32,5 +32,7 @@ NBER timeslices
 \dontrun{
 # str(timeSliceNBER())
 # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")))
+# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE))
+# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE))
 }
 }

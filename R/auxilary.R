@@ -972,7 +972,7 @@ Leading <- function(xTs = NULL, Shift = NULL) {
 #' NBER timeslices
 #'
 #'@param allSlicesStart NULL(default), Date of the earlies possbile date.
-#'This Date is the first day(1st) of a month. Note: this filter is applied late.
+#'This Date is the first day(1st) of a month. Note: this filter is applied LAST.
 #'@param allSlicesEnd NULL(default), Date of the latest possbile date.
 #'This Date is the last day(last) of a month. Note: this filter is applied late.
 #'@param LongTimeSlices FALSE(default), if TRUE, include non-recession range that
@@ -988,6 +988,8 @@ Leading <- function(xTs = NULL, Shift = NULL) {
 #' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")))
 #' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE))
 #' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE))
+#' # # now after seeing all of the date, THEN, choose the filter
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?))
 #' }
 #' @export
 timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL) {
@@ -1015,11 +1017,12 @@ timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSl
   NBERDates <- merge(LongStart, NBERDates)
 
   # filter out
-  if(length(allSlicesStart)) NBERDates <- NBERDates[allSlicesStart <= index(NBERDates)]
+  if(length(allSlicesStart)) NBERDates <- NBERDates[allSlicesStart   <= index(NBERDates)]
     if(!NROW(NBERDates)) stop("timeSliceNBER allSlicesStart removed all data")
-  if(length(allSlicesEnd))   NBERDates <- NBERDates[index()        <= allSlicesEnd]
+  if(length(allSlicesEnd))   NBERDates <- NBERDates[index(NBERDates) <= allSlicesEnd]
     if(!NROW(NBERDates)) stop("timeSliceNBER allSlicesEnd removed all data")
 
+  # FUTURE: instead, could have detecteed periodicity and used split.xts
   # determine
   split(as.data.frame(NBERDates), seq_len(NROW(NBERDates))) %>%
      lapply(function(x) {
@@ -1511,7 +1514,9 @@ willShire5000MachineWts <- function(xTs = NULL) {
               # remove the last record(NO)
   specifiedUnrateModel
 
+  message("Begin buildModel")                                          # first date that the "predictee" is available
   builtUnrateModel <- buildModel(specifiedUnrateModel, method="train", training.per=c("1970-12-31","2006-12-31"))
+  message("end buildModel")
 
   # Update currently specified or built model with most recent data
   UpdatedModelData <- getModelData(builtUnrateModel, na.rm = FALSE, source.envir = Symbols)
@@ -1644,23 +1649,6 @@ initPorfVal <- function(initVal = NULL) {
 })}
 
 
-#' sort
-#'
-#' @export
-Sort <- function(x) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
-
-  vars <- syms("value")
-  as_tibble(x) %>%
-    arrange(!!!vars)  %>%
-      list %>%
-        { DoCall(c, .) } -> ret
-
-   ret
-
-})}
-
 
 #' get the column names
 #'
@@ -1733,7 +1721,7 @@ valueClms <- function(xTs = NULL) {
   xTs  <- initXts(xTs)
 
   clms <- safeClms(xTs)
-  clms <- Sort(clms)
+  clms <- sort(clms)
 
   str_replace(clms, "_wts$", "")[str_detect(clms, "_wts$")]
 
@@ -1761,7 +1749,7 @@ wtsClms  <- function(xTs = NULL) {
   xTs  <- initXts(xTs)
 
   clms <- safeClms(xTs)
-  clms <- Sort(clms)
+  clms <- sort(clms)
 
   clms[str_detect(clms, "_wts$")]
 

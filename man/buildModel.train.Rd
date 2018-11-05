@@ -33,5 +33,5 @@ tc <- caret::trainControl(method = "cv", number = 5)
 
 TODO [ ] : fully WORKED EXAMPLE: combine WITH below
 builtModel <- buildModel(specmodel, method="train", training.per=c("1970-12-31","2006-12-31")
-  , method_train = 'xgbTree', tuneGrid = tg, trControl = tc)
+  , method_train = "xgbTree", tuneGrid = tg, trControl = tc)
 }
