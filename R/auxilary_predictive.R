@@ -587,7 +587,7 @@ buildModel.train <- function(quantmod,training.data,...) {
     Dots[["stage"]] <- NULL
 
     if(!"trControl" %in% DotsOrigNames) {
-      trControl <- caret::trainControl(method = "cv", number = 5)
+      trControl <- trainControl(method = "cv", number = 5)
       Dots[["trControl"]] <- trControl
     }
 

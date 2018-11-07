@@ -228,6 +228,8 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
 
   assign("nberDates", tis::nberDates, envir = envir)
 
+  assign("trainControl", caret::trainControl, envir = envir)
+
   action <- parse_expr("assign(\"env\", environment())")
   eval_bare(action, caller_env())
 
@@ -1529,7 +1531,7 @@ willShire5000MachineWts <- function(xTs = NULL) {
   specifiedUnrateModel
 
   # I can only train, test, validate where I have 'model target' predictee values
-  ModelTarget          <- as.character(as.list(formula(specifiedUnrateModel))[[2]])
+  ModelTarget          <- lhs.vars((formula(specifiedUnrateModel)))
   ModelTargetFirstDate <- head(index(na.trim(xTs[,ModelTarget])),1)
   ModelTargetTrainTestFirstDate <- ModelTargetFirstDate
 
@@ -1547,16 +1549,24 @@ willShire5000MachineWts <- function(xTs = NULL) {
   TrainingBegin <- min(head(AllData[[1]],1), head(AllData[[1]],1))
   TrainingEnd   <- max(tail(AllData[[length(AllData)]],1), tail(AllData[[length(FocusedData)]],1))
 
+  trControl <- NULL
+  # prepare for caret timeslices index and indexOut
+  if(length(AllData) == length(FocusedData)) {
+    NumbSlices <- length(FocusedData)
+    trControl  <- trainControl(method = "cv", number = NumbSlices)
+  } else {
+    stop("\"length(AllData) == length(FocusedData)\" is not TRUE")
+  }
                                                                        # first/last dates that the "predictee" dates are available
                                                                        # "1970-12-31","2006-12-31"(actual "2001-11-30")
   message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))))
-  builtUnrateModel <- buildModel(specifiedUnrateModel, method="train", training.per=c(TrainingBegin, TrainingEnd), stage = "Test")
+  builtUnrateModel <- buildModel(specifiedUnrateModel, method="train", training.per=c(TrainingBegin, TrainingEnd), trControl = trControl, stage = "Test")
   message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))
 
   # Update currently specified or built model with most recent data
   UpdatedModelData <- getModelData(builtUnrateModel, na.rm = FALSE, source.envir = Symbols)
                                                      # remove the last record(NO)
-                                                         # "2007-01-31" (actual "2001-12-31")
+                                                     # "2007-01-31" (actual "2001-12-31")
 
   # just after TrainTest
   ValidationPredictionBegin <- as.character(head(index(xTs[TrainingEnd < index(xTs)]),1))
@@ -1570,8 +1580,7 @@ willShire5000MachineWts <- function(xTs = NULL) {
   # uses S3 ifelse.xts
   # strategy/rule weights
   FittedSignal <- ifelse(Fitted > 0, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
-
-  colnames(FittedSignal)[1] <- str_c(colnames(xTs)[str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
+  colnames(FittedSignal)[1] <- str_c(ModelTarget, "_wts")
 
   FittedSignal
 
