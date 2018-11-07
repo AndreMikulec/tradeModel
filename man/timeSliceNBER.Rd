@@ -5,11 +5,12 @@
 \title{NBER timeslices}
 \usage{
 timeSliceNBER(allSlicesStart = NULL, allSlicesEnd = NULL,
-  LongTimeSlices = NULL, LongestTimeSlice = NULL)
+  LongTimeSlices = NULL, LongestTimeSlice = NULL,
+  OmitSliceFirstDate = NULL)
 }
 \arguments{
 \item{allSlicesStart}{NULL(default), Date of the earlies possbile date.
-This Date is the first day(1st) of a month. Note: this filter is applied late.}
+This Date is the first day(1st) of a month. Note: this filter is applied LAST.}
 
 \item{allSlicesEnd}{NULL(default), Date of the latest possbile date.
 This Date is the last day(last) of a month. Note: this filter is applied late.}
@@ -21,6 +22,11 @@ is before this recession range.}
 beginning of "NBER dates" (and limited by allSlicesStart)
 LongestTimeSlice = TRUE and LongTimeSlices = TRUE ARE mutually exclusive choices
 of each other}
+
+\item{OmitSliceFirstDate}{FALSE(default), All dates are end of month dates.
+A previous timeslice tailing date is the the same date as the next timeslice heading date.
+TRUE omits the heading date from each time slice.  This may be necessary to prevent
+repetition of data, for example in sending timeslices to machine learning models.}
 }
 \value{
 a list of vectors of Dates of recession Ranges
@@ -33,6 +39,9 @@ NBER timeslices
 # str(timeSliceNBER())
 # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")))
 # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE))
+# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE))
 # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE))
+# # now after seeing all of the date, THEN, choose the filter
+# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?))
 }
 }

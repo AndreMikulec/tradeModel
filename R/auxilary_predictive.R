@@ -549,18 +549,42 @@ buildModel.train <- function(quantmod,training.data,...) {
       Dots[["method"]] <- list(...)[["method_train"]]
     }
 
+    # https://xgboost.readthedocs.io/en/latest/parameter.html
     if((Dots[["method"]] == "xgbTree") & (!"tuneGrid" %in% DotsOrigNames)) {
-      tuneGrid <- expand.grid(
-        nrounds   =  100,
-        eta       =  c(0.1,0.01),
-        max_depth =  c(4,6,8,10),
-        gamma     =  0,
-        colsample_bytree = c(1,0.5),
-        min_child_weight = 1,
-        subsample        = c(1,0.5)
-      )
+      if(Dots[["stage"]] == "Production") {
+        tuneGrid <- expand.grid(
+          nrounds   =  c(500,200,100),
+          eta       =  c(0.3,0.1,0.01,0.001), # default 0.3
+          max_depth =  c(4,6,8,10),           # default 6
+          gamma     =  0,                     # default 0
+          colsample_bytree = c(1,0.5),        # default 1
+          min_child_weight = 1,               # default 1
+          subsample        = c(1,0.5)         # default 1
+        )
+      } else if(Dots[["stage"]] == "Test") {
+        tuneGrid <- expand.grid(
+          nrounds   =  c(100),
+          eta       =  c(0.3, 0.1),
+          max_depth =  c(4,8),
+          gamma     =  0,
+          colsample_bytree = c(1),
+          min_child_weight = 1,
+          subsample        = c(1)
+        )
+      } else {
+        tuneGrid <- expand.grid(
+          nrounds   =  100,
+          eta       =  c(0.1,0.01),
+          max_depth =  c(4,6,8,10),
+          gamma     =  0,
+          colsample_bytree = c(1,0.5),
+          min_child_weight = 1,
+          subsample        = c(1,0.5)
+        )
+      }
       Dots[["tuneGrid"]] <- tuneGrid
     }
+    Dots[["stage"]] <- NULL
 
     if(!"trControl" %in% DotsOrigNames) {
       trControl <- caret::trainControl(method = "cv", number = 5)

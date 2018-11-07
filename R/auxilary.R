@@ -176,6 +176,7 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   # require(PerformanceAnalytics)
   # so, I can use rstudio projects of packages
   if(!"quantmod" %in% search())             require(quantmod)
+  if(!"formula.tools" %in% search())        require(formula.tools)
   if(!"PerformanceAnalytics" %in% search()) require(PerformanceAnalytics)
 
   # debugging
@@ -195,6 +196,7 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   assign("caller_env", rlang::caller_env, envir = environment())
 
   assign("as.Date", zoo::as.Date, envir = envir)
+  assign("na.trim", zoo::na.trim, envir = envir)
 
   assign("%>%",  magrittr::`%>%` , envir = envir)
   assign("%m+%", lubridate::`%m+%`, envir = envir)
@@ -352,7 +354,10 @@ fredData <- function(Symbol = NULL) {
   initEnv();on.exit({uninitEnv()})
   if(is.null(Symbol)) stop("No fredData was requested")
 
+  message(str_c("Begin fredData - "), Symbol)
   xTs <- getSymbols(Symbol, src = "FRED", from = "1950-01-01", auto.assign = FALSE) # SINCE DEC 1970
+  message(str_c("End   fredData - "), Symbol)
+
   colnames(xTs)[1] <- tolower(colnames(xTs))
 
   xTs
@@ -981,18 +986,23 @@ Leading <- function(xTs = NULL, Shift = NULL) {
 #'beginning of "NBER dates" (and limited by allSlicesStart)
 #'LongestTimeSlice = TRUE and LongTimeSlices = TRUE ARE mutually exclusive choices
 #'of each other
+#'@param OmitSliceFirstDate FALSE(default), All dates are end of month dates.
+#'A previous timeslice tailing date is the the same date as the next timeslice heading date.
+#'TRUE omits the heading date from each time slice.  This may be necessary to prevent
+#'repetition of data, for example in sending timeslices to machine learning models.
 #' @return a list of vectors of Dates of recession Ranges
 #' @examples
 #' \dontrun{
 #' # str(timeSliceNBER())
 #' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")))
 #' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE))
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE))
 #' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE))
 #' # # now after seeing all of the date, THEN, choose the filter
 #' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?))
 #' }
 #' @export
-timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL) {
+timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL, OmitSliceFirstDate = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -1012,7 +1022,7 @@ timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSl
       )
     , beginNBERDates
   ) -> NBERDates
-  # prevous recession's end
+  # previous recession's end
   LongStart <- lag(NBERDates[,"End"]) + 1; colnames(LongStart)[1] <- "LongStart"
   NBERDates <- merge(LongStart, NBERDates)
 
@@ -1022,7 +1032,7 @@ timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSl
   if(length(allSlicesEnd))   NBERDates <- NBERDates[index(NBERDates) <= allSlicesEnd]
     if(!NROW(NBERDates)) stop("timeSliceNBER allSlicesEnd removed all data")
 
-  # FUTURE: instead, could have detecteed periodicity and used split.xts
+  # FUTURE: instead, could have detected periodicity and used split.xts
   # determine
   split(as.data.frame(NBERDates), seq_len(NROW(NBERDates))) %>%
      lapply(function(x) {
@@ -1037,6 +1047,9 @@ timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSl
        # single case (earliest record)
        if(!length(ActualStart)) ActualStart <- as.Date(x[["Start"]])
        DateSeq <- seq(from = ActualStart, to = zoo::as.Date(x[["End"]]) + 1, by = "month") - 1
+       # choose to omit the first observation
+       if(!is.null(OmitSliceFirstDate) && OmitSliceFirstDate && length(DateSeq)) DateSeq <- DateSeq[-1]
+       return(DateSeq)
 
      }) -> ListOfNBERDateRanges
 
@@ -1467,6 +1480,7 @@ unrateEyeballIndicators <- function(unrate = NULL) {
 })}
 
 
+
 #' add Willshire 5000 Index weights using Machine learning
 #'
 #' This is the workhorse function. This is where the magic/logic happens.
@@ -1514,26 +1528,52 @@ willShire5000MachineWts <- function(xTs = NULL) {
               # remove the last record(NO)
   specifiedUnrateModel
 
-  message("Begin buildModel")                                          # first date that the "predictee" is available
-  builtUnrateModel <- buildModel(specifiedUnrateModel, method="train", training.per=c("1970-12-31","2006-12-31"))
-  message("end buildModel")
+  # I can only train, test, validate where I have 'model target' predictee values
+  ModelTarget          <- as.character(as.list(formula(specifiedUnrateModel))[[2]])
+  ModelTargetFirstDate <- head(index(na.trim(xTs[,ModelTarget])),1)
+  ModelTargetTrainTestFirstDate <- ModelTargetFirstDate
+
+  ModelTargetLastDate <- tail(index(na.trim(xTs[,ModelTarget])),1)
+  # Later, I want to validate, so I save researve some dates(2007+)
+  ModelTargetTrainTestLastDate <- min(as.Date("2006-12-31"), ModelTargetLastDate)
+
+  #                                             I do not have any Predictee information earlier than this
+  #                                             HARD-CODED(I just know this)        Desired end "2006-12-31", but actual end is "2001-11-30"
+  #                                             as.Date("1970-12-31")
+  AllData     <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
+  FocusedData <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
+
+  # should be min(earliest),max(latest) Date of (AllData,FocusedData)
+  TrainingBegin <- min(head(AllData[[1]],1), head(AllData[[1]],1))
+  TrainingEnd   <- max(tail(AllData[[length(AllData)]],1), tail(AllData[[length(FocusedData)]],1))
+
+                                                                       # first/last dates that the "predictee" dates are available
+                                                                       # "1970-12-31","2006-12-31"(actual "2001-11-30")
+  message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))))
+  builtUnrateModel <- buildModel(specifiedUnrateModel, method="train", training.per=c(TrainingBegin, TrainingEnd), stage = "Test")
+  message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))
 
   # Update currently specified or built model with most recent data
   UpdatedModelData <- getModelData(builtUnrateModel, na.rm = FALSE, source.envir = Symbols)
                                                      # remove the last record(NO)
+                                                         # "2007-01-31" (actual "2001-12-31")
 
-  modelData <- modelData(UpdatedModelData, data.window = c("2007-01-31", as.character(tail(index(xTs),1))), exclude.training = TRUE)
+  # just after TrainTest
+  ValidationPredictionBegin <- as.character(head(index(xTs[TrainingEnd < index(xTs)]),1))
+  # lastest data, ModelTarget data can ( and in very  last data will ) be NA
+  ValidationPredictionEnd   <- as.character(tail(index(xTs),1))
+  modelData <- modelData(UpdatedModelData, data.window = c(ValidationPredictionBegin, ValidationPredictionEnd), exclude.training = TRUE)
 
   Fitted  <- predictModel(UpdatedModelData@fitted.model, modelData)
   Fitted  <- as.xts(Fitted, index(modelData))
 
   # uses S3 ifelse.xts
   # strategy/rule weights
-  Fitted <- ifelse(Fitted > 0, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
+  FittedSignal <- ifelse(Fitted > 0, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
 
-  colnames(Fitted)[1] <- str_c(colnames(xTs)[str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
+  colnames(FittedSignal)[1] <- str_c(colnames(xTs)[str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
 
-  Fitted
+  FittedSignal
 
 })}
 
