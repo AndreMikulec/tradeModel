@@ -206,7 +206,8 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   assign("str_c", stringr::str_c, envir = envir)
   assign("as_tibble", tibble::as_tibble,  envir = envir)
   assign("arrange", dplyr::arrange, envir = envir)
-  assign("map", purrr::map, envir = envir)
+  # assign("map", purrr::map, envir = envir)
+  assign("llply", plyr::llply, envir = envir)
   assign("transpose", purrr::transpose, envir = envir)
   # assign("invoke_map", purrr::invoke_map, envir = envir)
   assign("Day", DescTools::Day, envir = envir)
@@ -924,9 +925,9 @@ explodeXts <- function(  xTs1 = NULL, xTs2 = NULL, Fun = NULL
   xTs <- initXts()
   FunctionEnv <- environment()
 
-  lapply(WhichesCombinations, function(WhichCombo) {
+  llply(WhichesCombinations, function(WhichCombo) {
 
-    lapply(pairWise(xTs1, xTs2), function(xTsColumnSet) {
+    llply(pairWise(xTs1, xTs2), function(xTsColumnSet) {
       xTs1 <- xTsColumnSet[[1]]; xTs2 <- xTsColumnSet[[2]]
 
       if(NVAR(xTs2)) { xTs2List <- list(xTs2) } else { xTs2List <- NULL }
@@ -1037,7 +1038,7 @@ timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSl
   # FUTURE: instead, could have detected periodicity and used split.xts
   # determine
   split(as.data.frame(NBERDates), seq_len(NROW(NBERDates))) %>%
-     lapply(function(x) {
+     llply(function(x) {
 
        if(LongestTimeSlice) {
          ActualStart <- index(NBERDates[1,"Start"])
@@ -1515,10 +1516,10 @@ willShire5000MachineWts <- function(xTs = NULL) {
   # cashlogrets             obvious [future] return is not useful
 
   # create an environment of xts objects
-  map(as.data.frame(xTs),
-    ~ (function(x) {
-        as.xts(x, order.by = index(xTs))
-      })(x = .x)
+  llply(as.data.frame(xTs),
+    .fun =  function(x) {
+      as.xts(x, order.by = index(xTs))
+    }
   ) -> Symbols
 
   # reorders in alphabetical order
@@ -1549,10 +1550,25 @@ willShire5000MachineWts <- function(xTs = NULL) {
   TrainingBegin <- min(head(AllData[[1]],1), head(AllData[[1]],1))
   TrainingEnd   <- max(tail(AllData[[length(AllData)]],1), tail(AllData[[length(FocusedData)]],1))
 
-  trControl <- NULL
+
   # prepare for caret timeslices index and indexOut
+  trControl <- NULL
   if(length(AllData) == length(FocusedData)) {
     NumbSlices <- length(FocusedData)
+
+    # determine the Focused timeslices to OverRegress
+    Data <- modelData(specifiedUnrateModel)
+    for(slice in seq_len(NumbSlices)) {
+      # triple it:(bind a 2nd,3rd,4th copy)
+      # torgo new 2018, 2017,2018 slides
+      CopyNum <- 3
+      for(copy in seq_len(CopyNum)) {
+      Data <- rbind(Data, Data[FocusedData[[slice]]])
+      }
+    # LEFT_OFF: UBL Smote; or 'create new observations' or OverRegress
+    # LEFT_OFF: send index(AllData:this recession) and indexOut(AllData:next recession) to caret
+    }
+
     trControl  <- trainControl(method = "cv", number = NumbSlices)
   } else {
     stop("\"length(AllData) == length(FocusedData)\" is not TRUE")
@@ -1659,15 +1675,17 @@ addCashWts  <- function(xTs = NULL) {
 #'
 #' @param xTs xts object
 #' @param title heading
+#' @param n number of rows to print
 #' @return invisible xts object
 #' @export
-printTail <- function(xTs = NULL, title = NULL) {
+printTail <- function(xTs = NULL, title = NULL, n = NULL) {
   tryCatchLog::tryCatchLog({
   initPrintEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
   message(paste0("tail of ", title))
-  print(tail(xTs))
+  if(is.null(n)) n = 6
+  print(tail(xTs, n = n))
 
   invisible(xTs)
 

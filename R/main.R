@@ -63,8 +63,8 @@ UnRateMachinetradeModel <- function() {
   addUnRateEomData %>%                 # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addWillShire5000MachineWts  %>%      #
-  addCashWts                  %>%      # (excess)
+  addWillShire5000MachineWts %>%       #
+  addCashWts                 %>%       # (excess)
   # ret
 
   printTail("Exact Schedule of Leading of UnRateMachine returns and decisions") %>%

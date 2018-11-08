@@ -370,6 +370,30 @@ getModelData <- function (x, na.rm = TRUE, source.envir = NULL, ...) {
 }
 
 
+#' Create one data object from multiple sources, applying transformations via standard R formula mechanism.
+#'
+#' UNUSED
+#' see quantmod buildData
+#' and this function can also acquire symbols that are stored in an environment
+#'
+#'@param formula as quantmod buildData
+#'@param na.rm as quantmod buildData
+#'@parm return.class  as quantmod buildData
+#'@param source.envir find xts Symbols in this environment
+#'@return "return.class" as quantmod buildData
+#'@export
+buildData <- function(formula, na.rm = TRUE, return.class = "zoo", source.envir = NULL, ...) {
+
+    if (is.quantmod(formula)) {
+        fr <- modelData(formula)
+    }
+    else {
+        fr <- modelData(specifyModel(formula, na.rm = na.rm, source.envir = NULL, ...))
+    }
+    fr <- convert.time.series(fr = fr, return.class = return.class)
+}
+
+
 
 #' quantmod specifyModel with parameter source.envir
 #'

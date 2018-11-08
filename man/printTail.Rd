@@ -4,12 +4,14 @@
 \alias{printTail}
 \title{show the last six(6) records}
 \usage{
-printTail(xTs = NULL, title = NULL)
+printTail(xTs = NULL, title = NULL, n = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
 
 \item{title}{heading}
+
+\item{n}{number of rows to print}
 }
 \value{
 invisible xts object
