@@ -1598,6 +1598,8 @@ willShire5000MachineWts <- function(xTs = NULL) {
       UBLDataFormula <- as.formula(str_c(as.character(formula(specifiedUnrateModel)), " + index"))
       UBLResults     <- ImpSampRegress(UBLDataFormula, UBLDataCompleteCases, rel = Relevance, thr.rel = 0.5,  C.perc = list(1.0, 2.5))
       # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
+      # NOTE: no NEW index Values are created.
+      # I CAN NOT garnantee that all UBL functons do NOT do that
       UBLResultsIndex <- UBLResults[["index"]]
       UBLResults     <- UBLResults[, !colnames(UBLResults) %in% "index" , drop = FALSE]
 
@@ -1630,10 +1632,33 @@ willShire5000MachineWts <- function(xTs = NULL) {
                                                             # remove the last record(NO)
                                                             # "2007-01-31" (actual "2001-12-31")
 
+  # [ ] LEFT_OFF: ALMOST THERE index, indexOut
+  # AllModelSlices <- llply( AllData,function(x) window(specifiedUnrateModel@model.data, start = head(x,1), end = tail(x,1)) )
+  # indexSlices <- lapply(AllModelSlices, function(x) { match(index(x), index(specifiedUnrateModel), nomatch = 0) } )
+  # AllModelSlicesLastIndex <- length(AllModelSlices)
+  # for(i in seq_along(AllModelSlices)) {
+  #   if(i != AllModelSlicesLastIndex) {
+  #     indexOutSlices[i] <- AllSlices[i+1]
+  #     match
+  #   } else {
+  #     indexOutSlices[i] <- AllSlices[i-1]
+  #   }
+  # }
+  #
+  # [ ] LEFT_OFF Weights ALSMOST THERE
+  # specifiedUnrateModelTarget <- modelData(specifiedUnrateModel)[,ModelTarget]
+  # Weights <- ifelse(   specifiedUnrateModelTarget > 0
+  #              , 100 * specifiedUnrateModelTarget
+  #              , 2 ** sqrt(specifiedUnrateModelTarget)
+  #            )
+
                                                     # first/last dates that the "predictee" dates are available
                                                     # "1970-12-31","2006-12-31"(actual "2001-11-30")
   message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))))
   builtUnrateModel <- buildModel(specifiedUnrateModel, method="train", training.per=c(TrainingBegin, TrainingEnd), trControl = trControl, stage = "Test")
+
+  print(show(builtUnrateModel))
+
   message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))
 
   # LEFT_OFF: create time slices for caret "index" and "indexOut"
