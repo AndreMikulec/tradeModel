@@ -175,8 +175,8 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   # require(quantmod) # zoo, xts, TTR
   # require(PerformanceAnalytics)
   # so, I can use rstudio projects of packages
-  if(!"quantmod" %in% search())             require(quantmod)
   if(!"formula.tools" %in% search())        require(formula.tools)
+  if(!"quantmod" %in% search())             require(quantmod)
   if(!"PerformanceAnalytics" %in% search()) require(PerformanceAnalytics)
 
   # debugging
@@ -230,6 +230,11 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   assign("nberDates", tis::nberDates, envir = envir)
 
   assign("trainControl", caret::trainControl, envir = envir)
+
+  # DAMN spacetime WARNING happens AFTER I add TORGO'S UBL
+  assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
+
+  assign("list.zip", rlist::list.zip, envir = envir)
 
   action <- parse_expr("assign(\"env\", environment())")
   eval_bare(action, caller_env())
@@ -1515,15 +1520,16 @@ willShire5000MachineWts <- function(xTs = NULL) {
   # unrate NA at will5000idxlogrets late partial return is not useful
   # cashlogrets             obvious [future] return is not useful
 
+  # IF REMOVE ".fun = " then RStudio can debug
   # create an environment of xts objects
   llply(as.data.frame(xTs),
     .fun =  function(x) {
       as.xts(x, order.by = index(xTs))
     }
-  ) -> Symbols
+  ) -> SymbolsOrig
 
   # reorders in alphabetical order
-  Symbols <- list2env(Symbols)
+  Symbols <- list2env(SymbolsOrig)
 
   # traditionally the first column is the target variable
   specifyModel(formula = as.formula(str_c( colnames(xTs)[1], " ~ ",str_c(colnames(Indicators), collapse = " + ")))
@@ -1550,34 +1556,88 @@ willShire5000MachineWts <- function(xTs = NULL) {
   TrainingBegin <- min(head(AllData[[1]],1), head(AllData[[1]],1))
   TrainingEnd   <- max(tail(AllData[[length(AllData)]],1), tail(AllData[[length(FocusedData)]],1))
 
-
   # prepare for caret timeslices index and indexOut
   trControl <- NULL
   if(length(AllData) == length(FocusedData)) {
     NumbSlices <- length(FocusedData)
 
-    # determine the Focused timeslices to OverRegress
+    # determine the Focused timeslices to (Replicate)Copy
     Data <- modelData(specifiedUnrateModel)
+    TrainingData <- window(Data, start = TrainingBegin, end = TrainingEnd)
     for(slice in seq_len(NumbSlices)) {
-      # triple it:(bind a 2nd,3rd,4th copy)
+      # x-num-ish it:(bind a 2nd,3rd,4th copy)
       # torgo new 2018, 2017,2018 slides
-      CopyNum <- 3
-      for(copy in seq_len(CopyNum)) {
-      Data <- rbind(Data, Data[FocusedData[[slice]]])
+      # To balance the data: how many replica copies do I need?
+      # copy over enough so that the FocusedData and and AllData numbers of records are balanced
+      NumbReplicaCopies <- ceiling((length(AllData[[slice]]) - length(FocusedData[[slice]]))/length(FocusedData[[slice]]))
+      FocusedDataOrigSliceData <- Data[FocusedData[[slice]]]
+      for(copy in seq_len(NumbReplicaCopies)) {
+        TrainingData <- rbind(TrainingData, FocusedDataOrigSliceData)
       }
-    # LEFT_OFF: UBL Smote; or 'create new observations' or OverRegress
-    # LEFT_OFF: send index(AllData:this recession) and indexOut(AllData:next recession) to caret
+
+      # UBL Smote; or 'create new observations'
+      #                  y-val, rel(height), slope
+      Relevance <- matrix(c(
+                         -0.01, 1.0, 0.0,
+                          0.00, 0.5, 0.5,
+                          0.01, 0.0, 0.0
+                          )
+                   , ncol = 3
+                   , byrow = TRUE)
+
+
+      UBLData <- cbind(as.data.frame(TrainingData), index = as.POSIXct(index(TrainingData))); row.names(UBLData) <- NULL
+      # ? ImpSampRegress example
+      UBLDataCompleteCases <- UBLData[complete.cases(UBLData),,drop = FALSE]
+
+      # WERCS: WEighted Relevance-based Combination Strategy
+      # values lhs of formula with values LESS than zero are MORE relevant (financial losses)
+      # Therefore, I want new 150% percent MORE "financial loss data"
+      # Keeping all of the financial profits
+      # C.perc = list(1.0, 2.5))
+      UBLDataFormula <- as.formula(str_c(as.character(formula(specifiedUnrateModel)), " + index"))
+      UBLResults     <- ImpSampRegress(UBLDataFormula, UBLDataCompleteCases, rel = Relevance, thr.rel = 0.5,  C.perc = list(1.0, 2.5))
+      # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
+      UBLResultsIndex <- UBLResults[["index"]]
+      UBLResults     <- UBLResults[, !colnames(UBLResults) %in% "index" , drop = FALSE]
+
+      # convert back
+      # need the xts column names
+      # IF REMOVE ".fun = " then RStudio can debug
+      llply(rlist::list.zip(UBLResult = UBLResults, ColName = colnames(UBLResults)),
+        .fun = function(x) {
+          res <- as.xts(x[["UBLResult"]], order.by = UBLResultsIndex)
+          indexClass(res)  <- indexClass(TrainingData)
+          indexFormat(res) <- indexFormat(TrainingData)
+          res <- rbind(res, Data[,x[["ColName"]]][TrainingEnd < index(Data)])
+          return(res)
+        }
+      ) -> UpDatedSymbols
+      # reorders in alphabetical order
+      # MASSIVE CHANGE HERE ... mostly ZEROS in Final CALENDAR
+      # update Symbols with UBLResults
+      Symbols <- list2env(UpDatedSymbols)
     }
 
+   # LEFT_OFF: send index(AllData:this recession) and indexOut(AllData:next recession) to caret
     trControl  <- trainControl(method = "cv", number = NumbSlices)
   } else {
     stop("\"length(AllData) == length(FocusedData)\" is not TRUE")
   }
-                                                                       # first/last dates that the "predictee" dates are available
-                                                                       # "1970-12-31","2006-12-31"(actual "2001-11-30")
+
+  # Update currently specified or built model with most recent data
+  specifiedUnrateModel <- getModelData(specifiedUnrateModel, na.rm = FALSE, source.envir = Symbols)
+                                                            # remove the last record(NO)
+                                                            # "2007-01-31" (actual "2001-12-31")
+
+                                                    # first/last dates that the "predictee" dates are available
+                                                    # "1970-12-31","2006-12-31"(actual "2001-11-30")
   message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))))
   builtUnrateModel <- buildModel(specifiedUnrateModel, method="train", training.per=c(TrainingBegin, TrainingEnd), trControl = trControl, stage = "Test")
   message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))
+
+  # LEFT_OFF: create time slices for caret "index" and "indexOut"
+  # LEFT_OFF: determine obsevation weights(wts) for caret
 
   # Update currently specified or built model with most recent data
   UpdatedModelData <- getModelData(builtUnrateModel, na.rm = FALSE, source.envir = Symbols)

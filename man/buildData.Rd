@@ -12,6 +12,8 @@ buildData(formula, na.rm = TRUE, return.class = "zoo",
 
 \item{na.rm}{as quantmod buildData}
 
+\item{return.class}{as quantmod buildData}
+
 \item{source.envir}{find xts Symbols in this environment}
 }
 \value{

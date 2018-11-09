@@ -10,6 +10,7 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 3.5.1),
+    formula.tools,
     quantmod (>= 0.4-3),
     PerformanceAnalytics (>= 1.5.2)
 Imports:
@@ -24,10 +25,16 @@ Imports:
     wrapr,
     seplyr,
     purrr,
+    plyr,
     Hmisc, 
     DescTools,
     R.utils,
+    tidyr,
+    tis,
+    caret,
+    UBL,
+    rlist,
     tryCatchLog,
     futile.logger
-RoxygenNote: 6.1.0.9000
+RoxygenNote: 6.1.1
 Suggests: testthat

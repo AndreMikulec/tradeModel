@@ -378,7 +378,7 @@ getModelData <- function (x, na.rm = TRUE, source.envir = NULL, ...) {
 #'
 #'@param formula as quantmod buildData
 #'@param na.rm as quantmod buildData
-#'@parm return.class  as quantmod buildData
+#'@param return.class  as quantmod buildData
 #'@param source.envir find xts Symbols in this environment
 #'@return "return.class" as quantmod buildData
 #'@export
