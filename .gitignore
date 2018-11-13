@@ -2,9 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-/.RDataTmp
-/.RDataTmp1
-/.RDataTmp2
-/NOTES.txt
+/.RDataTmp*
 .Rproj.user
-NOTES.txt
+/NOTES.txt

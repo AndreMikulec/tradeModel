@@ -136,6 +136,18 @@ Less <- function(xTs1 = NULL, xTs2 = NULL) {
 
 #' quantmod getSymbols with source.envir
 #'
+#' @param Symbols	a character vector specifying the names of each symbol to be loaded
+#' @param env where to create objects. Setting env=NULL is equal to auto.assign=FALSE
+#' @param reload.Symbols	boolean to reload current symbols in specified environment. (FALSE)
+#' @param verbose boolean to turn on status of retrieval. (FALSE)
+#' @param warnings	boolean to turn on warnings. (TRUE)
+#' @param src character string specifying sourcing method. (yahoo)
+#' @param symbol.lookup retrieve symbol's sourcing method from external lookup (TRUE)
+#' @param auto.assign should results be loaded to env If FALSE, return results instead.
+#' As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE
+#' @param source.envir override: source environment to aquire the Symbols
+#' @param ... pass other parameters
+#'
 #' get some Symbols from an environment (source.envir)
 #'   will search first in (source.envir)
 #'   if the Symbol is not found in the enviroment (source.envir),
@@ -370,7 +382,54 @@ getModelData <- function (x, na.rm = TRUE, source.envir = NULL, ...) {
 }
 
 
-#' Create one data object from multiple sources, applying transformations via standard R formula mechanism.
+#' convert time series
+#'
+#' see pacakge quantmod quantmod:::convert.time.series
+#'
+#' @param fr as quantmod:::convert.time.series
+#' @param return.class as quantmod:::convert.time.series
+#'
+#' @export
+quantmod___convert.time.series <- function(fr, return.class) {
+
+    if ("quantmod.OHLC" %in% return.class) {
+        class(fr) <- c("quantmod.OHLC", "zoo")
+        return(fr)
+    }
+    else if ("xts" %in% return.class) {
+        return(fr)
+    }
+    if ("zoo" %in% return.class) {
+        return(as.zoo(fr))
+    }
+    else if ("ts" %in% return.class) {
+        fr <- as.ts(fr)
+        return(fr)
+    }
+    else if ("data.frame" %in% return.class) {
+        fr <- as.data.frame(fr)
+        return(fr)
+    }
+    else if ("matrix" %in% return.class) {
+        fr <- as.data.frame(fr)
+        return(fr)
+    }
+    else if ("timeSeries" %in% return.class) {
+        if (requireNamespace("timeSeries", quietly = TRUE)) {
+            fr <- timeSeries::timeSeries(coredata(fr), charvec = as.character(index(fr)))
+            return(fr)
+        }
+        else {
+            warning(paste("'timeSeries' from package 'timeSeries' could not be loaded:",
+                " 'xts' class returned"))
+        }
+    }
+}
+
+
+
+#' Create one data object from multiple sources,
+#' applying transformations via standard R formula mechanism.
 #'
 #' UNUSED
 #' see quantmod buildData
@@ -390,7 +449,7 @@ buildData <- function(formula, na.rm = TRUE, return.class = "zoo", source.envir 
     else {
         fr <- modelData(specifyModel(formula, na.rm = na.rm, source.envir = NULL, ...))
     }
-    fr <- convert.time.series(fr = fr, return.class = return.class)
+    fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
 }
 
 

@@ -1,4 +1,4 @@
 library(testthat)
-library(quantico)
+library(tradeModel)
 
-test_check("quantico")
+test_check("tradeModel")

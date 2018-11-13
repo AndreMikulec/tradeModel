@@ -175,6 +175,8 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   # require(quantmod) # zoo, xts, TTR
   # require(PerformanceAnalytics)
   # so, I can use rstudio projects of packages
+  if(!"DBI" %in% search())                  require(DBI)
+  if(!"RPostgreSQL" %in% search())          require(RPostgreSQL)
   if(!"formula.tools" %in% search())        require(formula.tools)
   if(!"quantmod" %in% search())             require(quantmod)
   if(!"PerformanceAnalytics" %in% search()) require(PerformanceAnalytics)
@@ -233,6 +235,21 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
 
   # DAMN spacetime WARNING happens AFTER I add TORGO'S UBL
   assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
+  # also see # SEARCH MY NOTES "trace(loadNamespace"
+  # does not CURRENTLY help
+  # Error in unloadNamespace(ns) :
+  # namespace ‘spacetime’ is imported by ‘gstat’ so cannot be unloaded
+  # trace(loadNamespace, quote(if (package == "spacetime") recover()))
+  # xts . . . spacetime . . . gtstat . . . automap . . . UBL
+  # xts . . . required by PerformanceAnalytics ( so will not be detached ) . . . quantico
+  # PerformanceAnalytics (>= 1.5.2)
+  # if(isNamespaceLoaded("PerformanceAnalytics")) {
+  #   ns <- asNamespace("PerformanceAnalytics")
+  #   unloadNamespace(ns)
+  # }
+
+  # currenlty NOT USED
+  assign("l2df", berryFunctions::l2df, envir = envir)
 
   assign("list.zip", rlist::list.zip, envir = envir)
 

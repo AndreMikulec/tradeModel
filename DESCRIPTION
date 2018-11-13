@@ -1,4 +1,4 @@
-Package: quantico
+Package: tradeModel
 Type: Package
 Title: Quantitive Mathematics and Financial Prediction
 Version: 0.1.0
@@ -10,10 +10,13 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 3.5.1),
+    DBI,
+    RPostgreSQL,
     formula.tools,
     quantmod (>= 0.4-3),
     PerformanceAnalytics (>= 1.5.2)
 Imports:
+    timeSeries,
     rlang,
     formula.tools,
     magrittr,
@@ -37,4 +40,6 @@ Imports:
     tryCatchLog,
     futile.logger
 RoxygenNote: 6.1.1
-Suggests: testthat
+Suggests: 
+      testthat
+
