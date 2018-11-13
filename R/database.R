@@ -512,13 +512,18 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' #########################################
 #' ## Method #3
 #' getSymbols.PostgreSQL('MSFT',env=globalenv())
+#'
+#' ## YEAR 2018 EXAMPLE
+#'
+#' ibm <- getSymbols.PostgreSQL("IBM", schname ="money", auto.assign =  F)
+#'
 #' }
 #' @export
 getSymbols.PostgreSQL <- function(Symbols,env,return.class='xts',
                                db.fields=c('o','h','l','c','v','a'),
                                field.names = c('Open','High','Low','Close','Volume','Adjusted'),
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
-                               options = NULL, forceISOdate = NULL,
+                               options = NULL, forceISOdate = TRUE,
                                ...) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
@@ -562,7 +567,7 @@ getSymbols.PostgreSQL <- function(Symbols,env,return.class='xts',
 
         if(schname != "") { dotSchemaQuoted <- paste0(dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
 
-
+        schemaSymbolsQuoted <- list()
         Symbols.db.Cols <- list()
         for(i in seq_along(Symbols)) {
             if(verbose) {
@@ -610,8 +615,8 @@ getSymbols.PostgreSQL <- function(Symbols,env,return.class='xts',
             # field.names <- c(field.namesColumnOne, field.names)
 
             # custom sorting
-            db.fields    <- customSorting(db.fields.levels, InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE)
-            field.names  <- customSorting(db.fields.levels, InitOrder = c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted"), CI = TRUE)
+            db.fields    <- customSorting(db.fields, InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE)
+            field.names  <- customSorting(db.fields, InitOrder = c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted"), CI = TRUE)
 
             db.fieldsQuoted  <-  dbQuoteIdentifier(con, db.fields)
             schemaSymbolsQuoted[[i]] <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbols[[i]]))
