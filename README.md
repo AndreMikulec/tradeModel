@@ -1,6 +1,6 @@
-# quantico
+# tradeModel
 
-The goal of quantico  determine an investment strategy that optimizes financial returns
+The goal of tradeModel is to determine an investment strategy that optimizes financial returns
 
 ## Installation
 
@@ -8,7 +8,7 @@ You can install quantico from github with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("AndreMikulec/quantico")
+devtools::install_github("AndreMikulec/tradeModel")
 ```
 Idea is based on  . . . 
 
