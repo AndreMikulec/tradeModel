@@ -8,7 +8,6 @@
 #' @param envi location of xts objects downloaded with getSymbols("XXX", src = 'yahoo')
 #' @param source.envir source location of Symbols
 #' @param ... pass through parameters
-#' @export
 #' @examples
 #' \dontrun{
 #'
@@ -35,6 +34,7 @@
 #' # saveSymbols(source.envir = source.envir, file.path = "C:\\Users\\Public")
 #'
 #' }
+#' @export
 saveSymbols <- function(Symbols = NULL, envi = parent.frame(), source.envir = NULL, ...) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
@@ -117,6 +117,7 @@ saveSymbols <- function(Symbols = NULL, envi = parent.frame(), source.envir = NU
 #' saves xts object symbols to a persistent location (disk: Symbol.RData file)
 #'
 #' see quantmod SaveSymbols
+#'
 #' @param file.path  character string of file (Symbol.Rdata) location
 #' @param source.envir source location of Symbols
 #' @param ... pass through parameters
@@ -185,6 +186,85 @@ DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
 })}
 
 
+#' extract a list of R objects and assign to an environment
+#'
+#' mostly for 'space saving' and cleanliness
+#'
+#' @param List collection of R objects
+#' @param nms names of List object (default: everything)
+#' @param environment to assign R objects
+#' @example
+#' @return invisible
+#' @examples
+#' \dontrun{
+#' List <- list(a=1, b=2)
+#' # a, b
+#' AssignEnv(List, c("a","b"))
+#' }
+#' @export
+AssignEnv <- function(List, nms = NULL, envir = parent.frame()) {
+tryCatchLog::tryCatchLog({
+  for(nm in names(List)){
+    # default everything
+    if(!is.null(nms)) nm <- nm[nm %in% nms]
+    assign(nm, List[[nm]], envir = envir)
+  }
+  invisible()
+})}
+
+
+#' smartly connect to PostgreSQL database
+#'
+#' @param user username(default "Symbols") to access database
+#' @param password password(default "Symbols") to access database
+#' @param dbname database name (default "Symbols")
+#' @param schname schema name (default "Symbols")
+#' @param host database host (default "localhost")
+#' @param port database port (default 5432)
+#' @param options pass extra parameters in aa string to the command line
+#' @param forceISOdate TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
+#' is forced to ISO style at conection
+#' @return list of "con" DBI Connection object and "schname" final chosen schema name
+#' @export
+pgConnect <- function(user=NULL,password=NULL,dbname=NULL,schname=NULL,
+                      host=NULL,port=NULL,options=NULL,forceISOdate=NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  if(!requireNamespace("DBI", quietly=TRUE))
+    stop("package:",dQuote("DBI"),"cannot be loaded.")
+  if(!requireNamespace("RPostgreSQL", quietly=TRUE))
+    stop("package:",dQuote("RPostgreSQL"),"cannot be loaded.")
+
+  if(is.null(user))     user     <- "Symbols"
+  if(is.null(password)) password <- "Symbols"
+  if(is.null(dbname))   dbname   <- "Symbols"
+  if(is.null(schname))  schname  <- "Symbols"
+  if(is.null(user) || is.null(password) || is.null(dbname)) {
+    stop(paste(
+        'At least one connection argument (',sQuote('user'),
+        sQuote('password'),sQuote('dbname'),
+        ") is not set"))
+  }
+  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),user=user,password=password,dbname=dbname,
+                                     host=host,port=port,options=options,forceISOdate=forceISOdate)
+
+  if(schname != "") {
+    schname <- schname
+  } else {
+    if(NROW(CurrentSearchPath)) {
+      CurrentSearchPath <- pgCurrentSearchPath(con)
+      schname <- CurrentSearchPath[1,1]
+    } else {
+      schname <- "public"
+    }
+  }
+  pgSetCurrentSearchPath(con, dbQuoteIdentifier(con, schname))
+  list(con=con,user=user,password=password,dbname=dbname,schname=schname)
+
+})}
+
+
 
 #' of a specific PostgreSQL database schema, show its tables
 #'
@@ -192,6 +272,7 @@ DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
 #' @param schema name
 #' @return vector of characters of table names
 #' The results do not have any order.
+#' @export
 pgListSchemaTables <- function(con, schname) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
@@ -224,6 +305,7 @@ pgListSchemaTables <- function(con, schname) {
 #' @param table name
 #' @return vector of characters of column names
 #' The results are ordered.
+#' @export
 pgListSchemaTableColumns <- function(con, schname, tblname) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
@@ -256,6 +338,22 @@ pgListSchemaTableColumns <- function(con, schname, tblname) {
 
 #' saves xts object symbols to a persistent location (database: PostgreSQL)
 #'
+#' CREATE ROLE "Symbols" LOGIN
+#'   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+#'
+#' ALTER USER Symbols PASSWORD 'Symbols';
+#'
+#' CREATE DATABASE "Symbols"
+#'   WITH OWNER = "Symbols"
+#'        ENCODING = 'UTF8'
+#'        TABLESPACE = pg_default
+#'        LC_COLLATE = 'C'
+#'        LC_CTYPE = 'C'
+#'        CONNECTION LIMIT = -1;
+#'
+#' CREATE SCHEMA "Symbols"
+#'   AUTHORIZATION "Symbols";
+#'
 #' @param sourc.envir location of xts objects
 #' @param field.names names existing in starting columns
 #' @param db.fields character vector indicating
@@ -270,18 +368,18 @@ pgListSchemaTableColumns <- function(con, schname, tblname) {
 #' @param forceISOdate TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
 #' is forced to ISO style at conection
 #' @param ... pass through parameters
-#' @export
 #' @examples
 #' \dontrun{
 #'
 #' }
+#' @export
 saveSymbols.PostgreSQL <- function(source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
   db.fields=c('o','h','l','c','v','a'),
   user=NULL,password=NULL,dbname=NULL,schname=NULL,host='localhost',port=5432,options=NULL, forceISOdate = TRUE,
   ...)  {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
   this.env <- environment()
 
   # HOPEFULLY no one messes with Date/date
@@ -295,35 +393,8 @@ saveSymbols.PostgreSQL <- function(source.envir = NULL,
   }
   if(!hasArg("verbose")) verbose <- FALSE
 
-  if(!requireNamespace("DBI", quietly=TRUE))
-    stop("package:",dQuote("DBI"),"cannot be loaded.")
-  if(!requireNamespace("RPostgreSQL", quietly=TRUE))
-    stop("package:",dQuote("RPostgreSQL"),"cannot be loaded.")
-
-  if(is.null(user))     user     <- "Symbols"
-  if(is.null(password)) password <- "Symbols"
-  if(is.null(dbname))   dbname   <- "Symbols"
-  if(is.null(schname))  schname  <- "Symbols"
-  if(is.null(user) || is.null(password) || is.null(dbname)) {
-    stop(paste(
-        'At least one connection argument (',sQuote('user'),
-        sQuote('password'),sQuote('dbname'),
-        ") is not set"))
-  }
-  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),user=user,password=password,dbname=dbname,
-                                     host=host,port=port,options=options,forceISOdate=forceISOdate)
-
-  if(schname != "") {
-    schname <- schname
-  } else {
-    if(NROW(CurrentSearchPath)) {
-      CurrentSearchPath <- pgCurrentSearchPath(con)
-      schname <- CurrentSearchPath[1,1]
-    } else {
-      schname <- "public"
-    }
-  }
-  pgSetCurrentSearchPath(con, dbQuoteIdentifier(con, schname))
+  DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
+  AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
 
   # now, I am only getting symbols from here
   Symbols <- names(as.list(source.envir))
@@ -340,7 +411,7 @@ saveSymbols.PostgreSQL <- function(source.envir = NULL,
     for (each.symbol in  missing.db.symbol) {
 
       xTs <- as.list(source.envir)[[each.symbol]]
-      if(is.null(xTs)) { message(paste("Symbol ", each.symbol, " was not found s skipping.")); next }
+      if(is.null(xTs)) { message(paste("Symbol ", each.symbol, " was not found, so skipping.")); next }
       df  <- xTs2DBDF(xTs, con, field.names = field.names[-1], db.fields = db.fields[-1])
 
       # create NEW CREATE TABLE statements"
@@ -349,8 +420,8 @@ saveSymbols.PostgreSQL <- function(source.envir = NULL,
       dbExecute(con, ddl)
 
       new.db.symbol <- c(new.db.symbol, each.symbol)
-      L <- list(); L[[each.symbol]] <- df
-      dfs <- c(dfs, L)
+      tempList <- list(); tempList[[each.symbol]] <- df
+      dfs <- c(dfs, tempList)
     }
 
     missing.db.symbol <- setdiff(missing.db.symbol, new.db.symbol)
@@ -441,33 +512,33 @@ oneColumn <- function(con, Query, outName) {
 #'
 #' @rdname pgCurrent
 #' @export
-pgCurrentUser <- function(con) oneColumn(con, "SELECT CURRENT_USER;", "CurrentUser")
+pgCurrentUser <- function(con) { oneColumn(con, "SELECT CURRENT_USER;", "CurrentUser") }
 
 #' get PostgreSQL current user schema
 #'
 #' @rdname pgCurrent
 #' @export
-pgCurrentSchema <- function(con) oneColumn(con, "SELECT current_schema();", "CurrentSchema")
+pgCurrentSchema <- function(con) { oneColumn(con, "SELECT current_schema();", "CurrentSchema") }
 
 #' get PostgreSQL current user database name
 #'
 #' @rdname pgCurrent
 #' @export
-pgCurrentDB <- function(con) oneColumn(con, "SELECT current_database();", "CurrentDB")
+pgCurrentDB <- function(con) { oneColumn(con, "SELECT current_database();", "CurrentDB") }
 
 
 #' get PostgreSQL current user search path
 #'
 #' @rdname pgCurrent
 #' @export
-pgCurrentSearchPath <- function(con) oneColumn(con, "SHOW SEARCH_PATH;", "CurrentSearchPath")
+pgCurrentSearchPath <- function(con) { oneColumn(con, "SHOW SEARCH_PATH;", "CurrentSearchPath") }
 
 
 #' set PostgreSQL current user search path
 #'
 #' @rdname pgCurrent
 #' @export
-pgSetCurrentSearchPath <- function(con, path) dbExecute(con, paste0("SET SEARCH_PATH TO ", path,";"))
+pgSetCurrentSearchPath <- function(con, path) { dbExecute(con, paste0("SET SEARCH_PATH TO ", path,";")) }
 
 
 
@@ -475,7 +546,7 @@ pgSetCurrentSearchPath <- function(con, path) dbExecute(con, paste0("SET SEARCH_
 #'
 #' @rdname pgCurrent
 #' @export
-pgCurrentTempSchema <- function(con) oneColumn(con, "SELECT nspname FROM pg_namespace WHERE oid = pg_my_temp_schema();", "CurrentTempSchema")
+pgCurrentTempSchema <- function(con) { oneColumn(con, "SELECT nspname FROM pg_namespace WHERE oid = pg_my_temp_schema();", "CurrentTempSchema") }
 
 #' custom sort a vector
 #'
@@ -644,35 +715,8 @@ initEnv();on.exit({uninitEnv()})
   if(!hasArg("verbose")) verbose <- FALSE
   if(!hasArg("auto.assign")) auto.assign <- TRUE
 
-  if(!requireNamespace("DBI", quietly=TRUE))
-   stop("package:",dQuote("DBI"),"cannot be loaded.")
-  if(!requireNamespace("RPostgreSQL", quietly=TRUE))
-   stop("package:",dQuote("RPostgreSQL"),"cannot be loaded.")
-
-  if(is.null(user))     user     <- "Symbols"
-  if(is.null(password)) password <- "Symbols"
-  if(is.null(dbname))   dbname   <- "Symbols"
-  if(is.null(schname))  schname  <- "Symbols"
-  if(is.null(user) || is.null(password) || is.null(dbname)) {
-    stop(paste(
-        'At least one connection argument (',sQuote('user'),
-        sQuote('password'),sQuote('dbname'),
-        ") is not set"))
-  }
-  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),user=user,password=password,dbname=dbname,
-                                     host=host,port=port,options=options,forceISOdate=forceISOdate)
-
-  if(schname != "") {
-    schname <- schname
-  } else {
-    if(NROW(CurrentSearchPath)) {
-      CurrentSearchPath <- pgCurrentSearchPath(con)
-      schname <- CurrentSearchPath[1,1]
-    } else {
-      schname <- "public"
-    }
-  }
-  pgSetCurrentSearchPath(con, dbQuoteIdentifier(con, schname))
+  DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
+  AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
 
   db.Symbols <- pgListSchemaTables(con, schname)
   if(length(Symbols) != sum(Symbols %in% db.Symbols)) {
@@ -715,8 +759,8 @@ initEnv();on.exit({uninitEnv()})
     query <- paste("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ",dbQuoteIdentifier(con, "date"))
     rs <- DBI::dbSendQuery(con, query)
     fr <- DBI::fetch(rs, n=-1)
+    DBI::dbDisconnect(con)
     #fr <- data.frame(fr[,-1],row.names=fr[,1])
-    dbDisconnect(con)
     fr <- xts(as.matrix(fr[,-1]),
               order.by=as.Date(fr[,1],origin='1970-01-01'),
               src=dbname,updated=Sys.time())
@@ -731,7 +775,7 @@ initEnv();on.exit({uninitEnv()})
       assign(Symbols[[i]],fr,env)
     if(verbose) cat('done\n')
   }
-  DBI::dbDisconnect(con)
+  dbDisconnect(con)
   if(auto.assign)
     return(Symbols)
   return(fr)

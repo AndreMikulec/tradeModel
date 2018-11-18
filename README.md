@@ -4,7 +4,7 @@ The goal of tradeModel is to determine an investment strategy that optimizes fin
 
 ## Installation
 
-You can install quantico from github with:
+You can install tradeModel from github with:
 
 ``` r
 # install.packages("devtools")
@@ -23,7 +23,7 @@ addWilshire5000LogReturns() %>%      # will5000idxlogrets
 addCashLogReturns           %>%      # cashlogrets
 
 # (2) indicator(s)
-addUnRateEomData %>%                        # unrate
+addUnRateEomData %>%                 # unrate
 
 # (3) use indicator(s)(unrate) to make rules:signals(weights)
 addWillShire5000Wts  %>%             # will5000logrets_wts

@@ -38,7 +38,22 @@ is forced to ISO style at conection}
 \item{sourc.envir}{location of xts objects}
 }
 \description{
-saves xts object symbols to a persistent location (database: PostgreSQL)
+CREATE ROLE "Symbols" LOGIN
+  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+}
+\details{
+ALTER USER Symbols PASSWORD 'Symbols';
+
+CREATE DATABASE "Symbols"
+  WITH OWNER = "Symbols"
+       ENCODING = 'UTF8'
+       TABLESPACE = pg_default
+       LC_COLLATE = 'C'
+       LC_CTYPE = 'C'
+       CONNECTION LIMIT = -1;
+
+CREATE SCHEMA "Symbols"
+  AUTHORIZATION "Symbols";
 }
 \examples{
 \dontrun{
