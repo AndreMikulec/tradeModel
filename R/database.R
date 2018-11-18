@@ -186,6 +186,74 @@ DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
 
 
 
+#' of a specific PostgreSQL database schema, show its tables
+#'
+#' @param con PostgreSQL DBI connection
+#' @param schema name
+#' @return vector of characters of table names
+#' The results do not have any order.
+pgListSchemaTables <- function(con, schname) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+    dbGetQuery(con,
+      paste0(
+       "
+        SELECT
+              table_catalog -- database
+            , table_schema
+            , table_name
+        FROM
+            information_schema.tables
+        WHERE
+            table_schema     IN (", dbQuoteLiteral(con, schname), ")
+        ;
+      "
+      )
+    ) -> db.Schemas.tables
+    db.Schemas.tables[["table_name"]]
+
+})}
+
+
+
+#' of a specific PostgreSQL database schema table, show its columns
+#'
+#' @param con PostgreSQL DBI connection
+#' @param schema name
+#' @param table name
+#' @return vector of characters of column names
+#' The results are ordered.
+pgListSchemaTableColumns <- function(con, schname, tblname) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+    dbGetQuery(con,
+      paste0(
+       "
+        SELECT
+              table_catalog -- database
+            , table_schema
+            , table_name
+            , column_name
+            , udt_name -- human readable datatype
+        FROM
+            information_schema.columns
+        WHERE
+            table_schema NOT IN ('information_schema', 'pg_catalog') AND
+            table_schema     IN (", dbQuoteLiteral(con, schname), ") AND
+            table_name       IN (", dbQuoteLiteral(con, tblname), ")
+        ORDER BY ordinal_position
+        ;
+      "
+      )
+    ) -> db.Schema.tbl
+    db.Schema.tbl[["column_name"]]
+
+})}
+
+
+
 #' saves xts object symbols to a persistent location (database: PostgreSQL)
 #'
 #' @param sourc.envir location of xts objects
@@ -260,7 +328,8 @@ saveSymbols.PostgreSQL <- function(source.envir = NULL,
   # now, I am only getting symbols from here
   Symbols <- names(as.list(source.envir))
 
-  db.Symbols <- DBI::dbListTables(con)
+  db.Symbols <- pgListSchemaTables(con, schname)
+
   if(length(Symbols) != sum(Symbols %in% db.Symbols)) {
     missing.db.symbol <- Symbols[!Symbols %in% db.Symbols]
     # for the requested Symbol, if I do not have database table so, I have to create ONE
@@ -605,7 +674,7 @@ initEnv();on.exit({uninitEnv()})
   }
   pgSetCurrentSearchPath(con, dbQuoteIdentifier(con, schname))
 
-  db.Symbols <- DBI::dbListTables(con)
+  db.Symbols <- pgListSchemaTables(con, schname)
   if(length(Symbols) != sum(Symbols %in% db.Symbols)) {
     missing.db.symbol <- Symbols[!Symbols %in% db.Symbols]
     warning(paste('could not load symbol(s): ',paste(missing.db.symbol,collapse=', ')))
@@ -620,48 +689,15 @@ initEnv();on.exit({uninitEnv()})
     if(verbose)
       cat(paste('Loading ',Symbols[[i]],paste(rep('.',10-nchar(Symbols[[i]])),collapse=''),sep=''))
     # PEEK AHEAD, SEE IF, VOLUME xor ADJUSTED, IS MISSING, SEE IF SINGLE COLUMN (FRED) DATA
-    dbGetQuery(con,
-      paste0(
-       "
-        SELECT
-              table_catalog -- database
-            , table_schema
-            , table_name
-            , column_name
-            , udt_name -- human readable datatype
-        FROM
-            information_schema.columns
-        WHERE
-            table_schema NOT IN ('information_schema', 'pg_catalog') AND
-            table_schema     IN (", dbQuoteLiteral(con, schname), ") AND
-            table_name       IN (", dbQuoteLiteral(con, Symbols[[i]]),")
-        ORDER BY ordinal_position
-        ;
-      "
-      )
-    ) -> Symbols.db.Cols[[i]]
+    Symbols.db.Cols <- pgListSchemaTableColumns(con, schname, tblname = Symbols[[i]])
 
     # Goal
     # exist in the DB: 'date', 'o','h','l','c','v','a' ( along with FRED columns )
     # translate from those
     # to R             'Date', 'Open','High','Low','Close','Volume','Adjusted'( along with FRED columns "as is")
 
-    # Symbols.db.Columns <-  do.call(c,Symbols.db.Cols[[i]][,"column_name", drop = F])
-    # Symbols.db.ColumnsColumnOne <- Symbols.db.Columns[1] # date # NOT USED
-    #
-    # MatchedPositions <- match( db.fields[-1], do.call(c,llply(strsplit(tolower(Symbols.db.Columns[-1]),""), function(x) x[1] ))  )
-    # Symbols.db.Columns <- Symbols.db.Columns[-1][MatchedPositions]
-    # Symbols.db.Columns <- c(Symbols.db.ColumnsColumnOne, Symbols.db.Columns)
-    # # (can be character())
-    #
-    # field.namesColumnOne <- field.names[1]
-    # MatchedPositions <- match( db.fields[-1], do.call(c,llply(strsplit(tolower(field.names[-1]),""), function(x) x[1] ))  )
-    # # (can be character())
-    # field.names <- field.names[-1][MatchedPositions]
-    # field.names <- c(field.namesColumnOne, field.names)
-
     # custom sorting
-    db.fields    <- customSorting(Symbols.db.Cols[[i]][["column_name"]], InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE)
+    db.fields    <- customSorting(Symbols.db.Cols, InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE)
     field.names  <- customSorting(field.names, InitOrder = c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted"), CI = TRUE)
 
     db.fieldsQuoted  <-  dbQuoteIdentifier(con, db.fields)
