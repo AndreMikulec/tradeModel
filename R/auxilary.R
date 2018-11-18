@@ -175,6 +175,7 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   # require(quantmod) # zoo, xts, TTR
   # require(PerformanceAnalytics)
   # so, I can use rstudio projects of packages
+  if(!"doParallel" %in% search())           require(doParallel)
   if(!"DBI" %in% search())                  require(DBI)
   if(!"RPostgreSQL" %in% search())          require(RPostgreSQL)
   if(!"formula.tools" %in% search())        require(formula.tools)
@@ -253,7 +254,7 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
 
   assign("list.zip", rlist::list.zip, envir = envir)
 
-  action <- parse_expr("assign(\"env\", environment())")
+  action <- parse_expr("assign(\"envi\", environment())")
   eval_bare(action, caller_env())
 
   ops <- options()
@@ -1697,7 +1698,11 @@ willShire5000MachineWts <- function(xTs = NULL) {
 
   # uses S3 ifelse.xts
   # strategy/rule weights
-  FittedSignal <- ifelse(Fitted > 0, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
+  FittedOneSidedThreashold <- quantile(coredata(Fitted))["25%"]
+  message("\n75% of the time, I am 'IN' the market.")
+  message(str_c("FittedSignal OneSidedThreashold threashold is ", FittedOneSidedThreashold, "\n"))
+  FittedSignal <- ifelse( Fitted > FittedOneSidedThreashold, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
+
   colnames(FittedSignal)[1] <- str_c(ModelTarget, "_wts")
 
   FittedSignal
@@ -1763,7 +1768,7 @@ cashWts <- function(xTs = NULL) {
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
-addCashWts  <- function(xTs = NULL) {
+appendCashWts  <- function(xTs = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)

@@ -5,9 +5,10 @@
 #' saves xts object symbols to a persistent location (dispatcher)
 #'
 #' @param Symbols	a character vector specifying the names of each symbol to be loaded
-#' @param envi location of xts objects downloaded with getSymbols("XXX", src = 'yahoo')
+#' @param env location of xts objects downloaded with getSymbols("XXX", src = 'yahoo')
 #' @param source.envir source location of Symbols
-#' @param ... pass through parameters
+#' xts objects must have the attribute "src"
+#' @param ... pass through parameters to saveSymbols.fn
 #' @examples
 #' \dontrun{
 #'
@@ -35,7 +36,7 @@
 #'
 #' }
 #' @export
-saveSymbols <- function(Symbols = NULL, envi = parent.frame(), source.envir = NULL, ...) {
+saveSymbols <- function(Symbols = NULL, env = parent.frame(), source.envir = NULL, ...) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -49,21 +50,22 @@ saveSymbols <- function(Symbols = NULL, envi = parent.frame(), source.envir = NU
 
   xTsGetSymbols <- list()
   DotgetSymbolsFound <- FALSE
-  if (exists(".getSymbols", envi, inherits = FALSE)) {
-    DotgetSymbols <- get(".getSymbols", envi, inherits = FALSE)
+  if (exists(".getSymbols", env, inherits = FALSE)) {
+    DotgetSymbols <- get(".getSymbols", env, inherits = FALSE)
     Inherits <- FALSE
     DotgetSymbolsFound <- TRUE
   }
-  # XXX NOT NEEDED anymore 'env' was actually re-assigned by InitEnv XXX
-  # tryCatchLog::tryCatchLog will give wrong "env = parent.frame()"
-  # but: exists(".getSymbols", parent.frame(), inherits = FALSE) # is the correct parent.frame()
-  else if (exists(".getSymbols", envi, inherits = TRUE)) {
-    DotgetSymbols <- get(".getSymbols", envi, inherits = TRUE)
-    Inherits <- TRUE
-    DotgetSymbolsFound <- TRUE
-  }
+  # # XXX NOT NEEDED anymore 'env' was actually re-assigned by InitEnv XXX
+  # # tryCatchLog::tryCatchLog will give wrong "env = parent.frame()"
+  # # but: exists(".getSymbols", parent.frame(), inherits = FALSE) # is the correct parent.frame()
+  # else if (exists(".getSymbols", env, inherits = TRUE)) {
+  #   DotgetSymbols <- get(".getSymbols", envi, inherits = TRUE)
+  #   Inherits <- TRUE
+  #   DotgetSymbolsFound <- TRUE
+  # }
 
   if(DotgetSymbolsFound) {
+
     if (is.null(Symbols)) {
       # get all of the Symbols
       Symbols <- names(DotgetSymbols)
@@ -71,12 +73,14 @@ saveSymbols <- function(Symbols = NULL, envi = parent.frame(), source.envir = NU
     else {
       Symbols <- Symbols[Symbols %in% names(DotgetSymbols)]
     }
+
     for (each.symbol in Symbols) {
       if(!each.symbol %in% names(xTsGetSymbols )){
-        xTsGetSymbols <- c(xTsGetSymbols, list(get(each.symbol, envir = envi, inherits = Inherits)))
+        xTsGetSymbols <- c(xTsGetSymbols, list(get(each.symbol, envir = env, inherits = Inherits)))
         names(xTsGetSymbols)[length(xTsGetSymbols)] <- each.symbol
       }
     }
+
   }
 
   runenv <- environment()
@@ -193,7 +197,6 @@ DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
 #' @param List collection of R objects
 #' @param nms names of List object (default: everything)
 #' @param environment to assign R objects
-#' @example
 #' @return invisible
 #' @examples
 #' \dontrun{
@@ -204,9 +207,14 @@ DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
 #' @export
 AssignEnv <- function(List, nms = NULL, envir = parent.frame()) {
 tryCatchLog::tryCatchLog({
-  for(nm in names(List)){
-    # default everything
-    if(!is.null(nms)) nm <- nm[nm %in% nms]
+initEnv();on.exit({uninitEnv()})
+  # default everything
+  if(!is.null(nms)) {
+    nmsINnames <- nms %in% names(List)
+    nms <-    nms[nmsINnames]
+    if(any(!nmsINnames)) warning(str_c("AssignEnv is asking for R objects that are not found: ", nms[!nmsINnames], collapse = ", "))
+  }
+  for(nm in nms){
     assign(nm, List[[nm]], envir = envir)
   }
   invisible()

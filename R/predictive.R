@@ -587,6 +587,36 @@ as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...)
 }
 
 
+#' detect the number of computer cores
+#'
+#' Re: [Rd] Get Logical processor count correctly whether NUMA is enabled or disabled
+#' Tomas Kalibera <tomas.kalibera@gmail.com>
+#' Mon 9/3/2018, 8:07 AM
+#' A summary for reference: the new detectCores() for Windows in R-devel
+#' Get Logical processor count correctly whether NUMA is enabled or disabled
+#' http://r.789695.n4.nabble.com/Get-Logical-processor-count-correctly-whether-NUMA-is-enabled-or-disabled-td4751774.html
+#'
+#' @return integer value of numer of cores
+#' @examples
+#' /dontrun {
+#' detectTrueCores()
+#' [1] 4
+#' }
+#' @export
+detectTrueCores <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  if (.Platform$OS.type == "windows") {
+    out   <- system("wmic cpu get numberofcores", intern=TRUE)
+    Cores <- as.integer(sum(as.numeric(gsub("([0-9]+).*", "\\1", grep("[0-9]+[ \t]*", out, value=TRUE)))))
+  } else {
+    Cores <- detectCores(logical = FALSE)
+  }
+  Cores
+})}
+
+
+
 #' S3-like method buildModel.train
 #'
 #' # tuneGrid ( production tester )
@@ -684,7 +714,15 @@ buildModel.train <- function(quantmod,training.data,...) {
     # therefore, Rsquared could not be calculated therefore it is set to NA
     # This happens in ~ 30% of all samples sent
     if(!all(complete.cases(training.data))) print("NOTE: in buildModel.train, training.data is missing some data.")
+    # sampling(index/indexOut) done in parallel ( default: allowParallel = T )
+    #   for 'fast' modeling, the overhead is 'too slow'
+    #   nominalTrainWorkflow
+    #     info$loop
+    cl<-makeCluster(detectTrueCores())
+    registerDoParallel(cl)
+    set.seed(2L)
     rp <- suppressWarnings( do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots) ) )
+    stopCluster(cl)
     return(list("fitted"=rp, "inputs"=attr(terms(rp),"term.labels")))
   }
 }

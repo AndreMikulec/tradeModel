@@ -24,7 +24,7 @@ UnRateEyeBalltradeModel <- function() {
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addWillShire5000EyeBallWts  %>%      #
-  addCashWts                  %>%      # (excess)
+  appendCashWts                  %>%      # (excess)
   # ret
 
   printTail("Exact Schedule of Leading of Eye Ball returns and decisions") %>%
@@ -64,7 +64,7 @@ UnRateMachinetradeModel <- function() {
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addWillShire5000MachineWts %>%       #
-  addCashWts                 %>%       # (excess)
+  appendCashWts                 %>%       # (excess)
   # ret
 
   printTail("Exact Schedule of Leading of UnRateMachine returns and decisions") %>%

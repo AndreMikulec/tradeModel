@@ -4,17 +4,18 @@
 \alias{saveSymbols}
 \title{saves xts object symbols to a persistent location (dispatcher)}
 \usage{
-saveSymbols(Symbols = NULL, envi = parent.frame(),
+saveSymbols(Symbols = NULL, env = parent.frame(),
   source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded}
 
-\item{envi}{location of xts objects downloaded with getSymbols("XXX", src = 'yahoo')}
+\item{env}{location of xts objects downloaded with getSymbols("XXX", src = 'yahoo')}
 
-\item{source.envir}{source location of Symbols}
+\item{source.envir}{source location of Symbols
+xts objects must have the attribute "src"}
 
-\item{...}{pass through parameters}
+\item{...}{pass through parameters to saveSymbols.fn}
 }
 \description{
 saves xts object symbols to a persistent location (dispatcher)
