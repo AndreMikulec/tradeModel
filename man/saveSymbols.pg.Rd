@@ -4,11 +4,10 @@
 \alias{saveSymbols.pg}
 \title{saveSymbols pg}
 \usage{
-saveSymbols.pg(Symbols = NULL, env = NULL, field.names = c("Open",
-  "High", "Low", "Close", "Volume", "Adjusted"), db.fields = c("o", "h",
-  "l", "c", "v", "a"), source.envir = NULL, user = NULL,
-  password = NULL, dbname = NULL, schname = NULL,
-  host = "localhost", port = 5432, options = NULL,
+saveSymbols.pg(source.envir = NULL, field.names = c("Open", "High",
+  "Low", "Close", "Volume", "Adjusted"), db.fields = c("o", "h", "l",
+  "c", "v", "a"), user = NULL, password = NULL, dbname = NULL,
+  schname = NULL, host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)
 }
 \description{

@@ -5,71 +5,108 @@
 #' saves xts object symbols to a persistent location (dispatcher)
 #'
 #' @param Symbols	a character vector specifying the names of each symbol to be loaded
-#' @param env	where to create(save) objects. Setting env=NULL is equal to auto.assign=FALSE
+#' @param envi location of xts objects downloaded with getSymbols("XXX", src = 'yahoo')
 #' @param source.envir source location of Symbols
 #' @param ... pass through parameters
 #' @export
 #' @examples
 #' \dontrun{
 #'
-#' saveSymbols("IBM", trg = "pg", schname = "money",
-#'   source.envir = list2env(list(IBM = getSymbols("IBM", auto.assign = F))))
+#' # Symbols must be case-insenstive unique
+#'
+#' getSymbols("IBM", src = "yahoo") # auto.assign = TRUE
+#'
+#' # Symbols names found in Symbols and the names of xts objects stored
+#' # in source.envir, must be mutually exclusive ( case in-sensensitive match)
+#' # (because list2env silently drops repeated members)
+#'
+#' # save just the Symbol "IBM"
+#' saveSymbols("IBM", trg = "pg")
+#'
+#' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#' source.envir = list2env(list(MSFT = msft))
+#' # save only the source.envir Symbols
+#' saveSymbols(Symbols = "", trg = "pg", source.envir = source.envir)
+#'
+#' # save all of the .getSymbols Symbols and the source.envir Symbols
+#' saveSymbols(trg = "pg", source.envir = source.envir)
+#'
+#' # save all to a file
+#' # saveSymbols(source.envir = source.envir, file.path = "C:\\Users\\Public")
 #'
 #' }
-saveSymbols <- function(Symbols = NULL, env = parent.frame(), source.envir = NULL, ...) {
+saveSymbols <- function(Symbols = NULL, envi = parent.frame(), source.envir = NULL, ...) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
-  browser()
+  # case insensitive
+
+  SymbolsInsource.envir <- Symbols[tolower(Symbols) %in% tolower(names(as.list(source.envir)))]
+  if(length(SymbolsInsource.envir)) stop(paste0("Symbols ", paste0(SymbolsInsource.envir, collapse = ", "), " found in source.envir"))
+
+  source.envirInSymbols <- names(as.list(source.envir))[tolower(names(as.list(source.envir))) %in% tolower(Symbols)]
+  if(length(source.envirInSymbols)) stop(paste0("source.envir ", paste0(source.envirInSymbols, collapse = ", "), " found in Symbols"))
+
   xTsGetSymbols <- list()
-  # traditional quantmod env # this does NOT work with tryCatchLog::tryCatchLog
-  # Th .GlobalEnv xTsGetSymbols are not being recored in .getSymbols
-  if (exists(".getSymbols", env, inherits = FALSE)) {
-      DotgetSymbols <- get(".getSymbols", env, inherits = FALSE)
-      if (is.null(Symbols)) {
-          Symbols <- names(DotgetSymbols)
-      }
-      else {
-          Symbols <- Symbols[Symbols %in% names(DotgetSymbols)]
-      }
-      for (each.symbol in Symbols) {
-          if(!each.symbol %in% names(xTsGetSymbols )){
-            xTsGetSymbols <- c(xTsGetSymbols, get(each.symbol, envir = env, inherits = FALSE))
-            names(xTsGetSymbols)[length(xTsGetSymbols)] < each.symbol
-          }
-      }
+  DotgetSymbolsFound <- FALSE
+  if (exists(".getSymbols", envi, inherits = FALSE)) {
+    DotgetSymbols <- get(".getSymbols", envi, inherits = FALSE)
+    Inherits <- FALSE
+    DotgetSymbolsFound <- TRUE
+  }
+  # XXX NOT NEEDED anymore 'env' was actually re-assigned by InitEnv XXX
+  # tryCatchLog::tryCatchLog will give wrong "env = parent.frame()"
+  # but: exists(".getSymbols", parent.frame(), inherits = FALSE) # is the correct parent.frame()
+  else if (exists(".getSymbols", envi, inherits = TRUE)) {
+    DotgetSymbols <- get(".getSymbols", envi, inherits = TRUE)
+    Inherits <- TRUE
+    DotgetSymbolsFound <- TRUE
   }
 
-   runenv <- environment()
-
-
-  # look in my custom environment ONLY
-
-   if(is.environment(source.envir)) {
-   llply(ls(envir = source.envir), function(x) {
-     xx <- get(x, source.envir, inherits = FALSE)
-     if((class(xx)[1] == "xts") && ("src" %in% names(xtsAttributes(xx)))) {
-       if(!x %in% names(xTsGetSymbols )){
-        xTsGetSymbols <- c(xTsGetSymbols, list(xx))
-        names(xTsGetSymbols)[length(xTsGetSymbols)] <- x
-        assign("xTsGetSymbols", xTsGetSymbols, envir = runenv)
-        }
+  if(DotgetSymbolsFound) {
+    if (is.null(Symbols)) {
+      # get all of the Symbols
+      Symbols <- names(DotgetSymbols)
+    }
+    else {
+      Symbols <- Symbols[Symbols %in% names(DotgetSymbols)]
+    }
+    for (each.symbol in Symbols) {
+      if(!each.symbol %in% names(xTsGetSymbols )){
+        xTsGetSymbols <- c(xTsGetSymbols, list(get(each.symbol, envir = envi, inherits = Inherits)))
+        names(xTsGetSymbols)[length(xTsGetSymbols)] <- each.symbol
       }
-   })
-   }
+    }
+  }
 
-   # save everything in my custom environment
-   if(!is.environment(source.envir))
-     source.envir <- list2env(xTsGetSymbols, parent = emptyenv())
+  runenv <- environment()
+  # look in my custom environment
+  if(is.environment(source.envir)) {
+  llply(ls(envir = source.envir), function(x) {
+    xx <- get(x, source.envir, inherits = FALSE)
+    if((class(xx)[1] == "xts") && ("src" %in% names(xtsAttributes(xx)))) {
+      if(!x %in% names(xTsGetSymbols )){
+         xTsGetSymbols <- c(xTsGetSymbols, list(xx))
+         names(xTsGetSymbols)[length(xTsGetSymbols)] <- x
+         assign("xTsGetSymbols", xTsGetSymbols, envir = runenv)
+       }
+    }
+  })}
+
+  # save everything in my custom environment
+  if(is.environment(source.envir))
+    # note list2env SILENTYLY a symbols of the same name AND in a DIFFERENT case
+    source.envir <- list2env(xTsGetSymbols, parent = emptyenv())
 
   Dots <- list(...)
+  # Symbols are no longer passed
+  # because all 'Symbols' are in the source.envir
+
   if("file.path" %in% names(Dots))
-    do.call(saveSymbols.RData, c(list(), Symbols = Symbols, env = env, source.envir = source.envir, Dots))
+    do.call(saveSymbols.RData, c(list(), source.envir = source.envir, Dots))
 
-  if("trg" %in% names(Dots)) {
-     do.call(paste0("saveSymbols",".", Dots[["trg"]]), c(list(),Symbols = Symbols, env = env, source.envir = source.envir, Dots))
-  }
-
+  if("trg" %in% names(Dots))
+    do.call(paste0("saveSymbols",".", Dots[["trg"]]), c(list(), source.envir = source.envir, Dots[!names(Dots) %in% "trg"]))
 
   invisible()
 
@@ -80,15 +117,11 @@ saveSymbols <- function(Symbols = NULL, env = parent.frame(), source.envir = NUL
 #' saves xts object symbols to a persistent location (disk: Symbol.RData file)
 #'
 #' see quantmod SaveSymbols
-#'
-#' @param Symbols	a character vector specifying the names of each symbol to be loaded
 #' @param file.path  character string of file (Symbol.Rdata) location
-#' @param env	where to create(save) objects. Setting env=NULL is equal to auto.assign=FALSE
 #' @param source.envir source location of Symbols
 #' @param ... pass through parameters
 #' @export
-saveSymbols.RData <- function (Symbols = NULL, file.path = stop("must specify 'file.path'"),
-  env = parent.frame(), source.envir = NULL, ...) {
+saveSymbols.RData <- function (file.path = stop("must specify 'file.path'"), source.envir = NULL, ...) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -105,8 +138,10 @@ saveSymbols.RData <- function (Symbols = NULL, file.path = stop("must specify 'f
 #'
 #' @param xTs OHLC[V][A] object
 #' @param con DBI database connection
+#' @param field.names R column names
+#' @param db.fields database column names
 #' @export
-xTs2DBDF <- function(xTs, con) {
+xTs2DBDF <- function(xTs, con, field.names, db.fields) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -114,15 +149,11 @@ xTs2DBDF <- function(xTs, con) {
 
   # OHLC columns
   str_replace_all(colnames(df), "[.]", "_")  -> colnames(df)
-  colnames(df)[str_detect(tolower(colnames(df)), "_open$")] <- "o"
-  colnames(df)[str_detect(tolower(colnames(df)), "_high$")] <- "h"
-  colnames(df)[str_detect(tolower(colnames(df)), "_low$")] <- "l"
-  colnames(df)[str_detect(tolower(colnames(df)), "_close$")] <- "c"
-  colnames(df)[str_detect(tolower(colnames(df)), "_volume$")] <- "v"
-  colnames(df)[str_detect(tolower(colnames(df)), "_adjusted$")] <- "a"
+  for(grouping in list.zip(field.names, db.fields)){
+     colnames(df)[str_detect(tolower(colnames(df)), str_c("_", tolower(grouping[["field.names"]]),"$"))] <- grouping[["db.fields"]]
+  }
   # all other column names "as is" (e.g. FRED)
 
-  # colnames(df) <- dbQuoteIdentifier(con, colnames(df))
   df
 
 })}
@@ -142,13 +173,13 @@ DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
   colClasses  <- do.call(c,llply(df, function(x) class(x)))
   colClasses[colClasses == "numeric"] <- "NUMERIC(14,3)"
 
+  # upon creation, do Quote Once:  (1)schema, (2)table and (3)column names
+  # the PostgreSQL storage will be: anything_capilized retains it's "" quotes.
+
   if(schname != "") { dotSchemaQuoted <- paste0(dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
   schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbol))
 
-    ddl <- paste0("CREATE TABLE ", schemaSymbolsQuoted ,"(", paste0( dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
-  # ddl <- paste0("CREATE TABLE ", schname ,".", Symbol ,"(", paste0( names(colClasses), " ", colClasses, collapse = ", "), ");")
-  # ddl <- paste0("CREATE TABLE ", schemaSymbolsQuoted ," (", paste0( names(colClasses), " ", colClasses, collapse = ", "), ");")
-
+  ddl <- paste0("CREATE TABLE ", schemaSymbolsQuoted ,"(", paste0( dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
   ddl
 
 })}
@@ -157,36 +188,38 @@ DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
 
 #' saves xts object symbols to a persistent location (database: PostgreSQL)
 #'
-#' @param Symbols	a character vector specifying the names of each symbol to be loaded
-#' @param env	where to create(save) objects. Setting env=NULL is equal to auto.assign=FALSE
+#' @param sourc.envir location of xts objects
 #' @param field.names names existing in starting columns
 #' @param db.fields character vector indicating
 #' names of fields to insert
-#' @param user username to access database
-#' @param password password to access database
-#' @param dbname database name
-#' @param schname schema name
-#' @param host database host
-#' @param port database port
+#' @param user username(default "Symbols") to access database
+#' @param password password(default "Symbols") to access database
+#' @param dbname database name (default "Symbols")
+#' @param schname schema name (default "Symbols")
+#' @param host database host (default "localhost")
+#' @param port database port (default 5432)
 #' @param options pass extra parameters in aa string to the command line
-#' @param forceISOdate FALSE/TRUE if the communication of date (time stamp) from PostgreSQL
+#' @param forceISOdate TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
 #' is forced to ISO style at conection
 #' @param ... pass through parameters
 #' @export
-saveSymbols.PostgreSQL <- function(Symbols = NULL, env = NULL,
+#' @examples
+#' \dontrun{
+#'
+#' }
+saveSymbols.PostgreSQL <- function(source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
   db.fields=c('o','h','l','c','v','a'),
-  source.envir = NULL,
   user=NULL,password=NULL,dbname=NULL,schname=NULL,host='localhost',port=5432,options=NULL, forceISOdate = TRUE,
   ...)  {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
   this.env <- environment()
 
-   # HOPEFULLY no one messes with Date/date
-   # HOPEFULLY BELOW data/Date meaningless ( only referenced by position(number) )
-   field.names <- c('Date', field.names)
-   db.fields   <- c('date', db.fields)
+  # HOPEFULLY no one messes with Date/date
+  # HOPEFULLY BELOW data/Date meaningless ( only referenced by position(number[-1]) )
+  field.names <- c('Date', field.names)
+  db.fields   <- c('date', db.fields)
 
   for(var in names(list(...))) {
     # import all named elements that are NON formals
@@ -199,10 +232,10 @@ saveSymbols.PostgreSQL <- function(Symbols = NULL, env = NULL,
   if(!requireNamespace("RPostgreSQL", quietly=TRUE))
     stop("package:",dQuote("RPostgreSQL"),"cannot be loaded.")
 
-  if(is.null(user))     user     <- "postgres"
-  if(is.null(password)) password <- "postgres"
-  if(is.null(dbname))   dbname   <- "postgres"
-  if(is.null(schname))  schname  <- ""
+  if(is.null(user))     user     <- "Symbols"
+  if(is.null(password)) password <- "Symbols"
+  if(is.null(dbname))   dbname   <- "Symbols"
+  if(is.null(schname))  schname  <- "Symbols"
   if(is.null(user) || is.null(password) || is.null(dbname)) {
     stop(paste(
         'At least one connection argument (',sQuote('user'),
@@ -224,22 +257,26 @@ saveSymbols.PostgreSQL <- function(Symbols = NULL, env = NULL,
   }
   pgSetCurrentSearchPath(con, dbQuoteIdentifier(con, schname))
 
+  # now, I am only getting symbols from here
+  Symbols <- names(as.list(source.envir))
+
   db.Symbols <- DBI::dbListTables(con)
   if(length(Symbols) != sum(Symbols %in% db.Symbols)) {
     missing.db.symbol <- Symbols[!Symbols %in% db.Symbols]
-    # for the requested Symbol, I do not have adatabae table so, I have to create ONE
+    # for the requested Symbol, if I do not have database table so, I have to create ONE
 
+    # create *new* empty TABLEs
     dfs <- list()
     new.db.symbol <- c()
     for (each.symbol in  missing.db.symbol) {
 
       xTs <- as.list(source.envir)[[each.symbol]]
       if(is.null(xTs)) { message(paste("Symbol ", each.symbol, " was not found s skipping.")); next }
-      df  <- xTs2DBDF(xTs, con)
+      df  <- xTs2DBDF(xTs, con, field.names = field.names[-1], db.fields = db.fields[-1])
 
       # create NEW CREATE TABLE statements"
       # column names
-      ddl <- DBDF2CREATETableStmt(df, con, each.symbol, schname)
+      ddl <- DBDF2CREATETableStmt(df, con, Symbol, schname)
       dbExecute(con, ddl)
 
       new.db.symbol <- c(new.db.symbol, each.symbol)
@@ -255,18 +292,12 @@ saveSymbols.PostgreSQL <- function(Symbols = NULL, env = NULL,
   }
   Symbols <- Symbols[Symbols %in% db.Symbols]
 
+  # make empty TABLEs, then fill empty TABLEs
   for (each.symbol in Symbols) {
-
-    # if(each.symbol %in% names(dfs)) {
-    #   df <- dfs[[each.symbol]]
-    # } else {
-    #   xTs <- getSymbols(each.symbol, source.envir = Symbols.envir, auto.assign = F)
-    #   df  <- xTs2DBDF(xTs)
-    # }
 
     xTs <- as.list(source.envir)[[each.symbol]]
     if(is.null(xTs)) { message(paste("Symbol ", each.symbol, " was not found s skipping.")); next }
-    df  <- xTs2DBDF(xTs)
+    df  <- xTs2DBDF(xTs, con, field.names = field.names[-1], db.fields = db.fields[-1])
 
     if(schname != "") { dotSchemaQuoted <- paste0(dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
     dbExecute(con, paste0("TRUNCATE TABLE ", dotSchemaQuoted, dbQuoteIdentifier(con, each.symbol), ";"))
@@ -277,17 +308,12 @@ saveSymbols.PostgreSQL <- function(Symbols = NULL, env = NULL,
     # to DB: 'date', 'o','h','l','c','v','a' ( along with FRED columns "as is")
 
     # custom sorting
-    # field.names  <- customSorting(field.names , InitOrder = field.names, CI = TRUE)
-    # df <- df[, field.names, drop = FALSE]
-
-    db.fields    <- customSorting(db.fields, InitOrder = db.fields, CI = TRUE)
+    db.fields    <- customSorting( colnames(df), InitOrder = db.fields, CI = TRUE)
     colnames(df) <- db.fields
 
-    # upon creation, do Quote Once:  (1)schema, (2)table and (3)column names
-    # the storage will be that anything_capilized retains it's "" quotes.
-
     dbWriteTable(con, each.symbol, df, append = T, row.names = F)
-                    # if with schema, will say TRUE, but will lie
+                     # if  each.symbol includes schema, will say TRUE, but will lie
+    dbDisconnect(con)
   }
   invisible()
 
@@ -454,23 +480,21 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' layout changes it is best to use
 #' \code{setDefaults(getSymbols.PostgreSQL,...)} with
 #' the new db.fields values specified.
-#'
-#' @param Symbols a charcter vector specifying
-#' the names of each symbol to be laoded
-#' @param env where to create objects (.GlobalEnv)
+#' @param Symbols  a character vector specifying the names of each symbol to be loaded
+#' @param env where to create objects. (.GlobalEnv) CURRENLY BROKEN
 #' @param return.class desirect class of returned object.
 #' Can be xts, zoo, data.fram, or xts. (zoo)
 #' @param db.fields character vector indicating
 #' names of fields to retrieve
 #' @param field.names names assigned to returned columns
-#' @param user username to access database
-#' @param password password to access database
-#' @param dbname database name
-#' @param schname schema name
-#' @param host database host
-#' @param port database port
+#' @param user username (default "Symbols") to access database
+#' @param password password (default "Symbols") to access database
+#' @param dbname database name (default "Symbols")
+#' @param schname schema name (default "Symbols")
+#' @param host database host (default "localhost")
+#' @param port database port (default 5432)
 #' @param options pass extra parameters in a string to the command line
-#' @param forceISOdate FALSE/TRUE if the communication of date (time stamp) from PostgreSQL
+#' @param forceISOdate TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
 #' is forced to ISO style at conection
 #' @return A call to getSymbols.MySQL will load into the specified
 #' environment one object for each \code{Symbol} specified,
@@ -498,12 +522,14 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #'
 #' ## Method #1
 #' getSymbols('MSFT',src='PostgreSQL')
-#'
+#' getSymbols('MSFT',src='pg')
 #'
 #' ## Method #2
 #' setDefaults(getSymbols,src='PostgreSQL')
+#' setDefaults(getSymbols,src='pg')
 #'   # OR
 #' setSymbolLookup(MSFT='PostgreSQL')
+#' setSymbolLookup(MSFT='pg')
 #'
 #' getSymbols('MSFT')
 #'
@@ -512,148 +538,169 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' #########################################
 #' ## Method #3
 #' getSymbols.PostgreSQL('MSFT',env=globalenv())
+#' getSymbols.pg('MSFT',env=globalenv())
 #'
-#' ## YEAR 2018 EXAMPLE
+#' ## YEAR 2018 EXAMPLES
 #'
-#' ibm <- getSymbols.PostgreSQL("IBM", schname ="money", auto.assign =  F)
+#' ibm <- getSymbols("IBM", src = "pg", auto.assign =  F)
+#'
+#' unrate <- getSymbols("UNRATE", src = "FRED", auto.assign =  F)
+#' saveSymbols(Symbols = "", trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
+#' unrate.db <- getSymbols("UNRATE", src = "pg", auto.assign =  F)
+#' unrate.db <- getSymbols(Symbols = "UNRATE", src = "pg", auto.assign = F)
 #'
 #' }
 #' @export
-getSymbols.PostgreSQL <- function(Symbols,env,return.class='xts',
+getSymbols.PostgreSQL <- function(Symbols = NULL, env, return.class = 'xts',
                                db.fields=c('o','h','l','c','v','a'),
                                field.names = c('Open','High','Low','Close','Volume','Adjusted'),
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
                                options = NULL, forceISOdate = TRUE,
                                ...) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
-     importDefaults("getSymbols.PostgreSQL")
-     this.env <- environment()
-     # So no one messes with Date/date
-     # BELOW data/Date meaningless ( only referenced by position(number) )
-     db.fields   <- c('date', db.fields)
-     field.names <- c('Date', field.names)
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  # NOTE env IS BROKEN,because initEnv is overriding it
+  # NOTE env IS BROKEN,because initEnv is overriding it
+  importDefaults("getSymbols.PostgreSQL")
+  this.env <- environment()
+  # So no one messes with Date/date
+  # BELOW data/Date meaningless ( only referenced by position(number) )
+  db.fields   <- c('date', db.fields)
+  field.names <- c('Date', field.names)
 
-     for(var in names(list(...))) {
-        # import all named elements that are NON formals
-        assign(var, list(...)[[var]], this.env)
-     }
-     if(!hasArg("verbose")) verbose <- FALSE
-     if(!hasArg("auto.assign")) auto.assign <- TRUE
+  for(var in names(list(...))) {
+    # import all named elements that are NON formals
+    assign(var, list(...)[[var]], this.env)
+  }
+  if(!hasArg("verbose")) verbose <- FALSE
+  if(!hasArg("auto.assign")) auto.assign <- TRUE
 
-     if(!requireNamespace("DBI", quietly=TRUE))
-       stop("package:",dQuote("DBI"),"cannot be loaded.")
-     if(!requireNamespace("RPostgreSQL", quietly=TRUE))
-       stop("package:",dQuote("RPostgreSQL"),"cannot be loaded.")
+  if(!requireNamespace("DBI", quietly=TRUE))
+   stop("package:",dQuote("DBI"),"cannot be loaded.")
+  if(!requireNamespace("RPostgreSQL", quietly=TRUE))
+   stop("package:",dQuote("RPostgreSQL"),"cannot be loaded.")
 
-        if(is.null(user))     user     <- "postgres"
-        if(is.null(password)) password <- "postgres"
-        if(is.null(dbname))   dbname   <- "postgres"
-        if(is.null(schname))  schname  <- ""
-        if(is.null(user) || is.null(password) || is.null(dbname)) {
-          stop(paste(
-              'At least one connection argument (',sQuote('user'),
-              sQuote('password'),sQuote('dbname'),
-              ") is not set"))
-        }
-        con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),user=user,password=password,dbname=dbname,
-                                           host=host,port=port,options=options,forceISOdate=forceISOdate)
-        db.Symbols <- DBI::dbListTables(con)
-        if(length(Symbols) != sum(Symbols %in% db.Symbols)) {
-          missing.db.symbol <- Symbols[!Symbols %in% db.Symbols]
-                warning(paste('could not load symbol(s): ',paste(missing.db.symbol,collapse=', ')))
-                Symbols <- Symbols[Symbols %in% db.Symbols]
-        }
+  if(is.null(user))     user     <- "Symbols"
+  if(is.null(password)) password <- "Symbols"
+  if(is.null(dbname))   dbname   <- "Symbols"
+  if(is.null(schname))  schname  <- "Symbols"
+  if(is.null(user) || is.null(password) || is.null(dbname)) {
+    stop(paste(
+        'At least one connection argument (',sQuote('user'),
+        sQuote('password'),sQuote('dbname'),
+        ") is not set"))
+  }
+  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),user=user,password=password,dbname=dbname,
+                                     host=host,port=port,options=options,forceISOdate=forceISOdate)
 
-        if(schname != "") { dotSchemaQuoted <- paste0(dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+  if(schname != "") {
+    schname <- schname
+  } else {
+    if(NROW(CurrentSearchPath)) {
+      CurrentSearchPath <- pgCurrentSearchPath(con)
+      schname <- CurrentSearchPath[1,1]
+    } else {
+      schname <- "public"
+    }
+  }
+  pgSetCurrentSearchPath(con, dbQuoteIdentifier(con, schname))
 
-        schemaSymbolsQuoted <- list()
-        Symbols.db.Cols <- list()
-        for(i in seq_along(Symbols)) {
-            if(verbose) {
-                cat(paste('Loading ',Symbols[[i]],paste(rep('.',10-nchar(Symbols[[i]])),collapse=''),sep=''))
-            }
+  db.Symbols <- DBI::dbListTables(con)
+  if(length(Symbols) != sum(Symbols %in% db.Symbols)) {
+    missing.db.symbol <- Symbols[!Symbols %in% db.Symbols]
+    warning(paste('could not load symbol(s): ',paste(missing.db.symbol,collapse=', ')))
+    Symbols <- Symbols[Symbols %in% db.Symbols]
+  }
 
-            # PEEK AHEAD, SEE IF, VOLUME xor ADJUSTED, IS MISSING, SEE IF SINGLE COLUMN (FRED) DATA
-            dbGetQuery(con,
-              paste0(
-              "
-                SELECT
-                      table_catalog -- database
-                    , table_schema
-                    , table_name
-                    , column_name
-                    , udt_name -- human readable datatype
-                FROM
-                    information_schema.columns
-                WHERE
-                    table_schema NOT IN ('information_schema', 'pg_catalog') AND
-                    table_schema     IN (", dbQuoteLiteral(con, schname), ") AND
-                    table_name       IN (", dbQuoteLiteral(con, Symbols[[i]]),")
-                ;
-              "
-              )
-            ) -> Symbols.db.Cols[[i]]
+  if(schname != "") { dotSchemaQuoted <- paste0(dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
 
-            # Goal
-            # exist in the DB: 'date', 'o','h','l','c','v','a' ( along with FRED columns )
-            # translate from those
-            # to R             'Date', 'Open','High','Low','Close','Volume','Adjusted'( along with FRED columns "as is")
+  schemaSymbolsQuoted <- list()
+  Symbols.db.Cols <- list()
+  for(i in seq_along(Symbols)) {
+    if(verbose)
+      cat(paste('Loading ',Symbols[[i]],paste(rep('.',10-nchar(Symbols[[i]])),collapse=''),sep=''))
+    # PEEK AHEAD, SEE IF, VOLUME xor ADJUSTED, IS MISSING, SEE IF SINGLE COLUMN (FRED) DATA
+    dbGetQuery(con,
+      paste0(
+       "
+        SELECT
+              table_catalog -- database
+            , table_schema
+            , table_name
+            , column_name
+            , udt_name -- human readable datatype
+        FROM
+            information_schema.columns
+        WHERE
+            table_schema NOT IN ('information_schema', 'pg_catalog') AND
+            table_schema     IN (", dbQuoteLiteral(con, schname), ") AND
+            table_name       IN (", dbQuoteLiteral(con, Symbols[[i]]),")
+        ORDER BY ordinal_position
+        ;
+      "
+      )
+    ) -> Symbols.db.Cols[[i]]
 
-            # Symbols.db.Columns <-  do.call(c,Symbols.db.Cols[[i]][,"column_name", drop = F])
-            # Symbols.db.ColumnsColumnOne <- Symbols.db.Columns[1] # date # NOT USED
-            #
-            # MatchedPositions <- match( db.fields[-1], do.call(c,llply(strsplit(tolower(Symbols.db.Columns[-1]),""), function(x) x[1] ))  )
-            # Symbols.db.Columns <- Symbols.db.Columns[-1][MatchedPositions]
-            # Symbols.db.Columns <- c(Symbols.db.ColumnsColumnOne, Symbols.db.Columns)
-            # # (can be character())
-            #
-            # field.namesColumnOne <- field.names[1]
-            # MatchedPositions <- match( db.fields[-1], do.call(c,llply(strsplit(tolower(field.names[-1]),""), function(x) x[1] ))  )
-            # # (can be character())
-            # field.names <- field.names[-1][MatchedPositions]
-            # field.names <- c(field.namesColumnOne, field.names)
+    # Goal
+    # exist in the DB: 'date', 'o','h','l','c','v','a' ( along with FRED columns )
+    # translate from those
+    # to R             'Date', 'Open','High','Low','Close','Volume','Adjusted'( along with FRED columns "as is")
 
-            # custom sorting
-            db.fields    <- customSorting(db.fields, InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE)
-            field.names  <- customSorting(db.fields, InitOrder = c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted"), CI = TRUE)
+    # Symbols.db.Columns <-  do.call(c,Symbols.db.Cols[[i]][,"column_name", drop = F])
+    # Symbols.db.ColumnsColumnOne <- Symbols.db.Columns[1] # date # NOT USED
+    #
+    # MatchedPositions <- match( db.fields[-1], do.call(c,llply(strsplit(tolower(Symbols.db.Columns[-1]),""), function(x) x[1] ))  )
+    # Symbols.db.Columns <- Symbols.db.Columns[-1][MatchedPositions]
+    # Symbols.db.Columns <- c(Symbols.db.ColumnsColumnOne, Symbols.db.Columns)
+    # # (can be character())
+    #
+    # field.namesColumnOne <- field.names[1]
+    # MatchedPositions <- match( db.fields[-1], do.call(c,llply(strsplit(tolower(field.names[-1]),""), function(x) x[1] ))  )
+    # # (can be character())
+    # field.names <- field.names[-1][MatchedPositions]
+    # field.names <- c(field.namesColumnOne, field.names)
 
-            db.fieldsQuoted  <-  dbQuoteIdentifier(con, db.fields)
-            schemaSymbolsQuoted[[i]] <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbols[[i]]))
+    # custom sorting
+    db.fields    <- customSorting(Symbols.db.Cols[[i]][["column_name"]], InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE)
+    field.names  <- customSorting(field.names, InitOrder = c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted"), CI = TRUE)
 
-            if(length(db.fields) > 1) {
-              Selection <- paste( db.fieldsQuoted , collapse=',')
-              OHLCData <- TRUE
-            } else {
-              # NO MATCHES, THEN MAYBE A "SINGLE COLUMN (FRED) DATA"
-              Selection <- "*"
-              OHLCData <- FALSE
-            }
-            # ABOVE (^) ALREADY QUOTED
-            query <- paste("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ",dbQuoteIdentifier(con, "date"))
-            rs <- DBI::dbSendQuery(con, query)
-            fr <- DBI::fetch(rs, n=-1)
-            #fr <- data.frame(fr[,-1],row.names=fr[,1])
-            fr <- xts(as.matrix(fr[,-1]),
-                      order.by=as.Date(fr[,1],origin='1970-01-01'),
-                      src=dbname,updated=Sys.time())
-            # MAY NOT HAVE VOLUME/ADJUSTED
-            if(OHLCData) {
-              colnames(fr) <- paste(Symbols[[i]],field.names[-1], sep='.')
-            } else { # as-is # e.g. FRED
-              colnames(fr) <- Symbols.db.Columns[-1]
-            }
-            fr <- quantmod___convert.time.series(fr=fr,return.class=return.class)
-            if(auto.assign)
-              assign(Symbols[[i]],fr,env)
-            if(verbose) cat('done\n')
-        }
-        DBI::dbDisconnect(con)
-        if(auto.assign)
-          return(Symbols)
-        return(fr)
+    db.fieldsQuoted  <-  dbQuoteIdentifier(con, db.fields)
+    schemaSymbolsQuoted[[i]] <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbols[[i]]))
+
+    if(sum(c("o", "h", "l", "c") %in% db.fields) == 4) {
+      Selection <- paste( db.fieldsQuoted , collapse=',')
+      OHLCData <- TRUE
+    } else {
+      # NO MATCHES, THEN MAYBE A "SINGLE COLUMN (FRED) DATA"
+      Selection <- "*"
+      OHLCData <- FALSE
+    }
+    # ABOVE (^) ALREADY QUOTED
+    query <- paste("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ",dbQuoteIdentifier(con, "date"))
+    rs <- DBI::dbSendQuery(con, query)
+    fr <- DBI::fetch(rs, n=-1)
+    #fr <- data.frame(fr[,-1],row.names=fr[,1])
+    dbDisconnect(con)
+    fr <- xts(as.matrix(fr[,-1]),
+              order.by=as.Date(fr[,1],origin='1970-01-01'),
+              src=dbname,updated=Sys.time())
+    # MAY NOT HAVE VOLUME/ADJUSTED
+    if(OHLCData) {
+      colnames(fr) <- paste(Symbols[[i]],field.names[-1], sep='.')
+    } else { # as-is # e.g. FRED
+      colnames(fr) <- db.fields[-1]
+    }
+    fr <- quantmod___convert.time.series(fr=fr,return.class=return.class)
+    if(auto.assign)
+      assign(Symbols[[i]],fr,env)
+    if(verbose) cat('done\n')
+  }
+  DBI::dbDisconnect(con)
+  if(auto.assign)
+    return(Symbols)
+  return(fr)
 })}
-#' "getSymbols pg
+#' getSymbols pg
 #'
 #'@export
 getSymbols.pg <- getSymbols.PostgreSQL

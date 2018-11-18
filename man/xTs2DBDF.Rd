@@ -4,12 +4,16 @@
 \alias{xTs2DBDF}
 \title{convert an OHLC xTs into aN OHLC data.frame MEANT to be loaded into a database}
 \usage{
-xTs2DBDF(xTs, con)
+xTs2DBDF(xTs, con, field.names, db.fields)
 }
 \arguments{
 \item{xTs}{OHLC[V][A] object}
 
 \item{con}{DBI database connection}
+
+\item{field.names}{R column names}
+
+\item{db.fields}{database column names}
 }
 \description{
 convert an OHLC xTs into aN OHLC data.frame MEANT to be loaded into a database

@@ -4,42 +4,44 @@
 \alias{saveSymbols.PostgreSQL}
 \title{saves xts object symbols to a persistent location (database: PostgreSQL)}
 \usage{
-saveSymbols.PostgreSQL(Symbols = NULL, env = NULL,
-  field.names = c("Open", "High", "Low", "Close", "Volume", "Adjusted"),
-  db.fields = c("o", "h", "l", "c", "v", "a"), source.envir = NULL,
-  user = NULL, password = NULL, dbname = NULL, schname = NULL,
-  host = "localhost", port = 5432, options = NULL,
+saveSymbols.PostgreSQL(source.envir = NULL, field.names = c("Open",
+  "High", "Low", "Close", "Volume", "Adjusted"), db.fields = c("o", "h",
+  "l", "c", "v", "a"), user = NULL, password = NULL, dbname = NULL,
+  schname = NULL, host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)
 }
 \arguments{
-\item{Symbols}{a character vector specifying the names of each symbol to be loaded}
-
-\item{env}{where to create(save) objects. Setting env=NULL is equal to auto.assign=FALSE}
-
 \item{field.names}{names existing in starting columns}
 
 \item{db.fields}{character vector indicating
 names of fields to insert}
 
-\item{user}{username to access database}
+\item{user}{username(default "Symbols") to access database}
 
-\item{password}{password to access database}
+\item{password}{password(default "Symbols") to access database}
 
-\item{dbname}{database name}
+\item{dbname}{database name (default "Symbols")}
 
-\item{schname}{schema name}
+\item{schname}{schema name (default "Symbols")}
 
-\item{host}{database host}
+\item{host}{database host (default "localhost")}
 
-\item{port}{database port}
+\item{port}{database port (default 5432)}
 
 \item{options}{pass extra parameters in aa string to the command line}
 
-\item{forceISOdate}{FALSE/TRUE if the communication of date (time stamp) from PostgreSQL
+\item{forceISOdate}{TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
 is forced to ISO style at conection}
 
 \item{...}{pass through parameters}
+
+\item{sourc.envir}{location of xts objects}
 }
 \description{
 saves xts object symbols to a persistent location (database: PostgreSQL)
+}
+\examples{
+\dontrun{
+
+}
 }

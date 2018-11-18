@@ -4,16 +4,11 @@
 \alias{saveSymbols.RData}
 \title{saves xts object symbols to a persistent location (disk: Symbol.RData file)}
 \usage{
-saveSymbols.RData(Symbols = NULL,
-  file.path = stop("must specify 'file.path'"), env = parent.frame(),
+saveSymbols.RData(file.path = stop("must specify 'file.path'"),
   source.envir = NULL, ...)
 }
 \arguments{
-\item{Symbols}{a character vector specifying the names of each symbol to be loaded}
-
 \item{file.path}{character string of file (Symbol.Rdata) location}
-
-\item{env}{where to create(save) objects. Setting env=NULL is equal to auto.assign=FALSE}
 
 \item{source.envir}{source location of Symbols}
 

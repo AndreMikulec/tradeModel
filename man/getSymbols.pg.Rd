@@ -2,14 +2,15 @@
 % Please edit documentation in R/database.R
 \name{getSymbols.pg}
 \alias{getSymbols.pg}
-\title{"getSymbols pg}
+\title{getSymbols pg}
 \usage{
-getSymbols.pg(Symbols, env, return.class = "xts", db.fields = c("o",
-  "h", "l", "c", "v", "a"), field.names = c("Open", "High", "Low",
-  "Close", "Volume", "Adjusted"), user = NULL, password = NULL,
-  dbname = NULL, schname = NULL, host = "localhost", port = 5432,
-  options = NULL, forceISOdate = NULL, ...)
+getSymbols.pg(Symbols = NULL, env, return.class = "xts",
+  db.fields = c("o", "h", "l", "c", "v", "a"), field.names = c("Open",
+  "High", "Low", "Close", "Volume", "Adjusted"), user = NULL,
+  password = NULL, dbname = NULL, schname = NULL,
+  host = "localhost", port = 5432, options = NULL,
+  forceISOdate = TRUE, ...)
 }
 \description{
-"getSymbols pg
+getSymbols pg
 }

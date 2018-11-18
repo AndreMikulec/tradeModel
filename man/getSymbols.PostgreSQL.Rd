@@ -4,18 +4,17 @@
 \alias{getSymbols.PostgreSQL}
 \title{Retrieve Data from PostgreSQL Database}
 \usage{
-getSymbols.PostgreSQL(Symbols, env, return.class = "xts",
+getSymbols.PostgreSQL(Symbols = NULL, env, return.class = "xts",
   db.fields = c("o", "h", "l", "c", "v", "a"), field.names = c("Open",
   "High", "Low", "Close", "Volume", "Adjusted"), user = NULL,
   password = NULL, dbname = NULL, schname = NULL,
   host = "localhost", port = 5432, options = NULL,
-  forceISOdate = NULL, ...)
+  forceISOdate = TRUE, ...)
 }
 \arguments{
-\item{Symbols}{a charcter vector specifying
-the names of each symbol to be laoded}
+\item{Symbols}{a character vector specifying the names of each symbol to be loaded}
 
-\item{env}{where to create objects (.GlobalEnv)}
+\item{env}{where to create objects. (.GlobalEnv) CURRENLY BROKEN}
 
 \item{return.class}{desirect class of returned object.
 Can be xts, zoo, data.fram, or xts. (zoo)}
@@ -25,21 +24,21 @@ names of fields to retrieve}
 
 \item{field.names}{names assigned to returned columns}
 
-\item{user}{username to access database}
+\item{user}{username (default "Symbols") to access database}
 
-\item{password}{password to access database}
+\item{password}{password (default "Symbols") to access database}
 
-\item{dbname}{database name}
+\item{dbname}{database name (default "Symbols")}
 
-\item{schname}{schema name}
+\item{schname}{schema name (default "Symbols")}
 
-\item{host}{database host}
+\item{host}{database host (default "localhost")}
 
-\item{port}{database port}
+\item{port}{database port (default 5432)}
 
 \item{options}{pass extra parameters in a string to the command line}
 
-\item{forceISOdate}{FALSE/TRUE if the communication of date (time stamp) from PostgreSQL
+\item{forceISOdate}{TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
 is forced to ISO style at conection}
 }
 \value{
@@ -86,12 +85,14 @@ setDefaults(getSymbols.PostgreSQL,user='jdoe',password='secret',
 
 ## Method #1
 getSymbols('MSFT',src='PostgreSQL')
-
+getSymbols('MSFT',src='pg')
 
 ## Method #2
 setDefaults(getSymbols,src='PostgreSQL')
+setDefaults(getSymbols,src='pg')
   # OR
 setSymbolLookup(MSFT='PostgreSQL')
+setSymbolLookup(MSFT='pg')
 
 getSymbols('MSFT')
 
@@ -100,6 +101,17 @@ getSymbols('MSFT')
 #########################################
 ## Method #3
 getSymbols.PostgreSQL('MSFT',env=globalenv())
+getSymbols.pg('MSFT',env=globalenv())
+
+## YEAR 2018 EXAMPLES
+
+ibm <- getSymbols("IBM", src = "pg", auto.assign =  F)
+
+unrate <- getSymbols("UNRATE", src = "FRED", auto.assign =  F)
+saveSymbols(Symbols = "", trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
+unrate.db <- getSymbols("UNRATE", src = "pg", auto.assign =  F)
+unrate.db <- getSymbols(Symbols = "UNRATE", src = "pg", auto.assign = F)
+
 }
 }
 \references{

@@ -4,13 +4,13 @@
 \alias{saveSymbols}
 \title{saves xts object symbols to a persistent location (dispatcher)}
 \usage{
-saveSymbols(Symbols = NULL, env = parent.frame(),
+saveSymbols(Symbols = NULL, envi = parent.frame(),
   source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded}
 
-\item{env}{where to create(save) objects. Setting env=NULL is equal to auto.assign=FALSE}
+\item{envi}{location of xts objects downloaded with getSymbols("XXX", src = 'yahoo')}
 
 \item{source.envir}{source location of Symbols}
 
@@ -22,8 +22,27 @@ saves xts object symbols to a persistent location (dispatcher)
 \examples{
 \dontrun{
 
-saveSymbols("IBM", trg = "pg", schname = "money",
-  source.envir = list2env(list(IBM = getSymbols("IBM", auto.assign = F))))
+# Symbols must be case-insenstive unique
+
+getSymbols("IBM", src = "yahoo") # auto.assign = TRUE
+
+# Symbols names found in Symbols and the names of xts objects stored
+# in source.envir, must be mutually exclusive ( case in-sensensitive match)
+# (because list2env silently drops repeated members)
+
+# save just the Symbol "IBM"
+saveSymbols("IBM", trg = "pg")
+
+msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+source.envir = list2env(list(MSFT = msft))
+# save only the source.envir Symbols
+saveSymbols(Symbols = "", trg = "pg", source.envir = source.envir)
+
+# save all of the .getSymbols Symbols and the source.envir Symbols
+saveSymbols(trg = "pg", source.envir = source.envir)
+
+# save all to a file
+# saveSymbols(source.envir = source.envir, file.path = "C:\\\\Users\\\\Public")
 
 }
 }
