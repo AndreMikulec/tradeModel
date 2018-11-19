@@ -173,6 +173,13 @@ xTs2DBDF <- function(xTs, con, field.names, db.fields) {
 #' @param source.envir where to find xts objects ( location of cache )
 #' @param ...	additional parameters
 #' @return A call to getSymbols.csv will load into the specified environment one object for each Symbol specified, with class defined by return.class. Presently this may be ts, zoo, xts, data.frame, or timeSeries
+#' @examples
+#' \dontrun{
+#' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#' source.envir = list2env(list(MSFT = msft))
+#' saveSymbols(Symbols = "", trg = "cache", source.envir = source.envir)
+#' res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
+#' }
 #' @export
 getSymbols.cache <- function (Symbols, env, return.class = "xts",
     source.envir = NULL, ...) {
@@ -221,6 +228,12 @@ initEnv();on.exit({uninitEnv()})
 #' @param source.envir location of xts objects
 #' @param target.envir location of where to store xts objects ( location of cache )
 #' @param ... not used
+#' @examples
+#' \dontrun{
+#' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#' source.envir = list2env(list(MSFT = msft))
+#' saveSymbols(Symbols = "", trg = "cache", source.envir = source.envir)
+#' }
 #' @export
 saveSymbols.cache <- function (source.envir = NULL, target.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({

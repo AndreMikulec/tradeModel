@@ -24,3 +24,11 @@ A call to getSymbols.csv will load into the specified environment one object for
 \description{
 Downloads Symbols to specified env from a local R environment
 }
+\examples{
+\dontrun{
+msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+source.envir = list2env(list(MSFT = msft))
+saveSymbols(Symbols = "", trg = "cache", source.envir = source.envir)
+res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
+}
+}
