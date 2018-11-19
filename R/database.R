@@ -251,16 +251,22 @@ initEnv();on.exit({uninitEnv()})
 
 #' from column names and datatypes, make a CREATE TABLE statement
 #'
+#' also register its meta-data
+#'
 #' @param df data.frame (with column names)
 #' @param con DBI database connection
 #' @export
-DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
+dfToCREATETable <- function(df, con, Symbol, schname) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
   # column datatypes
   colClasses  <- do.call(c,llply(df, function(x) class(x)))
   colClasses[colClasses == "numeric"] <- "NUMERIC(14,3)"
+
+  # meta-data table
+  if(!"Symbols" %in% pgListSchemaTables(con, "Symbols"))
+    dbExecute(con, paste0("CREATE TABLE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), "(", dbQuoteIdentifier(con, "Symbols"), " text, ", dbQuoteIdentifier(con, "updated")," timestamp with time zone);") )
 
   # upon creation, do Quote Once:  (1)schema, (2)table and (3)column names
   # the PostgreSQL storage will be: anything_capilized retains it's "" quotes.
@@ -269,7 +275,10 @@ DBDF2CREATETableStmt <- function(df, con, Symbol, schname) {
   schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbol))
 
   ddl <- paste0("CREATE TABLE ", schemaSymbolsQuoted ,"(", paste0( dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
-  ddl
+  dbExecute(con, ddl)
+  dml <- paste0("INSERT INTO ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), "(", dbQuoteIdentifier(con, "Symbols"), ") VALUES (", dbQuoteString(con, Symbol), ");")
+  dbExecute(con, dml)
+  invisible()
 
 })}
 
@@ -509,8 +518,7 @@ initEnv();on.exit({uninitEnv()})
 
       # create NEW CREATE TABLE statements"
       # column names
-      ddl <- DBDF2CREATETableStmt(df, con, Symbol, schname)
-      dbExecute(con, ddl)
+      dfToCREATETable(df = df, con = con, Symbol = each.symbol, schname = schname)
 
       new.db.symbol <- c(new.db.symbol, each.symbol)
       tempList <- list(); tempList[[each.symbol]] <- df
@@ -546,8 +554,11 @@ initEnv();on.exit({uninitEnv()})
 
     dbWriteTable(con, each.symbol, df, append = T, row.names = F)
                      # if  each.symbol includes schema, will say TRUE, but will lie
-    dbDisconnect(con)
+
+    dbExecute(con, paste0("UPDATE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), " SET ", dbQuoteIdentifier(con, "updated"), " = ", "to_timestamp(", dbQuoteString(con, as.character(Sys.time())), " ,'YYYY-MM-DD HH24:MI:SS')", " WHERE ", dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, each.symbol), ";"))
+
   }
+  dbDisconnect(con)
   invisible()
 
 })}
