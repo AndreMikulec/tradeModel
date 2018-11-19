@@ -319,7 +319,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return list of "con" DBI Connection object and "schname" final chosen schema name
 #' @export
 pgConnect <- function(user=NULL,password=NULL,dbname=NULL,schname=NULL,
-                      host=NULL,port=NULL,options=NULL,forceISOdate=NULL) {
+                      host=NULL,port=NULL,options=NULL,forceISOdate=TRUE) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -351,6 +351,7 @@ initEnv();on.exit({uninitEnv()})
       schname <- "public"
     }
   }
+  dbExecute(con, "SET TIME ZONE 'UTC';")
   pgSetCurrentSearchPath(con, dbQuoteIdentifier(con, schname))
   list(con=con,user=user,password=password,dbname=dbname,schname=schname)
 
@@ -361,7 +362,7 @@ initEnv();on.exit({uninitEnv()})
 #' of a specific PostgreSQL database schema, show its tables
 #'
 #' @param con PostgreSQL DBI connection
-#' @param schema name
+#' @param schname schema name
 #' @return vector of characters of table names
 #' The results do not have any order.
 #' @export

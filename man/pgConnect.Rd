@@ -6,7 +6,7 @@
 \usage{
 pgConnect(user = NULL, password = NULL, dbname = NULL,
   schname = NULL, host = NULL, port = NULL, options = NULL,
-  forceISOdate = NULL)
+  forceISOdate = TRUE)
 }
 \arguments{
 \item{user}{username(default "Symbols") to access database}

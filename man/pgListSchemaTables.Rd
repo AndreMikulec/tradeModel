@@ -9,7 +9,7 @@ pgListSchemaTables(con, schname)
 \arguments{
 \item{con}{PostgreSQL DBI connection}
 
-\item{schema}{name}
+\item{schname}{schema name}
 }
 \value{
 vector of characters of table names
