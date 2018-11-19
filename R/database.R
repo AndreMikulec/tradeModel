@@ -37,8 +37,8 @@
 #' }
 #' @export
 saveSymbols <- function(Symbols = NULL, env = parent.frame(), source.envir = NULL, ...) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
   # case insensitive
 
@@ -75,7 +75,7 @@ saveSymbols <- function(Symbols = NULL, env = parent.frame(), source.envir = NUL
     }
 
     for (each.symbol in Symbols) {
-      if(!each.symbol %in% names(xTsGetSymbols )){
+      if(!each.symbol %in% names(xTsGetSymbols)){
         xTsGetSymbols <- c(xTsGetSymbols, list(get(each.symbol, envir = env, inherits = Inherits)))
         names(xTsGetSymbols)[length(xTsGetSymbols)] <- each.symbol
       }
@@ -161,6 +161,77 @@ xTs2DBDF <- function(xTs, con, field.names, db.fields) {
 
   df
 
+})}
+
+
+
+#' Downloads Symbols to specified env from a local R environment
+#'
+#' @param Symbols	a character vector specifying the names of each symbol to be loaded
+#' @param env	where to create objects. (.GlobalEnv)
+#' @param return.class	class of returned object
+#' @param source.envir where to find xts objects ( location of cache )
+#' @param ...	additional parameters
+#' @return A call to getSymbols.csv will load into the specified environment one object for each Symbol specified, with class defined by return.class. Presently this may be ts, zoo, xts, data.frame, or timeSeries
+#' @export
+getSymbols.cache <- function (Symbols, env, return.class = "xts",
+    source.envir = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+    importDefaults("getSymbols.cache")
+    this.env <- environment()
+    for (var in names(list(...))) {
+        assign(var, list(...)[[var]], this.env)
+    }
+    if(is.null(source.envir)) source.envir <- .GlobalEnv
+    default.return.class <- return.class
+    if (!hasArg("verbose"))
+        verbose <- FALSE
+    if (!hasArg("auto.assign"))
+        auto.assign <- TRUE
+    for (i in seq_along(Symbols)) {
+        return.class <- default.return.class
+        if (verbose)
+            cat("loading ", Symbols[[i]], ".....")
+        if (!paste0(".", Symbols[[i]]) %in% ls(envir = source.envir, all.names = TRUE)) {
+            cat("\n", Symbols[[i]]," does not exist ", "....skipping\n")
+            next
+        }
+        fr <- get(paste0(".", Symbols[[i]]), envir =  source.envir)
+        if (verbose)
+            cat("done.\n")
+        if (!is.xts(fr))
+            fr <- xts(fr[, -1], as.Date(fr[, 1], origin = "1970-01-01"),
+                src = "cache", updated = Sys.time())
+        # NO COLUMN NAME ADJUSTMENT/CONVERSTION BECAUSE NOT AN ORIGINAL SOURCE
+        fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
+        # NO SYMBOL NAME ADJUSTMENT/CONVERSTION BECAUSE NOT AN ORIGINAL SOURCE
+        if (auto.assign)
+            assign(Symbols[[i]], fr, env)
+    }
+    if (auto.assign)
+        return(Symbols)
+    return(fr)
+})}
+
+
+
+#' save xts objects as .xts in source.envir ( cache )
+#'
+#' @param source.envir location of xts objects
+#' @param target.envir location of where to store xts objects ( location of cache )
+#' @param ... not used
+#' @export
+saveSymbols.cache <- function (source.envir = NULL, target.envir = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+    source.list <- as.list(source.envir)
+    if(is.null(target.envir)) target.envir <- .GlobalEnv
+    for(each.symbol in names(source.list)) {
+        assign(paste0(".", each.symbol), source.list[[each.symbol]], envir = target.envir)
+    }
+    invisible()
 })}
 
 
@@ -556,28 +627,31 @@ pgSetCurrentSearchPath <- function(con, path) { dbExecute(con, paste0("SET SEARC
 #' @export
 pgCurrentTempSchema <- function(con) { oneColumn(con, "SELECT nspname FROM pg_namespace WHERE oid = pg_my_temp_schema();", "CurrentTempSchema") }
 
+
+
 #' custom sort a vector
 #'
 #' excess is appended to the end ( CI sort or CS sort )
+#'
+#' # Custom Sorting in R
+#' # 2014
+#' # https://stackoverflow.com/questions/23995285/custom-sorting-in-r
+#' # AND
+#' # Case insensitive sort of vector of string in R
+#' # 2015
+#' # https://stackoverflow.com/questions/29890303/case-insensitive-sort-of-vector-of-string-in-r
 #'
 #' @param Vector vector to be sorted
 #' @param InitOrder starting custom sorting ( without the excess )
 #' @param CI case insensitive
 #' @examples
-#' \dontrun {
+#' \dontrun{
 #' customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"), InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE )
-#  # [1] "date" "o"    "h"    "l"    "c"    "v"    "a"    "E2"   "e3"
+#' [1] "date" "o"    "h"    "l"    "c"    "v"    "a"    "E2"   "e3"
 #' }
 #' @export
 customSorting <- function(Vector, InitOrder, CI = FALSE) {
 
-  # Custom Sorting in R
-  # 2014
-  # https://stackoverflow.com/questions/23995285/custom-sorting-in-r
-  # AND
-  # Case insensitive sort of vector of string in R
-  # 2015
-  # https://stackoverflow.com/questions/29890303/case-insensitive-sort-of-vector-of-string-in-r
 
   # custom sorting
   VectorLevels <- InitOrder

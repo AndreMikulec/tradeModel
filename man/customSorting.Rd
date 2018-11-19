@@ -16,8 +16,18 @@ customSorting(Vector, InitOrder, CI = FALSE)
 \description{
 excess is appended to the end ( CI sort or CS sort )
 }
+\details{
+# Custom Sorting in R
+# 2014
+# https://stackoverflow.com/questions/23995285/custom-sorting-in-r
+# AND
+# Case insensitive sort of vector of string in R
+# 2015
+# https://stackoverflow.com/questions/29890303/case-insensitive-sort-of-vector-of-string-in-r
+}
 \examples{
-\dontrun {
+\dontrun{
 customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"), InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE )
+[1] "date" "o"    "h"    "l"    "c"    "v"    "a"    "E2"   "e3"
 }
 }
