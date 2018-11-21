@@ -4,7 +4,7 @@
 \alias{existSymbols.cache}
 \title{xts object symbols}
 \usage{
-existSymbols.cache(Symbols = "", source.envir = NULL, ...)
+existSymbols.cache(Symbols = NULL, source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}

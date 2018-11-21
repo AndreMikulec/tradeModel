@@ -29,61 +29,6 @@ xTs2DBDF <- function(xTs, con, field.names, db.fields) {
 
 
 
-#' Downloads Symbols to specified env from a local R environment
-#'
-#' @param Symbols	a character vector specifying the names of each symbol to be loaded
-#' @param env	where to create objects. (.GlobalEnv)
-#' @param return.class	class of returned object
-#' @param source.envir where to find xts objects ( location of cache )
-#' @param ...	additional parameters
-#' @return A call to getSymbols.csv will load into the specified environment one object for each Symbol specified, with class defined by return.class. Presently this may be ts, zoo, xts, data.frame, or timeSeries
-#' @examples
-#' \dontrun{
-#' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
-#' source.envir = list2env(list(MSFT = msft))
-#' saveSymbols(Symbols = "", trg = "cache", source.envir = source.envir)
-#' res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
-#' }
-#' @export
-getSymbols.cache <- function (Symbols, env, return.class = "xts",
-    source.envir = NULL, ...) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-    importDefaults("getSymbols.cache")
-    this.env <- environment()
-    for (var in names(list(...))) {
-        assign(var, list(...)[[var]], this.env)
-    }
-    if(is.null(source.envir)) source.envir <- .GlobalEnv
-    default.return.class <- return.class
-    if (!hasArg("verbose"))
-        verbose <- FALSE
-    if (!hasArg("auto.assign"))
-        auto.assign <- TRUE
-    for (i in seq_along(Symbols)) {
-        return.class <- default.return.class
-        if (verbose)
-            cat("loading ", Symbols[[i]], ".....")
-        if (!paste0(".", Symbols[[i]]) %in% ls(envir = source.envir, all.names = TRUE)) {
-            cat("\n", Symbols[[i]]," does not exist ", "....skipping\n")
-            next
-        }
-        fr <- get(paste0(".", Symbols[[i]]), envir =  source.envir)
-        if (verbose)
-            cat("done.\n")
-        if (!is.xts(fr))
-            fr <- xts(fr[, -1], as.Date(fr[, 1], origin = "1970-01-01"),
-                src = "cache", updated = Sys.time())
-        # NO COLUMN NAME ADJUSTMENT/CONVERSTION BECAUSE NOT AN ORIGINAL SOURCE
-        fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
-        # NO SYMBOL NAME ADJUSTMENT/CONVERSTION BECAUSE NOT AN ORIGINAL SOURCE
-        if (auto.assign)
-            assign(Symbols[[i]], fr, env)
-    }
-    if (auto.assign)
-        return(Symbols)
-    return(fr)
-})}
 
 
 
@@ -488,6 +433,73 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 
 
 
+#' Downloads Symbols to specified env from a local R environment
+#'
+#' @param Symbols	a character vector specifying the names of each symbol to be loaded
+#' @param env	where to create objects. (.GlobalEnv)
+#' @param return.class	class of returned object
+#' @param source.envir where to find xts objects ( location of cache )
+#' @param ...	additional parameters
+#' @return A call to getSymbols.csv will load into the specified environment one object for each Symbol specified, with class defined by return.class. Presently this may be ts, zoo, xts, data.frame, or timeSeries
+#' @examples
+#' \dontrun{
+#' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#' source.envir = list2env(list(MSFT = msft))
+#' saveSymbols(Symbols = "", trg = "cache", source.envir = source.envir)
+#' res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
+#' }
+#' @export
+getSymbols.cache <- function (Symbols = NULL, source.envir = NULL, env, return.class = "xts", ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+    importDefaults("getSymbols.cache")
+    this.env <- environment()
+    for (var in names(list(...))) {
+        assign(var, list(...)[[var]], this.env)
+    }
+    if(is.null(source.envir)) source.envir <- .GlobalEnv
+    default.return.class <- return.class
+    if (!hasArg("verbose"))
+        verbose <- FALSE
+    if (!hasArg("auto.assign"))
+        auto.assign <- TRUE
+
+    AllSymbols       <- ls(envir = source.envir, all.names = TRUE)
+    RetrievedSymbols <- AllSymbols[str_detect(AllSymbols,"^[.].+")]
+    FoundSymbols     <- RetrievedSymbols %in% paste0(".",Symbols)
+    EnvSymbols       <- RetrievedSymbols[FoundSymbols]
+    Symbols          <- EnvSymbols
+    if(is.null(match.arg(Symbols))) Symbols <- RetrievedSymbols
+
+    # ORIGINAL quantmod-ism FOLLOWS ... [ ] could be cleaned up
+
+    for (i in seq_along(Symbols)) {
+        return.class <- default.return.class
+        if (verbose)
+            cat("loading ", Symbols[[i]], ".....")
+        if (!paste0(".", Symbols[[i]]) %in% RetrievedSymbols) {
+            cat("\n", Symbols[[i]]," does not exist ", "....skipping\n")
+            next
+        }
+        fr <- get(paste0(".", Symbols[[i]]), envir =  source.envir)
+        if (verbose)
+            cat("done.\n")
+        if (!is.xts(fr))
+            fr <- xts(fr[, -1], as.Date(fr[, 1], origin = "1970-01-01"),
+                src = "cache", updated = Sys.time())
+        # NO COLUMN NAME ADJUSTMENT/CONVERSTION BECAUSE NOT AN ORIGINAL SOURCE
+        fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
+        # NO SYMBOL NAME ADJUSTMENT/CONVERSTION BECAUSE NOT AN ORIGINAL SOURCE
+        if (auto.assign)
+            assign(Symbols[[i]], fr, env)
+    }
+    if (auto.assign)
+        return(Symbols)
+    return(fr)
+})}
+
+
+
 #' Retrieve Data from PostgreSQL Database
 #'
 #' @description
@@ -518,6 +530,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' \code{setDefaults(getSymbols.PostgreSQL,...)} with
 #' the new db.fields values specified.
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
+#' @param con DBI connection
 #' @param env where to create objects. (.GlobalEnv) CURRENLY BROKEN
 #' @param return.class desirect class of returned object.
 #' Can be xts, zoo, data.fram, or xts. (zoo)
@@ -588,7 +601,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #'
 #' }
 #' @export
-getSymbols.PostgreSQL <- function(Symbols = NULL, env, return.class = 'xts',
+getSymbols.PostgreSQL <- function(Symbols = NULL, con = con, env, return.class = 'xts',
                                db.fields=c('o','h','l','c','v','a'),
                                field.names = c('Open','High','Low','Close','Volume','Adjusted'),
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
@@ -610,10 +623,20 @@ initEnv();on.exit({uninitEnv()})
   if(!hasArg("verbose")) verbose <- FALSE
   if(!hasArg("auto.assign")) auto.assign <- TRUE
 
-  DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
-  AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+  if(is.null(con)) {
+    DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
+    AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+  }
+  if(!is.null(match.arg(schname)) && match.arg(schname) != schname) schname <- match.arg(schname)
 
-  db.Symbols <- pgListSchemaTables(con, schname)[pgListSchemaTables(con, schname)  %in% Symbols]
+  # ORIGINAL quantmod-ism FOLLOWS ... [ ] could be cleaned up
+
+  AllSymbols <- pgListSchemaTables(con, schname)
+  RetrievedSymbols <- AllSymbols[!AllSymbols %in% "Symbols"]
+  FoundSymbols     <- RetrievedSymbols %in% Symbols
+  db.Symbols       <- RetrievedSymbols[FoundSymbols]
+  if(is.null(match.arg(Symbols))) db.Symbols <- RetrievedSymbols
+
   if(length(Symbols) != sum(Symbols %in% db.Symbols)) {
     missing.db.symbol <- Symbols[!Symbols %in% db.Symbols]
     warning(paste('could not load symbol(s): ',paste(missing.db.symbol,collapse=', ')))
@@ -624,7 +647,7 @@ initEnv();on.exit({uninitEnv()})
 
   schemaSymbolsQuoted <- list()
   Symbols.db.Cols <- list()
-  for(i in seq_along(Symbols)) {
+  for(i in se                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 +           q_along(Symbols)) {
     if(verbose)
       cat(paste('Loading ',Symbols[[i]],paste(rep('.',10-nchar(Symbols[[i]])),collapse=''),sep=''))
     # PEEK AHEAD, SEE IF, VOLUME xor ADJUSTED, IS MISSING, SEE IF SINGLE COLUMN (FRED) DATA
@@ -701,20 +724,21 @@ getSymbols.pg <- getSymbols.PostgreSQL
 
 #' saves xts object symbols to a persistent location (dispatcher)
 #'
-#' First, it will look for Symbols in the .getSymbols file and env
-#' Next, it will look for Symbols in source.envir
+#' First, it will look for Symbols in the .getSymbols file and env and gather them
+#' Next,  it will look for Symbols in source.envir and gather them
 #'
 #' If provided file.path, then object will be stored on disk(same as "RData")
 #' If provided trg == "RData", "cache", or "PostgreSQL (or just "pg")
 #' then the objectw be ALSO saved in this OTHER location
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
-#' @param env location of xts objects placed that had been aquired with getSymbols("XXX", src = 'yahoo')
 #' @param source.envir source location of Symbols
+#' @param env location of xts objects placed that had been aquired with getSymbols("XXX", src = 'yahoo')
+#' @param Gathering places to look for symbols to be collected
 #' xts objects must have the attribute "src"
 #' @param file.path if provided will save to disk
 #' @param trg if provided will savse to a target "cache" or "pg" (PostgreSQL)
-#' @param ... pass through parameters to saveSymbols.fn
+#' @param ... passed to trg
 #' @examples
 #' \dontrun{
 #'
@@ -742,67 +766,93 @@ getSymbols.pg <- getSymbols.PostgreSQL
 #'
 #' }
 #' @export
-saveSymbols <- function(Symbols = NULL, env = parent.frame(), source.envir = NULL, ...) {
+saveSymbols <- function(Symbols = NULL, con = NULL, source.envir = NULL, env = parent.frame(),
+                       Gathering = c("DotgetSymbols","source.envir"), ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  # case insensitive
-  if(is.environment(source.envir)) {
+  if("source.envir" %in% Gathering) {
+    # case insensitive
+    if(is.environment(source.envir)) {
 
-    SymbolsInsource.envir <- Symbols[tolower(Symbols) %in% tolower(names(as.list(source.envir)))]
-    if(length(SymbolsInsource.envir)) stop(paste0("Symbols ", paste0(SymbolsInsource.envir, collapse = ", "), " found in source.envir"))
+      # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
+      SymbolsInsource.envir <- Symbols[tolower(Symbols) %in% tolower(names(as.list(source.envir)))]
+      if(length(SymbolsInsource.envir)) stop(paste0("Symbols ", paste0(SymbolsInsource.envir, collapse = ", "), " found in source.envir"))
 
-    source.envirInSymbols <- names(as.list(source.envir))[tolower(names(as.list(source.envir))) %in% tolower(Symbols)]
-    if(length(source.envirInSymbols)) stop(paste0("source.envir ", paste0(source.envirInSymbols, collapse = ", "), " found in Symbols"))
+      # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
+      source.envirInSymbols <- names(as.list(source.envir))[tolower(names(as.list(source.envir))) %in% tolower(Symbols)]
+      if(length(source.envirInSymbols)) stop(paste0("source.envir ", paste0(source.envirInSymbols, collapse = ", "), " found in Symbols"))
+
+    }
   }
 
-  # gather from .getSymbols file and env
 
   xTsGetSymbols <- list()
-  DotgetSymbolsFound <- FALSE
-  if (exists(".getSymbols", env, inherits = FALSE)) {
-    DotgetSymbols <- get(".getSymbols", env, inherits = FALSE)
-    Inherits <- FALSE
-    DotgetSymbolsFound <- TRUE
-  }
 
-  if(DotgetSymbolsFound) {
+  if("DotgetSymbols" %in% Gathering) {
 
-    if (is.null(Symbols)) {
-      # get all of the Symbols
-      Symbols <- names(DotgetSymbols)
-    }
-    else {
-      Symbols <- Symbols[Symbols %in% names(DotgetSymbols)]
+    # gather from .getSymbols file and env
+    DotgetSymbolsFound <- FALSE
+    if (exists(".getSymbols", env, inherits = FALSE)) {
+      DotgetSymbols <- get(".getSymbols", env, inherits = FALSE)
+      Inherits <- FALSE
+      DotgetSymbolsFound <- TRUE
     }
 
-    for (each.symbol in Symbols) {
-      if(!each.symbol %in% names(xTsGetSymbols)){
-        xTsGetSymbols <- c(xTsGetSymbols, list(get(each.symbol, envir = env, inherits = Inherits)))
-        names(xTsGetSymbols)[length(xTsGetSymbols)] <- each.symbol
+    if(DotgetSymbolsFound) {
+
+      # if (is.null(Symbols)) {
+      #   # get all of the Symbols
+      #   Symbols <- names(DotgetSymbols)
+      # }
+      # else {
+      #   Symbols <- Symbols[Symbols %in% names(DotgetSymbols)]
+      # }
+
+      RetrievedSymbols      <- names(DotgetSymbols)
+      FoundSymbols          <- RetrievedSymbols %in% Symbols
+      DotgetUsingSymbols    <- RetrievedSymbols[FoundSymbols]
+      if(is.null(Symbols))  DotgetUsingSymbols <- RetrievedSymbols
+
+      for (each.symbol in DotgetUsingSymbols) {
+        if(!each.symbol %in% names(xTsGetSymbols)){
+          xTsGetSymbols <- c(xTsGetSymbols, list(get(each.symbol, envir = env, inherits = Inherits)))
+          names(xTsGetSymbols)[length(xTsGetSymbols)] <- each.symbol
+        }
       }
+
     }
 
   }
 
-  # gather from source.envir
+  if("source.envir" %in% Gathering) {
 
-  runenv <- environment()
-  # look in my custom environment
-  if(is.environment(source.envir)) {
-  llply(ls(envir = source.envir), function(x) {
-    xx <- get(x, source.envir, inherits = FALSE)
-    if((class(xx)[1] == "xts") && ("src" %in% names(xtsAttributes(xx)))) {
-      if(!x %in% names(xTsGetSymbols )){
-         xTsGetSymbols <- c(xTsGetSymbols, list(xx))
-         names(xTsGetSymbols)[length(xTsGetSymbols)] <- x
-         assign("xTsGetSymbols", xTsGetSymbols, envir = runenv)
-       }
-    }
-  })}
+    # gather from source.envir
+
+    runenv <- environment()
+    # look in my custom environment
+    if(is.environment(source.envir)) {
+
+    RetrievedSymbols <- ls(envir = source.envir)
+    FoundSymbols <- RetrievedSymbols %in% Symbols
+    EnvSymbols   <- RetrievedSymbols[FoundSymbols]
+    if(is.null(Symbols))  EnvSymbols <- RetrievedSymbols
+
+    llply(EnvSymbols, function(x) {
+      xx <- get(x, source.envir, inherits = FALSE)
+      if((class(xx))[1] %in% c("zoo","xts", "data.frame","ts","timeSeries")) {
+        if(!x %in% names(xTsGetSymbols )){
+           xTsGetSymbols <- c(xTsGetSymbols, list(xx))
+           names(xTsGetSymbols)[length(xTsGetSymbols)] <- x
+           assign("xTsGetSymbols", xTsGetSymbols, envir = runenv)
+         }
+      }
+    })}
+
+  }
 
   # save everything back to my custom environment (source.envir)
-  # note list2env SILENTYLY DELETES a symbols of the same name AND in a DIFFERENT case
+  # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
   source.envir <- list2env(xTsGetSymbols, parent = emptyenv())
 
   Dots <- list(...)
@@ -813,7 +863,8 @@ initEnv();on.exit({uninitEnv()})
     do.call(saveSymbols.RData, c(list(), source.envir = source.envir, Dots))
   }
   if("trg" %in% names(Dots)) {
-    do.call(paste0("saveSymbols",".", Dots[["trg"]]), c(list(), source.envir = source.envir, Dots[!names(Dots) %in% "trg"]))
+    do.call(paste0("saveSymbols",".", Dots[["trg"]]), c(list(),
+      Symbols = Symbols, con = con, source.envir = source.envir, Dots[!names(Dots) %in% "trg"]))
   }
   invisible()
 
@@ -826,16 +877,23 @@ initEnv();on.exit({uninitEnv()})
 #' see quantmod SaveSymbols
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
-#' @param file.path  character string of file (Symbol.Rdata) location
 #' @param source.envir source location of Symbols
-#' @param ... pass through parameters
+#' @param file.path  character string of file (Symbol.Rdata) location
+#' @param ... pass through not used
 #' @export
-saveSymbols.RData <- function (Symbols = "", file.path = stop("must specify 'file.path'"), source.envir = NULL, ...) {
+saveSymbols.RData <- function (Symbols = NULL, source.envir = NULL, file.path = stop("must specify 'file.path'"), ...) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
-  for(each.symbol in names(as.list(source.envir))[names(as.list(source.envir)) %in% Symbols]) {
-     save(list = each.symbol, file = paste(file.path, "/", each.symbol, ".RData", sep = ""), envir = source.envir)
+  source.list <- as.list(source.envir)
+
+  RetrievedSymbols <- names(as.list(source.envir))
+  FoundSymbols <- RetrievedSymbols %in% Symbols
+  EnvSymbols   <- RetrievedSymbols[FoundSymbols]
+  if(is.null(Symbols))  EnvSymbols <- RetrievedSymbols
+
+  for(each.symbol in EnvSymbols) {
+     save(list = source.list[[each.symbol]], file = paste(file.path, "/", each.symbol, ".RData", sep = ""), envir = source.envir)
   }
   invisible()
 
@@ -856,17 +914,25 @@ saveSymbols.RData <- function (Symbols = "", file.path = stop("must specify 'fil
 #' saveSymbols(Symbols = "", trg = "cache", source.envir = source.envir)
 #' }
 #' @export
-saveSymbols.cache <- function (Symbols = "", source.envir = NULL, target.envir = NULL, ...) {
+saveSymbols.cache <- function (Symbols = NULL, source.envir = NULL, target.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
     source.list <- as.list(source.envir)
+
+    RetrievedSymbols <- names(as.list(source.envir))
+    FoundSymbols <- RetrievedSymbols %in% Symbols
+    EnvSymbols   <- RetrievedSymbols[FoundSymbols]
+    if(is.null(Symbols)) EnvSymbols <- RetrievedSymbols
+
     if(is.null(target.envir)) target.envir <- .GlobalEnv
-    for(each.symbol in names(source.list)[names(source.list) %in% Symbols]) {
+
+    for(each.symbol in EnvSymbols) {
         assign(paste0(".", each.symbol), source.list[[each.symbol]], envir = target.envir)
     }
     invisible()
 })}
+
 
 
 
@@ -908,7 +974,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
-saveSymbols.PostgreSQL <- function(Symbols = "", source.envir = NULL,
+saveSymbols.PostgreSQL <- function(Symbols = NULL, con = con, source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
   db.fields=c('o','h','l','c','v','a'),
   user=NULL,password=NULL,dbname=NULL,schname=NULL,host='localhost',port=5432,options=NULL, forceISOdate = TRUE,
@@ -928,13 +994,24 @@ initEnv();on.exit({uninitEnv()})
   }
   if(!hasArg("verbose")) verbose <- FALSE
 
-  DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
-  AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+  if(is.null(con)) {
+    DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
+    AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+  }
+  if(!is.null(match.arg(schname)) && match.arg(schname) != schname) schname <- match.arg(schname)
 
   # now, I am only getting symbols from here
-  Symbols <- names(as.list(source.envir))[names(as.list(source.envir)) %in% Symbols]
+  ###### Symbols <- names(as.list(source.envir))[names(as.list(source.envir)) %in% Symbols]
+
+  RetrievedSymbols  <- names(as.list(source.envir))
+  FoundSymbols      <- RetrievedSymbols %in% Symbols
+  EnvSymbols        <- RetrievedSymbols[FoundSymbols]
+  Symbols           <- EnvSymbols
+  if(is.null(match.arg(Symbols))) Symbols <-RetrievedSymbols
 
   db.Symbols <- pgListSchemaTables(con, schname)
+
+  # ORIGINAL quantmod-ism FOLLOWS ... [ ] could be cleaned up
 
   if(length(Symbols) != sum(Symbols %in% db.Symbols)) {
     missing.db.symbol <- Symbols[!Symbols %in% db.Symbols]
@@ -1045,7 +1122,7 @@ initEnv();on.exit({uninitEnv()})
 #' saveSymbols pg
 #'
 #'@export
-saveSymbols.pg <- saveSymbols.PostgreSQL
+saveSymbols.pg <- getSymbols.PostgreSQL
 
 
 
@@ -1056,7 +1133,8 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir source location of Symbols
 #' xts objects must have the attribute "src"
-#' @param ... pass through parameters to saveSymbols.fn
+#' @param src source program to look for symbols
+#' @param ... passed to src
 #' @return a named list of 'updated' properties
 #' @examples
 #' \dontrun{
@@ -1091,7 +1169,7 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 #'
 #' }
 #' @export
-updatedSymbols <- function(Symbols = "", source.envir = NULL, ...) {
+updatedSymbols <- function(Symbols = NULL, con = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -1100,7 +1178,13 @@ initEnv();on.exit({uninitEnv()})
     runenv <- environment()
     # look in my custom environment
     if(is.environment(source.envir)) {
-    llply(Symbols[Symbols %in% ls(envir = source.envir, all.names = TRUE)], function(x) {
+
+    AllSymbols <- ls(envir = source.envir, all.names = TRUE)
+    FoundAllSymbols <- AllSymbols %in% Symbols
+    AllFoundSymbols <- AllSymbols[FoundAllSymbols]
+    if(is.null(Symbols)) AllFoundSymbols <- AllSymbols
+
+    llply(AllFoundSymbols, function(x) {
       xx <- get(x, source.envir, inherits = FALSE)
       updated <- NULL
       if((class(xx)[1] == "xts")) {
@@ -1121,7 +1205,8 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols <- list()
   if("src" %in% names(Dots)) {
-    SrcSymbols <- do.call(paste0("updatedSymbols",".", Dots[["src"]]), c(list(), Symbols = Symbols, source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
+    SrcSymbols <- do.call(paste0("updatedSymbols",".", Dots[["src"]]), c(list(),
+                    Symbols = Symbols, con = con, source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
    }
   c(list(),EnvSymbols, SrcSymbols)
 
@@ -1135,7 +1220,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param source.envir location of xts objects
 #' @return a named list of 'updated' properties
 #' @export
-updatedSymbols.cache <- function(Symbols = "", source.envir = NULL, ...) {
+updatedSymbols.cache <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -1164,7 +1249,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return named list of the object 'updated' property
 #' @export
-updatedSymbols.PostgreSQL <- function(Symbols = "", con = NULL,
+updatedSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL,
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
                                options = NULL, forceISOdate = TRUE,
                                ...) {
@@ -1172,14 +1257,20 @@ updatedSymbols.PostgreSQL <- function(Symbols = "", con = NULL,
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  if(is.null(schname)) schname <- "Symbols"
   if(is.null(con)){
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
     AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
   }
+  if(!is.null(match.arg(schname)) && match.arg(schname) != schname) schname <- match.arg(schname)
+
+
+  RetrievedSymbols <- listSymbols(con, trg = "pg")
+  FoundSymbols <- RetrievedSymbols %in% Symbols
+  DBSymbols    <- RetrievedSymbols[FoundSymbols]
+  if(is.null(Symbols)) DBSymbols <- RetrievedSymbols
 
   Updateds <- list()
-  for(Symbol in Symbols) {
+  for(Symbol in DBSymbols) {
     updated <- dbGetQuery(con, paste0(
       "SELECT ", dbQuoteIdentifier(con, "updated"),
       " FROM ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
@@ -1204,8 +1295,8 @@ updatedSymbols.pg <- updatedSymbols.PostgreSQL
 #'
 #' @param source.envir source location of Symbols
 #' xts objects must have the attribute "src"
-#' @param ... pass through parameters to saveSymbols.fn
 #' @param src source program to look for symbols
+#' @param ... passed to src
 #' @return character vector of Symbols
 #' @examples
 #' \dontrun{
@@ -1237,7 +1328,7 @@ updatedSymbols.pg <- updatedSymbols.PostgreSQL
 #'
 #' }
 #' @export
-listSymbols <- function(source.envir = NULL, ...) {
+listSymbols <- function(con = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -1258,7 +1349,8 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols <- c()
   if("src" %in% names(Dots)) {
-    SrcSymbols <- do.call(paste0("listSymbols",".", Dots[["src"]]), c(list(), source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
+    SrcSymbols <- do.call(paste0("listSymbols",".", Dots[["src"]]), c(list(),
+                    con = con, source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
   }
   c(EnvSymbols, SrcSymbols)
 
@@ -1308,11 +1400,11 @@ listSymbols.PostgreSQL <- function(con = NULL,
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  if(is.null(schname)) schname <- "Symbols"
   if(is.null(con)) {
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
     AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
   }
+  if(!is.null(match.arg(schname)) && match.arg(schname) != schname) schname <- match.arg(schname)
 
   SchemaTables <- pgListSchemaTables(con = con, schname = schname)
   SchemaTables <- SchemaTables[!SchemaTables %in% "Symbols"]
@@ -1336,11 +1428,11 @@ listSymbols.pg <- listSymbols.PostgreSQL
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir location of xts objects
-#' @param ... passed to trg
 #' @param src source program to look for symbols
+#' @param ... passed to src
 #' @return character vector of Symbols
 #' @export
-existSymbols <- function(Symbols = "", source.envir = NULL, ...) {
+existSymbols <- function(Symbols = NULL, con = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -1348,14 +1440,16 @@ initEnv();on.exit({uninitEnv()})
   NotEnvSymbols <- character(0)
   if(!"src" %in% names(Dots)) {
     if(is.environment(source.envir)) {
-      FoundSymbols <- Symbols %in% listSymbols(source.envir = source.envir)
 
-      EnvSymbols <- Symbols[FoundSymbols]
+      RetrievedSymbols <- listSymbols(source.envir = source.envir)
+      FoundSymbols <- RetrievedSymbols %in% Symbols
+
+      EnvSymbols <- RetrievedSymbols[FoundSymbols]
       NamesEnvSymbols <-  names(EnvSymbols)
       EnvSymbols    <- rep(TRUE, length(EnvSymbols))
       names(EnvSymbols) <- NamesEnvSymbols
 
-      NotEnvSymbols <- Symbols[!FoundSymbols]
+      NotEnvSymbols <- RetrievedSymbols[!FoundSymbols]
       NamesNotEnvSymbols <- names(NotEnvSymbols)
       NotEnvSymbols <- rep(FALSE, length(NotEnvSymbols))
       names(NotEnvSymbols) <- NamesEnvSymbols
@@ -1367,7 +1461,8 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols < character(0)
   if("src" %in% names(Dots)) {
-    SrcSymbols <- do.call(paste0("existSymbols",".", Dots[["src"]]), c(list(), Symbols = Symbols, source.envir =  source.envir, Dots[!names(Dots) %in% "src"]))
+    SrcSymbols <- do.call(paste0("existSymbols",".", Dots[["src"]]), c(list(),
+                    Symbols = Symbols, con = con, source.envir =  source.envir, Dots[!names(Dots) %in% "src"]))
   }
 
   c(EnvSymbols, SrcSymbols)
@@ -1384,7 +1479,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return named character vector of Symbols
 #' @export
-existSymbols.cache <- function(Symbols = "", source.envir = NULL, ...) {
+existSymbols.cache <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -1392,20 +1487,20 @@ initEnv();on.exit({uninitEnv()})
   NotEnvSymbols <- chaacter(0)
   if(is.environment(source.envir)) {
     AllSymbols <- listSymbols(source.envir = source.envir)
-      FoundSymbols <- Symbols %in% llply(strsplit(AllSymbols, ""), function(x) {
-      if(x[1] == "") {
-        paste0(x[-1], collapse = "")
-      } else {
-        paste0(x, collapse = "")
-      }
+    RetrievedSymbols <- Symbols %in% llply(strsplit(AllSymbols, ""), function(x) {
+    if(x[1] == "") {
+      paste0(x[-1], collapse = "")
+    } else {
+      paste0(x, collapse = "")
+    }
     })
-    FoundSymbols <- Symbols %in% AllSymbol
-    EnvSymbols <- Symbols[FoundSymbols]
+    FoundSymbols <- RetrievedSymbols %in% Symbols
+    EnvSymbols <- RetrievedSymbols[FoundSymbols]
     NamesEnvSymbols <-  names(EnvSymbols)
     EnvSymbols    <- rep(TRUE, length(EnvSymbols))
     names(EnvSymbols) <- NamesEnvSymbols
 
-    NotEnvSymbols <- Symbols[!FoundSymbols]
+    NotEnvSymbols <- RetrievedSymbols[!FoundSymbols]
     NamesNotEnvSymbols <- names(NotEnvSymbols)
     NotEnvSymbols <- rep(FALSE, length(NotEnvSymbols))
     names(NotEnvSymbols) <- NamesEnvSymbols
@@ -1432,7 +1527,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return character vector of Symbols
 #' @export
-existSymbols.PostgreSQL <- function(Symbols = "", con = NULL,
+existSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL,
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
                                options = NULL, forceISOdate = TRUE,
                                ...) {
@@ -1440,22 +1535,22 @@ existSymbols.PostgreSQL <- function(Symbols = "", con = NULL,
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  if(is.null(schname)) schname <- "Symbols"
   if(is.null(con)) {
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
     AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
   }
+  if(!is.null(match.arg(schname)) && match.arg(schname) != schname) schname <- match.arg(schname)
 
   # trg = "pg"
-  AllSymbols <- listSymbols(con, user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate, trg = "pg")
-  FoundSymbols <- Symbols[Symbols %in% AllSymbols]
+  RetrievedSymbols <- listSymbols(con, user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate, trg = "pg")
+  FoundSymbols <- RetrievedSymbols %in% Symbols
 
-  DBSymbols <- Symbols[FoundSymbols]
+  DBSymbols <- RetrievedSymbols[FoundSymbols]
   NamesDBSymbols <-  names(DBSymbols)
   DBSymbols    <- rep(TRUE, length(DBSymbols))
   names(DBSymbols) <- NamesDBSymbols
 
-  NotDBSymbols <- Symbols[!FoundSymbols]
+  NotDBSymbols <- RetrievedSymbols[!FoundSymbols]
   NamesNotDBSymbols <- names(NotDBSymbols)
   NotDBSymbols <- rep(FALSE, length(NotDBSymbols))
   names(NotDBSymbols) <- NamesDBSymbols

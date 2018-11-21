@@ -4,15 +4,17 @@
 \alias{saveSymbols.RData}
 \title{saves xts object symbols to a persistent location (disk: Symbol.RData file)}
 \usage{
-saveSymbols.RData(file.path = stop("must specify 'file.path'"),
-  source.envir = NULL, ...)
+saveSymbols.RData(Symbols = NULL, source.envir = NULL,
+  file.path = stop("must specify 'file.path'"), ...)
 }
 \arguments{
-\item{file.path}{character string of file (Symbol.Rdata) location}
+\item{Symbols}{a character vector specifying the names of each symbol}
 
 \item{source.envir}{source location of Symbols}
 
-\item{...}{pass through parameters}
+\item{file.path}{character string of file (Symbol.Rdata) location}
+
+\item{...}{pass through not used}
 }
 \description{
 see quantmod SaveSymbols

@@ -4,7 +4,7 @@
 \alias{existSymbols.pg}
 \title{listSymbols pg}
 \usage{
-existSymbols.pg(Symbols = "", con = NULL, user = NULL,
+existSymbols.pg(Symbols = NULL, con = NULL, user = NULL,
   password = NULL, dbname = NULL, schname = NULL,
   host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)

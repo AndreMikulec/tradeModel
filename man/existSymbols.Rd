@@ -4,14 +4,14 @@
 \alias{existSymbols}
 \title{xts object symbols}
 \usage{
-existSymbols(Symbols = "", source.envir = NULL, ...)
+existSymbols(Symbols = NULL, con = NULL, source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
 
 \item{source.envir}{location of xts objects}
 
-\item{...}{passed to trg}
+\item{...}{passed to src}
 
 \item{src}{source program to look for symbols}
 }

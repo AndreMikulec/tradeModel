@@ -4,26 +4,29 @@
 \alias{saveSymbols}
 \title{saves xts object symbols to a persistent location (dispatcher)}
 \usage{
-saveSymbols(Symbols = NULL, env = parent.frame(),
-  source.envir = NULL, ...)
+saveSymbols(Symbols = NULL, con = NULL, source.envir = NULL,
+  env = parent.frame(), Gathering = c("DotgetSymbols", "source.envir"),
+  ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
 
+\item{source.envir}{source location of Symbols}
+
 \item{env}{location of xts objects placed that had been aquired with getSymbols("XXX", src = 'yahoo')}
 
-\item{source.envir}{source location of Symbols
+\item{Gathering}{places to look for symbols to be collected
 xts objects must have the attribute "src"}
 
-\item{...}{pass through parameters to saveSymbols.fn}
+\item{...}{passed to trg}
 
 \item{file.path}{if provided will save to disk}
 
 \item{trg}{if provided will savse to a target "cache" or "pg" (PostgreSQL)}
 }
 \description{
-First, it will look for Symbols in the .getSymbols file and env
-Next, it will look for Symbols in source.envir
+First, it will look for Symbols in the .getSymbols file and env and gather them
+Next,  it will look for Symbols in source.envir and gather them
 }
 \details{
 If provided file.path, then object will be stored on disk(same as "RData")

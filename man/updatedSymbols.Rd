@@ -4,7 +4,7 @@
 \alias{updatedSymbols}
 \title{'updated' property xts object symbols in a persistent location (dispatcher)}
 \usage{
-updatedSymbols(Symbols = "", source.envir = NULL, ...)
+updatedSymbols(Symbols = NULL, con = NULL, source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
@@ -12,7 +12,9 @@ updatedSymbols(Symbols = "", source.envir = NULL, ...)
 \item{source.envir}{source location of Symbols
 xts objects must have the attribute "src"}
 
-\item{...}{pass through parameters to saveSymbols.fn}
+\item{...}{passed to src}
+
+\item{src}{source program to look for symbols}
 }
 \value{
 a named list of 'updated' properties

@@ -4,15 +4,17 @@
 \alias{getSymbols.PostgreSQL}
 \title{Retrieve Data from PostgreSQL Database}
 \usage{
-getSymbols.PostgreSQL(Symbols = NULL, env, return.class = "xts",
-  db.fields = c("o", "h", "l", "c", "v", "a"), field.names = c("Open",
-  "High", "Low", "Close", "Volume", "Adjusted"), user = NULL,
-  password = NULL, dbname = NULL, schname = NULL,
+getSymbols.PostgreSQL(Symbols = NULL, con = con, env,
+  return.class = "xts", db.fields = c("o", "h", "l", "c", "v", "a"),
+  field.names = c("Open", "High", "Low", "Close", "Volume", "Adjusted"),
+  user = NULL, password = NULL, dbname = NULL, schname = NULL,
   host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded}
+
+\item{con}{DBI connection}
 
 \item{env}{where to create objects. (.GlobalEnv) CURRENLY BROKEN}
 

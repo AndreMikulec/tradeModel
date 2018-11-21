@@ -4,7 +4,7 @@
 \alias{updatedSymbols.pg}
 \title{updatedSymbols pg}
 \usage{
-updatedSymbols.pg(Symbols = "", con = NULL, user = NULL,
+updatedSymbols.pg(Symbols = NULL, con = NULL, user = NULL,
   password = NULL, dbname = NULL, schname = NULL,
   host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)

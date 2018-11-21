@@ -4,7 +4,7 @@
 \alias{existSymbols.PostgreSQL}
 \title{xts object symbols exist in the PostgreSQL (pg) database}
 \usage{
-existSymbols.PostgreSQL(Symbols = "", con = NULL, user = NULL,
+existSymbols.PostgreSQL(Symbols = NULL, con = NULL, user = NULL,
   password = NULL, dbname = NULL, schname = NULL,
   host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)

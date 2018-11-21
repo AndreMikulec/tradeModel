@@ -4,13 +4,13 @@
 \alias{listSymbols}
 \title{object symbols in a persistent location (dispatcher)}
 \usage{
-listSymbols(source.envir = NULL, ...)
+listSymbols(con = NULL, source.envir = NULL, ...)
 }
 \arguments{
 \item{source.envir}{source location of Symbols
 xts objects must have the attribute "src"}
 
-\item{...}{pass through parameters to saveSymbols.fn}
+\item{...}{passed to src}
 
 \item{src}{source program to look for symbols}
 }
