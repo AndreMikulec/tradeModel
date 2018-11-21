@@ -97,10 +97,9 @@ initEnv();on.exit({uninitEnv()})
     }
   })}
 
-  # save everything in my custom environment
-  if(is.environment(source.envir))
-    # note list2env SILENTYLY a symbols of the same name AND in a DIFFERENT case
-    source.envir <- list2env(xTsGetSymbols, parent = emptyenv())
+  # save everything back to my custom environment
+  # note list2env SILENTYLY a symbols of the same name AND in a DIFFERENT case
+  source.envir <- list2env(xTsGetSymbols, parent = emptyenv())
 
   Dots <- list(...)
   # Symbols are no longer passed
@@ -265,9 +264,18 @@ dfToCREATETable <- function(df, con, Symbol, schname) {
   colClasses[colClasses == "numeric"] <- "NUMERIC(14,3)"
 
   # meta-data table
-  if(!"Symbols" %in% pgListSchemaTables(con, "Symbols"))
-    dbExecute(con, paste0("CREATE TABLE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), "(", dbQuoteIdentifier(con, "Symbols"), " text, ", dbQuoteIdentifier(con, "updated")," timestamp with time zone);") )
+  if(!"Symbols" %in% pgListSchemaTables(con, "Symbols")) {
+    dbExecute(con, paste0("CREATE TABLE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), "(",
+                            dbQuoteIdentifier(con, "Symbols"), " text ", ", ",
+                            dbQuoteIdentifier(con, "updated")," timestamp with time zone ", ", ",
+                            dbQuoteIdentifier(con, "updated_R_class") , " text ", ", ",
+                            dbQuoteIdentifier(con, "src"), " text " ,
+                          ");") )
 
+    dbExecute(con, paste0("ALTER TABLE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
+                          " ADD PRIMARY KEY ( ", dbQuoteIdentifier(con, "Symbols"), ")",
+                          ";"))
+  }
   # upon creation, do Quote Once:  (1)schema, (2)table and (3)column names
   # the PostgreSQL storage will be: anything_capilized retains it's "" quotes.
 
@@ -275,6 +283,10 @@ dfToCREATETable <- function(df, con, Symbol, schname) {
   schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbol))
 
   ddl <- paste0("CREATE TABLE ", schemaSymbolsQuoted ,"(", paste0( dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
+  dbExecute(con, ddl)
+  ddl <- paste0("ALTER TABLE ", schemaSymbolsQuoted,
+                " ADD PRIMARY KEY ( ", dbQuoteIdentifier(con, names(colClasses)[1]), ")",
+                ";")
   dbExecute(con, ddl)
   dml <- paste0("INSERT INTO ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), "(", dbQuoteIdentifier(con, "Symbols"), ") VALUES (", dbQuoteString(con, Symbol), ");")
   dbExecute(con, dml)
@@ -287,8 +299,8 @@ dfToCREATETable <- function(df, con, Symbol, schname) {
 #'
 #' mostly for 'space saving' and cleanliness
 #'
-#' @param List collection of R objects
-#' @param nms names of List object (default: everything)
+#' @param List R list: a collection of R objects
+#' @param nms vector of names of List object (default: everything)
 #' @param environment to assign R objects
 #' @return invisible
 #' @examples
@@ -438,6 +450,53 @@ pgListSchemaTableColumns <- function(con, schname, tblname) {
 
 
 
+#' of a specific PostgreSQL database schema table, show its primary key columns
+#'
+#' @param con PostgreSQL DBI connection
+#' @param schema name
+#' @param table name
+#' @return vector of characters of primary key column names
+#' The results are ordered.
+#' @export
+pgListSchemaTablePrimaryKeyColumns <- function(con, schname, tblname) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+    # List primary keys for all tables - Postgresql
+    #  https://dba.stackexchange.com/questions/11032/list-primary-keys-for-all-tables-postgresql
+
+    dbGetQuery(con,
+
+      paste0(
+       "
+        SELECT   tc.table_catalog -- database
+               , tc.table_schema
+               , tc.table_name
+               , kc.column_name
+        FROM
+            information_schema.table_constraints tc,
+            information_schema.key_column_usage kc
+        WHERE
+            tc.table_schema NOT IN ('information_schema', 'pg_catalog') AND
+            tc.table_schema     IN (", dbQuoteLiteral(con, schname), ") AND
+            tc.table_name       IN (", dbQuoteLiteral(con, tblname), ") AND
+            tc.constraint_type = 'PRIMARY KEY' AND
+            kc.table_name = tc.table_name and kc.table_schema = tc.table_schema AND
+            kc.constraint_name = tc.constraint_name
+        ORDER BY 1, 2
+        ;
+      "
+
+      )
+    ) -> db.Schema.tbl
+    db.Schema.tbl[["column_name"]]
+
+  })}
+
+
+
+
+
 #' saves xts object symbols to a persistent location (database: PostgreSQL)
 #'
 #' CREATE ROLE "Symbols" LOGIN
@@ -553,9 +612,44 @@ initEnv();on.exit({uninitEnv()})
     colnames(df) <- db.fields
 
     dbWriteTable(con, each.symbol, df, append = T, row.names = F)
-                     # if  each.symbol includes schema, will say TRUE, but will lie
+    # if  each.symbol includes schema name + ".", then dbWriteTable will return TRUE, but it will LIE
 
-    dbExecute(con, paste0("UPDATE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), " SET ", dbQuoteIdentifier(con, "updated"), " = ", "to_timestamp(", dbQuoteString(con, as.character(Sys.time())), " ,'YYYY-MM-DD HH24:MI:SS')", " WHERE ", dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, each.symbol), ";"))
+
+    updated <- NULL
+    if("updated" %in% names(attributes(xTs))) {
+      # OLD: "to_timestamp(", dbQuoteString(con, as.character(Sys.time())), " ,'YYYY-MM-DD HH24:MI:SS')"
+      updated <- attributes(xTs)[["updated"]]
+      # How to properly handle timezone when passing POSIXct objects between R and Postgres DBMS?
+      # https://stackoverflow.com/questions/40524225/how-to-properly-handle-timezone-when-passing-posixct-objects-between-r-and-postg
+      updated <- format(as.POSIXct(updated, tz = Sys.getenv("TZ")), "%Y-%m-%d %H:%M:%OS%z")
+      dbExecute(con, paste0("UPDATE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
+                            " SET ",
+                            dbQuoteIdentifier(con, "updated"), " = ", dbQuoteString(con, updated),
+                            " WHERE ",
+                            dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, each.symbol),
+                            ";"))
+    }
+
+    updated_R_class <- NULL
+    if(inherits(xTs,"zoo")) {
+      updated_R_class <- class(index(xTs))[1]
+      dbExecute(con, paste0("UPDATE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
+                            " SET ",
+                            dbQuoteIdentifier(con, "updated_R_class")," = ", dbQuoteString(con, updated_R_class),
+                            " WHERE ",
+                            dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, each.symbol),
+                            ";"))
+    }
+    src <- NULL
+    if("src" %in% names(attributes(xTs))) {
+      src <- as.character(attributes(xTs)[["src"]])
+      dbExecute(con, paste0("UPDATE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
+                            " SET ",
+                            dbQuoteIdentifier(con, "src"), " = ", dbQuoteString(con, src),
+                            " WHERE ",
+                            dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, each.symbol),
+                            ";"))
+    }
 
   }
   dbDisconnect(con)
@@ -651,6 +745,13 @@ pgSetCurrentSearchPath <- function(con, path) { dbExecute(con, paste0("SET SEARC
 #' @rdname pgCurrent
 #' @export
 pgCurrentTempSchema <- function(con) { oneColumn(con, "SELECT nspname FROM pg_namespace WHERE oid = pg_my_temp_schema();", "CurrentTempSchema") }
+
+
+#' get PostgreSQL current user time zone
+#'
+#' @rdname pgTimeZone
+#' @export
+pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentTimeZone") }
 
 
 
@@ -806,8 +907,6 @@ getSymbols.PostgreSQL <- function(Symbols = NULL, env, return.class = 'xts',
                                ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-  # NOTE env IS BROKEN,because initEnv is overriding it
-  # NOTE env IS BROKEN,because initEnv is overriding it
   importDefaults("getSymbols.PostgreSQL")
   this.env <- environment()
   # So no one messes with Date/date
@@ -863,14 +962,31 @@ initEnv();on.exit({uninitEnv()})
       OHLCData <- FALSE
     }
     # ABOVE (^) ALREADY QUOTED
-    query <- paste("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ",dbQuoteIdentifier(con, "date"))
+    query <- paste0("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ",dbQuoteIdentifier(con, "date"), ";")
     rs <- DBI::dbSendQuery(con, query)
     fr <- DBI::fetch(rs, n=-1)
+
+    query <- paste0("SELECT ", " * ", " FROM ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols")," WHERE ", dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, Symbols[[i]]), ";")
+    SymbolAttributes <- DBI::dbGetQuery(con, query)[,-1,drop =FALSE]
+
+    updated <- NULL
+    if("updated" %in% colnames(SymbolAttributes)) updated <- SymbolAttributes[["updated"]]
+
+    updated_R_class <- NULL
+    if("updated_R_class" %in% colnames(SymbolAttributes)) {
+      updated_R_class <- SymbolAttributes[["updated_R_class"]]
+      updated <- eval_bare(parse_expr(paste0("as.", updated_R_class,"(updated)")), environment())
+    }
+    src <- NULL
+    if("src" %in% colnames(SymbolAttributes)) src <- SymbolAttributes[["src"]]
+
     DBI::dbDisconnect(con)
+
+    order.by= do.call(c,fr[,1, drop = F])
     #fr <- data.frame(fr[,-1],row.names=fr[,1])
     fr <- xts(as.matrix(fr[,-1]),
-              order.by=as.Date(fr[,1],origin='1970-01-01'),
-              src=dbname,updated=Sys.time())
+              order.by=order.by,        # ORIG: order.by=as.Date(fr[,1],origin='1970-01-01'),
+              src=src,updated=updated)  # ORIG: src=dbname,updated=Sys.time())
     # MAY NOT HAVE VOLUME/ADJUSTED
     if(OHLCData) {
       colnames(fr) <- paste(Symbols[[i]],field.names[-1], sep='.')

@@ -195,8 +195,11 @@ initEnv <- function(init = NULL, envir = rlang::caller_env()) {
   assign("syms", rlang::syms, envir = envir)
   assign("!!!", rlang::`!!!`, envir = envir)
   assign("parse_expr", rlang::parse_expr, envir = environment())
+  assign("parse_expr", rlang::parse_expr, envir = envir)
   assign("eval_bare",  rlang::eval_bare,  envir = environment())
+  assign("eval_bare",  rlang::eval_bare,  envir = envir)
   assign("caller_env", rlang::caller_env, envir = environment())
+  assign("caller_env", rlang::caller_env, envir = envir)
 
   assign("as.Date", zoo::as.Date, envir = envir)
   assign("na.trim", zoo::na.trim, envir = envir)

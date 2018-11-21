@@ -7,9 +7,9 @@
 AssignEnv(List, nms = NULL, envir = parent.frame())
 }
 \arguments{
-\item{List}{collection of R objects}
+\item{List}{R list: a collection of R objects}
 
-\item{nms}{names of List object (default: everything)}
+\item{nms}{vector of names of List object (default: everything)}
 
 \item{environment}{to assign R objects}
 }
