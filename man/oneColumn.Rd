@@ -4,7 +4,7 @@
 \alias{oneColumn}
 \title{returns One column from a database (con)}
 \usage{
-oneColumn(con, Query, outName)
+oneColumn(con, Query, outName, unQuote = NULL)
 }
 \arguments{
 \item{con}{DBI database connection}
@@ -13,6 +13,8 @@ oneColumn(con, Query, outName)
 no value, or a single value with with comma separted internal parts}
 
 \item{outName}{the new column name}
+
+\item{unQuote}{(default: FALSE) strip beginning(") and end quotes(")}
 }
 \description{
 returns One column from a database (con)
