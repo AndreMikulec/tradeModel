@@ -378,13 +378,27 @@ logReturns <- function(xTs = NULL)  {
 #' # 1947-01-01 243.16399999999999
 #' }
 #' @export
-fredData <- function(Symbol = NULL) {
+fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
   if(is.null(Symbol)) stop("No fredData was requested")
 
+  if(is.null(New)) New <- TRUE
+  if(New) NewMaxAge <- "4 hours"
+
   message(str_c("Begin fredData - "), Symbol)
-  xTs <- getSymbols(Symbol, src = "FRED", from = "1950-01-01", auto.assign = FALSE) # SINCE DEC 1970
+
+  src = "FRED"
+  from = "1950-01-01"
+  # NOTE, if Symbol == "WILL5000IND" # SINCE DEC 1970
+
+  if(New){
+    xTs <- getNewSymbols(Symbol, src = "FRED",
+           from = from, auto.assign = FALSE, MaxAge = NewMaxAge)
+  } else {
+    xTs <- getSymbols(Symbol, src = "FRED",
+           from = from, auto.assign = FALSE)
+  }
   message(str_c("End   fredData - "), Symbol)
 
   colnames(xTs)[1] <- tolower(colnames(xTs))
@@ -829,6 +843,8 @@ rollApply <- function(
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
+  # NOTE: POSSIBLY to be rewritten with rowr::rollApply
+
   xTsOrig <- xTs
   tryXtsSuccess <- FALSE
   tryXts <- try(try.xts(xTsOrig), silent = T)
@@ -868,7 +884,8 @@ rollApply <- function(
       , coredata = coredata
       , ...) -> xTsResult
 
-  # would/should always be/been true else I may/have/never ever made it his far
+  # would/should always be/been true
+  # else I may/have/never ever made it his far
   if(tryXtsSuccess) {
     reclass(xTsResult, xTsOrig)
   } -> xTsResult

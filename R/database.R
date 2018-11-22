@@ -68,7 +68,7 @@ dfToCREATETable <- function(df, con, Symbol, schname) {
   schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbol))
 
   # column datatypes
-  colClasses  <- do.call(llply(df, function(x) class(x)[1]))
+  colClasses  <- do.call(c,llply(df, function(x) {class(x)[1]}))
   colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
   colClasses[colClasses %in%   "Date"]       <- "DATE"
   colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
@@ -664,7 +664,7 @@ initEnv();on.exit({uninitEnv()})
         auto.assign <- TRUE
 
     AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
-    LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &&
+    LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &
                                   !str_detect(AllSymbols,"^[.]Random[.]seed$")]
     RetrievedSymbols <- str_replace(LessAllSymbols, "^[.]","")
     FoundSymbols     <- RetrievedSymbols %in% Symbols
@@ -685,14 +685,13 @@ initEnv();on.exit({uninitEnv()})
         fr <- get(paste0(".", Symbols[[i]]), envir =  cache.envir)
         if (verbose)
             cat("done.\n")
-        browser()
         if (!is.xts(fr)) {
            # try HARDER to get ATTRIBUTES
            updated <- attributes(fr)[["updated"]]
            if(is.null(updated)) updated <- Sys.time()
            src <- attributes(fr)[["src"]]
            if(is.null(src))     src <- "cache"
-           # finally ( does not work if already an xts/zoo)
+           # finally ( HARD NOTE: conversion BELOW does not work if already an xts/zoo object)
            fr <- xts(fr[, -1], as.Date(fr[, 1], origin = "1970-01-01"),
                 src = src, updated = updated)
         }
@@ -986,7 +985,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("getNewSymbols")
 
-  if(is.null(MaxAge)) MaxAge <- "4 weeks"
+  if(is.null(MaxAge)) MaxAge <- "4 hours"
   MaxAgeValueUnits <- strsplit(MaxAge, " ")[[1]]
   MaxAgeValue <- as.integer(MaxAgeValueUnits[1])
   MaxAgeUnits <- MaxAgeValueUnits[2]
@@ -1005,14 +1004,12 @@ initEnv();on.exit({uninitEnv()})
 
       FoundinNextSrc <- FALSE
       if(existSymbols(Symbols[[i]], src = nextsrc_forward)[[1]]) {
-        browser()
         updated <- updatedSymbols(Symbols[[i]], src = nextsrc_forward)[[1]]
         FoundinNextSrc <- TRUE
       }
 
       isTooOld <- "UNKNOWN"
       if(FoundinNextSrc) {
-        browser()
         AgeTestTooOld <- as.difftime(MaxAgeValue,  units = MaxAgeUnits) <  difftime(Sys.time(), updated)
         if(AgeTestTooOld) { isTooOld <- "YES"} else {  isTooOld <- "NO"}
       }
@@ -1024,8 +1021,7 @@ initEnv();on.exit({uninitEnv()})
       }
 
     } # nextsrc_forward in nextsrc
-
-    if(isTooOld %in% c("YES")) { # then get it from "src"
+    if(isTooOld %in% c("YES", "UNKNOWN")) { # then get it from "src"
       # not in our "nextsrc",
       # therfore get it from the source "src"
       xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
@@ -1042,7 +1038,6 @@ initEnv();on.exit({uninitEnv()})
     if(isTooOld %in% c("NO")) {  # then get it from nextsrc_forward
       # not in our "nextsrc",
       # therfore get it from the source "src"
-      browser()
       xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
       verbose = verbose, warnings = warnings, src = nextsrc_forward, symbol.lookup = symbol.lookup,
       auto.assign = FALSE, source.envir = source.envir,
@@ -1058,12 +1053,10 @@ initEnv();on.exit({uninitEnv()})
     for(nextrcItoBeUpdated in nextrcSeqtoBeUpdated) {
 
       # write back to the previous nextsrc
-      browser()
       tempList <- list()
       tempList[[Symbols[[i]]]] <- xTs
       saveSymbols(Symbols[[i]], Gathering = "source.envir",
                    trg = nextsrc[nextrcItoBeUpdated], source.envir = list2env(tempList), ...)
-      browser()
       # extra TO DO on the INDEX(1)
       # index of 1, also "Get" it to be loaded into "env" ( conditoins: auto.assign = TRUE or !is.null(env) )
       # INHERITS (auto.assign)
@@ -1074,7 +1067,8 @@ initEnv();on.exit({uninitEnv()})
         verbose = verbose, warnings = warnings, src = nextsrc[nextrcItoBeUpdated], symbol.lookup = symbol.lookup,
         auto.assign = auto.assign, source.envir = NULL,...)
         if(!auto.assign){
-          if(dim(xTs) != dim(xTs2)) message("getNewSymbols: !auto.assign: dim(xTs) != dim(xTs2)")
+          browser()
+          if(!identical(xTs,xTs2)) message("getNewSymbols: !auto.assign: !identical(xTs,xTs2)")
         }
       }
 
@@ -1380,6 +1374,7 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(SymbolsPassed)) Symbols <-RetrievedSymbols
 
   db.Symbols <- pgListSchemaTables(con, schname)
+  db.Symbols <- db.Symbols[!db.Symbols %in% "Symbols"]
 
   # ORIGINAL quantmod-ism FOLLOWS ... [ ] could be cleaned up
 
@@ -1551,8 +1546,6 @@ initEnv();on.exit({uninitEnv()})
     # look in my custom environment
     if(is.environment(source.envir)) {
 
-    browser()
-
     AllSymbols <- ls(envir = source.envir, all.names = TRUE)
     FoundAllSymbols <- AllSymbols %in% Symbols
     AllFoundSymbols <- AllSymbols[FoundAllSymbols]
@@ -1569,7 +1562,6 @@ initEnv();on.exit({uninitEnv()})
       namesx <- x
       if(!is.null(updated)) { x <- updated } else { x <- NA_real_ }
       Names(x) <- namesx
-      browser()
       EnvSymbols <- c(EnvSymbols, as.list(x))
       assign("EnvSymbols", EnvSymbols, envir =  runenv)
       invisible()
@@ -1597,7 +1589,7 @@ updatedSymbols.cache <- function(Symbols = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("updatedSymbols.cache")
-  browser()
+
   if(is.null(cache.envir)) cache.envir <- .GlobalEnv
 
   AllSymbols <- updatedSymbols(source.envir = cache.envir)
@@ -1753,7 +1745,7 @@ initEnv();on.exit({uninitEnv()})
   importDefaults("listSymbols.cache")
 
   if(is.null(cache.envir)) cache.envir <- .GlobalEnv
-  browser()
+
   AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
   LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &
                                 !str_detect(AllSymbols,"^[.]Random[.]seed$")]
@@ -1876,7 +1868,7 @@ initEnv();on.exit({uninitEnv()})
   # EnvSymbols    <- character(0)
   # NotEnvSymbols <- character(0)
   if(is.null(cache.envir)) cache.envir <- .GlobalEnv
-  browser()
+
   if(is.environment(cache.envir)) {
     AllSymbols <- listSymbols(cache.envir = cache.envir, src = "cache")
     if(!is.null(AllSymbols)) {

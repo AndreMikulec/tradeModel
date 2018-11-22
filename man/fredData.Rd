@@ -4,7 +4,7 @@
 \alias{fredData}
 \title{get data from the St. Louis FRED}
 \usage{
-fredData(Symbol = NULL)
+fredData(Symbol = NULL, New = NULL, NewMaxAge = NULL)
 }
 \arguments{
 \item{Symbol}{FRED symbol as a string}
