@@ -110,7 +110,7 @@ getSymbols.pg('MSFT',env=globalenv())
 ibm <- getSymbols("IBM", src = "pg", auto.assign =  F)
 
 unrate <- getSymbols("UNRATE", src = "FRED", auto.assign =  F)
-saveSymbols(Symbols = "", trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
+saveSymbols(trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
 unrate.db <- getSymbols("UNRATE", src = "pg", auto.assign =  F)
 unrate.db <- getSymbols(Symbols = "UNRATE", src = "pg", auto.assign = F)
 

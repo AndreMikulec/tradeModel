@@ -14,6 +14,7 @@ Idea is based on  . . .
 
 How to backtest a strategy in R
 https://www.r-bloggers.com/how-to-backtest-a-strategy-in-r/
+
 http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html
 
 ``` r

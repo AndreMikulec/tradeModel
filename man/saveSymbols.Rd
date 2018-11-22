@@ -50,7 +50,7 @@ saveSymbols("IBM", trg = "pg")
 msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 source.envir = list2env(list(MSFT = msft))
 # save only the source.envir Symbols
-saveSymbols(Symbols = "", trg = "pg", source.envir = source.envir)
+saveSymbols(trg = "pg", source.envir = source.envir)
 
 # save all of the .getSymbols Symbols and the source.envir Symbols
 saveSymbols(trg = "pg", source.envir = source.envir)

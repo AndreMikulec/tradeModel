@@ -39,7 +39,7 @@ source.envir = list2env(list(MSFT = msft))
 listSymbols(source.envir = source.envir)
 existSymbols(Symbols = "MSFT", source.envir = source.envir)
 
-saveSymbols(Symbols = "", trg = "cache", source.envir = source.envir)
+saveSymbols(trg = "cache", source.envir = source.envir)
 listSymbols(src = "cache")
 existSymbols(Symbols = "MSFT", src = "cache")
 
