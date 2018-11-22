@@ -46,11 +46,21 @@ The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"}
 \description{
 get a recent Symbol i(f I do not have one)
 }
+\details{
+first look in  nextsrc[1]
+if not found look in  nextsrc[2], . . . etc
+if ran out of  nextsrc, look in src
+  then next back-updated all of  nextsrc (going backwards)
+ alt: if DID NOT run out of nextsrc. A  nextsrc found the newer data.
+   then backload the newer data into all previous nextsrcs (going backwards)
+}
 \examples{
 \dontrun{
 
 # before, be sure, that "MSFT" is in the database
+ls(all.names = TRUE)
 msft <- getNewSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+ls(all.names = TRUE)
 
 }
 }

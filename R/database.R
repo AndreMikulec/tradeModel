@@ -99,7 +99,9 @@ dfToCREATETable <- function(df, con, Symbol, schname) {
 #' @export
 Names <- function(x) {
   if(is.null(x) || !length(x)) return(character(0))
-  names(x)
+  names(x) -> res
+  if(is.null(res)) return(character(0))
+  return(res)
 }
 
 #' if x or value is null or has length zero(0) then
@@ -683,9 +685,17 @@ initEnv();on.exit({uninitEnv()})
         fr <- get(paste0(".", Symbols[[i]]), envir =  cache.envir)
         if (verbose)
             cat("done.\n")
-        if (!is.xts(fr))
-            fr <- xts(fr[, -1], as.Date(fr[, 1], origin = "1970-01-01"),
-                src = "cache", updated = Sys.time())
+        browser()
+        if (!is.xts(fr)) {
+           # try HARDER to get ATTRIBUTES
+           updated <- attributes(fr)[["updated"]]
+           if(is.null(updated)) updated <- Sys.time()
+           src <- attributes(fr)[["src"]]
+           if(is.null(src))     src <- "cache"
+           # finally ( does not work if already an xts/zoo)
+           fr <- xts(fr[, -1], as.Date(fr[, 1], origin = "1970-01-01"),
+                src = src, updated = updated)
+        }
         # NO COLUMN NAME ADJUSTMENT/CONVERSTION BECAUSE NOT AN ORIGINAL SOURCE
         fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
         # NO SYMBOL NAME ADJUSTMENT/CONVERSTION BECAUSE NOT AN ORIGINAL SOURCE
@@ -932,6 +942,15 @@ getSymbols.pg <- getSymbols.PostgreSQL
 
 #' get a recent Symbol i(f I do not have one)
 #'
+#' @details
+#'
+#' first look in  nextsrc[1]
+#' if not found look in  nextsrc[2], . . . etc
+#' if ran out of  nextsrc, look in src
+#'   then next back-updated all of  nextsrc (going backwards)
+#'  alt: if DID NOT run out of nextsrc. A  nextsrc found the newer data.
+#'    then backload the newer data into all previous nextsrcs (going backwards)
+#'
 #' @param Symbols as quantmod getSymbols: a character vector specifying the names of each symbol to be loaded
 #' @param con DBI connection
 #' @param envir.source source of Symbols
@@ -953,7 +972,9 @@ getSymbols.pg <- getSymbols.PostgreSQL
 #' \dontrun{
 #'
 #' # before, be sure, that "MSFT" is in the database
+#' ls(all.names = TRUE)
 #' msft <- getNewSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#' ls(all.names = TRUE)
 #'
 #' }
 #' @export
@@ -984,12 +1005,14 @@ initEnv();on.exit({uninitEnv()})
 
       FoundinNextSrc <- FALSE
       if(existSymbols(Symbols[[i]], src = nextsrc_forward)[[1]]) {
+        browser()
         updated <- updatedSymbols(Symbols[[i]], src = nextsrc_forward)[[1]]
         FoundinNextSrc <- TRUE
       }
 
       isTooOld <- "UNKNOWN"
       if(FoundinNextSrc) {
+        browser()
         AgeTestTooOld <- as.difftime(MaxAgeValue,  units = MaxAgeUnits) <  difftime(Sys.time(), updated)
         if(AgeTestTooOld) { isTooOld <- "YES"} else {  isTooOld <- "NO"}
       }
@@ -1047,10 +1070,12 @@ initEnv();on.exit({uninitEnv()})
       if(nextrcItoBeUpdated == 1) {
 
         # get it back from "where I saved from" ( not applicable: if auto.assign = TRUE )
-        xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
+        xTs2 <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
         verbose = verbose, warnings = warnings, src = nextsrc[nextrcItoBeUpdated], symbol.lookup = symbol.lookup,
-        auto.assign = FALSE, source.envir = NULL,...)
-
+        auto.assign = auto.assign, source.envir = NULL,...)
+        if(!auto.assign){
+          if(dim(xTs) != dim(xTs2)) message("getNewSymbols: !auto.assign: dim(xTs) != dim(xTs2)")
+        }
       }
 
     } # nextrcItoBeUpdated in nextrcSeqtoBeUpdated
@@ -1526,6 +1551,8 @@ initEnv();on.exit({uninitEnv()})
     # look in my custom environment
     if(is.environment(source.envir)) {
 
+    browser()
+
     AllSymbols <- ls(envir = source.envir, all.names = TRUE)
     FoundAllSymbols <- AllSymbols %in% Symbols
     AllFoundSymbols <- AllSymbols[FoundAllSymbols]
@@ -1539,10 +1566,11 @@ initEnv();on.exit({uninitEnv()})
       } else if (!is.null(attributes(xx)[["updated"]])) {
         updated  <- attributes(xx)[["updated"]]
       }
-      namesx <- Names(x)
+      namesx <- x
       if(!is.null(updated)) { x <- updated } else { x <- NA_real_ }
       Names(x) <- namesx
-      EnvSymbols <- c(EnvSymbols, x)
+      browser()
+      EnvSymbols <- c(EnvSymbols, as.list(x))
       assign("EnvSymbols", EnvSymbols, envir =  runenv)
       invisible()
     })}
@@ -1569,12 +1597,16 @@ updatedSymbols.cache <- function(Symbols = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("updatedSymbols.cache")
+  browser()
+  if(is.null(cache.envir)) cache.envir <- .GlobalEnv
 
-  if(is.null(cache.envir)) cache.envir <- .Globalenv
+  AllSymbols <- updatedSymbols(source.envir = cache.envir)
 
-  EnvSymbols <- updatedSymbols(Symbols = Symbols, source.envir = cache.envir)
-  Names(EnvSymbols) <- str_replace(Names(EnvSymbols), "^[.]","")
-  EnvSymbols
+  LessAllSymbols   <- AllSymbols[str_detect(Names(AllSymbols),"^[.].+") &
+                                !str_detect(Names(AllSymbols),"^[.]Random[.]seed$")]
+  Names(LessAllSymbols) <- str_replace(Names(LessAllSymbols), "^[.]","")
+  RetrievedSymbols <- LessAllSymbols
+  RetrievedSymbols
 
 })}
 
@@ -1720,17 +1752,13 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("listSymbols.cache")
 
-  if(is.null(cache.envir)) cache.envir <- .Globalenv
-
+  if(is.null(cache.envir)) cache.envir <- .GlobalEnv
+  browser()
   AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
-  LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &&
+  LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &
                                 !str_detect(AllSymbols,"^[.]Random[.]seed$")]
   RetrievedSymbols <- str_replace(LessAllSymbols, "^[.]","")
-  FoundSymbols     <- RetrievedSymbols %in% Symbols
-  EnvSymbols       <- RetrievedSymbols[FoundSymbols]
-  EnvSymbols
-  if(is.null(SymbolsPassed)) EnvSymbols <- RetrievedSymbols
-  EnvSymbols
+  RetrievedSymbols
 
 })}
 
@@ -1848,7 +1876,7 @@ initEnv();on.exit({uninitEnv()})
   # EnvSymbols    <- character(0)
   # NotEnvSymbols <- character(0)
   if(is.null(cache.envir)) cache.envir <- .GlobalEnv
-
+  browser()
   if(is.environment(cache.envir)) {
     AllSymbols <- listSymbols(cache.envir = cache.envir, src = "cache")
     if(!is.null(AllSymbols)) {
