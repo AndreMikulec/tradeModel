@@ -4,7 +4,7 @@
 \alias{listSymbols}
 \title{object symbols in a persistent location (dispatcher)}
 \usage{
-listSymbols(con = NULL, source.envir = NULL, ...)
+listSymbols(source.envir = NULL, ...)
 }
 \arguments{
 \item{source.envir}{source location of Symbols

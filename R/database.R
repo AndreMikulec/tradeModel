@@ -1201,7 +1201,7 @@ initEnv();on.exit({uninitEnv()})
   }
   if("trg" %in% names(Dots)) {
     do.call(paste0("saveSymbols",".", Dots[["trg"]]), c(list(),
-      Symbols = Symbols, con = con, source.envir = source.envir, Dots[!names(Dots) %in% "trg"]))
+      Symbols = Symbols, source.envir = source.envir, Dots[!names(Dots) %in% "trg"]))
   }
   invisible()
 

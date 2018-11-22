@@ -4,16 +4,16 @@
 \alias{saveSymbols}
 \title{saves xts object symbols to a persistent location (dispatcher)}
 \usage{
-saveSymbols(Symbols = NULL, con = NULL, source.envir = NULL,
-  env = parent.frame(), Gathering = c("DotgetSymbols", "source.envir"),
+saveSymbols(Symbols = NULL, env = parent.frame(),
+  source.envir = NULL, Gathering = c("DotgetSymbols", "source.envir"),
   ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
 
-\item{source.envir}{source location of Symbols}
-
 \item{env}{location of xts objects placed that had been aquired with getSymbols("XXX", src = 'yahoo')}
+
+\item{source.envir}{source location of Symbols}
 
 \item{Gathering}{places to look for symbols to be collected
 xts objects must have the attribute "src"}

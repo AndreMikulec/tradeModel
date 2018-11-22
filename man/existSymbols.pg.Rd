@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{existSymbols.pg}
 \alias{existSymbols.pg}
-\title{listSymbols pg}
+\title{existSymbols pg}
 \usage{
 existSymbols.pg(Symbols = NULL, con = NULL, user = NULL,
   password = NULL, dbname = NULL, schname = NULL,
@@ -10,5 +10,5 @@ existSymbols.pg(Symbols = NULL, con = NULL, user = NULL,
   forceISOdate = TRUE, ...)
 }
 \description{
-listSymbols pg
+existSymbols pg
 }

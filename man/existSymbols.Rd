@@ -4,7 +4,7 @@
 \alias{existSymbols}
 \title{xts object symbols}
 \usage{
-existSymbols(Symbols = NULL, con = NULL, source.envir = NULL, ...)
+existSymbols(Symbols = NULL, source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
