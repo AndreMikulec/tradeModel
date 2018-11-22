@@ -4,7 +4,7 @@
 \alias{updatedSymbols.cache}
 \title{'updated' property of xts object symbols in the cache}
 \usage{
-updatedSymbols.cache(Symbols = NULL, source.envir = NULL, ...)
+updatedSymbols.cache(Symbols = NULL, cache.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}

@@ -4,12 +4,12 @@
 \alias{listSymbols.cache}
 \title{xts object symbols in the cache}
 \usage{
-listSymbols.cache(source.envir = NULL, ...)
+listSymbols.cache(cache.envir = NULL, ...)
 }
 \arguments{
-\item{source.envir}{location of xts objects}
-
 \item{...}{passed unused}
+
+\item{source.envir}{location of xts objects}
 }
 \value{
 character vector of Symbols

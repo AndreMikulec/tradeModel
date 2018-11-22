@@ -633,16 +633,20 @@ initEnv();on.exit({uninitEnv()})
 #' @return A call to getSymbols.csv will load into the specified environment one object for each Symbol specified, with class defined by return.class. Presently this may be ts, zoo, xts, data.frame, or timeSeries
 #' @examples
 #' \dontrun{
+#'
 #' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 #' source.envir = list2env(list(MSFT = msft))
 #' saveSymbols(trg = "cache", source.envir = source.envir)
 #' res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
+#'
 #' }
 #' @export
-getSymbols.cache <- function (Symbols = NULL, env, return.class = "xts", source.envir = NULL, ...) {
+getSymbols.cache <- function (Symbols = NULL, env, return.class = "xts", cache.envir = NULL,  ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
     importDefaults("getSymbols.cache")
+
+    if(is.null(cache.envir)) cache.envir <- .GlobalEnv
 
     SymbolsPassed <- Symbols
 
@@ -650,16 +654,18 @@ initEnv();on.exit({uninitEnv()})
     for (var in names(list(...))) {
         assign(var, list(...)[[var]], this.env)
     }
-    if(is.null(source.envir)) source.envir <- .GlobalEnv
+
     default.return.class <- return.class
     if (!hasArg("verbose"))
         verbose <- FALSE
     if (!hasArg("auto.assign"))
         auto.assign <- TRUE
 
-    AllSymbols       <- ls(envir = source.envir, all.names = TRUE)
-    RetrievedSymbols <- AllSymbols[str_detect(AllSymbols,"^[.].+")]
-    FoundSymbols     <- RetrievedSymbols %in% paste0(".",Symbols)
+    AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
+    LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &&
+                                  !str_detect(AllSymbols,"^[.]Random[.]seed$")]
+    RetrievedSymbols <- str_replace(LessAllSymbols, "^[.]","")
+    FoundSymbols     <- RetrievedSymbols %in% Symbols
     EnvSymbols       <- RetrievedSymbols[FoundSymbols]
     Symbols          <- EnvSymbols
     if(is.null(SymbolsPassed)) Symbols <- RetrievedSymbols
@@ -670,11 +676,11 @@ initEnv();on.exit({uninitEnv()})
         return.class <- default.return.class
         if (verbose)
             cat("loading ", Symbols[[i]], ".....")
-        if (!paste0(".", Symbols[[i]]) %in% RetrievedSymbols) {
+        if (!Symbols[[i]] %in% RetrievedSymbols) {
             cat("\n", Symbols[[i]]," does not exist ", "....skipping\n")
             next
         }
-        fr <- get(paste0(".", Symbols[[i]]), envir =  source.envir)
+        fr <- get(paste0(".", Symbols[[i]]), envir =  cache.envir)
         if (verbose)
             cat("done.\n")
         if (!is.xts(fr))
@@ -1029,12 +1035,12 @@ initEnv();on.exit({uninitEnv()})
     for(nextrcItoBeUpdated in nextrcSeqtoBeUpdated) {
 
       # write back to the previous nextsrc
-
+      browser()
       tempList <- list()
       tempList[[Symbols[[i]]]] <- xTs
       saveSymbols(Symbols[[i]], Gathering = "source.envir",
-                   src = nextsrc[nextrcItoBeUpdated], source.envir = list2env(tempList))
-
+                   trg = nextsrc[nextrcItoBeUpdated], source.envir = list2env(tempList), ...)
+      browser()
       # extra TO DO on the INDEX(1)
       # index of 1, also "Get" it to be loaded into "env" ( conditoins: auto.assign = TRUE or !is.null(env) )
       # INHERITS (auto.assign)
@@ -1043,8 +1049,7 @@ initEnv();on.exit({uninitEnv()})
         # get it back from "where I saved from" ( not applicable: if auto.assign = TRUE )
         xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
         verbose = verbose, warnings = warnings, src = nextsrc[nextrcItoBeUpdated], symbol.lookup = symbol.lookup,
-        auto.assign = FALSE, source.envir = NULL,
-        ...)
+        auto.assign = FALSE, source.envir = NULL,...)
 
       }
 
@@ -1105,8 +1110,8 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
-saveSymbols <- function(Symbols = NULL, con = NULL, source.envir = NULL, env = parent.frame(),
-                       Gathering = c("DotgetSymbols","source.envir"), ...) {
+saveSymbols <- function(Symbols = NULL, env = parent.frame(),
+                       source.envir = NULL, Gathering = c("DotgetSymbols","source.envir"), ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("saveSymbols")
@@ -1115,20 +1120,20 @@ initEnv();on.exit({uninitEnv()})
   # Symbols are no longer passed
   # because all 'Symbols' are in the source.envir
 
-  if("source.envir" %in% Gathering) {
-    # case insensitive
-    if(is.environment(source.envir)) {
-
-      # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
-      SymbolsInsource.envir <- Symbols[tolower(Symbols) %in% tolower(names(as.list(source.envir)))]
-      if(length(SymbolsInsource.envir)) stop(paste0("Symbols ", paste0(SymbolsInsource.envir, collapse = ", "), " found in source.envir"))
-
-      # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
-      source.envirInSymbols <- names(as.list(source.envir))[tolower(names(as.list(source.envir))) %in% tolower(Symbols)]
-      if(length(source.envirInSymbols)) stop(paste0("source.envir ", paste0(source.envirInSymbols, collapse = ", "), " found in Symbols"))
-
-    }
-  }
+  # if("source.envir" %in% Gathering) {
+  #   # case insensitive
+  #   if(is.environment(source.envir)) {
+  #
+  #     # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
+  #     SymbolsInsource.envir <- Symbols[tolower(Symbols) %in% tolower(names(as.list(source.envir)))]
+  #     if(length(SymbolsInsource.envir)) stop(paste0("Symbols ", paste0(SymbolsInsource.envir, collapse = ", "), " found in source.envir"))
+  #
+  #     # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
+  #     source.envirInSymbols <- names(as.list(source.envir))[tolower(names(as.list(source.envir))) %in% tolower(Symbols)]
+  #     if(length(source.envirInSymbols)) stop(paste0("source.envir ", paste0(source.envirInSymbols, collapse = ", "), " found in Symbols"))
+  #
+  #   }
+  # }
 
 
   xTsGetSymbols <- list()
@@ -1144,14 +1149,6 @@ initEnv();on.exit({uninitEnv()})
     }
 
     if(DotgetSymbolsFound) {
-
-      # if (is.null(Symbols)) {
-      #   # get all of the Symbols
-      #   Symbols <- names(DotgetSymbols)
-      # }
-      # else {
-      #   Symbols <- Symbols[Symbols %in% names(DotgetSymbols)]
-      # }
 
       RetrievedSymbols      <- names(DotgetSymbols)
       FoundSymbols          <- RetrievedSymbols %in% Symbols
@@ -1255,22 +1252,22 @@ initEnv();on.exit({uninitEnv()})
 #' saveSymbols(trg = "cache", source.envir = source.envir)
 #' }
 #' @export
-saveSymbols.cache <- function (Symbols = NULL, source.envir = NULL, target.envir = NULL, ...) {
+saveSymbols.cache <- function (Symbols = NULL, source.envir = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
     importDefaults("saveSymbols.cache")
 
+    if(is.null(cache.envir)) cache.envir <- .GlobalEnv
+
     source.list <- as.list(source.envir)
 
-    RetrievedSymbols <- names(as.list(source.envir))
+    RetrievedSymbols <- Names(as.list(source.envir))
     FoundSymbols <- RetrievedSymbols %in% Symbols
     EnvSymbols   <- RetrievedSymbols[FoundSymbols]
     if(is.null(Symbols)) EnvSymbols <- RetrievedSymbols
 
-    if(is.null(target.envir)) target.envir <- .GlobalEnv
-
     for(each.symbol in EnvSymbols) {
-        assign(paste0(".", each.symbol), source.list[[each.symbol]], envir = target.envir)
+        assign(paste0(".", each.symbol), source.list[[each.symbol]], envir = cache.envir)
     }
     invisible()
 })}
@@ -1516,7 +1513,7 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 #'
 #' }
 #' @export
-updatedSymbols <- function(Symbols = NULL, con = NULL, source.envir = NULL, ...) {
+updatedSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("updatedSymbols")
@@ -1542,9 +1539,9 @@ initEnv();on.exit({uninitEnv()})
       } else if (!is.null(attributes(xx)[["updated"]])) {
         updated  <- attributes(xx)[["updated"]]
       }
-      namesx <- names(x)
+      namesx <- Names(x)
       if(!is.null(updated)) { x <- updated } else { x <- NA_real_ }
-      names(x) <- namesx
+      Names(x) <- namesx
       EnvSymbols <- c(EnvSymbols, x)
       assign("EnvSymbols", EnvSymbols, envir =  runenv)
       invisible()
@@ -1554,7 +1551,7 @@ initEnv();on.exit({uninitEnv()})
   SrcSymbols <- list()
   if("src" %in% names(Dots)) {
     SrcSymbols <- do.call(paste0("updatedSymbols",".", Dots[["src"]]), c(list(),
-                    Symbols = Symbols, con = con, source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
+                    Symbols = Symbols, source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
    }
   c(list(),EnvSymbols, SrcSymbols)
 
@@ -1568,14 +1565,15 @@ initEnv();on.exit({uninitEnv()})
 #' @param source.envir location of xts objects
 #' @return a named list of 'updated' properties
 #' @export
-updatedSymbols.cache <- function(Symbols = NULL, source.envir = NULL, ...) {
+updatedSymbols.cache <- function(Symbols = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("updatedSymbols.cache")
 
-  if(is.null(source.envir)) source.envir <- .Globalenv
-  EnvSymbols <- updatedSymbols(Symbols = Symbols, source.envir = source.envir)
-  EnvSymbols <- EnvSymbols[str_detect(names(EnvSymbols), "^[.].+")]
+  if(is.null(cache.envir)) cache.envir <- .Globalenv
+
+  EnvSymbols <- updatedSymbols(Symbols = Symbols, source.envir = cache.envir)
+  Names(EnvSymbols) <- str_replace(Names(EnvSymbols), "^[.]","")
   EnvSymbols
 
 })}
@@ -1628,7 +1626,7 @@ initEnv();on.exit({uninitEnv()})
       " FROM ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
       " WHERE ", dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, Symbol), ";"))
     updated <- updated[[1]]
-    names(updated)[1] <- Symbol
+    Names(updated)[1] <- Symbol
     Updateds <- c(Updateds, list(updated))
   }
   Updateds
@@ -1680,7 +1678,7 @@ updatedSymbols.pg <- updatedSymbols.PostgreSQL
 #'
 #' }
 #' @export
-listSymbols <- function(con = NULL, source.envir = NULL, ...) {
+listSymbols <- function(source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("listSymbols")
@@ -1703,7 +1701,7 @@ initEnv();on.exit({uninitEnv()})
   SrcSymbols <- c()
   if("src" %in% names(Dots)) {
     SrcSymbols <- do.call(paste0("listSymbols",".", Dots[["src"]]), c(list(),
-                    con = con, source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
+                    source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
   }
   c(EnvSymbols, SrcSymbols)
 
@@ -1717,14 +1715,21 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return character vector of Symbols
 #' @export
-listSymbols.cache <- function(source.envir = NULL, ...) {
+listSymbols.cache <- function(cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("listSymbols.cache")
 
-  if(is.null(source.envir)) source.envir <- .Globalenv
-  EnvSymbols <- listSymbols(source.envir = source.envir)
-  EnvSymbols <- EnvSymbols[str_detect(names(EnvSymbols), "^[.].+")]
+  if(is.null(cache.envir)) cache.envir <- .Globalenv
+
+  AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
+  LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &&
+                                !str_detect(AllSymbols,"^[.]Random[.]seed$")]
+  RetrievedSymbols <- str_replace(LessAllSymbols, "^[.]","")
+  FoundSymbols     <- RetrievedSymbols %in% Symbols
+  EnvSymbols       <- RetrievedSymbols[FoundSymbols]
+  EnvSymbols
+  if(is.null(SymbolsPassed)) EnvSymbols <- RetrievedSymbols
   EnvSymbols
 
 })}
@@ -1790,7 +1795,7 @@ listSymbols.pg <- listSymbols.PostgreSQL
 #' @param ... passed to src
 #' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
-existSymbols <- function(Symbols = NULL, con = NULL, source.envir = NULL, ...) {
+existSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("existSymbols")
@@ -1804,54 +1809,25 @@ initEnv();on.exit({uninitEnv()})
 
       RetrievedSymbols <- listSymbols(source.envir = source.envir)
       if(is.null(RetrievedSymbols))  RetrievedSymbols <- character(0)
-#
-#       FoundSymbols <- RetrievedSymbols %in% Symbols
-#
-#       EnvSymbols <- RetrievedSymbols[FoundSymbols]
-#       NamesEnvSymbols <-  EnvSymbols
-#       EnvSymbols    <- rep(TRUE, length(EnvSymbols))
-#       Names(EnvSymbols) <- NamesEnvSymbols
-#
-#       NotEnvSymbols <- RetrievedSymbols[!FoundSymbols]
-#       NamesNotEnvSymbols <- NotEnvSymbols
-#       NotEnvSymbols <- rep(FALSE, length(NotEnvSymbols))
-#       Names(NotEnvSymbols) <- NamesNotEnvSymbols
-#
-#       Result <-  c(EnvSymbols, NotEnvSymbols)[order(c(Names(EnvSymbols), Names(NotEnvSymbols)))]
-#
-#       NamesSymbols <- Symbols
-#       Symbols <- rep(FALSE,length(Symbols))
-#       Names(Symbols) <- NamesSymbols
-#
-#       if(!all(Names(Symbols) %in% Names(Result))){
-#
-#         Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
-#         Result <- Result[!duplicated(Names(Result))]
-#         Result <- Result[order(Names(Result))]
-#       }
-#       Return(Result)
 
-        if(!is.null(Symbols)) {
-          Results <-        Symbols %in% RetrievedSymbols
-          Names(Results) <- Symbols
-        } else {
-          Results <- rep(TRUE, length(RetrievedSymbols))
-          Names(Results) <- RetrievedSymbols
-        }
-        # because a named vector (of booleans) gets upgraded to character.
-        return(as.list(Results))
+      if(!is.null(Symbols)) {
+        Results <-        Symbols %in% RetrievedSymbols
+        Names(Results) <- Symbols
+      } else {
+        Results <- rep(TRUE, length(RetrievedSymbols))
+        Names(Results) <- RetrievedSymbols
+      }
+      # because a named vector (of booleans) gets upgraded to character.
+      return(as.list(Results))
     }
   }
 
   SrcSymbols <- character(0)
   if("src" %in% names(Dots)) {
     Results <- do.call(paste0("existSymbols",".", Dots[["src"]]), c(list(),
-                    Symbols = Symbols, con = con, source.envir =  source.envir, Dots[!names(Dots) %in% "src"]))
+                    Symbols = Symbols, source.envir =  source.envir, Dots[!names(Dots) %in% "src"]))
     return(Results)
   }
-
-
-
 
 })}
 
@@ -1864,53 +1840,22 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
-existSymbols.cache <- function(Symbols = NULL, source.envir = NULL, ...) {
+existSymbols.cache <- function(Symbols = NULL, cache.envir = NULL,  ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("existSymbols.cache")
 
   # EnvSymbols    <- character(0)
   # NotEnvSymbols <- character(0)
-  if(is.null(source.envir)) source.envir <- .GlobalEnv
+  if(is.null(cache.envir)) cache.envir <- .GlobalEnv
 
-  if(is.environment(source.envir)) {
-    AllSymbols <- listSymbols(source.envir = source.envir, src = "cache")
+  if(is.environment(cache.envir)) {
+    AllSymbols <- listSymbols(cache.envir = cache.envir, src = "cache")
     if(!is.null(AllSymbols)) {
-      RetrievedSymbols <- Symbols %in% llply(strsplit(AllSymbols, ""), function(x) {
-        if(x[1] == "") {
-          paste0(x[-1], collapse = "")
-        } else {
-          paste0(x, collapse = "")
-        }
-      })
+      RetrievedSymbols <- AllSymbols
     } else {
       RetrievedSymbols <- character(0)
     }
-    # FoundSymbols <- RetrievedSymbols %in% Symbols
-    # EnvSymbols <- RetrievedSymbols[FoundSymbols]
-    # NamesEnvSymbols <-  EnvSymbols
-    # EnvSymbols    <- rep(TRUE, length(EnvSymbols))
-    # Names(EnvSymbols) <- NamesEnvSymbols
-    #
-    # NotEnvSymbols <- RetrievedSymbols[!FoundSymbols]
-    # NamesNotEnvSymbols <- NotEnvSymbols
-    # NotEnvSymbols <- rep(FALSE, length(NotEnvSymbols))
-    # Names(NotEnvSymbols) <- NamesNotEnvSymbols
-    #
-    # Result <- c(EnvSymbols, NotEnvSymbols)[order(c(Names(EnvSymbols), Names(NotEnvSymbols)))]
-    #
-    # NamesSymbols <- Symbols
-    # Symbols <- rep(FALSE,length(Symbols))
-    # Names(Symbols) <- NamesSymbols
-    #
-    # if(!all(Names(Symbols) %in% Names(Result))){
-    #
-    #   Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
-    #   Result <- Result[!duplicated(Names(Result))]
-    #   Result <- Result[order(Names(Result))]
-    # }
-    #
-    # return(Result)
 
     if(!is.null(Symbols)) {
       Results <-        Symbols %in% RetrievedSymbols
@@ -1967,31 +1912,6 @@ initEnv();on.exit({uninitEnv()})
                       schname=schname,host=host,port=port,options=options,
                       forceISOdate=forceISOdate, src = "pg")
   if(is.null(RetrievedSymbols)) RetrievedSymbols <- character(0)
-  # FoundSymbols <- RetrievedSymbols %in% Symbols
-  #
-  # DBSymbols <- RetrievedSymbols[FoundSymbols]
-  # NamesDBSymbols <-  DBSymbols
-  # DBSymbols    <- rep(TRUE, length(DBSymbols))
-  # Names(DBSymbols) <- NamesDBSymbols
-  #
-  # NotDBSymbols <- RetrievedSymbols[!FoundSymbols]
-  # NamesNotDBSymbols <- NotDBSymbols
-  # NotDBSymbols <- rep(FALSE, length(NotDBSymbols))
-  # Names(NotDBSymbols) <- NamesNotDBSymbols
-  #
-  # Result <- c(DBSymbols, NotDBSymbols)[order(c(Names(DBSymbols), Names(NotDBSymbols)))]
-  #
-  # NamesSymbols <- Symbols
-  # Symbols <- rep(FALSE,length(Symbols))
-  # Names(Symbols) <- NamesSymbols
-  #
-  # if(!all(Names(Symbols) %in% Names(Result))){
-  #
-  #   Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
-  #   Result <- Result[!duplicated(Names(Result))]
-  #   Result <- Result[order(Names(Result))]
-  # }
-  # return(Result)
 
   if(!is.null(Symbols)) {
     Results <-        Symbols %in% RetrievedSymbols
@@ -2004,7 +1924,7 @@ initEnv();on.exit({uninitEnv()})
   return(as.list(Results))
 
 })}
-#' listSymbols pg
+#' existSymbols pg
 #'
 #'@export
 existSymbols.pg <- existSymbols.PostgreSQL

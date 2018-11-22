@@ -5,7 +5,7 @@
 \title{Downloads Symbols to specified env from a local R environment}
 \usage{
 getSymbols.cache(Symbols = NULL, env, return.class = "xts",
-  source.envir = NULL, ...)
+  cache.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded}
@@ -14,9 +14,9 @@ getSymbols.cache(Symbols = NULL, env, return.class = "xts",
 
 \item{return.class}{class of returned object}
 
-\item{source.envir}{where to find xts objects ( location of cache )}
-
 \item{...}{additional parameters}
+
+\item{source.envir}{where to find xts objects ( location of cache )}
 }
 \value{
 A call to getSymbols.csv will load into the specified environment one object for each Symbol specified, with class defined by return.class. Presently this may be ts, zoo, xts, data.frame, or timeSeries
@@ -26,9 +26,11 @@ Downloads Symbols to specified env from a local R environment
 }
 \examples{
 \dontrun{
+
 msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 source.envir = list2env(list(MSFT = msft))
 saveSymbols(trg = "cache", source.envir = source.envir)
 res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
+
 }
 }

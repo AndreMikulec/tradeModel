@@ -4,14 +4,14 @@
 \alias{existSymbols.cache}
 \title{xts object symbols}
 \usage{
-existSymbols.cache(Symbols = NULL, source.envir = NULL, ...)
+existSymbols.cache(Symbols = NULL, cache.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
 
-\item{source.envir}{location of xts objects}
-
 \item{...}{passed unused}
+
+\item{source.envir}{location of xts objects}
 }
 \value{
 R named list of Symbols and results (TRUE/FALSE)

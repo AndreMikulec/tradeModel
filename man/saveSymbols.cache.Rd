@@ -5,16 +5,16 @@
 \title{save xts objects as .xts in source.envir ( cache )}
 \usage{
 saveSymbols.cache(Symbols = NULL, source.envir = NULL,
-  target.envir = NULL, ...)
+  cache.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
 
 \item{source.envir}{location of xts objects}
 
-\item{target.envir}{location of where to store xts objects ( location of cache )}
-
 \item{...}{not used}
+
+\item{target.envir}{location of where to store xts objects ( location of cache )}
 }
 \description{
 save xts objects as .xts in source.envir ( cache )

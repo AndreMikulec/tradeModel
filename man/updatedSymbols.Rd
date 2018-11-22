@@ -4,7 +4,7 @@
 \alias{updatedSymbols}
 \title{'updated' property xts object symbols in a persistent location (dispatcher)}
 \usage{
-updatedSymbols(Symbols = NULL, con = NULL, source.envir = NULL, ...)
+updatedSymbols(Symbols = NULL, source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
