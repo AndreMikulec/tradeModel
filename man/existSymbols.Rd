@@ -16,7 +16,7 @@ existSymbols(Symbols = NULL, con = NULL, source.envir = NULL, ...)
 \item{src}{source program to look for symbols}
 }
 \value{
-character vector of Symbols
+R named list of Symbols and results (TRUE/FALSE)
 }
 \description{
 looks in source.envir xor "src" exclusively

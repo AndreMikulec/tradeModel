@@ -639,7 +639,7 @@ initEnv();on.exit({uninitEnv()})
 #' res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
 #' }
 #' @export
-getSymbols.cache <- function (Symbols = NULL, source.envir = NULL, env, return.class = "xts", ...) {
+getSymbols.cache <- function (Symbols = NULL, env, return.class = "xts", source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
     importDefaults("getSymbols.cache")
@@ -794,7 +794,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
-getSymbols.PostgreSQL <- function(Symbols = NULL, con = con, env, return.class = 'xts',
+getSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, env, return.class = 'xts',
                                db.fields=c('o','h','l','c','v','a'),
                                field.names = c('Open','High','Low','Close','Volume','Adjusted'),
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
@@ -822,8 +822,9 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(con)) {
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
-    AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+    AssignEnv(DBConMeta, c("con"))
   }
+  schname <- pgCurrentSchema(con)[[1]]
   if(!is.null(schnamePassed) && schnamePassed != schname) schname <- schnamePassed
 
   # ORIGINAL quantmod-ism FOLLOWS ... [ ] could be cleaned up
@@ -844,7 +845,9 @@ initEnv();on.exit({uninitEnv()})
 
   schemaSymbolsQuoted <- list()
   Symbols.db.Cols <- list()
-  for(i in se                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 +           q_along(Symbols)) {
+
+  for(i in seq_along(Symbols)) {
+
     if(verbose)
       cat(paste('Loading ',Symbols[[i]],paste(rep('.',10-nchar(Symbols[[i]])),collapse=''),sep=''))
     # PEEK AHEAD, SEE IF, VOLUME xor ADJUSTED, IS MISSING, SEE IF SINGLE COLUMN (FRED) DATA
@@ -870,6 +873,7 @@ initEnv();on.exit({uninitEnv()})
       Selection <- "*"
       OHLCData <- FALSE
     }
+
     # ABOVE (^) ALREADY QUOTED
     query <- paste0("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ",dbQuoteIdentifier(con, "date"), ";")
     rs <- DBI::dbSendQuery(con, query)
@@ -894,9 +898,10 @@ initEnv();on.exit({uninitEnv()})
     order.by= do.call(c,fr[,1, drop = F])
     #fr <- data.frame(fr[,-1],row.names=fr[,1])
     fr <- xts(as.matrix(fr[,-1]),
-              order.by=order.by,        # ORIG: order.by=as.Date(fr[,1],origin='1970-01-01'),
-              src=src,updated=updated)  # ORIG: src=dbname,updated=Sys.time())
+              order.by=order.by,
+              src=src,updated=updated)
     # MAY NOT HAVE VOLUME/ADJUSTED
+
     if(OHLCData) {
       colnames(fr) <- paste(Symbols[[i]],field.names[-1], sep='.')
     } else { # as-is # e.g. FRED
@@ -911,6 +916,7 @@ initEnv();on.exit({uninitEnv()})
   if(auto.assign)
     return(Symbols)
   return(fr)
+
 })}
 #' getSymbols pg
 #'
@@ -940,7 +946,8 @@ getSymbols.pg <- getSymbols.PostgreSQL
 #' @examples
 #' \dontrun{
 #'
-#'
+#' # before, be sure, that "MSFT" is in the database
+#' msft <- getNewSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 #'
 #' }
 #' @export
@@ -952,7 +959,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("getNewSymbols")
 
-  if(is.null(MaxAge)) MaxAge <- "24 hours"
+  if(is.null(MaxAge)) MaxAge <- "4 weeks"
   MaxAgeValueUnits <- strsplit(MaxAge, " ")[[1]]
   MaxAgeValue <- as.integer(MaxAgeValueUnits[1])
   MaxAgeUnits <- MaxAgeValueUnits[2]
@@ -970,8 +977,8 @@ initEnv();on.exit({uninitEnv()})
     for(nextsrc_forward in nextsrc) {
 
       FoundinNextSrc <- FALSE
-      if(existSymbols(Symbols[[i]], src = nextsrc_forward)) {
-        updated <- updatedSymbols(Symbols[[i]], src = nextsrc_forward)
+      if(existSymbols(Symbols[[i]], src = nextsrc_forward)[[1]]) {
+        updated <- updatedSymbols(Symbols[[i]], src = nextsrc_forward)[[1]]
         FoundinNextSrc <- TRUE
       }
 
@@ -989,21 +996,34 @@ initEnv();on.exit({uninitEnv()})
 
     } # nextsrc_forward in nextsrc
 
-
-    if(isTooOld %in% c("NO")) {
+    if(isTooOld %in% c("YES")) { # then get it from "src"
       # not in our "nextsrc",
       # therfore get it from the source "src"
-      xTs <- getSymbols(Symbols = Symbols[[i]], con = con, envir.source = envir.source, env = env, reload.Symbols = reload.Symbols,
+      xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
       verbose = verbose, warnings = warnings, src = src, symbol.lookup = symbol.lookup,
       auto.assign = FALSE, source.envir = source.envir,
       ...)
 
-      # index(sequence) of (current and) previous nextsrc values in 'reverse order' (SEE BELOW)
+      # index(sequence) of (current(last) and) previous nextsrc values in 'reverse order' (SEE BELOW)
       nextrcSeqtoBeUpdated <- match(nextsrc_forward, nextsrc, 0) %>%
                              {seq_len(.) - 0} %>% {identity(.)[] } %>% rev
-      # BELOW: will TEST update itself
-      # nextrcItoBeUpdated i== nextrcSeqtoBeUpdated
-      # WILL TEST loading into ITSELF
+                              # creating a reverse order sequence
+    }
+
+    if(isTooOld %in% c("NO")) {  # then get it from nextsrc_forward
+      # not in our "nextsrc",
+      # therfore get it from the source "src"
+      browser()
+      xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
+      verbose = verbose, warnings = warnings, src = nextsrc_forward, symbol.lookup = symbol.lookup,
+      auto.assign = FALSE, source.envir = source.envir,
+      ...)
+
+      # index(sequence) of the previous nextsrc values in 'reverse order' (SEE BELOW)
+      nextrcSeqtoBeUpdated <- match(nextsrc_forward, nextsrc, 0) %>%
+                             {seq_len(.) - 1} %>% {identity(.)[-1] } %>% rev
+                              # previous           # remove the value zero(0)
+
     }
 
     for(nextrcItoBeUpdated in nextrcSeqtoBeUpdated) {
@@ -1021,7 +1041,7 @@ initEnv();on.exit({uninitEnv()})
       if(nextrcItoBeUpdated == 1) {
 
         # get it back from "where I saved from" ( not applicable: if auto.assign = TRUE )
-        xTs <- getSymbols(Symbols = Symbols[[i]], con = con, envir.source = envir.source, env = env, reload.Symbols = reload.Symbols,
+        xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
         verbose = verbose, warnings = warnings, src = nextsrc[nextrcItoBeUpdated], symbol.lookup = symbol.lookup,
         auto.assign = FALSE, source.envir = NULL,
         ...)
@@ -1296,7 +1316,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
-saveSymbols.PostgreSQL <- function(Symbols = NULL, con = con, source.envir = NULL,
+saveSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
   db.fields=c('o','h','l','c','v','a'),
   user=NULL,password=NULL,dbname=NULL,schname=NULL,host='localhost',port=5432,options=NULL, forceISOdate = TRUE,
@@ -1323,8 +1343,9 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(con)) {
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
-    AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+    AssignEnv(DBConMeta, c("con"))
   }
+  schname <- pgCurrentSchema(con)[[1]]
   if(!is.null(schnamePassed) && schnamePassed != schname) schname <- schnamePassed
 
   # now, I am only getting symbols from here
@@ -1448,7 +1469,7 @@ initEnv();on.exit({uninitEnv()})
 #' saveSymbols pg
 #'
 #'@export
-saveSymbols.pg <- getSymbols.PostgreSQL
+saveSymbols.pg <- saveSymbols.PostgreSQL
 
 
 
@@ -1586,14 +1607,16 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("updatedSymbols.PostgreSQL")
 
+  schnamePassed <- schname
+
   if(is.null(con)){
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
-    AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+    AssignEnv(DBConMeta, c("con"))
   }
-  if(!is.null(match.arg(schname)) && match.arg(schname) != schname) schname <- match.arg(schname)
+  schname <- pgCurrentSchema(con)[[1]]
+  if(!is.null(schnamePassed) && schnamePassed != schname) schname <- schnamePassed
 
-
-  RetrievedSymbols <- listSymbols(con, trg = "pg")
+  RetrievedSymbols <- listSymbols(con, src = "pg")
   FoundSymbols <- RetrievedSymbols %in% Symbols
   DBSymbols    <- RetrievedSymbols[FoundSymbols]
   if(is.null(Symbols)) DBSymbols <- RetrievedSymbols
@@ -1604,7 +1627,7 @@ initEnv();on.exit({uninitEnv()})
       "SELECT ", dbQuoteIdentifier(con, "updated"),
       " FROM ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
       " WHERE ", dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, Symbol), ";"))
-    updated <- undated[[1]]
+    updated <- updated[[1]]
     names(updated)[1] <- Symbol
     Updateds <- c(Updateds, list(updated))
   }
@@ -1732,11 +1755,14 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("listSymbols.PostgreSQL")
 
+  schnamePassed <- schname
+
   if(is.null(con)) {
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
-    AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+    AssignEnv(DBConMeta, c("con"))
   }
-  if(!is.null(match.arg(schname)) && match.arg(schname) != schname) schname <- match.arg(schname)
+  schname <- pgCurrentSchema(con)[[1]]
+  if(!is.null(schnamePassed) && schnamePassed != schname) schname <- schnamePassed
 
   SchemaTables <- pgListSchemaTables(con = con, schname = schname)
   SchemaTables <- SchemaTables[!SchemaTables %in% "Symbols"]
@@ -1762,7 +1788,7 @@ listSymbols.pg <- listSymbols.PostgreSQL
 #' @param source.envir location of xts objects
 #' @param src source program to look for symbols
 #' @param ... passed to src
-#' @return character vector of Symbols
+#' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
 existSymbols <- function(Symbols = NULL, con = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
@@ -1778,42 +1804,53 @@ initEnv();on.exit({uninitEnv()})
 
       RetrievedSymbols <- listSymbols(source.envir = source.envir)
       if(is.null(RetrievedSymbols))  RetrievedSymbols <- character(0)
+#
+#       FoundSymbols <- RetrievedSymbols %in% Symbols
+#
+#       EnvSymbols <- RetrievedSymbols[FoundSymbols]
+#       NamesEnvSymbols <-  EnvSymbols
+#       EnvSymbols    <- rep(TRUE, length(EnvSymbols))
+#       Names(EnvSymbols) <- NamesEnvSymbols
+#
+#       NotEnvSymbols <- RetrievedSymbols[!FoundSymbols]
+#       NamesNotEnvSymbols <- NotEnvSymbols
+#       NotEnvSymbols <- rep(FALSE, length(NotEnvSymbols))
+#       Names(NotEnvSymbols) <- NamesNotEnvSymbols
+#
+#       Result <-  c(EnvSymbols, NotEnvSymbols)[order(c(Names(EnvSymbols), Names(NotEnvSymbols)))]
+#
+#       NamesSymbols <- Symbols
+#       Symbols <- rep(FALSE,length(Symbols))
+#       Names(Symbols) <- NamesSymbols
+#
+#       if(!all(Names(Symbols) %in% Names(Result))){
+#
+#         Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
+#         Result <- Result[!duplicated(Names(Result))]
+#         Result <- Result[order(Names(Result))]
+#       }
+#       Return(Result)
 
-      FoundSymbols <- RetrievedSymbols %in% Symbols
-
-      EnvSymbols <- RetrievedSymbols[FoundSymbols]
-      NamesEnvSymbols <-  Names(EnvSymbols)
-      EnvSymbols    <- rep(TRUE, length(EnvSymbols))
-      names(EnvSymbols) <- NamesEnvSymbols
-
-      NotEnvSymbols <- RetrievedSymbols[!FoundSymbols]
-      NamesNotEnvSymbols <- Names(NotEnvSymbols)
-      NotEnvSymbols <- rep(FALSE, length(NotEnvSymbols))
-      names(NotEnvSymbols) <- NamesEnvSymbols
+        if(!is.null(Symbols)) {
+          Results <-        Symbols %in% RetrievedSymbols
+          Names(Results) <- Symbols
+        } else {
+          Results <- rep(TRUE, length(RetrievedSymbols))
+          Names(Results) <- RetrievedSymbols
+        }
+        # because a named vector (of booleans) gets upgraded to character.
+        return(as.list(Results))
     }
-    Result <-  c(EnvSymbols, NotEnvSymbols)[order(c(Names(EnvSymbols), Names(NotEnvSymbols)))]
-
-    NamesSymbols <- Symbols
-    Symbols <- rep(FALSE,length(Symbols))
-    Names(Symbols) <- NamesSymbols
-
-    if(!all(Names(Symbols) %in% Names(Result))){
-
-      Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
-      Result <- Result[!duplicated(Names(Result))]
-      Result <- Result[order(Names(Result))]
-    }
-    EnvSymbols <- Result
-
   }
 
   SrcSymbols <- character(0)
   if("src" %in% names(Dots)) {
-    SrcSymbols <- do.call(paste0("existSymbols",".", Dots[["src"]]), c(list(),
+    Results <- do.call(paste0("existSymbols",".", Dots[["src"]]), c(list(),
                     Symbols = Symbols, con = con, source.envir =  source.envir, Dots[!names(Dots) %in% "src"]))
+    return(Results)
   }
 
-  c(EnvSymbols, SrcSymbols)
+
 
 
 })}
@@ -1825,19 +1862,19 @@ initEnv();on.exit({uninitEnv()})
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir location of xts objects
 #' @param ... passed unused
-#' @return named character vector of Symbols
+#' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
 existSymbols.cache <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("existSymbols.cache")
 
-  EnvSymbols    <- character(0)
-  NotEnvSymbols <- character(0)
+  # EnvSymbols    <- character(0)
+  # NotEnvSymbols <- character(0)
   if(is.null(source.envir)) source.envir <- .GlobalEnv
 
   if(is.environment(source.envir)) {
-    AllSymbols <- listSymbols(source.envir = source.envir)
+    AllSymbols <- listSymbols(source.envir = source.envir, src = "cache")
     if(!is.null(AllSymbols)) {
       RetrievedSymbols <- Symbols %in% llply(strsplit(AllSymbols, ""), function(x) {
         if(x[1] == "") {
@@ -1849,32 +1886,43 @@ initEnv();on.exit({uninitEnv()})
     } else {
       RetrievedSymbols <- character(0)
     }
-    FoundSymbols <- RetrievedSymbols %in% Symbols
-    EnvSymbols <- RetrievedSymbols[FoundSymbols]
-    NamesEnvSymbols <-  Names(EnvSymbols)
-    EnvSymbols    <- rep(TRUE, length(EnvSymbols))
-    names(EnvSymbols) <- NamesEnvSymbols
+    # FoundSymbols <- RetrievedSymbols %in% Symbols
+    # EnvSymbols <- RetrievedSymbols[FoundSymbols]
+    # NamesEnvSymbols <-  EnvSymbols
+    # EnvSymbols    <- rep(TRUE, length(EnvSymbols))
+    # Names(EnvSymbols) <- NamesEnvSymbols
+    #
+    # NotEnvSymbols <- RetrievedSymbols[!FoundSymbols]
+    # NamesNotEnvSymbols <- NotEnvSymbols
+    # NotEnvSymbols <- rep(FALSE, length(NotEnvSymbols))
+    # Names(NotEnvSymbols) <- NamesNotEnvSymbols
+    #
+    # Result <- c(EnvSymbols, NotEnvSymbols)[order(c(Names(EnvSymbols), Names(NotEnvSymbols)))]
+    #
+    # NamesSymbols <- Symbols
+    # Symbols <- rep(FALSE,length(Symbols))
+    # Names(Symbols) <- NamesSymbols
+    #
+    # if(!all(Names(Symbols) %in% Names(Result))){
+    #
+    #   Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
+    #   Result <- Result[!duplicated(Names(Result))]
+    #   Result <- Result[order(Names(Result))]
+    # }
+    #
+    # return(Result)
 
-    NotEnvSymbols <- RetrievedSymbols[!FoundSymbols]
-    NamesNotEnvSymbols <- Names(NotEnvSymbols)
-    NotEnvSymbols <- rep(FALSE, length(NotEnvSymbols))
-    names(NotEnvSymbols) <- NamesEnvSymbols
+    if(!is.null(Symbols)) {
+      Results <-        Symbols %in% RetrievedSymbols
+      Names(Results) <- Symbols
+    } else {
+      Results <- rep(TRUE, length(RetrievedSymbols))
+      Names(Results) <- RetrievedSymbols
+    }
+    # because a named vector (of booleans) gets upgraded to character.
+    return(as.list(Results))
 
   }
-
-  Result <- c(EnvSymbols, NotEnvSymbols)[order(c(Names(EnvSymbols), Names(NotEnvSymbols)))]
-
-  NamesSymbols <- Symbols
-  Symbols <- rep(FALSE,length(Symbols))
-  Names(Symbols) <- NamesSymbols
-
-  if(!all(Names(Symbols) %in% Names(Result))){
-
-    Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
-    Result <- Result[!duplicated(Names(Result))]
-    Result <- Result[order(Names(Result))]
-  }
-  return(Result)
 
 })}
 
@@ -1893,7 +1941,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param forceISOdate TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
 #' is forced to ISO style at conection
 #' @param ... passed unused
-#' @return character vector of Symbols
+#' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
 existSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL,
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
@@ -1907,39 +1955,53 @@ initEnv();on.exit({uninitEnv()})
   schnamePassed <- schname
 
   if(is.null(con)) {
-    DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
-    AssignEnv(DBConMeta, c("con", "user", "password", "dbname", "schname"))
+    DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,
+                           schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
+    AssignEnv(DBConMeta, c("con"))
   }
+  schname <- pgCurrentSchema(con)[[1]]
   if(!is.null(schnamePassed) && schnamePassed != schname) schname <- schnamePassed
 
-  # trg = "pg"
-  RetrievedSymbols <- listSymbols(con, user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate, trg = "pg")
+  # src = "pg"
+  RetrievedSymbols <- listSymbols(con, user=user,password=password,dbname=dbname,
+                      schname=schname,host=host,port=port,options=options,
+                      forceISOdate=forceISOdate, src = "pg")
   if(is.null(RetrievedSymbols)) RetrievedSymbols <- character(0)
-  FoundSymbols <- RetrievedSymbols %in% Symbols
+  # FoundSymbols <- RetrievedSymbols %in% Symbols
+  #
+  # DBSymbols <- RetrievedSymbols[FoundSymbols]
+  # NamesDBSymbols <-  DBSymbols
+  # DBSymbols    <- rep(TRUE, length(DBSymbols))
+  # Names(DBSymbols) <- NamesDBSymbols
+  #
+  # NotDBSymbols <- RetrievedSymbols[!FoundSymbols]
+  # NamesNotDBSymbols <- NotDBSymbols
+  # NotDBSymbols <- rep(FALSE, length(NotDBSymbols))
+  # Names(NotDBSymbols) <- NamesNotDBSymbols
+  #
+  # Result <- c(DBSymbols, NotDBSymbols)[order(c(Names(DBSymbols), Names(NotDBSymbols)))]
+  #
+  # NamesSymbols <- Symbols
+  # Symbols <- rep(FALSE,length(Symbols))
+  # Names(Symbols) <- NamesSymbols
+  #
+  # if(!all(Names(Symbols) %in% Names(Result))){
+  #
+  #   Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
+  #   Result <- Result[!duplicated(Names(Result))]
+  #   Result <- Result[order(Names(Result))]
+  # }
+  # return(Result)
 
-  DBSymbols <- RetrievedSymbols[FoundSymbols]
-  NamesDBSymbols <-  Names(DBSymbols)
-  DBSymbols    <- rep(TRUE, length(DBSymbols))
-  names(DBSymbols) <- NamesDBSymbols
-
-  NotDBSymbols <- RetrievedSymbols[!FoundSymbols]
-  NamesNotDBSymbols <- Names(NotDBSymbols)
-  NotDBSymbols <- rep(FALSE, length(NotDBSymbols))
-  names(NotDBSymbols) <- NamesDBSymbols
-
-  Result <- c(DBSymbols, NotDBSymbols)[order(c(Names(DBSymbols), Names(NotDBSymbols)))]
-
-  NamesSymbols <- Symbols
-  Symbols <- rep(FALSE,length(Symbols))
-  Names(Symbols) <- NamesSymbols
-
-  if(!all(Names(Symbols) %in% Names(Result))){
-
-    Result <- c(Result, Symbols[!Names(Symbols) %in% Names(Result)])
-    Result <- Result[!duplicated(Names(Result))]
-    Result <- Result[order(Names(Result))]
+  if(!is.null(Symbols)) {
+    Results <-        Symbols %in% RetrievedSymbols
+    Names(Results) <- Symbols
+  } else {
+    Results <- rep(TRUE, length(RetrievedSymbols))
+    Names(Results) <- RetrievedSymbols
   }
-  return(Result)
+  # because a named vector (of booleans) gets upgraded to character.
+  return(as.list(Results))
 
 })}
 #' listSymbols pg

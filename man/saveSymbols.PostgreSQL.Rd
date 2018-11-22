@@ -4,7 +4,7 @@
 \alias{saveSymbols.PostgreSQL}
 \title{saves xts object symbols to a persistent location (database: PostgreSQL)}
 \usage{
-saveSymbols.PostgreSQL(Symbols = NULL, con = con,
+saveSymbols.PostgreSQL(Symbols = NULL, con = NULL,
   source.envir = NULL, field.names = c("Open", "High", "Low", "Close",
   "Volume", "Adjusted"), db.fields = c("o", "h", "l", "c", "v", "a"),
   user = NULL, password = NULL, dbname = NULL, schname = NULL,

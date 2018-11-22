@@ -4,7 +4,7 @@
 \alias{getSymbols.pg}
 \title{getSymbols pg}
 \usage{
-getSymbols.pg(Symbols = NULL, con = con, env, return.class = "xts",
+getSymbols.pg(Symbols = NULL, con = NULL, env, return.class = "xts",
   db.fields = c("o", "h", "l", "c", "v", "a"), field.names = c("Open",
   "High", "Low", "Close", "Volume", "Adjusted"), user = NULL,
   password = NULL, dbname = NULL, schname = NULL,

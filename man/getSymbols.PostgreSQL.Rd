@@ -4,7 +4,7 @@
 \alias{getSymbols.PostgreSQL}
 \title{Retrieve Data from PostgreSQL Database}
 \usage{
-getSymbols.PostgreSQL(Symbols = NULL, con = con, env,
+getSymbols.PostgreSQL(Symbols = NULL, con = NULL, env,
   return.class = "xts", db.fields = c("o", "h", "l", "c", "v", "a"),
   field.names = c("Open", "High", "Low", "Close", "Volume", "Adjusted"),
   user = NULL, password = NULL, dbname = NULL, schname = NULL,

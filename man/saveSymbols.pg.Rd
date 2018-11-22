@@ -4,9 +4,9 @@
 \alias{saveSymbols.pg}
 \title{saveSymbols pg}
 \usage{
-saveSymbols.pg(Symbols = NULL, con = con, env, return.class = "xts",
-  db.fields = c("o", "h", "l", "c", "v", "a"), field.names = c("Open",
-  "High", "Low", "Close", "Volume", "Adjusted"), user = NULL,
+saveSymbols.pg(Symbols = NULL, con = NULL, source.envir = NULL,
+  field.names = c("Open", "High", "Low", "Close", "Volume", "Adjusted"),
+  db.fields = c("o", "h", "l", "c", "v", "a"), user = NULL,
   password = NULL, dbname = NULL, schname = NULL,
   host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)

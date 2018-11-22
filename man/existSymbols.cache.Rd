@@ -14,7 +14,7 @@ existSymbols.cache(Symbols = NULL, source.envir = NULL, ...)
 \item{...}{passed unused}
 }
 \value{
-named character vector of Symbols
+R named list of Symbols and results (TRUE/FALSE)
 }
 \description{
 xts object symbols

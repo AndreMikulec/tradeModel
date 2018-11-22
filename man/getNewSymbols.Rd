@@ -49,7 +49,8 @@ get a recent Symbol i(f I do not have one)
 \examples{
 \dontrun{
 
-
+# before, be sure, that "MSFT" is in the database
+msft <- getNewSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 
 }
 }

@@ -4,17 +4,17 @@
 \alias{getSymbols.cache}
 \title{Downloads Symbols to specified env from a local R environment}
 \usage{
-getSymbols.cache(Symbols = NULL, source.envir = NULL, env,
-  return.class = "xts", ...)
+getSymbols.cache(Symbols = NULL, env, return.class = "xts",
+  source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded}
 
-\item{source.envir}{where to find xts objects ( location of cache )}
-
 \item{env}{where to create objects. (.GlobalEnv)}
 
 \item{return.class}{class of returned object}
+
+\item{source.envir}{where to find xts objects ( location of cache )}
 
 \item{...}{additional parameters}
 }
