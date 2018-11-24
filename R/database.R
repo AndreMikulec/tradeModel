@@ -632,7 +632,10 @@ initEnv();on.exit({uninitEnv()})
 #' @param return.class	class of returned object
 #' @param source.envir where to find xts objects ( location of cache )
 #' @param ...	additional parameters
-#' @return A call to getSymbols.csv will load into the specified environment one object for each Symbol specified, with class defined by return.class. Presently this may be ts, zoo, xts, data.frame, or timeSeries
+#' @return A call to getSymbols.csv will load into the
+#' specified environment one object for each Symbol specified,
+#' with class defined by return.class. Presently this may be
+#' ts, zoo, xts, data.frame, or timeSeries
 #' @examples
 #' \dontrun{
 #'
@@ -903,6 +906,9 @@ initEnv();on.exit({uninitEnv()})
     updated_R_class <- NULL
     if("updated_R_class" %in% colnames(SymbolAttributes)) {
       updated_R_class <- SymbolAttributes[["updated_R_class"]]
+      if(!updated_R_class %in% c("ts","data.frame")) {
+        if(!isNamespaceLoaded(updated_R_class)) requireNamespace(updated_R_class, quietly = TRUE)
+      }
       updated <- eval_bare(parse_expr(paste0("as.", updated_R_class,"(updated)")), environment())
     }
     src <- NULL
@@ -1008,20 +1014,20 @@ initEnv();on.exit({uninitEnv()})
         FoundinNextSrc <- TRUE
       }
 
-      isTooOld <- "UNKNOWN"
+      isTooOld <- "DIDNOTFIND"
       if(FoundinNextSrc) {
         AgeTestTooOld <- as.difftime(MaxAgeValue,  units = MaxAgeUnits) <  difftime(Sys.time(), updated)
         if(AgeTestTooOld) { isTooOld <- "YES"} else {  isTooOld <- "NO"}
       }
 
-      if((isTooOld %in% c("UNKNOWN","YES"))) {
+      if((isTooOld %in% c("DIDNOTFIND","YES"))) {
         next
       } else {
         break
       }
 
     } # nextsrc_forward in nextsrc
-    if(isTooOld %in% c("YES", "UNKNOWN")) { # then get it from "src"
+    if(isTooOld %in% c("DIDNOTFIND", "YES")) { # then get it from "src"
       # not in our "nextsrc",
       # therfore get it from the source "src"
       xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,

@@ -19,7 +19,10 @@ getSymbols.cache(Symbols = NULL, env, return.class = "xts",
 \item{source.envir}{where to find xts objects ( location of cache )}
 }
 \value{
-A call to getSymbols.csv will load into the specified environment one object for each Symbol specified, with class defined by return.class. Presently this may be ts, zoo, xts, data.frame, or timeSeries
+A call to getSymbols.csv will load into the
+specified environment one object for each Symbol specified,
+with class defined by return.class. Presently this may be
+ts, zoo, xts, data.frame, or timeSeries
 }
 \description{
 Downloads Symbols to specified env from a local R environment
