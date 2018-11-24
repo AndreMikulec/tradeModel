@@ -31,9 +31,10 @@ Downloads Symbols to specified env from a local R environment
 \dontrun{
 
 msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+
 source.envir = list2env(list(MSFT = msft))
 saveSymbols(trg = "cache", source.envir = source.envir)
-res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
+msft2 <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
 
 }
 }

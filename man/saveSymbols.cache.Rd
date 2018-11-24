@@ -21,8 +21,11 @@ save xts objects as .xts in source.envir ( cache )
 }
 \examples{
 \dontrun{
+
 msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 source.envir = list2env(list(MSFT = msft))
 saveSymbols(trg = "cache", source.envir = source.envir)
+saveSymbols(trg = "cache", source.envir = source.envir, cache.envir = .GlobalEnv)
+
 }
 }

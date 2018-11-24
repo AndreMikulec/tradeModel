@@ -105,12 +105,19 @@ getSymbols('MSFT')
 getSymbols.PostgreSQL('MSFT',env=globalenv())
 getSymbols.pg('MSFT',env=globalenv())
 
+#########################################
 ## YEAR 2018 EXAMPLES
+#########################################
 
-ibm <- getSymbols("IBM", src = "pg", auto.assign =  F)
+msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+source.envir = list2env(list(MSFT = msft))
+
+# save all of the .getSymbols Symbols and the source.envir Symbols
+saveSymbols(trg = "pg", source.envir = source.envir)
 
 unrate <- getSymbols("UNRATE", src = "FRED", auto.assign =  F)
 saveSymbols(trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
+
 unrate.db <- getSymbols("UNRATE", src = "pg", auto.assign =  F)
 unrate.db <- getSymbols(Symbols = "UNRATE", src = "pg", auto.assign = F)
 

@@ -493,6 +493,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' getSymbols(list(AAPL = "yahoo"), env = e) # bcomes INTERNALLY auto.assign = T
 #' ls.str(envir = e)
 #'
+#' # INSTEAD OF "yahoo", get IT from the source.envir
 #' AAPLSymbol <- getSymbols(list(AAPL = "yahoo"), auto.assign = FALSE, source.envir = e)
 #' str(AAPLSymbol)
 #'
@@ -640,9 +641,10 @@ initEnv();on.exit({uninitEnv()})
 #' \dontrun{
 #'
 #' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#'
 #' source.envir = list2env(list(MSFT = msft))
 #' saveSymbols(trg = "cache", source.envir = source.envir)
-#' res <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
+#' msft2 <- getSymbols(Symbols = "MSFT", src = "cache", auto.assign = F)
 #'
 #' }
 #' @export
@@ -801,12 +803,19 @@ initEnv();on.exit({uninitEnv()})
 #' getSymbols.PostgreSQL('MSFT',env=globalenv())
 #' getSymbols.pg('MSFT',env=globalenv())
 #'
+#'#########################################
 #' ## YEAR 2018 EXAMPLES
+#'#########################################
 #'
-#' ibm <- getSymbols("IBM", src = "pg", auto.assign =  F)
+#' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#' source.envir = list2env(list(MSFT = msft))
+#'
+#' # save all of the .getSymbols Symbols and the source.envir Symbols
+#' saveSymbols(trg = "pg", source.envir = source.envir)
 #'
 #' unrate <- getSymbols("UNRATE", src = "FRED", auto.assign =  F)
 #' saveSymbols(trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
+#'
 #' unrate.db <- getSymbols("UNRATE", src = "pg", auto.assign =  F)
 #' unrate.db <- getSymbols(Symbols = "UNRATE", src = "pg", auto.assign = F)
 #'
@@ -968,7 +977,7 @@ getSymbols.pg <- getSymbols.PostgreSQL
 #' @param auto.assign as quantmod getSymbols: should results be loaded to env If FALSE, return results instead. As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE
 #' @param file.path as quantmod getSymbols: character string of file location
 #' @param nextsrc next alternative sourcing methods trying in order, if found data is refreshed in reverse order
-#' @param MaxAge (default "24 hours") is longest age allowed, such the retrieving from
+#' @param MaxAge (default "4 hours") is longest age allowed, such the retrieving from
 #' the "cache" will be done. If the MaxAge is exceeded then,
 #' the Symbol(s) are refreshed anew from "src".
 #' The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"
@@ -976,7 +985,10 @@ getSymbols.pg <- getSymbols.PostgreSQL
 #' @examples
 #' \dontrun{
 #'
-#' # before, be sure, that "MSFT" is in the database
+#' # before, maybe, be sure,
+#' # that "MSFT" is in the cache "cache" or database "pg"
+#' # (example not shown)
+#'
 #' ls(all.names = TRUE)
 #' msft <- getNewSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 #' ls(all.names = TRUE)
@@ -1073,7 +1085,6 @@ initEnv();on.exit({uninitEnv()})
         verbose = verbose, warnings = warnings, src = nextsrc[nextrcItoBeUpdated], symbol.lookup = symbol.lookup,
         auto.assign = auto.assign, source.envir = NULL,...)
         if(!auto.assign){
-          browser()
           if(!identical(xTs,xTs2)) message("getNewSymbols: !auto.assign: !identical(xTs,xTs2)")
         }
       }
@@ -1100,70 +1111,75 @@ initEnv();on.exit({uninitEnv()})
 #' If provided trg == "RData", "cache", or "PostgreSQL (or just "pg")
 #' then the objectw be ALSO saved in this OTHER location
 #'
+#' Needs either/both "trg" or "file.path"
+#'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir source location of Symbols
-#' @param env location of xts objects placed that had been aquired with getSymbols("XXX", src = 'yahoo')
+#' @param env location of xts objects placed that had been aquired
+#' with getSymbols("XXX", src = 'yahoo')
+#' Gathering = "DotGetSymbols" and "file.path" look 'here' for Symbols
 #' @param Gathering places to look for symbols to be collected
-#' xts objects must have the attribute "src"
+#' Can be "DotgetSymbols" and/or "source.envir"
+#' Symbol names must be case-insenstive unique.
 #' @param file.path if provided will save to disk
-#' @param trg if provided will savse to a target "cache" or "pg" (PostgreSQL)
+#' @param trg if provided will save to a target "cache"(Symbol name prepended with a ".")
+#' or "pg" (PostgreSQL)
+#' See ? saveSymbols.cache and ? saveSymbols.pg
+#' @param target.envir if provided will save to to memory
+#' Note: .getSymbols is * NOT UPDATED.*  A user is reponsible for 'self-tracking.'
 #' @param ... passed to trg
 #' @examples
 #' \dontrun{
 #'
 #' # Symbols must be case-insenstive unique
 #'
-#' getSymbols("IBM", src = "yahoo") # auto.assign = TRUE
-#'
 #' # Symbols names found in Symbols and the names of xts objects stored
 #' # in source.envir, must be mutually exclusive ( case in-sensensitive match)
 #' # (because list2env silently drops repeated members)
 #'
-#' # save just the Symbol "IBM"
-#' saveSymbols("IBM", trg = "pg")
+#' getSymbols("IBM", src = "yahoo")
 #'
 #' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 #' source.envir = list2env(list(MSFT = msft))
-#' # save only the source.envir Symbols
-#' saveSymbols(trg = "pg", source.envir = source.envir)
 #'
-#' # save all of the .getSymbols Symbols and the source.envir Symbols
-#' saveSymbols(trg = "pg", source.envir = source.envir)
+#' # save only the "source.envir" Symbols
+#' saveSymbols(source.envir = source.envir, Gathering = "source.envir", target.envir = e)
 #'
-#' # save all to a file
-#' # saveSymbols(source.envir = source.envir, file.path = "C:\\Users\\Public")
+#' save only the DotgetSymbols" Symbols #
+#' saveSymbols(source.envir = source.envir, Gathering = "DotgetSymbols", target.envir = e)
+#'
+#' # compatible with quantmod::saveSymbols
+#' # when using "file.path"
+#' # save the "DotgetSymbols"(required) to a file
+#' saveSymbols(file.path = "C:\\Users\\Public")
+#'
+#' # compatible with quantmod::saveSymbols
+#' # when using "file.path"
+#' # save both "source.envir" and "DotgetSymbols"(required) to a file
+#' saveSymbols(source.envir = source.envir,
+#'   Gathering = "source.envir", file.path = "C:\\Users\\Public")
+#'
+#' # when using "file.path"
+#' # save ONLY "source.envir" to a file
+#' # SEE ? saveSymbols.RData
+#' saveSymbols.RData(source.envir = source.envir, file.path = "C:\\Users\\Public")
 #'
 #' }
 #' @export
 saveSymbols <- function(Symbols = NULL, env = parent.frame(),
-                       source.envir = NULL, Gathering = c("DotgetSymbols","source.envir"), ...) {
+                       source.envir = NULL, Gathering = "source.envir", ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("saveSymbols")
 
+  source.envirPassed <- source.envir
   Dots <- list(...)
-  # Symbols are no longer passed
-  # because all 'Symbols' are in the source.envir
 
-  # if("source.envir" %in% Gathering) {
-  #   # case insensitive
-  #   if(is.environment(source.envir)) {
-  #
-  #     # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
-  #     SymbolsInsource.envir <- Symbols[tolower(Symbols) %in% tolower(names(as.list(source.envir)))]
-  #     if(length(SymbolsInsource.envir)) stop(paste0("Symbols ", paste0(SymbolsInsource.envir, collapse = ", "), " found in source.envir"))
-  #
-  #     # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
-  #     source.envirInSymbols <- names(as.list(source.envir))[tolower(names(as.list(source.envir))) %in% tolower(Symbols)]
-  #     if(length(source.envirInSymbols)) stop(paste0("source.envir ", paste0(source.envirInSymbols, collapse = ", "), " found in Symbols"))
-  #
-  #   }
-  # }
-
-
+  # all init
   xTsGetSymbols <- list()
 
-  if("DotgetSymbols" %in% Gathering) {
+  xTsGetSymbolsDotgetSymbols <- list() # keep compatible with quantmod::saveSymbols
+  if("DotgetSymbols" %in% Gathering || !is.null(Dots[["file.path"]])) {
 
     # gather from .getSymbols file and env
     DotgetSymbolsFound <- FALSE
@@ -1190,7 +1206,10 @@ initEnv();on.exit({uninitEnv()})
     }
 
   }
+  xTsGetSymbolsDotgetSymbols <- xTsGetSymbols
+  xTsGetSymbols <- list()
 
+  xTsGetSymbolssource.envir <- list()
   if("source.envir" %in% Gathering) {
 
     # gather from source.envir
@@ -1216,18 +1235,42 @@ initEnv();on.exit({uninitEnv()})
     })}
 
   }
+  xTsGetSymbolssource.envir <- xTsGetSymbols
+  xTsGetSymbols <- list()
+
+  # check for case-insenstive duplicates
+  # ( because list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case)
+  SamexTsGetSymbols <- intersect(lower(names(xTsGetSymbolsDotgetSymbols)),lower(names(xTsGetSymbolssource.envir)))
+  if(length(SamexTsGetSymbols)) {
+    stop(paste0("In saveSymbols, duplicate case-insenstive naames found in ", paste0(SamexTsGetSymbols, collapse = ", ")))
+  }
+
+                                       # keep compatible with quantmod::saveSymbols
+  if("DotgetSymbols" %in% Gathering || !is.null(Dots[["file.path"]])) {
+    xTsGetSymbols <- c(list(),xTsGetSymbolsDotgetSymbols)
+  }
+  # everything: either, may be empty
+  xTsGetSymbols <- c(list(),xTsGetSymbols, xTsGetSymbolssource.envir)
 
   # save everything back to my custom environment (source.envir)
   # note list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case
   source.envir <- list2env(xTsGetSymbols, parent = emptyenv())
 
-  if("file.path" %in% names(Dots)) {
-    do.call(saveSymbols.RData, c(list(), source.envir = source.envir, Dots))
+ # keep compatible with quantmod::saveSymbols
+  if("file.path" %in% names(Dots) && is.null(source.envirPassed)) {
+    do.call(saveSymbols.RData, c(list(), source.envir = list2env(xTsGetSymbols), Dots))
   }
   if("trg" %in% names(Dots)) {
     do.call(paste0("saveSymbols",".", Dots[["trg"]]), c(list(),
       Symbols = Symbols, source.envir = source.envir, Dots[!names(Dots) %in% "trg"]))
   }
+
+  if(!is.null(Dots[["target.envir"]])) {
+    for(var in names(xTsGetSymbols)) {
+      assign(var, xTsGetSymbols[[var]], target.envir)
+    }
+  }
+
   invisible()
 
 })}
@@ -1242,15 +1285,29 @@ initEnv();on.exit({uninitEnv()})
 #' @param source.envir source location of Symbols
 #' @param file.path  character string of file (Symbol.Rdata) location
 #' @param ... pass through not used
+#' @examples
+#' \dontrun{
+#'
+#' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#' source.envir = list2env(list(MSFT = msft))
+#' # save to a file
+#' saveSymbols(source.envir = source.envir, file.path = "C:\\Users\\Public")
+#'
+#'}
 #' @export
-saveSymbols.RData <- function (Symbols = NULL, source.envir = NULL, file.path = stop("must specify 'file.path'"), ...) {
+saveSymbols.RData <- function (Symbols = NULL,
+  file.path = stop("must specify 'file.path'"), source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("saveSymbols.RData")
 
-  source.list <- as.list(source.envir)
+  if(!is.null(source.envir)) {
+    source.list <- as.list(source.envir)
+  } else {
+    stop("SaveSymbols.RData source.envir is NULL")
+  }
 
-  RetrievedSymbols <- names(as.list(source.envir))
+  RetrievedSymbols <- Names(source.list)
   FoundSymbols <- RetrievedSymbols %in% Symbols
   EnvSymbols   <- RetrievedSymbols[FoundSymbols]
   if(is.null(Symbols))  EnvSymbols <- RetrievedSymbols
@@ -1272,9 +1329,12 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... not used
 #' @examples
 #' \dontrun{
+#'
 #' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 #' source.envir = list2env(list(MSFT = msft))
 #' saveSymbols(trg = "cache", source.envir = source.envir)
+#' saveSymbols(trg = "cache", source.envir = source.envir, cache.envir = .GlobalEnv)
+#'
 #' }
 #' @export
 saveSymbols.cache <- function (Symbols = NULL, source.envir = NULL, cache.envir = NULL, ...) {
@@ -1302,10 +1362,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' saves xts object symbols to a persistent location (database: PostgreSQL)
 #'
+#' # creeate using
+#'
 #' CREATE ROLE "Symbols" LOGIN
 #'   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
 #'
-#' ALTER USER Symbols PASSWORD 'Symbols';
+#' ALTER USER "Symbols" PASSWORD 'Symbols';
 #'
 #' CREATE DATABASE "Symbols"
 #'   WITH OWNER = "Symbols"
@@ -1317,6 +1379,20 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' CREATE SCHEMA "Symbols"
 #'   AUTHORIZATION "Symbols";
+#'
+#' CREATE TABLE "Symbols"
+#' (
+#'   "Symbols" text NOT NULL,
+#'   updated timestamp with time zone,
+#'   "updated_R_class" text,
+#'   src text,
+#'   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
+#' )
+#' WITH (
+#'   OIDS=FALSE
+#' );
+#' ALTER TABLE "Symbols"
+#'   OWNER TO "Symbols";
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param sourc.envir location of xts objects
@@ -1335,6 +1411,18 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... pass through parameters
 #' @examples
 #' \dontrun{
+#'
+#' msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+#' source.envir = list2env(list(MSFT = msft))
+#'
+#' # save all of the .getSymbols Symbols and the source.envir Symbols
+#' saveSymbols(trg = "pg", source.envir = source.envir)
+#'
+#' unrate <- getSymbols("UNRATE", src = "FRED", auto.assign =  F)
+#' saveSymbols(trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
+#'
+#' unrate.db <- getSymbols("UNRATE", src = "pg", auto.assign =  F)
+#' unrate.db <- getSymbols(Symbols = "UNRATE", src = "pg", auto.assign = F)
 #'
 #' }
 #' @export
@@ -1394,14 +1482,17 @@ initEnv();on.exit({uninitEnv()})
     # IMPORTANT!!
     # NOTE, IF THE STRUCTURE of THE incoming OBJECT is different from the STORED object
     # E.G.! NEW COLUMNS, DIFFERENT R/POSTGRESQL CLASS OF the index
-    # then MAYBE dbWriteTable WILL FAIL? DIFFERENT PROBLEM with MISSING other COLUMNS?
+    # then MAYBE
+    # dbWriteTable WILL FAIL? and/or
+    # DIFFERENT PROBLEM with MISSING other COLUMNS?
     # SEE caroline::dbWriteTable2
-    # SEE RPostgre::dbWRiteTable
+    # SEE RPostgre::dbWriteTable
     # SEE MY OWN NOTES
     # (I HAVE NOT HANDLED THESE 'change' CASES)
     # NOTE: the INDEX type probably will not change
-    # BUT getting NEW added COLUMNS would be COMMON so I WOULD (IN THE NEAR FUTURE) have to do:
-    # (1) detect (2) ADD COLUMN
+    # BUT getting NEW added COLUMNS would be COMMON
+    # so I WOULD (IN THE NEAR FUTURE) have to do:
+    # (1) detect new column name (2) ADD COLUMN
 
     for (each.symbol in  missing.db.symbol) {
 
@@ -1446,7 +1537,8 @@ initEnv();on.exit({uninitEnv()})
     colnames(df) <- db.fields
 
     dbWriteTable(con, each.symbol, df, append = T, row.names = F)
-    # if  each.symbol includes schema name + ".", then dbWriteTable will return TRUE, but it will LIE
+    # if  each.symbol includes schema name + ".",
+    # then dbWriteTable will return TRUE, but it will LIE
 
     updated <- NULL
     if("updated" %in% names(attributes(xTs))) {
@@ -1496,13 +1588,13 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 
 
 
-#' 'updated' property xts object symbols in a persistent location (dispatcher)
+#' 'updated' date-ish/time-ish property
+#' of an [xts] object symbols in a persistent location (dispatcher)
 #'
-#' looks in source.envir xor "src" exclusively
+#' looks in source.envir
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir source location of Symbols
-#' xts objects must have the attribute "src"
 #' @param src source program to look for symbols
 #' @param ... passed to src
 #' @return a named list of 'updated' properties
@@ -1871,8 +1963,6 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("existSymbols.cache")
 
-  # EnvSymbols    <- character(0)
-  # NotEnvSymbols <- character(0)
   if(is.null(cache.envir)) cache.envir <- .GlobalEnv
 
   if(is.environment(cache.envir)) {

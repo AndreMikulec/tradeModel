@@ -41,11 +41,13 @@ is forced to ISO style at conection}
 \item{sourc.envir}{location of xts objects}
 }
 \description{
-CREATE ROLE "Symbols" LOGIN
-  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+# creeate using
 }
 \details{
-ALTER USER Symbols PASSWORD 'Symbols';
+CREATE ROLE "Symbols" LOGIN
+  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+
+ALTER USER "Symbols" PASSWORD 'Symbols';
 
 CREATE DATABASE "Symbols"
   WITH OWNER = "Symbols"
@@ -57,9 +59,35 @@ CREATE DATABASE "Symbols"
 
 CREATE SCHEMA "Symbols"
   AUTHORIZATION "Symbols";
+
+CREATE TABLE "Symbols"
+(
+  "Symbols" text NOT NULL,
+  updated timestamp with time zone,
+  "updated_R_class" text,
+  src text,
+  CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "Symbols"
+  OWNER TO "Symbols";
 }
 \examples{
 \dontrun{
+
+msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+source.envir = list2env(list(MSFT = msft))
+
+# save all of the .getSymbols Symbols and the source.envir Symbols
+saveSymbols(trg = "pg", source.envir = source.envir)
+
+unrate <- getSymbols("UNRATE", src = "FRED", auto.assign =  F)
+saveSymbols(trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
+
+unrate.db <- getSymbols("UNRATE", src = "pg", auto.assign =  F)
+unrate.db <- getSymbols(Symbols = "UNRATE", src = "pg", auto.assign = F)
 
 }
 }

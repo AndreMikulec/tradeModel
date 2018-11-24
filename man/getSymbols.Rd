@@ -50,6 +50,7 @@ e <- new.env(parent = emptyenv())
 getSymbols(list(AAPL = "yahoo"), env = e) # bcomes INTERNALLY auto.assign = T
 ls.str(envir = e)
 
+# INSTEAD OF "yahoo", get IT from the source.envir
 AAPLSymbol <- getSymbols(list(AAPL = "yahoo"), auto.assign = FALSE, source.envir = e)
 str(AAPLSymbol)
 

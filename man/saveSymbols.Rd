@@ -5,24 +5,31 @@
 \title{saves xts object symbols to a persistent location (dispatcher)}
 \usage{
 saveSymbols(Symbols = NULL, env = parent.frame(),
-  source.envir = NULL, Gathering = c("DotgetSymbols", "source.envir"),
-  ...)
+  source.envir = NULL, Gathering = "source.envir", ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
 
-\item{env}{location of xts objects placed that had been aquired with getSymbols("XXX", src = 'yahoo')}
+\item{env}{location of xts objects placed that had been aquired
+with getSymbols("XXX", src = 'yahoo')
+Gathering = "DotGetSymbols" and "file.path" look 'here' for Symbols}
 
 \item{source.envir}{source location of Symbols}
 
 \item{Gathering}{places to look for symbols to be collected
-xts objects must have the attribute "src"}
+Can be "DotgetSymbols" and/or "source.envir"
+Symbol names must be case-insenstive unique.}
 
 \item{...}{passed to trg}
 
 \item{file.path}{if provided will save to disk}
 
-\item{trg}{if provided will savse to a target "cache" or "pg" (PostgreSQL)}
+\item{trg}{if provided will save to a target "cache"(Symbol name prepended with a ".")
+or "pg" (PostgreSQL)
+See ? saveSymbols.cache and ? saveSymbols.pg}
+
+\item{target.envir}{if provided will save to to memory
+Note: .getSymbols is * NOT UPDATED.*  A user is reponsible for 'self-tracking.'}
 }
 \description{
 First, it will look for Symbols in the .getSymbols file and env and gather them
@@ -32,31 +39,6 @@ Next,  it will look for Symbols in source.envir and gather them
 If provided file.path, then object will be stored on disk(same as "RData")
 If provided trg == "RData", "cache", or "PostgreSQL (or just "pg")
 then the objectw be ALSO saved in this OTHER location
-}
-\examples{
-\dontrun{
 
-# Symbols must be case-insenstive unique
-
-getSymbols("IBM", src = "yahoo") # auto.assign = TRUE
-
-# Symbols names found in Symbols and the names of xts objects stored
-# in source.envir, must be mutually exclusive ( case in-sensensitive match)
-# (because list2env silently drops repeated members)
-
-# save just the Symbol "IBM"
-saveSymbols("IBM", trg = "pg")
-
-msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
-source.envir = list2env(list(MSFT = msft))
-# save only the source.envir Symbols
-saveSymbols(trg = "pg", source.envir = source.envir)
-
-# save all of the .getSymbols Symbols and the source.envir Symbols
-saveSymbols(trg = "pg", source.envir = source.envir)
-
-# save all to a file
-# saveSymbols(source.envir = source.envir, file.path = "C:\\\\Users\\\\Public")
-
-}
+Needs either/both "trg" or "file.path"
 }

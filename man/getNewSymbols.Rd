@@ -30,7 +30,7 @@ getNewSymbols(Symbols = NULL, env = parent.frame(),
 
 \item{nextsrc}{next alternative sourcing methods trying in order, if found data is refreshed in reverse order}
 
-\item{MaxAge}{(default "24 hours") is longest age allowed, such the retrieving from
+\item{MaxAge}{(default "4 hours") is longest age allowed, such the retrieving from
 the "cache" will be done. If the MaxAge is exceeded then,
 the Symbol(s) are refreshed anew from "src".
 The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"}
@@ -57,7 +57,10 @@ if ran out of  nextsrc, look in src
 \examples{
 \dontrun{
 
-# before, be sure, that "MSFT" is in the database
+# before, maybe, be sure,
+# that "MSFT" is in the cache "cache" or database "pg"
+# (example not shown)
+
 ls(all.names = TRUE)
 msft <- getNewSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
 ls(all.names = TRUE)

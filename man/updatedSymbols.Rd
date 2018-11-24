@@ -2,15 +2,15 @@
 % Please edit documentation in R/database.R
 \name{updatedSymbols}
 \alias{updatedSymbols}
-\title{'updated' property xts object symbols in a persistent location (dispatcher)}
+\title{'updated' date-ish/time-ish property
+of an [xts] object symbols in a persistent location (dispatcher)}
 \usage{
 updatedSymbols(Symbols = NULL, source.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
 
-\item{source.envir}{source location of Symbols
-xts objects must have the attribute "src"}
+\item{source.envir}{source location of Symbols}
 
 \item{...}{passed to src}
 
@@ -20,7 +20,7 @@ xts objects must have the attribute "src"}
 a named list of 'updated' properties
 }
 \description{
-looks in source.envir xor "src" exclusively
+looks in source.envir
 }
 \examples{
 \dontrun{
