@@ -42,3 +42,41 @@ then the objectw be ALSO saved in this OTHER location
 
 Needs either/both "trg" or "file.path"
 }
+\examples{
+\dontrun{
+
+# Symbols must be case-insenstive unique
+
+# Symbols names found in Symbols and the names of xts objects stored
+# in source.envir, must be mutually exclusive ( case in-sensensitive match)
+# (because list2env silently drops repeated members)
+
+getSymbols("IBM", src = "yahoo")
+
+msft <- getSymbols("MSFT", src = "yahoo", auto.assign = FALSE)
+source.envir = list2env(list(MSFT = msft))
+
+# save only the "source.envir" Symbols
+saveSymbols(source.envir = source.envir, Gathering = "source.envir", target.envir = e)
+
+# save only the DotgetSymbols" Symbols #
+saveSymbols(source.envir = source.envir, Gathering = "DotgetSymbols", target.envir = e)
+
+# compatible with quantmod::saveSymbols
+# when using "file.path"
+# save the "DotgetSymbols"(required) to a file
+saveSymbols(file.path = "C:\\\\Users\\\\Public")
+
+# compatible with quantmod::saveSymbols
+# when using "file.path"
+# save both "source.envir" and "DotgetSymbols"(required) to a file
+saveSymbols(source.envir = source.envir,
+  Gathering = "source.envir", file.path = "C:\\\\Users\\\\Public")
+
+# when using "file.path"
+# save ONLY "source.envir" to a file
+# SEE ? saveSymbols.RData
+saveSymbols.RData(source.envir = source.envir, file.path = "C:\\\\Users\\\\Public")
+
+}
+}

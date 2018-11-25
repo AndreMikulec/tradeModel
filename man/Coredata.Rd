@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{Coredata}
 \alias{Coredata}
-\title{garentees return value value is a 'matrix of at least one dimension'or NULL}
+\title{garantees return value value is a 'matrix of at least one dimension'or NULL}
 \usage{
 Coredata(xTs = NULL)
 }

@@ -41,7 +41,7 @@ is forced to ISO style at conection}
 \item{sourc.envir}{location of xts objects}
 }
 \description{
-# creeate using
+# Once only, the end-user must pre-create the [database and [ user and]] schema
 }
 \details{
 CREATE ROLE "Symbols" LOGIN
@@ -60,19 +60,20 @@ CREATE DATABASE "Symbols"
 CREATE SCHEMA "Symbols"
   AUTHORIZATION "Symbols";
 
-CREATE TABLE "Symbols"
-(
-  "Symbols" text NOT NULL,
-  updated timestamp with time zone,
-  "updated_R_class" text,
-  src text,
-  CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE "Symbols"
-  OWNER TO "Symbols";
+# # create automatically by function: dfToCREATETable
+# CREATE TABLE "Symbols"
+# (
+#   "Symbols" text NOT NULL,
+#   updated timestamp with time zone,
+#   "updated_R_class" text,
+#   src text,
+#   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
+# )
+# WITH (
+#   OIDS=FALSE
+# );
+# ALTER TABLE "Symbols"
+#   OWNER TO "Symbols";
 }
 \examples{
 \dontrun{

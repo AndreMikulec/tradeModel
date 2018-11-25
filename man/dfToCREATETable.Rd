@@ -2,7 +2,8 @@
 % Please edit documentation in R/database.R
 \name{dfToCREATETable}
 \alias{dfToCREATETable}
-\title{from column names and datatypes, make a CREATE TABLE statement}
+\title{from column names and datatypes, make a CREATE TABLE statement
+needed to persistently store data}
 \usage{
 dfToCREATETable(df, con, Symbol, schname)
 }
@@ -13,4 +14,22 @@ dfToCREATETable(df, con, Symbol, schname)
 }
 \description{
 also register its meta-data
+(Note: if the meta-data table(Symbols) does not exist, then it will be created)
+}
+\details{
+# # create automatically by function: dfToCREATETable
+
+# CREATE TABLE "Symbols"
+# (
+#   "Symbols" text NOT NULL,
+#   updated timestamp with time zone,
+#   "updated_R_class" text,
+#   src text,
+#   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
+# )
+# WITH (
+#   OIDS=FALSE
+# );
+# ALTER TABLE "Symbols"
+#   OWNER TO "Symbols";
 }

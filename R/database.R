@@ -11,8 +11,8 @@
 #' @param db.fields database column names
 #' @export
 xTs2DBDF <- function(xTs, con, field.names, db.fields) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
   df <- cbind(date = index(xTs), as.data.frame(xTs, stringsAsFactors = FALSE))
 
@@ -35,16 +35,33 @@ xTs2DBDF <- function(xTs, con, field.names, db.fields) {
 
 
 #' from column names and datatypes, make a CREATE TABLE statement
+#' needed to persistently store data
 #'
 #' also register its meta-data
+#' (Note: if the meta-data table(Symbols) does not exist, then it will be created)
+#'
+#'# # create automatically by function: dfToCREATETable
+#'
+#'# CREATE TABLE "Symbols"
+#'# (
+#'#   "Symbols" text NOT NULL,
+#'#   updated timestamp with time zone,
+#'#   "updated_R_class" text,
+#'#   src text,
+#'#   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
+#'# )
+#'# WITH (
+#'#   OIDS=FALSE
+#'# );
+#'# ALTER TABLE "Symbols"
+#'#   OWNER TO "Symbols";
 #'
 #' @param df data.frame (with column names)
 #' @param con DBI database connection
 #' @export
 dfToCREATETable <- function(df, con, Symbol, schname) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
-
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
   # meta-data table
   if(!"Symbols" %in% pgListSchemaTables(con, "Symbols")) {
@@ -212,8 +229,8 @@ initEnv();on.exit({uninitEnv()})
 #' The results do not have any order.
 #' @export
 pgListSchemaTables <- function(con, schname) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
     dbGetQuery(con,
       paste0(
@@ -245,8 +262,8 @@ pgListSchemaTables <- function(con, schname) {
 #' The results are ordered.
 #' @export
 pgListSchemaTableColumns <- function(con, schname, tblname) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
     dbGetQuery(con,
       paste0(
@@ -283,8 +300,8 @@ pgListSchemaTableColumns <- function(con, schname, tblname) {
 #' The results are ordered.
 #' @export
 pgListSchemaTablePrimaryKeyColumns <- function(con, schname, tblname) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
     # List primary keys for all tables - Postgresql
     #  https://dba.stackexchange.com/questions/11032/list-primary-keys-for-all-tables-postgresql
@@ -344,8 +361,9 @@ pgListSchemaTablePrimaryKeyColumns <- function(con, schname, tblname) {
 #' }
 #' @export
 oneColumn <- function(con, Query, outName, unQuote = NULL) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
   if(is.null(unQuote)) unQuote = FALSE
   res <- dbGetQuery(con, Query)
   if(NROW(res)) {
@@ -1145,7 +1163,7 @@ initEnv();on.exit({uninitEnv()})
 #' # save only the "source.envir" Symbols
 #' saveSymbols(source.envir = source.envir, Gathering = "source.envir", target.envir = e)
 #'
-#' save only the DotgetSymbols" Symbols #
+#' # save only the DotgetSymbols" Symbols #
 #' saveSymbols(source.envir = source.envir, Gathering = "DotgetSymbols", target.envir = e)
 #'
 #' # compatible with quantmod::saveSymbols
@@ -1240,7 +1258,7 @@ initEnv();on.exit({uninitEnv()})
 
   # check for case-insenstive duplicates
   # ( because list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case)
-  SamexTsGetSymbols <- intersect(lower(names(xTsGetSymbolsDotgetSymbols)),lower(names(xTsGetSymbolssource.envir)))
+  SamexTsGetSymbols <- intersect(tolower(names(xTsGetSymbolsDotgetSymbols)),tolower(names(xTsGetSymbolssource.envir)))
   if(length(SamexTsGetSymbols)) {
     stop(paste0("In saveSymbols, duplicate case-insenstive naames found in ", paste0(SamexTsGetSymbols, collapse = ", ")))
   }
@@ -1362,7 +1380,7 @@ initEnv();on.exit({uninitEnv()})
 
 #' saves xts object symbols to a persistent location (database: PostgreSQL)
 #'
-#' # creeate using
+#' # Once only, the end-user must pre-create the [database and [ user and]] schema
 #'
 #' CREATE ROLE "Symbols" LOGIN
 #'   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
@@ -1380,20 +1398,21 @@ initEnv();on.exit({uninitEnv()})
 #' CREATE SCHEMA "Symbols"
 #'   AUTHORIZATION "Symbols";
 #'
-#' CREATE TABLE "Symbols"
-#' (
-#'   "Symbols" text NOT NULL,
-#'   updated timestamp with time zone,
-#'   "updated_R_class" text,
-#'   src text,
-#'   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
-#' )
-#' WITH (
-#'   OIDS=FALSE
-#' );
-#' ALTER TABLE "Symbols"
-#'   OWNER TO "Symbols";
-#'
+#'# # create automatically by function: dfToCREATETable
+#'# CREATE TABLE "Symbols"
+#'# (
+#'#   "Symbols" text NOT NULL,
+#'#   updated timestamp with time zone,
+#'#   "updated_R_class" text,
+#'#   src text,
+#'#   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
+#'# )
+#'# WITH (
+#'#   OIDS=FALSE
+#'# );
+#'# ALTER TABLE "Symbols"
+#'#   OWNER TO "Symbols";
+# #
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param sourc.envir location of xts objects
 #' @param field.names names existing in starting columns

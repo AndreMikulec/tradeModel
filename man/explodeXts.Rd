@@ -38,7 +38,7 @@ from an xts function stub, create an ets object of derived columns
 Meant to create many package TTR technical trading column results
 CURRENTLY NOT USED
 
-Ideas are from
+Idea was from
 
 Time series cross-validation 5
 January 24, 2013
@@ -46,7 +46,7 @@ By Deane-Mayer
 http://www.r-bloggers.com/time-series-cross-validation-5/
 http://moderntoolmaking.blogspot.com/2013/01/time-series-cross-validation-5.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+ModernToolMaking+%28Modern+Tool+Making%29
 
-xTs1 (and xTs2 'if any' are paired/matched column position to column position)
+NOTE: if any xTs2, then xTs1 and xTs2 are paired/matched column position to column position)
 }
 \examples{
 \dontrun{

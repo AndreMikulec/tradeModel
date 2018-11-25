@@ -442,6 +442,7 @@ as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...)
 detectTrueCores <- function() {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
   if (.Platform$OS.type == "windows") {
     out   <- system("wmic cpu get numberofcores", intern=TRUE)
     Cores <- as.integer(sum(as.numeric(gsub("([0-9]+).*", "\\1", grep("[0-9]+[ \t]*", out, value=TRUE)))))
@@ -449,6 +450,7 @@ initEnv();on.exit({uninitEnv()})
     Cores <- detectCores(logical = FALSE)
   }
   Cores
+
 })}
 
 
@@ -483,7 +485,9 @@ initEnv();on.exit({uninitEnv()})
 #'   , method_train = "xgbTree", tuneGrid = tg, trControl = tc)
 #'
 #' @export
-buildModel.train <- function(quantmod,training.data,...) {
+buildModel.train <- function(quantmod,training.data, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
   if(is.method.available("train","caret")) {
 
@@ -554,14 +558,16 @@ buildModel.train <- function(quantmod,training.data,...) {
     #   for 'fast' modeling, the overhead is 'too slow'
     #   nominalTrainWorkflow
     #     info$loop
+
     cl<-makeCluster(detectTrueCores())
     registerDoParallel(cl)
     set.seed(2L)
-    rp <- suppressWarnings( do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots) ) )
+    rp <- suppressWarnings( do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots[!names(Dots) %in% "stage"]) ) )
     stopCluster(cl)
+
     return(list("fitted"=rp, "inputs"=attr(terms(rp),"term.labels")))
   }
-}
+})}
 
 #' determine the future
 #'
