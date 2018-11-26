@@ -1677,17 +1677,18 @@ initEnv();on.exit({uninitEnv()})
       Symbols <- list2env(UpDatedSymbols)
     }
 
-   # PERHAPS, I CAN PUSH this DOWN until LATER
-   # Meant to go into index(AllData:this recession) and indexOut(AllData:next recession) to caret
-    trControl  <- trainControl(method = "cv", number = NumbSlices)
   } else {
     stop("\"length(AllData) == length(FocusedData)\" is not TRUE")
   }
 
+
+  # determine slices of index and indexOut
+  # MY VISUAL OBSERVATION: model DOES *worse*: option; less observation to TRAIN/TEST over
+
                                                         # any UBL (or OTHER) functions that could have
                                                         # crept-in/created new observations that exist OUT-of-RANGE
                                                         # GARANTEED TO BE WITHIN c(TrainingBegin, TrainingEnd)
-                                 # ONLY DATE RANGES
+                                 # ONLY NBER DATE RANGES                     # Re-defining Training* to be more date-restrictev
   AllDataSliceTimeRanges <- llply(AllData, function(x)  c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1))) )
   # should be min(earliest)
   FirstLoop <- TRUE
@@ -1715,11 +1716,11 @@ initEnv();on.exit({uninitEnv()})
                                                             # remove the last record(NO)
                                                             # "2007-01-31" (actual "2001-12-31")
 
-  DetermingModelData <- modelData(specifiedUnrateModel) # , data.window = c(TrainingBegin, TrainingEnd)
+  Data <- modelData(specifiedUnrateModel) # , data.window = c(TrainingBegin, TrainingEnd)
    # determine timeSlices
-  DetermingModelDataWobsid <- cbind(DetermingModelData, obsid = seq_len(NROW(DetermingModelData)))
+  DataWobsid <- cbind(Data, obsid = seq_len(NROW(Data)))
 
-  indexSlicesObs <- lapply(AllDataSliceTimeRanges, function(x) { coredata(window(DetermingModelDataWobsid, start = x[["start"]], end = x[["end"]]))[,"obsid"] })
+  indexSlicesObs <- lapply(AllDataSliceTimeRanges, function(x) { as.integer(coredata(window(DataWobsid, start = x[["start"]], end = x[["end"]])[,"obsid"])) })
   indexSlicesObsLastIndex <- length(indexSlicesObs)
   indexSlicesOutObs <- list()
   for(i in seq_along(indexSlicesObs)) {
@@ -1731,22 +1732,11 @@ initEnv();on.exit({uninitEnv()})
   }                                             # then it(4th set) would be tested TWICE ( and I do not want that)
 
 
-  # # because
-  # # from c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1)))
-  # # For safetey reasons, I must re-calculate the "DetermingModelData"
-  # AdjustedDetermingModelData <- DetermingModelData
-  # #
-  # AdjustedDetermingModelData <- initXts()
-  # for(i in AllDataSliceTimeRanges) {
-  #   AdjustedDetermingModelData <- rbind(AdjustedDetermingModelData, window(DetermingModelData, start = i[["start"]], end = i[["end"]] ))
-  # }
-
-
   # determine weights
 
   # I am passing ( also when I decide that I am not sending weights )
   # pass through
-  AdjustedWeightRankings <- rep(1,NROW(AdjustedDetermingModelData))
+  AdjustedWeightRankings <-  rep(1,NROW(window(Data, start = TrainingBegin, end = TrainingEnd)))
   #
   # xgboost weights ( using objective(y hieght) value to determine 'how much I care'(weights))
   # The weights are then
@@ -1759,7 +1749,7 @@ initEnv();on.exit({uninitEnv()})
   #   Gradient boosting machines, a tutorial
   #   http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
   #
-  Objectives <- as.vector(coredata(AdjustedDetermingModelData)[, ModelTarget])
+  Objectives <- as.vector(coredata(window(Data, start = TrainingBegin, end = TrainingEnd))[, ModelTarget])
   # lower values have lower rank numbers
   findInterval(x =  Objectives,
     # SEE MY NOTES: CURRENTLY REVIEWING different weights determiners
@@ -1782,6 +1772,12 @@ initEnv();on.exit({uninitEnv()})
   # weights = AdjustedWeightRankings
   # if the model is xgboost [xgbTree], then it does USE it
 
+
+  trControl  <- trainControl(method = "cv", number = length(indexSlicesObs),
+                             index = indexSlicesObs,
+                             indexOut = indexSlicesOutObs
+                             )
+
                                                     # first/last dates that the "predictee" dates are available
                                                     # "1970-12-31","2006-12-31"(actual "2001-11-30")
   message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))))
@@ -1789,7 +1785,7 @@ initEnv();on.exit({uninitEnv()})
                                  method="train",
                                  training.per=c(TrainingBegin, TrainingEnd),
                                  trControl = trControl,
-                                 stage = "Test", # alternate  # "Production"
+                                 stage = "Production", # alternate  # "Production" "Test"
                                  weights = AdjustedWeightRankings # weights
                                  )
 
