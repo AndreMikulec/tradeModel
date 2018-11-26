@@ -1570,10 +1570,6 @@ initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
 
-  # will5000idxlogrets late partial return is not useful
-  # unrate NA at will5000idxlogrets late partial return is not useful
-  # cashlogrets             obvious [future] return is not useful
-
   # IF REMOVE ".fun = " then RStudio can debug
   # create an environment of xts objects
   llply(as.data.frame(xTs),
@@ -1603,26 +1599,32 @@ initEnv();on.exit({uninitEnv()})
   #                                             I do not have any Predictee information earlier than this
   #                                             HARD-CODED(I just know this)        Desired end "2006-12-31", but actual end is "2001-11-30"
   #                                             as.Date("1970-12-31")
-  # SHOULD BE renamed NBERAllData, NBERFocusedData
+  # [ ] FIX: SHOULD BE renamed NBERAllData, NBERFocusedData
   AllData     <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
   FocusedData <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
 
   # should be min(earliest),max(latest) Date of (AllData,FocusedData)
   TrainingBegin <- min(head(AllData[[1]],1), head(FocusedData[[1]],1))
   TrainingEnd   <- max(tail(AllData[[length(AllData)]],1), tail(AllData[[length(FocusedData)]],1))
+  # FIX: validation (zone) and exact records and (timeindex) needs to be nown
+  # [ ] BETTER(BELOW) use intersect(dates) and "duplicated.data.frame"
+  #     to determine if any UBL created records leak INTO the validation AREA
 
   # prepare for caret timeslices index and indexOut
   trControl <- NULL
   if(length(AllData) == length(FocusedData)) {
     NumbSlices <- length(FocusedData)
 
-    # determine the Focused timeslices to (Replicate)Copy
+    # ANDRE balancing
+
+    # determine the Focused timeslices to (replicate)copy
     Data <- modelData(specifiedUnrateModel)
     TrainingData <- window(Data, start = TrainingBegin, end = TrainingEnd)
     for(slice in seq_len(NumbSlices)) {
       # x-num-ish it:(bind a 2nd,3rd,4th copy)
-      # torgo new 2018, 2017,2018 slides
+      # Torgo new 2018, 2017,2018 slides
       # To balance the data: how many replica copies do I need?
+      # ANDRE DECISION
       # copy over enough so that the FocusedData and and AllData numbers of records are balanced
       NumbReplicaCopies <- ceiling((length(AllData[[slice]]) - length(FocusedData[[slice]]))/length(FocusedData[[slice]]))
       FocusedDataOrigSliceData <- Data[FocusedData[[slice]]]
@@ -1630,17 +1632,18 @@ initEnv();on.exit({uninitEnv()})
         TrainingData <- rbind(TrainingData, FocusedDataOrigSliceData)
       }
 
-      # UBL Smote; or 'create new observations'
-      #                x-axis
-      #                  y-val, rel(height), slope at height
+      # UBL functionons;  or 'create new observations'
+      #                x-axis   y-axis
+      #                 y-val,  rel(height), slope at height(y-axis)
       Relevance <- matrix(c(
-                         -0.01, 1.0, 0.0,
+                         -0.01, 1.0, 0.0, # negative y-values ( I care *much* about )
                           0.00, 0.5, 0.5,
-                          0.01, 0.0, 0.0
+                          0.01, 0.0, 0.0  # positive y-values ( I do not care much about )
                           )
                    , ncol = 3
                    , byrow = TRUE)
 
+      # utility based learning
 
       UBLData <- cbind(as.data.frame(TrainingData), index = as.POSIXct(index(TrainingData))); row.names(UBLData) <- NULL
       # ? ImpSampRegress example
@@ -1651,7 +1654,7 @@ initEnv();on.exit({uninitEnv()})
       # Therefore, I want new 150% percent MORE "financial loss data"
       # Keeping all of the financial profits
       # C.perc = list(1.0, 2.5))
-      UBLDataFormula <- as.formula(str_c(as.character(formula(specifiedUnrateModel)), " + index"))
+      UBLDataFormula <- as.formula(str_c(as.character(formula(specifiedUnrateModel)), " + index")) # need the index to COPY
       UBLResults     <- ImpSampRegress(UBLDataFormula, UBLDataCompleteCases, rel = Relevance, thr.rel = 0.5,  C.perc = list(1.0, 2.5))
       # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
       # NOTE: no NEW index Values are created.
@@ -1680,6 +1683,10 @@ initEnv();on.exit({uninitEnv()})
   } else {
     stop("\"length(AllData) == length(FocusedData)\" is not TRUE")
   }
+  # FIX: check if ANY NEW UBL records found its way into the VALIDATION area
+  # [ ] BETER OFF
+  # FIX: SINCE UBL/OTHER can ADD/REMOVE records
+  # [ ] BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
 
 
   # determine slices of index and indexOut
@@ -1809,7 +1816,8 @@ initEnv();on.exit({uninitEnv()})
                                                      # remove the last record(NO)
                                                      # "2007-01-31" (actual "2001-12-31")
 
-  # just after TrainTest
+  # just after TrainTest                               # FIX: SINCE UBL/OTHER can ADD/REMOVE records
+                                                       # [ ] BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
   ValidationPredictionBegin <- as.character(head(index(xTs[TrainingEnd < index(xTs)]),1))
   # lastest data, ModelTarget data can ( and in very  last data will ) be NA
   ValidationPredictionEnd   <- as.character(tail(index(xTs),1))
