@@ -1603,11 +1603,12 @@ initEnv();on.exit({uninitEnv()})
   #                                             I do not have any Predictee information earlier than this
   #                                             HARD-CODED(I just know this)        Desired end "2006-12-31", but actual end is "2001-11-30"
   #                                             as.Date("1970-12-31")
+  # SHOULD BE renamed NBERAllData, NBERFocusedData
   AllData     <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
   FocusedData <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
 
   # should be min(earliest),max(latest) Date of (AllData,FocusedData)
-  TrainingBegin <- min(head(AllData[[1]],1), head(AllData[[1]],1))
+  TrainingBegin <- min(head(AllData[[1]],1), head(FocusedData[[1]],1))
   TrainingEnd   <- max(tail(AllData[[length(AllData)]],1), tail(AllData[[length(FocusedData)]],1))
 
   # prepare for caret timeslices index and indexOut
@@ -1656,7 +1657,7 @@ initEnv();on.exit({uninitEnv()})
       # NOTE: no NEW index Values are created.
       # I CAN NOT garnantee that all UBL functons do NOT do that
       UBLResultsIndex <- UBLResults[["index"]]
-      UBLResults     <- UBLResults[, !colnames(UBLResults) %in% "index" , drop = FALSE]
+      UBLResults      <- UBLResults[, !colnames(UBLResults) %in% "index" , drop = FALSE]
 
       # convert back
       # need the xts column names
@@ -1676,10 +1677,37 @@ initEnv();on.exit({uninitEnv()})
       Symbols <- list2env(UpDatedSymbols)
     }
 
-   # LEFT_OFF: send index(AllData:this recession) and indexOut(AllData:next recession) to caret
+   # PERHAPS, I CAN PUSH this DOWN until LATER
+   # Meant to go into index(AllData:this recession) and indexOut(AllData:next recession) to caret
     trControl  <- trainControl(method = "cv", number = NumbSlices)
   } else {
     stop("\"length(AllData) == length(FocusedData)\" is not TRUE")
+  }
+
+                                                        # any UBL (or OTHER) functions that could have
+                                                        # crept-in/created new observations that exist OUT-of-RANGE
+                                                        # GARANTEED TO BE WITHIN c(TrainingBegin, TrainingEnd)
+                                 # ONLY DATE RANGES
+  AllDataSliceTimeRanges <- llply(AllData, function(x)  c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1))) )
+  # should be min(earliest)
+  FirstLoop <- TRUE
+  for(i in seq_along(AllDataSliceTimeRanges)) {
+    if(FirstLoop) {
+      TrainingBegin  <- AllDataSliceTimeRanges[[i]][["start"]]
+      FirstLoop <- FALSE
+    } else {
+      TrainingBegin < min(TrainingBegin, AllDataSliceTimeRanges[[i]][["start"]])
+    }
+  }
+  # should be max(latest)
+  FirstLoop <- TRUE
+  for(i in rev(seq_along(AllDataSliceTimeRanges))) {
+    if(FirstLoop) {
+      TrainingEnd  <- AllDataSliceTimeRanges[[i]][["end"]]
+      FirstLoop <- FALSE
+    } else {
+      TrainingEnd < max(TrainingBegin, AllDataSliceTimeRanges[[i]][["end"]])
+    }
   }
 
   # Update currently specified or built model with most recent data
@@ -1687,41 +1715,55 @@ initEnv();on.exit({uninitEnv()})
                                                             # remove the last record(NO)
                                                             # "2007-01-31" (actual "2001-12-31")
 
-  # [ ] LEFT_OFF: ALMOST THERE index, indexOut
-  # AllModelSlices <- llply( AllData,function(x) window(specifiedUnrateModel@model.data, start = head(x,1), end = tail(x,1)) )
-  # indexSlices <- lapply(AllModelSlices, function(x) { match(index(x), index(specifiedUnrateModel), nomatch = 0) } )
-  # AllModelSlicesLastIndex <- length(AllModelSlices)
-  # for(i in seq_along(AllModelSlices)) {
-  #   if(i != AllModelSlicesLastIndex) {
-  #     indexOutSlices[i] <- AllSlices[i+1]
-  #     match
-  #   } else {
-  #     indexOutSlices[i] <- AllSlices[i-1]
-  #   }
-  # }
-  #
-  # [ ] LEFT_OFF Weights ALSMOST THERE
-  # specifiedUnrateModelTarget <- modelData(specifiedUnrateModel)[,ModelTarget]
-  # Weights <- ifelse(   specifiedUnrateModelTarget > 0
-  #              , 100 * specifiedUnrateModelTarget
-  #              , 2 ** sqrt(specifiedUnrateModelTarget)
-  #            )
+  DetermingModelData <- modelData(specifiedUnrateModel) # , data.window = c(TrainingBegin, TrainingEnd)
+   # determine timeSlices
+  DetermingModelDataWobsid <- cbind(DetermingModelData, obsid = seq_len(NROW(DetermingModelData)))
 
-  WeightsDetermingData    <- coredata(modelData(specifiedUnrateModel, data.window = c(TrainingBegin, TrainingEnd))[, specifiedUnrateModel@model.target])
+  indexSlicesObs <- lapply(AllDataSliceTimeRanges, function(x) { coredata(window(DetermingModelDataWobsid, start = x[["start"]], end = x[["end"]]))[,"obsid"] })
+  indexSlicesObsLastIndex <- length(indexSlicesObs)
+  indexSlicesOutObs <- list()
+  for(i in seq_along(indexSlicesObs)) {
+    if(i != indexSlicesObsLastIndex) {
+      indexSlicesOutObs[i] <- indexSlicesObs[i+1]
+    } else {
+      indexSlicesOutObs[i] <- indexSlicesObs[1] # gets the first set,
+    }                                           # otherwise, if I choose the 4th set
+  }                                             # then it(4th set) would be tested TWICE ( and I do not want that)
+
+
+  # # because
+  # # from c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1)))
+  # # For safetey reasons, I must re-calculate the "DetermingModelData"
+  # AdjustedDetermingModelData <- DetermingModelData
+  # #
+  # AdjustedDetermingModelData <- initXts()
+  # for(i in AllDataSliceTimeRanges) {
+  #   AdjustedDetermingModelData <- rbind(AdjustedDetermingModelData, window(DetermingModelData, start = i[["start"]], end = i[["end"]] ))
+  # }
+
+
+  # determine weights
+
   # I am passing ( also when I decide that I am not sending weights )
-  AdjustedWeightRankings <- rep(1,NROW(WeightsDetermingData))
+  # pass through
+  AdjustedWeightRankings <- rep(1,NROW(AdjustedDetermingModelData))
   #
-  # xgboost weights ( using objective(y hight) value to determine 'how much I care'(weights))
+  # xgboost weights ( using objective(y hieght) value to determine 'how much I care'(weights))
   # The weights are then
-  # simply multiplied by the classification error at each iteration of the learning process.
-  # Front Neurorobot. 2013; 7: 21.
-  # Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
-  # PMCID: PMC3885826
-  # Gradient boosting machines, a tutorial
-  # http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
-  Objectives <- as.vector(WeightsDetermingData)
+  #
+  #   simply multiplied by the classification error at each iteration of the learning process.
+  #
+  #   Front Neurorobot. 2013; 7: 21.
+  #   Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
+  #   PMCID: PMC3885826
+  #   Gradient boosting machines, a tutorial
+  #   http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
+  #
+  Objectives <- as.vector(coredata(AdjustedDetermingModelData)[, ModelTarget])
   # lower values have lower rank numbers
   findInterval(x =  Objectives,
+    # SEE MY NOTES: CURRENTLY REVIEWING different weights determiners
+    # https://cran.r-project.org/web/packages/freqweights/freqweights.pdf
                vec = wtd.quantile(
                  x = Objectives,
                  weights = rep(1, NROW(Objectives)), # SEE MY NOTES
@@ -1747,8 +1789,8 @@ initEnv();on.exit({uninitEnv()})
                                  method="train",
                                  training.per=c(TrainingBegin, TrainingEnd),
                                  trControl = trControl,
-                                 stage = "Test",
-                                 weights = AdjustedWeightRankings # weights(wts)
+                                 stage = "Test", # alternate  # "Production"
+                                 weights = AdjustedWeightRankings # weights
                                  )
 
   print(show(builtUnrateModel))
