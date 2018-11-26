@@ -732,6 +732,12 @@ initEnv();on.exit({uninitEnv()})
 #' Sortino Ratio: Are you calculating it wrong?
 #' https://www.rcmalternatives.com/2013/09/sortino-ratio-are-you-calculating-it-wrong/
 #'
+#' I CAN GET RID OF THIS FUNCTION
+#'
+#' # THIS WORKS CORRECTLY "AS IS"
+#' Add feature zeroMAR to SortinoRatio ( actually DownsideDeviation ) #106
+#' https://github.com/braverock/PerformanceAnalytics/issues/106
+#'
 #' @examples
 #' \dontrun{
 #' # trueSortinoRatio(x, n, rf = 0.0, na.rm = FALSE)
@@ -1543,6 +1549,25 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' for package caret: True Sortino Ratio Summary
+#'
+#' @export
+SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
+
+  require(PerformanceAnalytics)
+
+  browser()
+  R <- data[,"obs"] - data[,"pred"]
+  out <- SortinoRatio(R = R, MAR = 0)
+  dimnames(out) <- NULL
+  out <- as.vector(out)
+  names(out)[1] <- "ratio"
+  return(out)
+
+}
+
+
+
 #' add Willshire 5000 Index weights using Machine learning
 #'
 #' This is the workhorse function. This is where the magic/logic happens.
@@ -1740,7 +1765,7 @@ initEnv();on.exit({uninitEnv()})
     } else {
       indexSlicesOutObs[i] <- indexSlicesObs[1] # gets the first set,
     }                                           # otherwise, if I choose the 4th set
-  }                                             # then it(4th set) would be tested TWICE ( and I do not want that)
+  }                                             # then it(4th set) would be tested TWICE (and I do not want that)
   # lousy: so I turned off
   indexSlicesObs    <- NULL
   indexSlicesOutObs <- NULL
@@ -1791,7 +1816,8 @@ initEnv();on.exit({uninitEnv()})
 
   trControl  <- trainControl(method = "cv", number = if(!is.null(indexSlicesObs)) { length(indexSlicesObs) } else { 5 },
                              index    = if(!is.null(indexSlicesObs))    { indexSlicesObs }    else { NULL },
-                             indexOut = if(!is.null(indexSlicesOutObs)) { indexSlicesOutObs } else { NULL }
+                             indexOut = if(!is.null(indexSlicesOutObs)) { indexSlicesOutObs } else { NULL },
+                             summaryFunction = SortinoRatioSummary # formals(caret::trainControl) # to put back non-NULL args
                              )
 
                                                     # first/last dates that the "predictee" dates are available
@@ -1802,7 +1828,9 @@ initEnv();on.exit({uninitEnv()})
                                  training.per=c(TrainingBegin, TrainingEnd),
                                  trControl = trControl,
                                  stage = "Test", # alternate  # "Production" "Test"
-                                 weights = AdjustedWeightRankings # weights
+                                 weights = AdjustedWeightRankings, # weights
+                                 maximize = TRUE,
+                                 metric = "ratio"
                                  )
 
   print(show(builtUnrateModel))
