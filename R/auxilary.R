@@ -1556,9 +1556,10 @@ SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
 
   require(PerformanceAnalytics)
 
-  browser()
+  Power <- 16
   R <- data[,"obs"] - data[,"pred"]
   out <- SortinoRatio(R = R, MAR = 0)
+  out <- sign(out) * if(out < 1) { abs(out) ** (1/Power) } else { (abs(out)) ** Power }
   dimnames(out) <- NULL
   out <- as.vector(out)
   names(out)[1] <- "ratio"
@@ -1833,7 +1834,11 @@ initEnv();on.exit({uninitEnv()})
                                  metric = "ratio"
                                  )
 
-  print(show(builtUnrateModel))
+  message("Chosen Model")
+  print(builtUnrateModel)
+  message("Variable Imortance of the Chosen Model")
+  print(varImp(builtUnrateModel@fitted.model))
+
 
   message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))
 
