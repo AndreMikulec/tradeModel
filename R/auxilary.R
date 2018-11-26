@@ -1683,6 +1683,10 @@ initEnv();on.exit({uninitEnv()})
 
 
   # determine slices of index and indexOut
+  # pass through
+  indexSlicesObs    <- NULL
+  indexSlicesOutObs <- NULL
+
   # MY VISUAL OBSERVATION: model DOES *worse*: option; less observation to TRAIN/TEST over
 
                                                         # any UBL (or OTHER) functions that could have
@@ -1730,13 +1734,17 @@ initEnv();on.exit({uninitEnv()})
       indexSlicesOutObs[i] <- indexSlicesObs[1] # gets the first set,
     }                                           # otherwise, if I choose the 4th set
   }                                             # then it(4th set) would be tested TWICE ( and I do not want that)
+  # lousy: so I turned off
+  indexSlicesObs    <- NULL
+  indexSlicesOutObs <- NULL
 
 
-  # determine weights
+  # weights
 
   # I am passing ( also when I decide that I am not sending weights )
   # pass through
-  AdjustedWeightRankings <-  rep(1,NROW(window(Data, start = TrainingBegin, end = TrainingEnd)))
+  AdjustedWeightRankings <- NULL
+                            #rep(1,NROW(window(Data, start = TrainingBegin, end = TrainingEnd)))
   #
   # xgboost weights ( using objective(y hieght) value to determine 'how much I care'(weights))
   # The weights are then
@@ -1772,10 +1780,11 @@ initEnv();on.exit({uninitEnv()})
   # weights = AdjustedWeightRankings
   # if the model is xgboost [xgbTree], then it does USE it
 
+  # fitting
 
-  trControl  <- trainControl(method = "cv", number = length(indexSlicesObs),
-                             index = indexSlicesObs,
-                             indexOut = indexSlicesOutObs
+  trControl  <- trainControl(method = "cv", number = if(!is.null(indexSlicesObs)) { length(indexSlicesObs) } else { 5 },
+                             index    = if(!is.null(indexSlicesObs))    { indexSlicesObs }    else { NULL },
+                             indexOut = if(!is.null(indexSlicesOutObs)) { indexSlicesOutObs } else { NULL }
                              )
 
                                                     # first/last dates that the "predictee" dates are available
@@ -1785,7 +1794,7 @@ initEnv();on.exit({uninitEnv()})
                                  method="train",
                                  training.per=c(TrainingBegin, TrainingEnd),
                                  trControl = trControl,
-                                 stage = "Production", # alternate  # "Production" "Test"
+                                 stage = "Test", # alternate  # "Production" "Test"
                                  weights = AdjustedWeightRankings # weights
                                  )
 
@@ -1793,8 +1802,7 @@ initEnv();on.exit({uninitEnv()})
 
   message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))
 
-  # LEFT_OFF: create time slices for caret "index" and "indexOut"
-  # LEFT_OFF: determine obsevation weights(wts) for caret
+  # prediction
 
   # Update currently specified or built model with most recent data
   UpdatedModelData <- getModelData(builtUnrateModel, na.rm = FALSE, source.envir = Symbols)
