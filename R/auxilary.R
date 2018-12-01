@@ -249,6 +249,8 @@ tryCatchLog::tryCatchLog({
 
   # DAMN spacetime WARNING happens AFTER I add TORGO'S UBL
   assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
+  assign("ReScaling", DMwR::ReScaling, envir = envir)
+
   # also see # SEARCH MY NOTES "trace(loadNamespace"
   # does not CURRENTLY help
   # Error in unloadNamespace(ns) :
@@ -1549,7 +1551,8 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' for package caret: True Sortino Ratio Summary
+#' for package caret function trainControl parameter summaryFunction
+#' True Sortino Ratio 'summary function'
 #'
 #' @export
 SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
@@ -1566,6 +1569,49 @@ SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
   return(out)
 
 }
+
+
+#' relative scaling
+#'
+#' @param x anything with methods for
+#' Ops: +-/* and possibly methods for min/max
+#' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
+#' @return re-scaled from low:mim/max*100' to max:100
+#' @export
+relativeScale <- function(x, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  ReScaling(x, t.mn=min(x)/max(x)*100, t.mx=100, ...)
+})}
+
+
+#' relative scaling of 2 dimensions
+#'
+#' @param 2 dim object data.frame or two=dim non-matrix, non-array
+#' with methods for
+#' Ops: +-/* and possibly methods for min/max
+#' @param cols columns to rescale
+#' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
+#' @return re-scaled from low:mim/max*100' to max:100
+#' @export
+relativeScaleImportance <-function(x, cols = c("importance"), ... ) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  if(length(dim(x)) > 2) stop("relativeScaleImportance given x with too high dimensions")
+
+  if(length(dim(x)) == 2) {
+    for(col in cols){
+      xi <- x[[col]]
+      xs <- relativeScale(xi, ...)
+      x[[col]] <- xs
+    }
+    res <- x
+  } else {
+    res <- relativeScale(x, ...)
+  }
+  return(res)
+})}
 
 
 
@@ -1820,7 +1866,6 @@ initEnv();on.exit({uninitEnv()})
                              indexOut = if(!is.null(indexSlicesOutObs)) { indexSlicesOutObs } else { NULL },
                              summaryFunction = SortinoRatioSummary # formals(caret::trainControl) # to put back non-NULL args
                              )
-
                                                     # first/last dates that the "predictee" dates are available
                                                     # "1970-12-31","2006-12-31"(actual "2001-11-30")
   message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))))
@@ -1837,7 +1882,7 @@ initEnv();on.exit({uninitEnv()})
   message("Chosen Model")
   print(builtUnrateModel)
   message("Variable Imortance of the Chosen Model")
-  print(varImp(builtUnrateModel@fitted.model))
+  print(relativeScale(varImp(builtUnrateModel@fitted.model, scale = FALSE)$imp))
 
 
   message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))

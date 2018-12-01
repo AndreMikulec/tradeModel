@@ -24,7 +24,7 @@ UnRateEyeBalltradeModel <- function() {
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addWillShire5000EyeBallWts  %>%      #
-  appendCashWts                  %>%      # (excess)
+  appendCashWts               %>%      # (excess)
   # ret
 
   printTail("Exact Schedule of Leading of Eye Ball returns and decisions") %>%
@@ -64,7 +64,7 @@ UnRateMachinetradeModel <- function() {
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addWillShire5000MachineWts %>%       #
-  appendCashWts                 %>%       # (excess)
+  appendCashWts              %>%       # (excess)
   # ret
 
   printTail("Exact Schedule of Leading of UnRateMachine returns and decisions") %>%
@@ -73,7 +73,6 @@ UnRateMachinetradeModel <- function() {
   portfolioMonthlyReturns %>%
 
   # (5) evaluate performance
-  # Lagging %>% # Always chops off Sep ( WHY? )
   Lagging %>% printCalendar("Lagging UnRateMachine returns")
 
 })}

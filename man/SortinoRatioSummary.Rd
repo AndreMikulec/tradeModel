@@ -2,10 +2,12 @@
 % Please edit documentation in R/auxilary.R
 \name{SortinoRatioSummary}
 \alias{SortinoRatioSummary}
-\title{for package caret: True Sortino Ratio Summary}
+\title{for package caret function trainControl parameter summaryFunction
+True Sortino Ratio 'summary function'}
 \usage{
 SortinoRatioSummary(data, lev = NULL, model = NULL)
 }
 \description{
-for package caret: True Sortino Ratio Summary
+for package caret function trainControl parameter summaryFunction
+True Sortino Ratio 'summary function'
 }
