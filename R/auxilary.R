@@ -251,6 +251,10 @@ tryCatchLog::tryCatchLog({
   assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
   assign("ReScaling", DMwR::ReScaling, envir = envir)
 
+  assign("Predictor", iml::Predictor, envir = envir)
+  assign("FeatureImp", iml::FeatureImp, envir = envir)
+  assign("Interaction", iml::Interaction, envir = envir)
+
   # also see # SEARCH MY NOTES "trace(loadNamespace"
   # does not CURRENTLY help
   # Error in unloadNamespace(ns) :
@@ -1561,12 +1565,40 @@ SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
 
   Power <- 16
   R <- data[,"obs"] - data[,"pred"]
-  out <- SortinoRatio(R = R, MAR = 0)
-  out <- sign(out) * if(out < 1) { abs(out) ** (1/Power) } else { (abs(out)) ** Power }
-  dimnames(out) <- NULL
-  out <- as.vector(out)
+  # numeric vector of size NROW(data)
+  #
+  outOrig <- SortinoRatio(R = R, MAR = 0)
+  # marix if size 1x1
+  #
+  dimnames(outOrig) <- NULL
+  outOrig <- as.vector(outOrig)
+  out <- outOrig
+  # numeric vector of size 1
+
+  # attempt to extremize the results
+  # (For now, just use) linear loss functions
+  # ranges
+  StrengthAboveMAR <- 1
+  if(0 <= outOrig) out <- out * StrengthAboveMAR
+  StrengthBelowMAR <- 4
+  if(outOrig < 0)  out <- out * StrengthBelowMAR
+
   names(out)[1] <- "ratio"
   return(out)
+
+}
+
+
+#' for package iml function FeatureImp$new
+#' True Sortino Ratio 'loss function'
+#'
+#' @param see ? iml::FeatureImp
+#' @param see ? iml::FeatureImp
+#' @param ... lev = NULL, model = NULL : passed to SortinoRatioSummary
+#' @export
+SortinoRatioLoss <- function (actual, predicted, ...) {
+
+  SortinoRatioSummary(data = data.frame(obs = actual, pred = predicted, ...))
 
 }
 
@@ -1881,9 +1913,25 @@ initEnv();on.exit({uninitEnv()})
 
   message("Chosen Model")
   print(builtUnrateModel)
-  message("Variable Imortance of the Chosen Model")
+  message("Model Variable Importance of the Chosen Model")
   print(relativeScale(varImp(builtUnrateModel@fitted.model, scale = FALSE)$imp))
 
+
+  # what makes the most sense is to use the
+  # original (non-'added(removed) records) train/test data
+  predictor = Predictor$new(builtUnrateModel@fitted.model,
+    data = as.data.frame(xTs[do.call(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.inputs], stringsAsFactor = FALSE),
+    y =       c(coredata(xTs[do.call(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.target]))
+  )
+  message("iml: Feature Importance; Shuffling each feature and measuring how much the performance drops")
+  imp = FeatureImp$new(predictor, loss = SortinoRatioLoss)
+  print(relativeScaleImportance(imp$results))
+
+  message("iml: Measure Interactions; measure how strongly features interact with each other;")
+  message("how much of the variance of f(x) is explained by the interaction of that feature")
+  message("with any other feature")
+  interact = Interaction$new(predictor)
+  print(relativeScaleImportance(arrange(interact$results, desc(.interaction)), cols = ".interaction"))
 
   message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))
 
