@@ -255,6 +255,8 @@ tryCatchLog::tryCatchLog({
   assign("FeatureImp", iml::FeatureImp, envir = envir)
   assign("Interaction", iml::Interaction, envir = envir)
 
+  assign("rbindlist", data.table::rbindlist, envir = envir)
+
   # also see # SEARCH MY NOTES "trace(loadNamespace"
   # does not CURRENTLY help
   # Error in unloadNamespace(ns) :
@@ -642,25 +644,55 @@ interleave <- function (x, y)
     c(x, y)[order(c(iX, iY))]
 }
 
-#' flatten a data.frame to (hopfully) ONE row
+
+
+
+#' liquify a data.frame
 #'
-#' NOTE: only WORKS with ONE unique primary key value
-#' If I want to work with many primary key valuess,
-#' then one would need to split the data upon those values
-#' then next apply this function individually to each chunk
-#' Last, 'smart' merge all of the data.frames together (while
-#' adding new columns contributed by each data.frame).
+#' From a long data.frame, makes it into a wide data.frame.
 #'
+#' First, split-off into many data.frames using UniqueIDRegex
+#' (and 100 percent correlated ConstColsRegex)
+#'
+#' Next, generates new columns using FactorColsRegex and then
+#' repositions data items into those new columns ( see the example )
+#' Data items are found in columns that are 'not members' of
+#' UniqueIDRegex, ConstColsRegex, and FactorColsRegex
+#'
+#' Last, 'smart' merges all of the data.frames together while
+#' adding new columns contributed by each splitted-off data.frame.
+#' Results, will/should be (hopfully) 'less' rows with many more columns
+#'
+#' @param UniqueIDRegex unique IDs column names regular expression: determines the
+#' character vector of the columns that compose of the "unique identifier" for the row.
+#' This combination splits the input data.frame(x) into many data.frames(x - splitted).
+#' @param ConstColsRegex constant column names regular expression: determines the
+#' character vector of (1) the columns that compose of the "unique identifier" for the row.
+#' (must include columns determined by parameter "UniqueIDRegex")
+#' and (2) optionally its 100 percent correlated columns (with values that
+#' do not vary with the values of the "unique identifer" columns.
+#' An examples would be another datatype or alias or alternate name: eg. 17000 "2016-07-18"
+#' @param FactorColsRegex reqular expression that determines the columns
+#' to be flattened. It also the program "subtracts off" columns found in parameter "ConstColsRegex"
+#' @param FactorColsNAReplace of columns that are the "result of FactorColsRegex",
+#' replacement of the NA values.  Good options may be "None" or "Unknown" or "NotAppl"
+#' @param FactorColsFixedSep output FactorColsRegex divider(concatinator) characters
+#' @param DetailColsFixedSep output "generated (new) columns" divider(concatinator) characters
+#' @param SpaceFixedSep just before the data is returned, replace column name
+#' character spaces with this value
+#' @param AmperstandFixedSep just before the data is returned, replace column name
+#' amperstand(&) characters with this value(And)
 #' @examples
 #' \dontrun{
 #'#
 #'# data.frame(
-#'#   dateindexid = c(17000, 17000, 17000, 17000),
-#'#   dateindexFact = c("2016-07-18", "2016-07-18", "2016-07-18", "2016-07-18"),
-#'#   ActionFact = c("Morn", "Morn", "Night", "Night"),
-#'#   ActionAtFact = c("Sell", "Buy", "Sell", "Buy"),
-#'#   INSTR1 = c(8, 16, 32, 64),
-#'#   INSTR2 = c(10008, 10016, 10032, 10064)
+#'#   dateindexid = c(17000, 17000, 17000, 17000, 17500, 17500, 17500, 17500),
+#'#   dateindexFact = c("2016-07-18", "2016-07-18", "2016-07-18", "2016-07-18",
+#'#     "2017-11-30", "2017-11-30", "2017-11-30", "2017-11-30"),
+#'#   ActionFact = c("Morn", "Morn", "Night", "Night", "Morn", "Aftern", "Aftern", "Night"),
+#'#   ActionAtFact = c("Sell", "Buy", "Sell", "Buy", "Sell", "Buy", "Hold", "Buy"),
+#'#   INSTR1 = c(8, 16, 32, 64, 108, 116, 132, 164),
+#'#   INSTR2 = c(10008, 10016, 10032, 10064, 10108, 10116, 10132, 10164)
 #'# , stringsAsFactors = FALSE
 #'# )  -> DFS
 #'#
@@ -670,64 +702,119 @@ interleave <- function (x, y)
 #'# 2       17000    2016-07-18       Morn          Buy     16  10016
 #'# 3       17000    2016-07-18      Night         Sell     32  10032
 #'# 4       17000    2016-07-18      Night          Buy     64  10064
+#'# 5       17500    2017-11-30       Morn         Sell    108  10108
+#'# 6       17500    2017-11-30     Aftern          Buy    116  10116
+#'# 7       17500    2017-11-30     Aftern         Hold    132  10132
+#'# 8       17500    2017-11-30      Night          Buy    164  10164
 #'#
+#'# > options(width = 60)
 #'#
 #'# > liquifyDF(DFS)
-#'#   dateindexid dateindexFact Morn.Sell.INSTR1 Morn.Buy.INSTR1 Night.Sell.INSTR1 Night.Buy.INSTR1
-#'# 1       17000    2016-07-18                8              16                32               64
-#'#   Morn.Sell.INSTR2 Morn.Buy.INSTR2 Night.Sell.INSTR2 Night.Buy.INSTR2
-#'# 1            10008           10016             10032            10064
-#'#
+#'#   dateindexid dateindexFact Morn.Sell.INSTR1
+#'# 1       17000    2016-07-18                8
+#'# 2       17500    2017-11-30              108
+#'#   Morn.Buy.INSTR1 Night.Sell.INSTR1 Night.Buy.INSTR1
+#'# 1              16                32               64
+#'# 2              NA                NA              164
+#'#   Morn.Sell.INSTR2 Morn.Buy.INSTR2 Night.Sell.INSTR2
+#'# 1            10008           10016             10032
+#'# 2            10108              NA                NA
+#'#   Night.Buy.INSTR2 Aftern.Buy.INSTR1 Aftern.Hold.INSTR1
+#'# 1            10064                NA                 NA
+#'# 2            10164               116                132
+#'#   Aftern.Buy.INSTR2 Aftern.Hold.INSTR2
+#'# 1                NA                 NA
+#'# 2             10116              10132
 #'#
 #' }
 #'@export
-liquifyDF <- function(x, ConstColsRegex = "^dateindex", FactorColsRegex = "Fact$"
+liquifyDF <- function(x
+                       , UniqueIDRegex =  "^dateindexid$"
+                       , ConstColsRegex = "^dateindex"
+                       , FactorColsRegex =        "Fact$"
                        , FactorColsNAReplace = NULL
                        , FactorColsFixedSep = "."
                        , DetailColsFixedSep = "."
-                       , SpaceFixedSep = "."
+                       , SpaceFixedSep =      "."
                        , AmperstandFixedSep = "And"
                       ) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+  # require(magrittr)
+  # require(R.utils)
+  # require(stringr)
+  # require(wrapr)
+  # require(seplyr)
+  # require(tidyselect)
+  # require(dplyr)
+  # require(tidyr)
+  # require(data.table)
+  xOrig <- x
 
   if(NROW(x) == 0) { message("liquifyDF found zero rows"); return(data.frame()) }
 
-  # typically "id" columns
+  # "unique id" columns (unique row identifier columns)
+  # "dateindexid"
+  UniqueIDCols <- vars_select(names(x), matches(UniqueIDRegex))
+
+  # "unique id" columns (unique row identifier columns)
+  # and 100% correlated columns
+  # "dateindexid" "dateindexFact"(100% correlated column)
   ConstCols <- vars_select(names(x), matches(ConstColsRegex))
-                     # garantee no 'id' columns ( and the [rest of] factors )
-  FCT_COLS_VECTOR <- setdiff(tidyselect::vars_select(names(x), matches(FactorColsRegex)), ConstCols)
-  FCT_COLS_NAME   <- str_c(FCT_COLS_VECTOR, collapse = FactorColsFixedSep)
-  FCT_COLS_SEP    <- str_c(FCT_COLS_VECTOR, collapse = ", ")
 
-  if(!is.null(FactorColsNAReplace)) {
-    for(coli in FCT_COLS_VECTOR) {
-      x[is.na(x[, coli, drop = TRUE]),coli] <- FactorColsNAReplace
+  UniqueIDInteraction <- do.call(interaction, list(x[, UniqueIDCols, drop = F], drop = T))
+  xSplittedByUniqueID <- split(x, f = UniqueIDInteraction)
+
+  resultsInList <- list()
+  for(x in xSplittedByUniqueID) {
+
+    # tidyselect::vars_select(names(x), matches(FactorColsRegex)) . . .
+    # "dateindexFact"    "ActionFact"  "ActionAtFact"
+    #
+    # garantee no 'id/correlated' columns ( and the [rest of] factors )
+    # expected to be 'flattened' are the following . . .
+    # ActionFact"   "ActionAtFact"
+    FCT_COLS_VECTOR <- setdiff(tidyselect::vars_select(names(x), matches(FactorColsRegex)), ConstCols)
+    FCT_COLS_NAME   <- str_c(FCT_COLS_VECTOR, collapse = FactorColsFixedSep)
+    FCT_COLS_SEP    <- str_c(FCT_COLS_VECTOR, collapse = ", ")
+
+    if(!is.null(FactorColsNAReplace)) {
+      for(coli in FCT_COLS_VECTOR) {
+        x[is.na(x[, coli, drop = TRUE]),coli] <- FactorColsNAReplace
+      }
     }
+
+    LeftSideRow1  <-  select_se(x, ConstCols)[1, , drop = FALSE]
+    NotLeftSide   <-  deselect(x, ConstCols)
+
+    UNITE <- function(x) {
+      let(list(FCT_COLS_NAME = FCT_COLS_NAME, FCT_COLS_SEP = FCT_COLS_SEP),
+        unite(x, FCT_COLS_NAME, FCT_COLS_SEP, sep = FactorColsFixedSep)
+      , subsMethod = "stringsubs", strict = FALSE)
+      }
+
+    # make ONE column to represent all factors
+    NotLeftSide %>% UNITE %>%
+      # change row.names to FCT_COLS_NAME, drop column 1
+      `row.names<-`(.[[1]]) %>% select(-1) %>%
+        # to one dimension : one BIG wide ROW
+        as.matrix %>% wrap(sep = DetailColsFixedSep) -> NotLeftSide
+
+    cbind(LeftSideRow1,as.data.frame(t(NotLeftSide))) -> results
+
+    str_replace_all(colnames(results),"[ ]", SpaceFixedSep) ->
+      colnames(results)
+    str_replace_all(colnames(results),"&"  , AmperstandFixedSep) ->
+      colnames(results)
+
+    resultsInList <- c(resultsInList, list(results))
+
   }
-
-  LeftSideRow1  <-  select_se(x, ConstCols)[1, , drop = FALSE]
-  NotLeftSide   <-  deselect(x, ConstCols)
-
-  UNITE <- function(x) {
-    let(list(FCT_COLS_NAME = FCT_COLS_NAME, FCT_COLS_SEP = FCT_COLS_SEP),
-      unite(x, FCT_COLS_NAME, FCT_COLS_SEP, sep = FactorColsFixedSep)
-    , subsMethod = "stringsubs", strict = FALSE)
-    }
-
-  # make ONE column to represent all factors
-  NotLeftSide %>% UNITE %>%
-    # change row.names to FCT_COLS_NAME, drop column 1
-    `row.names<-`(.[[1]]) %>% select(-1) %>%
-      # to one dimension : one BIG wide ROW
-      as.matrix %>% wrap(sep = DetailColsFixedSep) -> NotLeftSide
-
-  cbind(LeftSideRow1,as.data.frame(t(NotLeftSide))) -> results
-
-  colnames(results) <- str_replace_all(colnames(results),"[ ]", SpaceFixedSep)
-  colnames(results) <- str_replace_all(colnames(results),"&"  , AmperstandFixedSep)
-
-  return(results)
+  # choosing # data.table::rbindlist(resultsInList, fill = TRUE)
+  # over purrr::map_dfr(resultsInList, identity)
+  # because # data.table::rbindlist(resultsInList) # fill = FALSE(default) # can(flexibly) match by position
+  resultsOneDF <- as.data.frame(rbindlist(resultsInList, fill = TRUE), stringsAsFactors = FALSE)
+  return(resultsOneDF)
 
 })}
 

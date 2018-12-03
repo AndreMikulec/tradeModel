@@ -2,31 +2,69 @@
 % Please edit documentation in R/auxilary.R
 \name{liquifyDF}
 \alias{liquifyDF}
-\title{flatten a data.frame to (hopfully) ONE row}
+\title{liquify a data.frame}
 \usage{
-liquifyDF(x, ConstColsRegex = "^dateindex", FactorColsRegex = "Fact$",
+liquifyDF(x, UniqueIDRegex = "^dateindexid$",
+  ConstColsRegex = "^dateindex", FactorColsRegex = "Fact$",
   FactorColsNAReplace = NULL, FactorColsFixedSep = ".",
   DetailColsFixedSep = ".", SpaceFixedSep = ".",
   AmperstandFixedSep = "And")
 }
+\arguments{
+\item{UniqueIDRegex}{unique IDs column names regular expression: determines the
+character vector of the columns that compose of the "unique identifier" for the row.
+This combination splits the input data.frame(x) into many data.frames(x - splitted).}
+
+\item{ConstColsRegex}{constant column names regular expression: determines the
+character vector of (1) the columns that compose of the "unique identifier" for the row.
+(must include columns determined by parameter "UniqueIDRegex")
+and (2) optionally its 100 percent correlated columns (with values that
+do not vary with the values of the "unique identifer" columns.
+An examples would be another datatype or alias or alternate name: eg. 17000 "2016-07-18"}
+
+\item{FactorColsRegex}{reqular expression that determines the columns
+to be flattened. It also the program "subtracts off" columns found in parameter "ConstColsRegex"}
+
+\item{FactorColsNAReplace}{of columns that are the "result of FactorColsRegex",
+replacement of the NA values.  Good options may be "None" or "Unknown" or "NotAppl"}
+
+\item{FactorColsFixedSep}{output FactorColsRegex divider(concatinator) characters}
+
+\item{DetailColsFixedSep}{output "generated (new) columns" divider(concatinator) characters}
+
+\item{SpaceFixedSep}{just before the data is returned, replace column name
+character spaces with this value}
+
+\item{AmperstandFixedSep}{just before the data is returned, replace column name
+amperstand(&) characters with this value(And)}
+}
 \description{
-NOTE: only WORKS with ONE unique primary key value
-If I want to work with many primary key valuess,
-then one would need to split the data upon those values
-then next apply this function individually to each chunk
-Last, 'smart' merge all of the data.frames together (while
-adding new columns contributed by each data.frame).
+From a long data.frame, makes it into a wide data.frame.
+}
+\details{
+First, split-off into many data.frames using UniqueIDRegex
+(and 100 percent correlated ConstColsRegex)
+
+Next, generates new columns using FactorColsRegex and then
+repositions data items into those new columns ( see the example )
+Data items are found in columns that are 'not members' of
+UniqueIDRegex, ConstColsRegex, and FactorColsRegex
+
+Last, 'smart' merges all of the data.frames together while
+adding new columns contributed by each splitted-off data.frame.
+Results, will/should be (hopfully) 'less' rows with many more columns
 }
 \examples{
 \dontrun{
 #
 # data.frame(
-#   dateindexid = c(17000, 17000, 17000, 17000),
-#   dateindexFact = c("2016-07-18", "2016-07-18", "2016-07-18", "2016-07-18"),
-#   ActionFact = c("Morn", "Morn", "Night", "Night"),
-#   ActionAtFact = c("Sell", "Buy", "Sell", "Buy"),
-#   INSTR1 = c(8, 16, 32, 64),
-#   INSTR2 = c(10008, 10016, 10032, 10064)
+#   dateindexid = c(17000, 17000, 17000, 17000, 17500, 17500, 17500, 17500),
+#   dateindexFact = c("2016-07-18", "2016-07-18", "2016-07-18", "2016-07-18",
+#     "2017-11-30", "2017-11-30", "2017-11-30", "2017-11-30"),
+#   ActionFact = c("Morn", "Morn", "Night", "Night", "Morn", "Aftern", "Aftern", "Night"),
+#   ActionAtFact = c("Sell", "Buy", "Sell", "Buy", "Sell", "Buy", "Hold", "Buy"),
+#   INSTR1 = c(8, 16, 32, 64, 108, 116, 132, 164),
+#   INSTR2 = c(10008, 10016, 10032, 10064, 10108, 10116, 10132, 10164)
 # , stringsAsFactors = FALSE
 # )  -> DFS
 #
@@ -36,14 +74,29 @@ adding new columns contributed by each data.frame).
 # 2       17000    2016-07-18       Morn          Buy     16  10016
 # 3       17000    2016-07-18      Night         Sell     32  10032
 # 4       17000    2016-07-18      Night          Buy     64  10064
+# 5       17500    2017-11-30       Morn         Sell    108  10108
+# 6       17500    2017-11-30     Aftern          Buy    116  10116
+# 7       17500    2017-11-30     Aftern         Hold    132  10132
+# 8       17500    2017-11-30      Night          Buy    164  10164
 #
+# > options(width = 60)
 #
 # > liquifyDF(DFS)
-#   dateindexid dateindexFact Morn.Sell.INSTR1 Morn.Buy.INSTR1 Night.Sell.INSTR1 Night.Buy.INSTR1
-# 1       17000    2016-07-18                8              16                32               64
-#   Morn.Sell.INSTR2 Morn.Buy.INSTR2 Night.Sell.INSTR2 Night.Buy.INSTR2
-# 1            10008           10016             10032            10064
-#
+#   dateindexid dateindexFact Morn.Sell.INSTR1
+# 1       17000    2016-07-18                8
+# 2       17500    2017-11-30              108
+#   Morn.Buy.INSTR1 Night.Sell.INSTR1 Night.Buy.INSTR1
+# 1              16                32               64
+# 2              NA                NA              164
+#   Morn.Sell.INSTR2 Morn.Buy.INSTR2 Night.Sell.INSTR2
+# 1            10008           10016             10032
+# 2            10108              NA                NA
+#   Night.Buy.INSTR2 Aftern.Buy.INSTR1 Aftern.Hold.INSTR1
+# 1            10064                NA                 NA
+# 2            10164               116                132
+#   Aftern.Buy.INSTR2 Aftern.Hold.INSTR2
+# 1                NA                 NA
+# 2             10116              10132
 #
 }
 }
