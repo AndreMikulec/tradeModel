@@ -220,7 +220,7 @@ tryCatchLog::tryCatchLog({
   ### assign("arrange", dplyr::arrange, envir = envir)
   # assign("map", purrr::map, envir = envir)
   assign("llply", plyr::llply, envir = envir)
-  assign("transpose", purrr::transpose, envir = envir)
+  ### assign("transpose", purrr::transpose, envir = envir)
   # assign("invoke_map", purrr::invoke_map, envir = envir)
   assign("Day", DescTools::Day, envir = envir)
   assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
@@ -1060,6 +1060,7 @@ initEnv();on.exit({uninitEnv()})
 #' # explodeXts(ibm[,c("IBM.Open","IBM.Close")], Fun = "TTR::SMA", Whiches = list(n = 2:3))
 #' }
 #' @export
+#' @importFrom purrr transpose
 explodeXts <- function(  xTs1 = NULL, xTs2 = NULL, Fun = NULL
                        , Whiches   = NULL
                        , AltName   = NULL, Prefix = NULL, FixedSep  = NULL
@@ -1074,7 +1075,7 @@ initEnv();on.exit({uninitEnv()})
 
   DoCall(expand.grid, Whiches) %>%
       as.list %>%
-        transpose -> WhichesCombinations
+        { purrr::transpose(.) } -> WhichesCombinations
   if(!NCOL(WhichesCombinations)){ return(initXts()) }
 
   if(mode(Fun) == "function") {
