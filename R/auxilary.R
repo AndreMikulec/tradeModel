@@ -210,7 +210,7 @@ tryCatchLog::tryCatchLog({
 
   assign("%>%",  magrittr::`%>%` , envir = envir)
   assign("%m+%", lubridate::`%m+%`, envir = envir)
-  assign("days", lubridate::days, envir = envir)
+  ### assign("days", lubridate::days, envir = envir)
 
   ### assign("str_detect", stringr::str_detect, envir = envir)
   ### assign("str_replace", stringr::str_replace, envir = envir)
@@ -1317,9 +1317,12 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] "1970-01-31"
 #' }
 #' @export
+#' @importFrom lubridate days
 nextMonthfromYesterday.Date <- function(date = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  days <- lubridate::days
 
   date <- initDate(date)
   truncPOSIXt(date, units = "months") %>%
