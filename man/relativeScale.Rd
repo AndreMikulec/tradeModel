@@ -8,7 +8,7 @@ relativeScale(x, ...)
 }
 \arguments{
 \item{x}{anything with methods for
-Ops: +-/* and possibly methods for min/max}
+Ops: "+","-","/", "*" and possibly methods for min/max}
 
 \item{...}{passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx}
 }

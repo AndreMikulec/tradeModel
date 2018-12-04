@@ -13,7 +13,7 @@ relativeScaleImportance(x, cols = c("importance"), ...)
 
 \item{2}{dim object data.frame or two=dim non-matrix, non-array
 with methods for
-Ops: +-/* and possibly methods for min/max}
+Ops: "+","-","/", "*" and possibly methods for min/max}
 }
 \value{
 re-scaled from low:mim/max*100' to max:100

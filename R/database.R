@@ -10,6 +10,7 @@
 #' @param field.names R column names
 #' @param db.fields database column names
 #' @export
+#' @importFrom stringr str_c
 xTs2DBDF <- function(xTs, con, field.names, db.fields) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -19,7 +20,7 @@ initEnv();on.exit({uninitEnv()})
   # OHLC columns
   str_replace_all(colnames(df), "[.]", "_")  -> colnames(df)
   for(grouping in list.zip(field.names, db.fields)){
-     colnames(df)[str_detect(tolower(colnames(df)), str_c("_", tolower(grouping[["field.names"]]),"$"))] <- grouping[["db.fields"]]
+     colnames(df)[str_detect(tolower(colnames(df)), stringr::str_c("_", tolower(grouping[["field.names"]]),"$"))] <- grouping[["db.fields"]]
   }
   # all other column names "as is" (e.g. FRED)
 
@@ -151,6 +152,7 @@ Names <- function(x) {
 #' AssignEnv(List, c("a","b"))
 #' }
 #' @export
+#' @importFrom stringr str_c
 AssignEnv <- function(List, nms = NULL, envir = parent.frame()) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -158,7 +160,7 @@ initEnv();on.exit({uninitEnv()})
   if(!is.null(nms)) {
     nmsINnames <- nms %in% names(List)
     nms <-    nms[nmsINnames]
-    if(any(!nmsINnames)) warning(str_c("AssignEnv is asking for R objects that are not found: ", nms[!nmsINnames], collapse = ", "))
+    if(any(!nmsINnames)) warning(stringr::str_c("AssignEnv is asking for R objects that are not found: ", nms[!nmsINnames], collapse = ", "))
   }
   for(nm in nms){
     assign(nm, List[[nm]], envir = envir)
@@ -356,7 +358,11 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' pgCurrentSearchPath <- oneColumn(con, "SHOW SEARCH_PATH;", "CurrentSearchPath")
 #'
-#' pgCurrentTempSchema <- oneColumn(con, "SELECT nspname FROM pg_namespace WHERE oid = pg_my_temp_schema();", "CurrentTempSchema")
+#' pgCurrentTempSchema <- oneColumn(con, 
+#'   "SELECT nspname 
+#'   FROM pg_namespace 
+#'   WHERE oid = pg_my_temp_schema();", 
+#' "CurrentTempSchema")
 #'
 #' }
 #' @export
@@ -454,7 +460,9 @@ pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentT
 #' @param CI case insensitive
 #' @examples
 #' \dontrun{
-#' customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"), InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE )
+#' customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"), 
+#'    InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE 
+#'  )
 #' [1] "date" "o"    "h"    "l"    "c"    "v"    "a"    "E2"   "e3"
 #' }
 #' @export

@@ -17,8 +17,3 @@ single column xts with  the new column name
 \description{
 generate a good xts column name
 }
-\examples{
-\dontrun{
-
-}
-}

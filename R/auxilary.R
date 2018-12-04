@@ -398,6 +398,7 @@ initEnv();on.exit({uninitEnv()})
 #' # 1947-01-01 243.16399999999999
 #' }
 #' @export
+#' @importFrom stringr str_c
 fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
@@ -406,7 +407,7 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL) {
   if(is.null(New)) New <- TRUE
   if(New) NewMaxAge <- "4 hours"
 
-  message(str_c("Begin fredData - "), Symbol)
+  message(stringr::str_c("Begin fredData - "), Symbol)
 
   src = "FRED"
   from = "1950-01-01"
@@ -419,7 +420,7 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL) {
     xTs <- getSymbols(Symbol, src = "FRED",
            from = from, auto.assign = FALSE)
   }
-  message(str_c("End   fredData - "), Symbol)
+  message(stringr::str_c("End   fredData - "), Symbol)
 
   colnames(xTs)[1] <- tolower(colnames(xTs))
 
@@ -496,11 +497,8 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param x single column xts with the old column name
 #' @return single column xts with  the new column name
-#' @examples
-#' \dontrun{
-#'
-#' }
 #' @export
+#' @importFrom stringr str_c
 newXtsColName <- function(xTs = NULL, Fun =  NULL, isCharFun = NULL, xTs1 = NULL, xTs2 = NULL, WhichCombo =  NULL, AltName = NULL, Prefix = NULL, FixedSep = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -517,26 +515,26 @@ initEnv();on.exit({uninitEnv()})
     NewName <- AltName
   }
 
-  str_c(
+  stringr::str_c(
   c(
     if(!is.null(xTs1) && (NCOL(xTs1) > 0)) { colnames(xTs1)[1] } else { NULL },
     if(!is.null(xTs2) && (NCOL(xTs2) > 0)) { colnames(xTs2)[1] } else { NULL }
   ), collapse = FixedSep) -> Colnames
 
   if(length(WhichCombo)) {
-    WhichCombo <-  str_c(c(interleave(names(WhichCombo), unlist(WhichCombo))), collapse = FixedSep)
+    WhichCombo <-  stringr::str_c(c(interleave(names(WhichCombo), unlist(WhichCombo))), collapse = FixedSep)
   } else {
     WhichCombo <- NULL
   }
 
   PreName <- NULL; PostName <- NULL
-  NewNameWhichCombo <- str_c(c(NewName, WhichCombo), collapse = FixedSep)
+  NewNameWhichCombo <- stringr::str_c(c(NewName, WhichCombo), collapse = FixedSep)
   if(is.null(Prefix) || (Prefix == FALSE)) {
     PostName <- NewNameWhichCombo
   } else {
     PreName  <- NewNameWhichCombo
   }
-  NewName <- str_c(c(PreName, Colnames, PostName), collapse = FixedSep)
+  NewName <- stringr::str_c(c(PreName, Colnames, PostName), collapse = FixedSep)
   colnames(xTs)[1] <-NewName
 
   xTs
@@ -728,6 +726,7 @@ interleave <- function (x, y)
 #'#
 #' }
 #'@export
+#' @importFrom stringr str_c
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -775,8 +774,8 @@ initEnv();on.exit({uninitEnv()})
     # expected to be 'flattened' are the following . . .
     # ActionFact"   "ActionAtFact"
     FCT_COLS_VECTOR <- setdiff(tidyselect::vars_select(names(x), matches(FactorColsRegex)), ConstCols)
-    FCT_COLS_NAME   <- str_c(FCT_COLS_VECTOR, collapse = FactorColsFixedSep)
-    FCT_COLS_SEP    <- str_c(FCT_COLS_VECTOR, collapse = ", ")
+    FCT_COLS_NAME   <- stringr::str_c(FCT_COLS_VECTOR, collapse = FactorColsFixedSep)
+    FCT_COLS_SEP    <- stringr::str_c(FCT_COLS_VECTOR, collapse = ", ")
 
     if(!is.null(FactorColsNAReplace)) {
       for(coli in FCT_COLS_VECTOR) {
@@ -882,7 +881,8 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
 #'# 1970-01-04 2.5
 #'# 1970-01-05 3.5
 #'#
-#'# > rollApply(xts(c(0,-1,2,-3,4), zoo::as.Date(0:4)), Fun = trueSortinoRatio, AltName = "SRTN", partial = TRUE, width = 2, MinRows = 2)
+#'# > rollApply(xts(c(0,-1,2,-3,4), zoo::as.Date(0:4))
+#'#     , Fun = trueSortinoRatio, AltName = "SRTN", partial = TRUE, width = 2, MinRows = 2)
 #'#
 #'#                          SRTN.2
 #'# 1970-01-01                   NA
@@ -933,9 +933,12 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
 #'# 1970-01-04 2.0  # unless, I come up with a *better way* to re-organize 'around' the [NA] data
 #'# 1970-01-05 3.5  # then that is the best answer I have NOW.
 #'#
-#'# rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), Fun = DSMA, AltName = "MATH", partial = FALSE, width = 2, n = 2, QTY = "Last")
-#'#                                                                              # because I programmed around THIS
-#'# rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), Fun = DSMA, AltName = "MATH", partial = TRUE, width = 2, n = 2,QTY = "Last")
+#'# rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4))
+#'#   , Fun = DSMA, AltName = "MATH", partial = FALSE, width = 2, n = 2, QTY = "Last")
+#'#
+#'# because I programmed around THIS "partial"
+#'# rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4))
+#'#   , Fun = DSMA, AltName = "MATH", partial = TRUE, width = 2, n = 2,QTY = "Last")
 #'#
 #'#            MATH.2
 #'# 1970-01-01     NA
@@ -1007,7 +1010,7 @@ initEnv();on.exit({uninitEnv()})
   if(!is.null(AltName)) NewName <- AltName
   if(is.null(FixedSep)) FixedSep <- "."
 
-  colnames(xTsResult) <-  str_c( colnames(xTsResult), str_c(c(NewName, width), collapse = FixedSep), collapse = FixedSep)
+  colnames(xTsResult) <-  stringr::str_c( colnames(xTsResult), stringr::str_c(c(NewName, width), collapse = FixedSep), collapse = FixedSep)
 
   return(xTsResult)
 
@@ -1153,11 +1156,19 @@ initEnv();on.exit({uninitEnv()})
 #' \dontrun{
 #' # str(timeSliceNBER())
 #' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")))
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE))
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE))
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE))
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
+#' # , LongTimeSlices = TRUE)
+#' # )
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
+#' #   , LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
+#' # )
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
+#' # , LongestTimeSlice = TRUE)
+#' # )
 #' # # now after seeing all of the date, THEN, choose the filter
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?))
+#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
+#' # , LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?)
+#' # )
 #' }
 #' @export
 timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL, OmitSliceFirstDate = NULL) {
@@ -1595,6 +1606,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom stringr str_c
 willShire5000EyeBallWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1609,7 +1621,7 @@ initEnv();on.exit({uninitEnv()})
                         ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
   unrate_wts[is.na(unrate_wts)] <- 1 # 100% allocated
 
-  colnames(unrate_wts)[1] <- str_c(colnames(xTs)[str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
+  colnames(unrate_wts)[1] <- stringr::str_c(colnames(xTs)[str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
 
   unrate_wts
 
@@ -1693,7 +1705,7 @@ SortinoRatioLoss <- function (actual, predicted, ...) {
 #' relative scaling
 #'
 #' @param x anything with methods for
-#' Ops: +-/* and possibly methods for min/max
+#' Ops: "+","-","/", "*" and possibly methods for min/max
 #' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
 #' @return re-scaled from low:mim/max*100' to max:100
 #' @export
@@ -1708,7 +1720,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param 2 dim object data.frame or two=dim non-matrix, non-array
 #' with methods for
-#' Ops: +-/* and possibly methods for min/max
+#' Ops: "+","-","/", "*" and possibly methods for min/max
 #' @param cols columns to rescale
 #' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
 #' @return re-scaled from low:mim/max*100' to max:100
@@ -1744,6 +1756,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom stringr str_c
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1773,7 +1786,7 @@ initEnv();on.exit({uninitEnv()})
   Symbols <- list2env(SymbolsOrig)
 
   # traditionally the first column is the target variable
-  specifyModel(formula = as.formula(str_c( colnames(xTs)[1], " ~ ",str_c(colnames(Indicators), collapse = " + ")))
+  specifyModel(formula = as.formula(stringr::str_c( colnames(xTs)[1], " ~ ", stringr::str_c(colnames(Indicators), collapse = " + ")))
             , na.rm = FALSE, source.envir = Symbols) ->
               # remove the last record(NO)
   specifiedUnrateModel
@@ -1845,7 +1858,7 @@ initEnv();on.exit({uninitEnv()})
       # Therefore, I want new 150% percent MORE "financial loss data"
       # Keeping all of the financial profits
       # C.perc = list(1.0, 2.5))
-      UBLDataFormula <- as.formula(str_c(as.character(formula(specifiedUnrateModel)), " + index")) # need the index to COPY
+      UBLDataFormula <- as.formula(stringr::str_c(as.character(formula(specifiedUnrateModel)), " + index")) # need the index to COPY
       UBLResults     <- ImpSampRegress(UBLDataFormula, UBLDataCompleteCases, rel = Relevance, thr.rel = 0.5,  C.perc = list(1.0, 2.5))
       # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
       # NOTE: no NEW index Values are created.
@@ -1987,7 +2000,7 @@ initEnv();on.exit({uninitEnv()})
                              )
                                                     # first/last dates that the "predictee" dates are available
                                                     # "1970-12-31","2006-12-31"(actual "2001-11-30")
-  message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))), "")
+  message(stringr::str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))), "")
   builtUnrateModel <- buildModel(specifiedUnrateModel,
                                  method="train",
                                  training.per=c(TrainingBegin, TrainingEnd),
@@ -2020,7 +2033,7 @@ initEnv();on.exit({uninitEnv()})
   interact = Interaction$new(predictor)
   print(relativeScaleImportance(arrange(interact$results, desc(.interaction)), cols = ".interaction"))
 
-  message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))),"")
+  message(stringr::str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))),"")
 
   # prediction
 
@@ -2049,7 +2062,7 @@ initEnv();on.exit({uninitEnv()})
 
     DateTimesIncompleteValidationData <- index(ValidationData)[!ValidationDataCompleteCases]
     message("")
-    message(str_c("*** Not full complete cases exist for date/times: ", str_c(DateTimesIncompleteValidationData, collapse = ", "), ". ***"))
+    message(stringr::str_c("*** Not full complete cases exist for date/times: ", stringr::str_c(DateTimesIncompleteValidationData, collapse = ", "), ". ***"))
     message(      "*** Now will do a na.locf() to complete it/them. ***")
     ValidationData <- cbind(ValidationData[, builtUnrateModel@model.target], na.locf(ValidationData[, builtUnrateModel@model.inputs]))
   }
@@ -2060,10 +2073,10 @@ initEnv();on.exit({uninitEnv()})
   # strategy/rule weights
   FittedOneSidedThreashold <- quantile(coredata(Fitted))["25%"]
   message("\n75% of the time, I am 'IN' the market.")
-  message(str_c("FittedSignal OneSidedThreashold threashold is ", FittedOneSidedThreashold, "\n"))
+  message(stringr::str_c("FittedSignal OneSidedThreashold threashold is ", FittedOneSidedThreashold, "\n"))
   FittedSignal <- ifelse( Fitted > FittedOneSidedThreashold, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
 
-  colnames(FittedSignal)[1] <- str_c(ModelTarget, "_wts")
+  colnames(FittedSignal)[1] <- stringr::str_c(ModelTarget, "_wts")
 
   FittedSignal
 
@@ -2109,6 +2122,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom stringr str_c
 cashWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2116,7 +2130,7 @@ initEnv();on.exit({uninitEnv()})
 
   # excess left over
   cash_wts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[,wtsClms(xTs)], na.rm = TRUE)
-  colnames(cash_wts)[1] <- str_c(colnames(xTs)[str_detect(colnames(xTs), "^cash.*rets$")], "_wts")
+  colnames(cash_wts)[1] <- stringr::str_c(colnames(xTs)[str_detect(colnames(xTs), "^cash.*rets$")], "_wts")
 
   cash_wts
 

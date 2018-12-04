@@ -38,10 +38,18 @@ NBER timeslices
 \dontrun{
 # str(timeSliceNBER())
 # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")))
-# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE))
-# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE))
-# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE))
+# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
+# , LongTimeSlices = TRUE)
+# )
+# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
+#   , LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
+# )
+# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
+# , LongestTimeSlice = TRUE)
+# )
 # # now after seeing all of the date, THEN, choose the filter
-# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31"), LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?))
+# str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
+# , LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?)
+# )
 }
 }
