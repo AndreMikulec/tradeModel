@@ -227,7 +227,7 @@ tryCatchLog::tryCatchLog({
   ### assign("DoCall", DescTools::DoCall, envir = envir)
 
   ### assign("vars_select", tidyselect::vars_select, envir = envir)
-  assign("matches", tidyselect::matches, envir = envir)
+  ### assign("matches", tidyselect::matches, envir = envir)
 
   assign("select", dplyr::select, envir = envir)
   assign("case_when", dplyr::case_when, envir = envir)
@@ -735,6 +735,7 @@ interleave <- function (x, y)
 #' @importFrom stringr str_replace_all
 #' @importFrom tidyselect vars_select
 #' @importFrom tidyselect matches
+#' @importFrom dplyr select
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -803,7 +804,7 @@ initEnv();on.exit({uninitEnv()})
     # make ONE column to represent all factors
     NotLeftSide %>% UNITE %>%
       # change row.names to FCT_COLS_NAME, drop column 1
-      `row.names<-`(.[[1]]) %>% select(-1) %>%
+      `row.names<-`(.[[1]]) %>% dplyr::select(-1) %>% 
         # to one dimension : one BIG wide ROW
         as.matrix %>% wrap(sep = DetailColsFixedSep) -> NotLeftSide
 
