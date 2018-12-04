@@ -236,7 +236,7 @@ tryCatchLog::tryCatchLog({
   ### assign("deselect", seplyr::deselect, envir = envir)
   ### assign("let", wrapr::let, envir = envir)
 
-  assign("wrap", R.utils::wrap, envir = envir)
+  ### assign("wrap", R.utils::wrap, envir = envir)
 
   assign("unite", tidyr::unite, envir = envir)
 
@@ -738,6 +738,7 @@ interleave <- function (x, y)
 #' @importFrom dplyr select
 #' @importFrom seplyr select_se
 #' @importFrom wrapr let
+#' @importFrom R.utils wrap
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -808,7 +809,7 @@ initEnv();on.exit({uninitEnv()})
       # change row.names to FCT_COLS_NAME, drop column 1
       `row.names<-`(.[[1]]) %>% dplyr::select(-1) %>% 
         # to one dimension : one BIG wide ROW
-        as.matrix %>% wrap(sep = DetailColsFixedSep) -> NotLeftSide
+        as.matrix %>% R.utils::wrap(sep = DetailColsFixedSep) -> NotLeftSide
 
     cbind(LeftSideRow1,as.data.frame(t(NotLeftSide))) -> results
 
