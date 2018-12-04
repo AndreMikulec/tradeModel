@@ -229,10 +229,10 @@ tryCatchLog::tryCatchLog({
   ### assign("vars_select", tidyselect::vars_select, envir = envir)
   ### assign("matches", tidyselect::matches, envir = envir)
 
-  assign("select", dplyr::select, envir = envir)
+  ### assign("select", dplyr::select, envir = envir)
   assign("case_when", dplyr::case_when, envir = envir)
 
-  assign("select_se", seplyr::select_se, envir = envir)
+  ### assign("select_se", seplyr::select_se, envir = envir)
   assign("deselect", seplyr::deselect, envir = envir)
   assign("let", wrapr::let, envir = envir)
 
@@ -736,6 +736,7 @@ interleave <- function (x, y)
 #' @importFrom tidyselect vars_select
 #' @importFrom tidyselect matches
 #' @importFrom dplyr select
+#' @importFrom seplyr select_se
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -792,7 +793,7 @@ initEnv();on.exit({uninitEnv()})
       }
     }
 
-    LeftSideRow1  <-  select_se(x, ConstCols)[1, , drop = FALSE]
+    LeftSideRow1  <-  seplyr::select_se(x, ConstCols)[1, , drop = FALSE]
     NotLeftSide   <-  deselect(x, ConstCols)
 
     UNITE <- function(x) {
