@@ -224,7 +224,7 @@ tryCatchLog::tryCatchLog({
   ### assign("invoke_map", purrr::invoke_map, envir = envir)
   ### assign("Day", DescTools::Day, envir = envir)
   ### assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
-  assign("DoCall", DescTools::DoCall, envir = envir)
+  ### assign("DoCall", DescTools::DoCall, envir = envir)
 
   assign("vars_select", tidyselect::vars_select, envir = envir)
   assign("matches", tidyselect::matches, envir = envir)
@@ -1064,6 +1064,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom purrr transpose
 #' @importFrom plyr llply
+#' @importFrom DescTools DoCall
 explodeXts <- function(  xTs1 = NULL, xTs2 = NULL, Fun = NULL
                        , Whiches   = NULL
                        , AltName   = NULL, Prefix = NULL, FixedSep  = NULL
@@ -1076,7 +1077,7 @@ initEnv();on.exit({uninitEnv()})
   xTs2  <- initXts(xTs2)
   if(is.null(FixedSep)) FixedSep = "."
 
-  DoCall(expand.grid, Whiches) %>%
+  DescTools::DoCall(expand.grid, Whiches) %>% 
       as.list %>%
         { purrr::transpose(.) } -> WhichesCombinations
   if(!NCOL(WhichesCombinations)){ return(initXts()) }
@@ -1097,7 +1098,7 @@ initEnv();on.exit({uninitEnv()})
       xTs1 <- xTsColumnSet[[1]]; xTs2 <- xTsColumnSet[[2]]
 
       if(NVAR(xTs2)) { xTs2List <- list(xTs2) } else { xTs2List <- NULL }
-      Temp <- DoCall(Fun, args = c(list(), list(xTs1), xTs2List, WhichCombo, list(...)), quote = quote, envir = envir)
+      Temp <- DescTools::DoCall(Fun, args = c(list(), list(xTs1), xTs2List, WhichCombo, list(...)), quote = quote, envir = envir)
 
       Temp <- newXtsColName( Temp, Fun = Fun, isCharFun = isCharFun, xTs1 = xTs1, xTs2 = xTs2, WhichCombo = WhichCombo
                            , AltName = AltName, Prefix = Prefix, FixedSep = FixedSep)
