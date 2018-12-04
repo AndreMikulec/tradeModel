@@ -240,7 +240,7 @@ tryCatchLog::tryCatchLog({
 
   ### assign("unite", tidyr::unite, envir = envir)
 
-  assign("truncPOSIXt",  Hmisc::truncPOSIXt,  envir = envir)
+  ## assign("truncPOSIXt",  Hmisc::truncPOSIXt,  envir = envir)
   assign("wtd.quantile", Hmisc::wtd.quantile, envir = envir)
 
   assign("nberDates", tis::nberDates, envir = envir)
@@ -1336,6 +1336,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom lubridate days
 #' @importFrom lubridate %m+%
+#' @importFrom Hmisc truncPOSIXt
 nextMonthfromYesterday.Date <- function(date = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1344,7 +1345,7 @@ initEnv();on.exit({uninitEnv()})
   `%m+%` <- lubridate::`%m+%`
 
   date <- initDate(date)
-  truncPOSIXt(date, units = "months") %>%
+  Hmisc::truncPOSIXt(date, units = "months") %>%
     { zoo::as.Date(.)} %m+%
       months(1) %m+%
         days(-1)
