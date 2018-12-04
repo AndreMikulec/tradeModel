@@ -209,7 +209,7 @@ tryCatchLog::tryCatchLog({
   assign("na.trim", zoo::na.trim, envir = envir)
 
   assign("%>%",  magrittr::`%>%` , envir = envir)
-  assign("%m+%", lubridate::`%m+%`, envir = envir)
+  ### assign("%m+%", lubridate::`%m+%`, envir = envir)
   ### assign("days", lubridate::days, envir = envir)
 
   ### assign("str_detect", stringr::str_detect, envir = envir)
@@ -218,10 +218,10 @@ tryCatchLog::tryCatchLog({
   ### assign("str_c", stringr::str_c, envir = envir)
   ### assign("as_tibble", tibble::as_tibble,  envir = envir)
   ### assign("arrange", dplyr::arrange, envir = envir)
-  # assign("map", purrr::map, envir = envir)
+  ### assign("map", purrr::map, envir = envir)
   ### assign("llply", plyr::llply, envir = envir)
   ### assign("transpose", purrr::transpose, envir = envir)
-  # assign("invoke_map", purrr::invoke_map, envir = envir)
+  ### assign("invoke_map", purrr::invoke_map, envir = envir)
   assign("Day", DescTools::Day, envir = envir)
   assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
   assign("DoCall", DescTools::DoCall, envir = envir)
@@ -471,9 +471,12 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
+#' @importFrom lubridate %m+%
 Lagging <- function(xTs = NULL, Shift = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  `%m+%` <- lubridate::`%m+%`
 
   xTs <- initXts(xTs)
   if(is.null(Shift)) Shift = 1
@@ -620,12 +623,8 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom plyr llply
 pairWise <- function(x1, x2) {
 
-  List <- c(list(),lapply(x1, identity), lapply(x2, identity))
-  # also works and parallelizable
-  # List <- c(list(), plyr::llply(x1, identity), plyr::llply(x2, identity))
-  # xts FAILS . . .
-  # List <- c(list(), purrr::map(x1, ~{identity(x = .x)}), purrr::map(x2, ~{identity(x = .x)}))
-
+  List <- c(list(),plyr::llply(x1, identity), plyr::llply(x2, identity))
+  
   L1coord <- seq(from = 1, by = 2, length.out = 0.5*length(List))
   L2coord <- seq(from = 2, by = 2, length.out = 0.5*length(List))
 
@@ -1122,9 +1121,13 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
+#' @importFrom lubridate %m+%
 Leading <- function(xTs = NULL, Shift = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  `%m+%` <- lubridate::`%m+%`
+
   xTs <- initXts(xTs)
   if(is.null(Shift)) Shift = 1
   # compare to quantmod:::Lag.xts
@@ -1318,11 +1321,13 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom lubridate days
+#' @importFrom lubridate %m+%
 nextMonthfromYesterday.Date <- function(date = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   days <- lubridate::days
+  `%m+%` <- lubridate::`%m+%`
 
   date <- initDate(date)
   truncPOSIXt(date, units = "months") %>%
