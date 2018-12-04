@@ -234,7 +234,7 @@ tryCatchLog::tryCatchLog({
 
   ### assign("select_se", seplyr::select_se, envir = envir)
   ### assign("deselect", seplyr::deselect, envir = envir)
-  assign("let", wrapr::let, envir = envir)
+  ### assign("let", wrapr::let, envir = envir)
 
   assign("wrap", R.utils::wrap, envir = envir)
 
@@ -737,6 +737,7 @@ interleave <- function (x, y)
 #' @importFrom tidyselect matches
 #' @importFrom dplyr select
 #' @importFrom seplyr select_se
+#' @importFrom wrapr let
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -797,7 +798,7 @@ initEnv();on.exit({uninitEnv()})
     NotLeftSide   <-  seplyr::deselect(x, ConstCols)
 
     UNITE <- function(x) {
-      let(list(FCT_COLS_NAME = FCT_COLS_NAME, FCT_COLS_SEP = FCT_COLS_SEP),
+      wrapr::let(list(FCT_COLS_NAME = FCT_COLS_NAME, FCT_COLS_SEP = FCT_COLS_SEP),
         unite(x, FCT_COLS_NAME, FCT_COLS_SEP, sep = FactorColsFixedSep)
       , subsMethod = "stringsubs", strict = FALSE)
       }
