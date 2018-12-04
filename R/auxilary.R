@@ -217,7 +217,7 @@ tryCatchLog::tryCatchLog({
   ### assign("str_replace_all", stringr::str_replace_all, envir = envir)
   ### assign("str_c", stringr::str_c, envir = envir)
   ### assign("as_tibble", tibble::as_tibble,  envir = envir)
-  assign("arrange", dplyr::arrange, envir = envir)
+  ### assign("arrange", dplyr::arrange, envir = envir)
   # assign("map", purrr::map, envir = envir)
   assign("llply", plyr::llply, envir = envir)
   assign("transpose", purrr::transpose, envir = envir)
@@ -1764,6 +1764,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom stringr str_c
+#' @importFrom dplyr arrange
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2038,7 +2039,7 @@ initEnv();on.exit({uninitEnv()})
   message("how much of the variance of f(x) is explained by the interaction of that feature")
   message("with any other feature")
   interact = Interaction$new(predictor)
-  print(relativeScaleImportance(arrange(interact$results, desc(.interaction)), cols = ".interaction"))
+  print(relativeScaleImportance(dplyr::arrange(interact$results, desc(.interaction)), cols = ".interaction"))
 
   message(stringr::str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))),"")
 
