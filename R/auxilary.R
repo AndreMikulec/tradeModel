@@ -251,9 +251,9 @@ tryCatchLog::tryCatchLog({
   ### assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
   assign("ReScaling", DMwR::ReScaling, envir = envir)
 
-  assign("Predictor", iml::Predictor, envir = envir)
-  assign("FeatureImp", iml::FeatureImp, envir = envir)
-  assign("Interaction", iml::Interaction, envir = envir)
+  ### assign("Predictor", iml::Predictor, envir = envir)
+  ### assign("FeatureImp", iml::FeatureImp, envir = envir)
+  ### assign("Interaction", iml::Interaction, envir = envir)
 
   ### assign("rbindlist", data.table::rbindlist, envir = envir)
 
@@ -1796,6 +1796,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom dplyr case_when
 #' @importFrom Hmisc wtd.quantile
 #' @importFrom UBL ImpSampRegress
+#' @importFrom iml Predictor FeatureImp Interaction
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2058,18 +2059,18 @@ initEnv();on.exit({uninitEnv()})
 
   # what makes the most sense is to use the
   # original (non-'added(removed) records) train/test data
-  predictor = Predictor$new(builtUnrateModel@fitted.model,
+  predictor = iml::Predictor$new(builtUnrateModel@fitted.model,
     data = as.data.frame(xTs[do.call(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.inputs], stringsAsFactor = FALSE),
     y =       c(coredata(xTs[do.call(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.target]))
   )
   message("iml: Feature Importance; Shuffling each feature and measuring how much the performance drops")
-  imp = FeatureImp$new(predictor, loss = SortinoRatioLoss)
+  imp = iml::FeatureImp$new(predictor, loss = SortinoRatioLoss)
   print(relativeScaleImportance(imp$results))
 
   message("iml: Measure Interactions; measure how strongly features interact with each other;")
   message("how much of the variance of f(x) is explained by the interaction of that feature")
   message("with any other feature")
-  interact = Interaction$new(predictor)
+  interact = iml::Interaction$new(predictor)
   print(relativeScaleImportance(dplyr::arrange(interact$results, desc(.interaction)), cols = ".interaction"))
 
   message(stringr::str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))),"")
