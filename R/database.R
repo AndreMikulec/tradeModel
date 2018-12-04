@@ -676,6 +676,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom stringr str_detect
+#' @importFrom stringr str_replace
 getSymbols.cache <- function (Symbols = NULL, env, return.class = "xts", cache.envir = NULL,  ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -699,7 +700,7 @@ initEnv();on.exit({uninitEnv()})
     AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
     LessAllSymbols   <- AllSymbols[stringr::str_detect(AllSymbols,"^[.].+") &
                                   !stringr::str_detect(AllSymbols,"^[.]Random[.]seed$")]
-    RetrievedSymbols <- str_replace(LessAllSymbols, "^[.]","")
+    RetrievedSymbols <- stringr::str_replace(LessAllSymbols, "^[.]","")
     FoundSymbols     <- RetrievedSymbols %in% Symbols
     EnvSymbols       <- RetrievedSymbols[FoundSymbols]
     Symbols          <- EnvSymbols
@@ -1713,6 +1714,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return a named list of 'updated' properties
 #' @export
 #' @importFrom stringr str_detect
+#' @importFrom stringr str_replace
 updatedSymbols.cache <- function(Symbols = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1724,7 +1726,7 @@ initEnv();on.exit({uninitEnv()})
 
   LessAllSymbols   <- AllSymbols[stringr::str_detect(Names(AllSymbols),"^[.].+") &
                                 !stringr::str_detect(Names(AllSymbols),"^[.]Random[.]seed$")]
-  Names(LessAllSymbols) <- str_replace(Names(LessAllSymbols), "^[.]","")
+  Names(LessAllSymbols) <- stringr::str_replace(Names(LessAllSymbols), "^[.]","")
   RetrievedSymbols <- LessAllSymbols
   RetrievedSymbols
 
@@ -1868,6 +1870,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return character vector of Symbols
 #' @export
 #' @importFrom stringr str_detect
+#' @importFrom stringr str_replace
 listSymbols.cache <- function(cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1878,7 +1881,7 @@ initEnv();on.exit({uninitEnv()})
   AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
   LessAllSymbols   <- AllSymbols[stringr::str_detect(AllSymbols,"^[.].+") &
                                 !stringr::str_detect(AllSymbols,"^[.]Random[.]seed$")]
-  RetrievedSymbols <- str_replace(LessAllSymbols, "^[.]","")
+  RetrievedSymbols <- stringr::str_replace(LessAllSymbols, "^[.]","")
   RetrievedSymbols
 
 })}

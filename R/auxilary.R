@@ -213,7 +213,7 @@ tryCatchLog::tryCatchLog({
   assign("days", lubridate::days, envir = envir)
 
   ### assign("str_detect", stringr::str_detect, envir = envir)
-  assign("str_replace", stringr::str_replace, envir = envir)
+  ### assign("str_replace", stringr::str_replace, envir = envir)
   assign("str_replace_all", stringr::str_replace_all, envir = envir)
   ### assign("str_c", stringr::str_c, envir = envir)
   assign("as_tibble", tibble::as_tibble,  envir = envir)
@@ -470,6 +470,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @export
 #' @importFrom stringr str_detect
+#' @importFrom stringr str_replace
 Lagging <- function(xTs = NULL, Shift = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -485,9 +486,9 @@ initEnv();on.exit({uninitEnv()})
   }
   xTs %>% { lag(., 1 * Shift) } -> xTs
   if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
-    colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "leadingrets$", "rets")
+    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "leadingrets$", "rets")
   } else {
-    colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "rets$", "laggingrets")
+    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "laggingrets")
   }
   xTs
 })}
@@ -1115,6 +1116,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @export
 #' @importFrom stringr str_detect
+#' @importFrom stringr str_replace
 Leading <- function(xTs = NULL, Shift = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1129,9 +1131,9 @@ initEnv();on.exit({uninitEnv()})
   }
   xTs %>% { lag(.,-1 * Shift) } -> xTs
   if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
-    colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "laggingrets$", "rets")
+    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "laggingrets$", "rets")
   } else {
-    colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "rets$", "leadingrets")
+    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "leadingrets")
   }
   xTs
 })}
@@ -2270,6 +2272,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom stringr str_detect
+#' @importFrom stringr str_replace
 valueClms <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2278,7 +2281,7 @@ initEnv();on.exit({uninitEnv()})
   clms <- safeClms(xTs)
   clms <- sort(clms)
 
-  str_replace(clms, "_wts$", "")[stringr::str_detect(clms, "_wts$")]
+  stringr::str_replace(clms, "_wts$", "")[stringr::str_detect(clms, "_wts$")]
 
 })}
 
