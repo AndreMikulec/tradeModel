@@ -61,6 +61,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param df data.frame (with column names)
 #' @param con DBI database connection
+#' @importFrom plyr llply
 #' @export
 dfToCREATETable <- function(df, con, Symbol, schname) {
 tryCatchLog::tryCatchLog({
@@ -88,7 +89,7 @@ initEnv();on.exit({uninitEnv()})
   schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbol))
 
   # column datatypes
-  colClasses  <- do.call(c,llply(df, function(x) {class(x)[1]}))
+  colClasses  <- do.call(c,plyr::llply(df, function(x) {class(x)[1]}))
   colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
   colClasses[colClasses %in%   "Date"]       <- "DATE"
   colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
@@ -368,6 +369,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom plyr llply
 oneColumn <- function(con, Query, outName, unQuote = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -386,7 +388,7 @@ initEnv();on.exit({uninitEnv()})
   }
   if(unQuote) {
     split(ret,seq_len(NROW(ret))) %>%
-      llply(function(x) { strsplit(x[[1]], "^\"|\"$")[[1]][2] }) %>%
+      plyr::llply(function(x) { strsplit(x[[1]], "^\"|\"$")[[1]][2] }) %>% 
         do.call(c,.) %>%
           as.data.frame(., stringsAsFactors = FALSE) -> ret
   }
@@ -1196,6 +1198,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom plyr llply
 saveSymbols <- function(Symbols = NULL, env = parent.frame(),
                        source.envir = NULL, Gathering = "source.envir", ...) {
 tryCatchLog::tryCatchLog({
@@ -1253,7 +1256,7 @@ initEnv();on.exit({uninitEnv()})
     EnvSymbols   <- RetrievedSymbols[FoundSymbols]
     if(is.null(Symbols))  EnvSymbols <- RetrievedSymbols
 
-    llply(EnvSymbols, function(x) {
+    plyr::llply(EnvSymbols, function(x) {
       xx <- get(x, source.envir, inherits = FALSE)
       if((class(xx))[1] %in% c("zoo","xts", "data.frame","ts","timeSeries")) {
         if(!x %in% names(xTsGetSymbols )){
@@ -1662,6 +1665,7 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 #'
 #' }
 #' @export
+#' @importFrom plyr llply
 updatedSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1680,7 +1684,7 @@ initEnv();on.exit({uninitEnv()})
     AllFoundSymbols <- AllSymbols[FoundAllSymbols]
     if(is.null(Symbols)) AllFoundSymbols <- AllSymbols
 
-    llply(AllFoundSymbols, function(x) {
+    plyr::llply(AllFoundSymbols, function(x) {
       xx <- get(x, source.envir, inherits = FALSE)
       updated <- NULL
       if((class(xx)[1] == "xts")) {
@@ -1833,6 +1837,7 @@ updatedSymbols.pg <- updatedSymbols.PostgreSQL
 #'
 #' }
 #' @export
+#' @importFrom plyr llply
 listSymbols <- function(source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1845,7 +1850,7 @@ initEnv();on.exit({uninitEnv()})
     runenv <- environment()
     # look in my custom environment
     if(is.environment(source.envir)) {
-    llply(ls(envir = source.envir, all.names = TRUE), function(x) {
+    plyr::llply(ls(envir = source.envir, all.names = TRUE), function(x) {
       xx <- get(x, source.envir, inherits = FALSE)
       if((class(xx))[1] %in% c("zoo","xts", "data.frame","ts","timeSeries")) {
         EnvSymbols <- c(EnvSymbols, x)

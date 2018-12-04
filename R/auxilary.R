@@ -219,7 +219,7 @@ tryCatchLog::tryCatchLog({
   ### assign("as_tibble", tibble::as_tibble,  envir = envir)
   ### assign("arrange", dplyr::arrange, envir = envir)
   # assign("map", purrr::map, envir = envir)
-  assign("llply", plyr::llply, envir = envir)
+  ### assign("llply", plyr::llply, envir = envir)
   ### assign("transpose", purrr::transpose, envir = envir)
   # assign("invoke_map", purrr::invoke_map, envir = envir)
   assign("Day", DescTools::Day, envir = envir)
@@ -617,6 +617,7 @@ initEnv();on.exit({uninitEnv()})
 #'#
 #' }
 #' @export
+#' @importFrom plyr llply
 pairWise <- function(x1, x2) {
 
   List <- c(list(),lapply(x1, identity), lapply(x2, identity))
@@ -1061,6 +1062,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom purrr transpose
+#' @importFrom plyr llply
 explodeXts <- function(  xTs1 = NULL, xTs2 = NULL, Fun = NULL
                        , Whiches   = NULL
                        , AltName   = NULL, Prefix = NULL, FixedSep  = NULL
@@ -1088,9 +1090,9 @@ initEnv();on.exit({uninitEnv()})
   xTs <- initXts()
   FunctionEnv <- environment()
 
-  llply(WhichesCombinations, function(WhichCombo) {
+  plyr::llply(WhichesCombinations, function(WhichCombo) {
 
-    llply(pairWise(xTs1, xTs2), function(xTsColumnSet) {
+    plyr::llply(pairWise(xTs1, xTs2), function(xTsColumnSet) {
       xTs1 <- xTsColumnSet[[1]]; xTs2 <- xTsColumnSet[[2]]
 
       if(NVAR(xTs2)) { xTs2List <- list(xTs2) } else { xTs2List <- NULL }
@@ -1178,6 +1180,7 @@ initEnv();on.exit({uninitEnv()})
 #' # )
 #' }
 #' @export
+#' @importFrom plyr llply
 timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL, OmitSliceFirstDate = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1211,7 +1214,7 @@ initEnv();on.exit({uninitEnv()})
   # FUTURE: instead, could have detected periodicity and used split.xts
   # determine
   split(as.data.frame(NBERDates), seq_len(NROW(NBERDates))) %>%
-     llply(function(x) {
+     plyr::llply(function(x) {
 
        if(LongestTimeSlice) {
          ActualStart <- index(NBERDates[1,"Start"])
@@ -1766,6 +1769,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom stringr str_c
 #' @importFrom dplyr arrange
+#' @importFrom plyr llply
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1785,7 +1789,7 @@ initEnv();on.exit({uninitEnv()})
 
   # IF REMOVE ".fun = " then RStudio can debug
   # create an environment of xts objects
-  llply(as.data.frame(xTs),
+  plyr::llply(as.data.frame(xTs),
     .fun =  function(x) {
       as.xts(x, order.by = index(xTs))
     }
@@ -1878,7 +1882,7 @@ initEnv();on.exit({uninitEnv()})
       # convert back
       # need the xts column names
       # IF REMOVE ".fun = " then RStudio can debug
-      llply(rlist::list.zip(UBLResult = UBLResults, ColName = colnames(UBLResults)),
+      plyr::llply(rlist::list.zip(UBLResult = UBLResults, ColName = colnames(UBLResults)),
         .fun = function(x) {
           res <- as.xts(x[["UBLResult"]], order.by = UBLResultsIndex)
           indexClass(res)  <- indexClass(TrainingData)
@@ -1913,7 +1917,7 @@ initEnv();on.exit({uninitEnv()})
                                                         # crept-in/created new observations that exist OUT-of-RANGE
                                                         # GARANTEED TO BE WITHIN c(TrainingBegin, TrainingEnd)
                                  # ONLY NBER DATE RANGES                     # Re-defining Training* to be more date-restrictev
-  AllDataSliceTimeRanges <- llply(AllData, function(x)  c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1))) )
+  AllDataSliceTimeRanges <- plyr::llply(AllData, function(x)  c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1))) )
   # should be min(earliest)
   FirstLoop <- TRUE
   for(i in seq_along(AllDataSliceTimeRanges)) {
