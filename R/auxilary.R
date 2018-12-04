@@ -214,7 +214,7 @@ tryCatchLog::tryCatchLog({
 
   ### assign("str_detect", stringr::str_detect, envir = envir)
   ### assign("str_replace", stringr::str_replace, envir = envir)
-  assign("str_replace_all", stringr::str_replace_all, envir = envir)
+  ### assign("str_replace_all", stringr::str_replace_all, envir = envir)
   ### assign("str_c", stringr::str_c, envir = envir)
   assign("as_tibble", tibble::as_tibble,  envir = envir)
   assign("arrange", dplyr::arrange, envir = envir)
@@ -501,6 +501,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return single column xts with  the new column name
 #' @export
 #' @importFrom stringr str_c
+#' @importFrom stringr str_replace_all
 newXtsColName <- function(xTs = NULL, Fun =  NULL, isCharFun = NULL, xTs1 = NULL, xTs2 = NULL, WhichCombo =  NULL, AltName = NULL, Prefix = NULL, FixedSep = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -509,7 +510,7 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(AltName)) {
     if(isCharFun) {
-      NewName <- str_replace_all(Fun,"[.]|::",FixedSep)
+      NewName <- stringr::str_replace_all(Fun,"[.]|::",FixedSep)
     } else {
       NewName <- "anon"
     }
@@ -729,6 +730,7 @@ interleave <- function (x, y)
 #' }
 #'@export
 #' @importFrom stringr str_c
+#' @importFrom stringr str_replace_all
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -803,9 +805,9 @@ initEnv();on.exit({uninitEnv()})
 
     cbind(LeftSideRow1,as.data.frame(t(NotLeftSide))) -> results
 
-    str_replace_all(colnames(results),"[ ]", SpaceFixedSep) ->
+    stringr::str_replace_all(colnames(results),"[ ]", SpaceFixedSep) ->
       colnames(results)
-    str_replace_all(colnames(results),"&"  , AmperstandFixedSep) ->
+    stringr::str_replace_all(colnames(results),"&"  , AmperstandFixedSep) ->
       colnames(results)
 
     resultsInList <- c(resultsInList, list(results))

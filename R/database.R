@@ -12,6 +12,7 @@
 #' @export
 #' @importFrom stringr str_c
 #' @importFrom stringr str_detect
+#' @importFrom stringr str_replace_all
 xTs2DBDF <- function(xTs, con, field.names, db.fields) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -19,7 +20,7 @@ initEnv();on.exit({uninitEnv()})
   df <- cbind(date = index(xTs), as.data.frame(xTs, stringsAsFactors = FALSE))
 
   # OHLC columns
-  str_replace_all(colnames(df), "[.]", "_")  -> colnames(df)
+  stringr::str_replace_all(colnames(df), "[.]", "_")  -> colnames(df)
   for(grouping in list.zip(field.names, db.fields)){
      colnames(df)[stringr::str_detect(tolower(colnames(df)), stringr::str_c("_", tolower(grouping[["field.names"]]),"$"))] <- grouping[["db.fields"]]
   }
