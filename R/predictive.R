@@ -434,7 +434,7 @@ as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...)
 #'
 #' @return integer value of numer of cores
 #' @examples
-#' /dontrun {
+#' \dontrun{
 #' detectTrueCores()
 #' [1] 4
 #' }

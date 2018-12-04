@@ -18,7 +18,7 @@ Get Logical processor count correctly whether NUMA is enabled or disabled
 http://r.789695.n4.nabble.com/Get-Logical-processor-count-correctly-whether-NUMA-is-enabled-or-disabled-td4751774.html
 }
 \examples{
-/dontrun {
+\dontrun{
 detectTrueCores()
 [1] 4
 }

@@ -1987,7 +1987,7 @@ initEnv();on.exit({uninitEnv()})
                              )
                                                     # first/last dates that the "predictee" dates are available
                                                     # "1970-12-31","2006-12-31"(actual "2001-11-30")
-  message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))))
+  message(str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))), "")
   builtUnrateModel <- buildModel(specifiedUnrateModel,
                                  method="train",
                                  training.per=c(TrainingBegin, TrainingEnd),
@@ -2020,7 +2020,7 @@ initEnv();on.exit({uninitEnv()})
   interact = Interaction$new(predictor)
   print(relativeScaleImportance(arrange(interact$results, desc(.interaction)), cols = ".interaction"))
 
-  message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))))
+  message(str_c("End   buildModel - ", as.character(formula(specifiedUnrateModel))),"")
 
   # prediction
 
@@ -2034,10 +2034,27 @@ initEnv();on.exit({uninitEnv()})
   ValidationPredictionBegin <- as.character(head(index(xTs[TrainingEnd < index(xTs)]),1))
   # lastest data, ModelTarget data can ( and in very  last data will ) be NA
   ValidationPredictionEnd   <- as.character(tail(index(xTs),1))
-  modelData <- modelData(UpdatedModelData, data.window = c(ValidationPredictionBegin, ValidationPredictionEnd), exclude.training = TRUE)
 
-  Fitted  <- predictModel(UpdatedModelData@fitted.model, modelData)
-  Fitted  <- as.xts(Fitted, index(modelData))
+  ValidationData <- modelData(UpdatedModelData, data.window = c(ValidationPredictionBegin, ValidationPredictionEnd), exclude.training = TRUE)
+  ValidationDataCompleteCases <- complete.cases(ValidationData[, builtUnrateModel@model.inputs])
+
+  if(any(!ValidationDataCompleteCases)){
+
+    # xgboost 'somtimes' drops sending a response to incomplete records
+    # (a "dropped observation")
+    # Also, even though my "data" is "not (recently) available" enough"
+    # so that I "do not have a most recent end of month record."
+    # I would STILL prefer to have a "most recent end of month record"
+    # so, I KNOW what I can invest-in NOW.
+
+    DateTimesIncompleteValidationData <- index(ValidationData)[!ValidationDataCompleteCases]
+    message("")
+    message(str_c("*** Not full complete cases exist for date/times: ", str_c(DateTimesIncompleteValidationData, collapse = ", "), ". ***"))
+    message(      "*** Now will do a na.locf() to complete it/them. ***")
+    ValidationData <- cbind(ValidationData[, builtUnrateModel@model.target], na.locf(ValidationData[, builtUnrateModel@model.inputs]))
+  }
+  Fitted  <- predictModel(UpdatedModelData@fitted.model, ValidationData)
+  Fitted  <- as.xts(Fitted, index(ValidationData))
 
   # uses S3 ifelse.xts
   # strategy/rule weights

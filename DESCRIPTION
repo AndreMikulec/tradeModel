@@ -19,7 +19,6 @@ Depends:
 Imports:
     timeSeries,
     rlang,
-    formula.tools,
     magrittr,
     stringr,
     lubridate, 
@@ -36,7 +35,9 @@ Imports:
     tidyr,
     tis,
     caret,
+    DMwR,
     UBL,
+    iml,
     rlist,
     tryCatchLog,
     futile.logger
