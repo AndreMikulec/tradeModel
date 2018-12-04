@@ -223,7 +223,7 @@ tryCatchLog::tryCatchLog({
   ### assign("transpose", purrr::transpose, envir = envir)
   ### assign("invoke_map", purrr::invoke_map, envir = envir)
   ### assign("Day", DescTools::Day, envir = envir)
-  assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
+  ### assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
   assign("DoCall", DescTools::DoCall, envir = envir)
 
   assign("vars_select", tidyselect::vars_select, envir = envir)
@@ -473,6 +473,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom stringr str_replace
 #' @importFrom lubridate %m+%
 #' @importFrom DescTools Day
+#' @importFrom DescTools LastDayOfMonth
 Lagging <- function(xTs = NULL, Shift = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -484,7 +485,7 @@ initEnv();on.exit({uninitEnv()})
   # compare to quantmod:::Lag.xts
   if(periodicity(xTs)[["scale"]] == "monthly") {
     if(DescTools::Day(head(index(xTs),1)) %in% c(28:31)) {
-      refDates <- LastDayOfMonth(tail(index(xTs),1) %m+% months( 1 * seq_len(Shift)) )
+      refDates <- DescTools::LastDayOfMonth(tail(index(xTs),1) %m+% months( 1 * seq_len(Shift)) )
     }
     xTs <- merge(xTs, xts(, refDates) )
   }
@@ -1124,6 +1125,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom stringr str_replace
 #' @importFrom lubridate %m+%
 #' @importFrom DescTools Day
+#' @importFrom DescTools LastDayOfMonth
 Leading <- function(xTs = NULL, Shift = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1135,7 +1137,7 @@ initEnv();on.exit({uninitEnv()})
   # compare to quantmod:::Lag.xts
   if(periodicity(xTs)[["scale"]] == "monthly") {
     if(DescTools::Day(head(index(xTs),1)) %in% c(28:31)) {
-      refDates <- LastDayOfMonth(head(index(xTs),1) %m+% months(-1 * seq_len(Shift)) )
+      refDates <- DescTools::LastDayOfMonth(head(index(xTs),1) %m+% months(-1 * seq_len(Shift)) )
     }
     xTs <- merge(xTs, xts(, refDates) )
   }
