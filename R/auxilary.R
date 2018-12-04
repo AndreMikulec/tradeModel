@@ -240,8 +240,8 @@ tryCatchLog::tryCatchLog({
 
   ### assign("unite", tidyr::unite, envir = envir)
 
-  ## assign("truncPOSIXt",  Hmisc::truncPOSIXt,  envir = envir)
-  assign("wtd.quantile", Hmisc::wtd.quantile, envir = envir)
+  ### assign("truncPOSIXt",  Hmisc::truncPOSIXt,  envir = envir)
+  ### assign("wtd.quantile", Hmisc::wtd.quantile, envir = envir)
 
   assign("nberDates", tis::nberDates, envir = envir)
 
@@ -1794,6 +1794,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom dplyr arrange
 #' @importFrom plyr llply
 #' @importFrom dplyr case_when
+#' @importFrom Hmisc wtd.quantile
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2010,7 +2011,7 @@ initEnv();on.exit({uninitEnv()})
   findInterval(x =  Objectives,
     # SEE MY NOTES: CURRENTLY REVIEWING different weights determiners
     # https://cran.r-project.org/web/packages/freqweights/freqweights.pdf
-               vec = wtd.quantile(
+               vec = Hmisc::wtd.quantile(
                  x = Objectives,
                  weights = rep(1, NROW(Objectives)), # SEE MY NOTES
                  probs = c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00),
