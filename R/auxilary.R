@@ -233,7 +233,7 @@ tryCatchLog::tryCatchLog({
   assign("case_when", dplyr::case_when, envir = envir)
 
   ### assign("select_se", seplyr::select_se, envir = envir)
-  assign("deselect", seplyr::deselect, envir = envir)
+  ### assign("deselect", seplyr::deselect, envir = envir)
   assign("let", wrapr::let, envir = envir)
 
   assign("wrap", R.utils::wrap, envir = envir)
@@ -794,7 +794,7 @@ initEnv();on.exit({uninitEnv()})
     }
 
     LeftSideRow1  <-  seplyr::select_se(x, ConstCols)[1, , drop = FALSE]
-    NotLeftSide   <-  deselect(x, ConstCols)
+    NotLeftSide   <-  seplyr::deselect(x, ConstCols)
 
     UNITE <- function(x) {
       let(list(FCT_COLS_NAME = FCT_COLS_NAME, FCT_COLS_SEP = FCT_COLS_SEP),
