@@ -11,6 +11,7 @@
 #' @param db.fields database column names
 #' @export
 #' @importFrom stringr str_c
+#' @importFrom stringr str_detect
 xTs2DBDF <- function(xTs, con, field.names, db.fields) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -20,7 +21,7 @@ initEnv();on.exit({uninitEnv()})
   # OHLC columns
   str_replace_all(colnames(df), "[.]", "_")  -> colnames(df)
   for(grouping in list.zip(field.names, db.fields)){
-     colnames(df)[str_detect(tolower(colnames(df)), stringr::str_c("_", tolower(grouping[["field.names"]]),"$"))] <- grouping[["db.fields"]]
+     colnames(df)[stringr::str_detect(tolower(colnames(df)), stringr::str_c("_", tolower(grouping[["field.names"]]),"$"))] <- grouping[["db.fields"]]
   }
   # all other column names "as is" (e.g. FRED)
 
@@ -674,6 +675,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom stringr str_detect
 getSymbols.cache <- function (Symbols = NULL, env, return.class = "xts", cache.envir = NULL,  ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -695,8 +697,8 @@ initEnv();on.exit({uninitEnv()})
         auto.assign <- TRUE
 
     AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
-    LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &
-                                  !str_detect(AllSymbols,"^[.]Random[.]seed$")]
+    LessAllSymbols   <- AllSymbols[stringr::str_detect(AllSymbols,"^[.].+") &
+                                  !stringr::str_detect(AllSymbols,"^[.]Random[.]seed$")]
     RetrievedSymbols <- str_replace(LessAllSymbols, "^[.]","")
     FoundSymbols     <- RetrievedSymbols %in% Symbols
     EnvSymbols       <- RetrievedSymbols[FoundSymbols]
@@ -1710,6 +1712,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param source.envir location of xts objects
 #' @return a named list of 'updated' properties
 #' @export
+#' @importFrom stringr str_detect
 updatedSymbols.cache <- function(Symbols = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1719,8 +1722,8 @@ initEnv();on.exit({uninitEnv()})
 
   AllSymbols <- updatedSymbols(source.envir = cache.envir)
 
-  LessAllSymbols   <- AllSymbols[str_detect(Names(AllSymbols),"^[.].+") &
-                                !str_detect(Names(AllSymbols),"^[.]Random[.]seed$")]
+  LessAllSymbols   <- AllSymbols[stringr::str_detect(Names(AllSymbols),"^[.].+") &
+                                !stringr::str_detect(Names(AllSymbols),"^[.]Random[.]seed$")]
   Names(LessAllSymbols) <- str_replace(Names(LessAllSymbols), "^[.]","")
   RetrievedSymbols <- LessAllSymbols
   RetrievedSymbols
@@ -1864,6 +1867,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return character vector of Symbols
 #' @export
+#' @importFrom stringr str_detect
 listSymbols.cache <- function(cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1872,8 +1876,8 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(cache.envir)) cache.envir <- .GlobalEnv
 
   AllSymbols       <- ls(envir = cache.envir, all.names = TRUE)
-  LessAllSymbols   <- AllSymbols[str_detect(AllSymbols,"^[.].+") &
-                                !str_detect(AllSymbols,"^[.]Random[.]seed$")]
+  LessAllSymbols   <- AllSymbols[stringr::str_detect(AllSymbols,"^[.].+") &
+                                !stringr::str_detect(AllSymbols,"^[.]Random[.]seed$")]
   RetrievedSymbols <- str_replace(LessAllSymbols, "^[.]","")
   RetrievedSymbols
 

@@ -212,10 +212,10 @@ tryCatchLog::tryCatchLog({
   assign("%m+%", lubridate::`%m+%`, envir = envir)
   assign("days", lubridate::days, envir = envir)
 
-  assign("str_detect", stringr::str_detect, envir = envir)
+  ### assign("str_detect", stringr::str_detect, envir = envir)
   assign("str_replace", stringr::str_replace, envir = envir)
   assign("str_replace_all", stringr::str_replace_all, envir = envir)
-  assign("str_c", stringr::str_c, envir = envir)
+  ### assign("str_c", stringr::str_c, envir = envir)
   assign("as_tibble", tibble::as_tibble,  envir = envir)
   assign("arrange", dplyr::arrange, envir = envir)
   # assign("map", purrr::map, envir = envir)
@@ -469,6 +469,7 @@ initEnv();on.exit({uninitEnv()})
 #' lagging
 #'
 #' @export
+#' @importFrom stringr str_detect
 Lagging <- function(xTs = NULL, Shift = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -483,7 +484,7 @@ initEnv();on.exit({uninitEnv()})
     xTs <- merge(xTs, xts(, refDates) )
   }
   xTs %>% { lag(., 1 * Shift) } -> xTs
-  if(str_detect(colnames(xTs)[1], "leadingrets$")) {
+  if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
     colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "leadingrets$", "rets")
   } else {
     colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "rets$", "laggingrets")
@@ -1113,6 +1114,7 @@ initEnv();on.exit({uninitEnv()})
 #' pads beginning date as necessary
 #'
 #' @export
+#' @importFrom stringr str_detect
 Leading <- function(xTs = NULL, Shift = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1126,7 +1128,7 @@ initEnv();on.exit({uninitEnv()})
     xTs <- merge(xTs, xts(, refDates) )
   }
   xTs %>% { lag(.,-1 * Shift) } -> xTs
-  if(str_detect(colnames(xTs)[1], "leadingrets$")) {
+  if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
     colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "laggingrets$", "rets")
   } else {
     colnames(xTs)[1] <- str_replace(colnames(xTs)[1], "rets$", "leadingrets")
@@ -1607,6 +1609,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom stringr str_c
+#' @importFrom stringr str_detect
 willShire5000EyeBallWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1621,7 +1624,7 @@ initEnv();on.exit({uninitEnv()})
                         ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
   unrate_wts[is.na(unrate_wts)] <- 1 # 100% allocated
 
-  colnames(unrate_wts)[1] <- stringr::str_c(colnames(xTs)[str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
+  colnames(unrate_wts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
 
   unrate_wts
 
@@ -2123,6 +2126,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom stringr str_c
+#' @importFrom stringr str_detect
 cashWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2130,7 +2134,7 @@ initEnv();on.exit({uninitEnv()})
 
   # excess left over
   cash_wts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[,wtsClms(xTs)], na.rm = TRUE)
-  colnames(cash_wts)[1] <- stringr::str_c(colnames(xTs)[str_detect(colnames(xTs), "^cash.*rets$")], "_wts")
+  colnames(cash_wts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^cash.*rets$")], "_wts")
 
   cash_wts
 
@@ -2265,6 +2269,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] "b"
 #' }
 #' @export
+#' @importFrom stringr str_detect
 valueClms <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2273,7 +2278,7 @@ initEnv();on.exit({uninitEnv()})
   clms <- safeClms(xTs)
   clms <- sort(clms)
 
-  str_replace(clms, "_wts$", "")[str_detect(clms, "_wts$")]
+  str_replace(clms, "_wts$", "")[stringr::str_detect(clms, "_wts$")]
 
 })}
 
@@ -2293,6 +2298,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] "b_wts
 #' }
 #' @export
+#' @importFrom stringr str_detect
 wtsClms  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2301,7 +2307,7 @@ initEnv();on.exit({uninitEnv()})
   clms <- safeClms(xTs)
   clms <- sort(clms)
 
-  clms[str_detect(clms, "_wts$")]
+  clms[stringr::str_detect(clms, "_wts$")]
 
 })}
 # clms <- c("b_wts","b","a_wts","a", "c")
