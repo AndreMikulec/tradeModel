@@ -230,7 +230,7 @@ tryCatchLog::tryCatchLog({
   ### assign("matches", tidyselect::matches, envir = envir)
 
   ### assign("select", dplyr::select, envir = envir)
-  assign("case_when", dplyr::case_when, envir = envir)
+  ### assign("case_when", dplyr::case_when, envir = envir)
 
   ### assign("select_se", seplyr::select_se, envir = envir)
   ### assign("deselect", seplyr::deselect, envir = envir)
@@ -1792,6 +1792,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom stringr str_c
 #' @importFrom dplyr arrange
 #' @importFrom plyr llply
+#' @importFrom dplyr case_when
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2016,7 +2017,7 @@ initEnv();on.exit({uninitEnv()})
               rightmost.closed = TRUE) %>%
                 {.*(-1) } %>% { . + 8 } -> BareWeightRankings # values 7 through 1
                 # lower numbers 'now' have higher rank numbers
-  case_when(
+  dplyr::case_when(
     BareWeightRankings == 7 ~ 30, # from 7  1%
     BareWeightRankings == 6 ~ 15, # from 6 10%
     BareWeightRankings == 5 ~  8, # from 5 25%
