@@ -238,7 +238,7 @@ tryCatchLog::tryCatchLog({
 
   ### assign("wrap", R.utils::wrap, envir = envir)
 
-  assign("unite", tidyr::unite, envir = envir)
+  ### assign("unite", tidyr::unite, envir = envir)
 
   assign("truncPOSIXt",  Hmisc::truncPOSIXt,  envir = envir)
   assign("wtd.quantile", Hmisc::wtd.quantile, envir = envir)
@@ -739,6 +739,7 @@ interleave <- function (x, y)
 #' @importFrom seplyr select_se
 #' @importFrom wrapr let
 #' @importFrom R.utils wrap
+#' @importFrom tidyr unite
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -800,7 +801,7 @@ initEnv();on.exit({uninitEnv()})
 
     UNITE <- function(x) {
       wrapr::let(list(FCT_COLS_NAME = FCT_COLS_NAME, FCT_COLS_SEP = FCT_COLS_SEP),
-        unite(x, FCT_COLS_NAME, FCT_COLS_SEP, sep = FactorColsFixedSep)
+        tidyr::unite(x, FCT_COLS_NAME, FCT_COLS_SEP, sep = FactorColsFixedSep)
       , subsMethod = "stringsubs", strict = FALSE)
       }
 
