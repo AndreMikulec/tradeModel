@@ -248,7 +248,7 @@ tryCatchLog::tryCatchLog({
   assign("trainControl", caret::trainControl, envir = envir)
 
   # DAMN spacetime WARNING happens AFTER I add TORGO'S UBL
-  assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
+  ### assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
   assign("ReScaling", DMwR::ReScaling, envir = envir)
 
   assign("Predictor", iml::Predictor, envir = envir)
@@ -1795,6 +1795,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom plyr llply
 #' @importFrom dplyr case_when
 #' @importFrom Hmisc wtd.quantile
+#' @importFrom UBL ImpSampRegress
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1888,7 +1889,7 @@ initEnv();on.exit({uninitEnv()})
       # utility based learning
 
       UBLData <- cbind(as.data.frame(TrainingData), index = as.POSIXct(index(TrainingData))); row.names(UBLData) <- NULL
-      # ? ImpSampRegress example
+      # ? UBL::ImpSampRegress example
       UBLDataCompleteCases <- UBLData[complete.cases(UBLData),,drop = FALSE]
 
       # WERCS: WEighted Relevance-based Combination Strategy
@@ -1897,7 +1898,7 @@ initEnv();on.exit({uninitEnv()})
       # Keeping all of the financial profits
       # C.perc = list(1.0, 2.5))
       UBLDataFormula <- as.formula(stringr::str_c(as.character(formula(specifiedUnrateModel)), " + index")) # need the index to COPY
-      UBLResults     <- ImpSampRegress(UBLDataFormula, UBLDataCompleteCases, rel = Relevance, thr.rel = 0.5,  C.perc = list(1.0, 2.5))
+      UBLResults     <- UBL::ImpSampRegress(UBLDataFormula, UBLDataCompleteCases, rel = Relevance, thr.rel = 0.5,  C.perc = list(1.0, 2.5))
       # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
       # NOTE: no NEW index Values are created.
       # I CAN NOT garnantee that all UBL functons do NOT do that
