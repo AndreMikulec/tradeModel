@@ -255,7 +255,7 @@ tryCatchLog::tryCatchLog({
   assign("FeatureImp", iml::FeatureImp, envir = envir)
   assign("Interaction", iml::Interaction, envir = envir)
 
-  assign("rbindlist", data.table::rbindlist, envir = envir)
+  ### assign("rbindlist", data.table::rbindlist, envir = envir)
 
   # also see # SEARCH MY NOTES "trace(loadNamespace"
   # does not CURRENTLY help
@@ -740,6 +740,7 @@ interleave <- function (x, y)
 #' @importFrom wrapr let
 #' @importFrom R.utils wrap
 #' @importFrom tidyr unite
+#' @importFrom data.table rbindlist
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -824,8 +825,9 @@ initEnv();on.exit({uninitEnv()})
   }
   # choosing # data.table::rbindlist(resultsInList, fill = TRUE)
   # over purrr::map_dfr(resultsInList, identity)
-  # because # data.table::rbindlist(resultsInList) # fill = FALSE(default) # can(flexibly) match by position
-  resultsOneDF <- as.data.frame(rbindlist(resultsInList, fill = TRUE), stringsAsFactors = FALSE)
+  # because # data.table::rbindlist(resultsInList) # fill = FALSE(default) 
+  # can(flexibly) match by position ( I am matching by "name" )
+  resultsOneDF <- as.data.frame(data.table::rbindlist(resultsInList, fill = TRUE), stringsAsFactors = FALSE)
   return(resultsOneDF)
 
 })}
