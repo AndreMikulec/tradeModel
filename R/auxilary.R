@@ -226,7 +226,7 @@ tryCatchLog::tryCatchLog({
   ### assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
   ### assign("DoCall", DescTools::DoCall, envir = envir)
 
-  assign("vars_select", tidyselect::vars_select, envir = envir)
+  ### assign("vars_select", tidyselect::vars_select, envir = envir)
   assign("matches", tidyselect::matches, envir = envir)
 
   assign("select", dplyr::select, envir = envir)
@@ -733,6 +733,8 @@ interleave <- function (x, y)
 #'@export
 #' @importFrom stringr str_c
 #' @importFrom stringr str_replace_all
+#' @importFrom tidyselect vars_select
+#' @importFrom tidyselect matches
 liquifyDF <- function(x
                        , UniqueIDRegex =  "^dateindexid$"
                        , ConstColsRegex = "^dateindex"
@@ -760,12 +762,12 @@ initEnv();on.exit({uninitEnv()})
 
   # "unique id" columns (unique row identifier columns)
   # "dateindexid"
-  UniqueIDCols <- vars_select(names(x), matches(UniqueIDRegex))
+  UniqueIDCols <- tidyselect::vars_select(names(x), tidyselect::matches(UniqueIDRegex))
 
   # "unique id" columns (unique row identifier columns)
   # and 100% correlated columns
   # "dateindexid" "dateindexFact"(100% correlated column)
-  ConstCols <- vars_select(names(x), matches(ConstColsRegex))
+  ConstCols <- tidyselect::vars_select(names(x), tidyselect::matches(ConstColsRegex))
 
   UniqueIDInteraction <- do.call(interaction, list(x[, UniqueIDCols, drop = F], drop = T))
   xSplittedByUniqueID <- split(x, f = UniqueIDInteraction)
@@ -773,13 +775,13 @@ initEnv();on.exit({uninitEnv()})
   resultsInList <- list()
   for(x in xSplittedByUniqueID) {
 
-    # tidyselect::vars_select(names(x), matches(FactorColsRegex)) . . .
+    # tidyselect::vars_select(names(x), tidyselect::matches(FactorColsRegex)) . . .
     # "dateindexFact"    "ActionFact"  "ActionAtFact"
     #
     # garantee no 'id/correlated' columns ( and the [rest of] factors )
     # expected to be 'flattened' are the following . . .
     # ActionFact"   "ActionAtFact"
-    FCT_COLS_VECTOR <- setdiff(tidyselect::vars_select(names(x), matches(FactorColsRegex)), ConstCols)
+    FCT_COLS_VECTOR <- setdiff(tidyselect::vars_select(names(x), tidyselect::matches(FactorColsRegex)), ConstCols)
     FCT_COLS_NAME   <- stringr::str_c(FCT_COLS_VECTOR, collapse = FactorColsFixedSep)
     FCT_COLS_SEP    <- stringr::str_c(FCT_COLS_VECTOR, collapse = ", ")
 
