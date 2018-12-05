@@ -7,18 +7,18 @@
 \alias{nextMonthfromYesterday.xts}
 \title{change the index date to the future}
 \usage{
-nextMonthfromYesterday(xTs = NULL)
+nextMonthfromYesterday(x = NULL)
 
-\method{nextMonthfromYesterday}{default}(xTs = NULL)
+\method{nextMonthfromYesterday}{default}(x = NULL)
 
-\method{nextMonthfromYesterday}{Date}(date = NULL)
+\method{nextMonthfromYesterday}{Date}(x = NULL)
 
-\method{nextMonthfromYesterday}{xts}(xTs = NULL)
+\method{nextMonthfromYesterday}{xts}(x = NULL)
 }
 \arguments{
-\item{xTs}{xts object or data object}
+\item{x}{xts object or Date object}
 
-\item{date}{date object}
+\item{x}{date object}
 }
 \value{
 xts object or data object with the index moved up

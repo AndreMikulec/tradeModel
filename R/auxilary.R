@@ -1,6 +1,6 @@
 
 
-#' garentee a date is a date or and empty date
+#' garantee a date is a date or and empty date
 #'
 #' @param date date
 #' @return date
@@ -1285,11 +1285,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' change the index date to the future
 #'
-#' @param xTs xts object or data object
+#' @param x xts object or Date object
 #' @return xts object or data object with the index moved up
 #' @rdname nextMonthfromYesterday
 #' @export
-nextMonthfromYesterday <- function(xTs = NULL) {
+nextMonthfromYesterday <- function(x = NULL) {
 
   # tryCatchLog is not allowed here
   UseMethod("nextMonthfromYesterday")
@@ -1299,7 +1299,7 @@ nextMonthfromYesterday <- function(xTs = NULL) {
 
 #' @rdname nextMonthfromYesterday
 #' @export
-nextMonthfromYesterday.default <- function(xTs = NULL) {
+nextMonthfromYesterday.default <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -1308,7 +1308,7 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' @param date date object
+#' @param x date object
 #' @rdname nextMonthfromYesterday
 #' @examples
 #' \dontrun{
@@ -1321,14 +1321,14 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom lubridate %m+%
 #' @importFrom Hmisc truncPOSIXt
 #' @importFrom zoo as.Date
-nextMonthfromYesterday.Date <- function(date = NULL) {
+nextMonthfromYesterday.Date <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  days <- lubridate::days
-  `%m+%` <- lubridate::`%m+%`
+  days <-  lubridate::days
+ `%m+%` <- lubridate::`%m+%`
 
-  date <- initDate(date)
+  date <- initDate(x)
   Hmisc::truncPOSIXt(date, units = "months") %>%
     { zoo::as.Date(.)} %m+%
       months(1) %m+%
@@ -1350,11 +1350,11 @@ initEnv();on.exit({uninitEnv()})
 #' #  Date[1:1], format: "1970-01-31"
 #' }
 #' @export
-nextMonthfromYesterday.xts <- function(xTs = NULL) {
+nextMonthfromYesterday.xts <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  xTs  <- initXts(xTs)
+  xTs  <- initXts(x)
   lapply(index(xTs), nextMonthfromYesterday) %>%
     { do.call(c,.) } %>%
       { xts(Coredata(xTs),.) }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{initDate}
 \alias{initDate}
-\title{garentee a date is a date or and empty date}
+\title{garantee a date is a date or and empty date}
 \usage{
 initDate(date = NULL)
 }
@@ -13,7 +13,7 @@ initDate(date = NULL)
 date
 }
 \description{
-garentee a date is a date or and empty date
+garantee a date is a date or and empty date
 }
 \examples{
 \dontrun{
