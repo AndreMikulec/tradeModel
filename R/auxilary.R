@@ -249,7 +249,7 @@ tryCatchLog::tryCatchLog({
 
   # DAMN spacetime WARNING happens AFTER I add TORGO'S UBL
   ### assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
-  assign("ReScaling", DMwR::ReScaling, envir = envir)
+  ### assign("ReScaling", DMwR::ReScaling, envir = envir)
 
   ### assign("Predictor", iml::Predictor, envir = envir)
   ### assign("FeatureImp", iml::FeatureImp, envir = envir)
@@ -1740,10 +1740,11 @@ SortinoRatioLoss <- function (actual, predicted, ...) {
 #' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
 #' @return re-scaled from low:mim/max*100' to max:100
 #' @export
+#' @importFrom DMwR ReScaling
 relativeScale <- function(x, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-  ReScaling(x, t.mn=min(x)/max(x)*100, t.mx=100, ...)
+  DMwR::ReScaling(x, t.mn=min(x)/max(x)*100, t.mx=100, ...)
 })}
 
 
