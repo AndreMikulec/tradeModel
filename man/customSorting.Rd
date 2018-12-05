@@ -27,8 +27,8 @@ excess is appended to the end ( CI sort or CS sort )
 }
 \examples{
 \dontrun{
-customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"), 
-   InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE 
+customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"),
+   InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE
  )
 [1] "date" "o"    "h"    "l"    "c"    "v"    "a"    "E2"   "e3"
 }

@@ -13,6 +13,7 @@
 #' # Date of length 0
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
 initDate <- function(date = NULL) {
 tryCatchLog::tryCatchLog({
@@ -47,6 +48,7 @@ initEnv();on.exit({uninitEnv()})
 #' # Date of length 0
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
 initXts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
@@ -87,6 +89,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [3,]   13
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 Coredata <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -128,6 +131,7 @@ NVAR <- function(x = NULL) {
 
 #' @rdname NVAR
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 NVAR.default <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 
@@ -144,6 +148,7 @@ tryCatchLog::tryCatchLog({
 #' # [1] 0
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 NVAR.xts <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -177,6 +182,8 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom futile.logger flog.threshold ERROR
 #' @importFrom rlang parse_expr eval_bare caller_env
+#' @importFrom magrittr %>%
+#' @importFrom tryCatchLog tryCatchLog
 initEnv <- function(init = NULL) {
 tryCatchLog::tryCatchLog({
 
@@ -188,100 +195,12 @@ tryCatchLog::tryCatchLog({
   envii <- rlang::caller_env()
   rlang::eval_bare(action, env = envii)
 
+  # LATER MOVE THIS DOWN INTO FUNCTIONS
   assign("%>%",  magrittr::`%>%` , envir = envii)
 
+  # LATER MOVE THESE DOWN INTO FUNCTIONS
   if(!"quantmod" %in% search())                 require(quantmod)
   if(!"PerformanceAnalytics" %in% search())     require(PerformanceAnalytics)
-
-  # require(quantmod) # zoo, xts, TTR
-  # require(PerformanceAnalytics)
-  # so, I can use rstudio projects of packages
-  ### if(!"doParallel" %in% search())           require(doParallel)
-  ### if(!"DBI" %in% search())                  require(DBI)
-  ### if(!"RPostgreSQL" %in% search())          require(RPostgreSQL)
-  ### if(!"formula.tools" %in% search())        require(formula.tools)
-
-  # debugging
-  # 1st round (where the error occurs)
-  # tryCatchLog
-  # 2nd round (env variables around where the error occurred)
-  # options(error = quote(dump.frames("testdump", TRUE)))
-  # utils/html/debugger.html
-  # 3rd round
-  # browser(expr = { <where condition> }
-
-  # convenience
-  ### assign("parse_expr", rlang::parse_expr, envir = envir)
-  ### assign("eval_bare",  rlang::eval_bare,  envir = envir)
-  ### assign("caller_env", rlang::caller_env, envir = envir)
-
-  ### assign("as.Date", zoo::as.Date, envir = envir)
-  ### assign("na.trim", zoo::na.trim, envir = envir)
-
-
-  ### assign("%m+%", lubridate::`%m+%`, envir = envir)
-  ### assign("days", lubridate::days, envir = envir)
-
-  ### assign("str_detect", stringr::str_detect, envir = envir)
-  ### assign("str_replace", stringr::str_replace, envir = envir)
-  ### assign("str_replace_all", stringr::str_replace_all, envir = envir)
-  ### assign("str_c", stringr::str_c, envir = envir)
-
-  ### assign("arrange", dplyr::arrange, envir = envir)
-  ### assign("map", purrr::map, envir = envir)
-  ### assign("llply", plyr::llply, envir = envir)
-  ### assign("transpose", purrr::transpose, envir = envir)
-  ### assign("invoke_map", purrr::invoke_map, envir = envir)
-  ### assign("Day", DescTools::Day, envir = envir)
-  ### assign("LastDayOfMonth", DescTools::LastDayOfMonth, envir = envir)
-  ### assign("DoCall", DescTools::DoCall, envir = envir)
-
-  ### assign("vars_select", tidyselect::vars_select, envir = envir)
-  ### assign("matches", tidyselect::matches, envir = envir)
-
-  ### assign("select", dplyr::select, envir = envir)
-  ### assign("case_when", dplyr::case_when, envir = envir)
-
-  ### assign("select_se", seplyr::select_se, envir = envir)
-  ### assign("deselect", seplyr::deselect, envir = envir)
-  ### assign("let", wrapr::let, envir = envir)
-
-  ### assign("wrap", R.utils::wrap, envir = envir)
-
-  ### assign("unite", tidyr::unite, envir = envir)
-
-  ### assign("truncPOSIXt",  Hmisc::truncPOSIXt,  envir = envir)
-  ### assign("wtd.quantile", Hmisc::wtd.quantile, envir = envir)
-
-  ### assign("nberDates", tis::nberDates, envir = envir)
-
-  ### assign("trainControl", caret::trainControl, envir = envir)
-
-  # DAMN spacetime WARNING happens AFTER I add TORGO'S UBL
-  ### assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
-  ### assign("ReScaling", DMwR::ReScaling, envir = envir)
-
-  ### assign("Predictor", iml::Predictor, envir = envir)
-  ### assign("FeatureImp", iml::FeatureImp, envir = envir)
-  ### assign("Interaction", iml::Interaction, envir = envir)
-
-  ### assign("rbindlist", data.table::rbindlist, envir = envir)
-
-  # also see # SEARCH MY NOTES "trace(loadNamespace"
-  # does not CURRENTLY help
-  # Error in unloadNamespace(ns) :
-  # namespace ‘spacetime’ is imported by ‘gstat’ so cannot be unloaded
-  # trace(loadNamespace, quote(if (package == "spacetime") recover()))
-  # xts . . . spacetime . . . gtstat . . . automap . . . UBL
-  # xts . . . required by PerformanceAnalytics ( so will not be detached ) . . . tradeModel
-  # PerformanceAnalytics (>= 1.5.2)
-  # if(isNamespaceLoaded("PerformanceAnalytics")) {
-  #   ns <- asNamespace("PerformanceAnalytics")
-  #   unloadNamespace(ns)
-  # }
-
-  ### assign("list.zip", rlist::list.zip, envir = envir)
-
 
   options(warn=2L)
   options(width=10000L) # LIMIT # Note: set Rterm(64 bit) as appropriate
@@ -319,6 +238,7 @@ tryCatchLog::tryCatchLog({
 #' # [1] 5
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom rlang caller_env
 uninitEnv <- function() {
 tryCatchLog::tryCatchLog({
@@ -352,6 +272,7 @@ tryCatchLog::tryCatchLog({
 #' # [1] 10.000000000000000 10.999999999999998 11.999999999999996
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 logReturns <- function(xTs = NULL)  {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -379,6 +300,7 @@ initEnv();on.exit({uninitEnv()})
 #' # 1947-01-01 243.16399999999999
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL) {
   tryCatchLog::tryCatchLog({
@@ -431,6 +353,7 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL) {
 #' # 1970-01-31    2
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 eomData <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -450,6 +373,7 @@ initEnv();on.exit({uninitEnv()})
 #' lagging
 #'
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
 #' @importFrom lubridate %m+%
@@ -486,6 +410,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param x single column xts with the old column name
 #' @return single column xts with  the new column name
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 #' @importFrom stringr str_replace_all
 newXtsColName <- function(xTs = NULL, Fun =  NULL, isCharFun = NULL, xTs1 = NULL, xTs2 = NULL, WhichCombo =  NULL, AltName = NULL, Prefix = NULL, FixedSep = NULL) {
@@ -534,7 +459,7 @@ initEnv();on.exit({uninitEnv()})
 
 #' pairwise interleave of columns
 #'
-#' works better on xts objects ( lapply structure is held together )
+#' works better on xts objects ( lapply,plyr::llply structure is held together )
 #'
 #' @param x1 data.frame or xts object
 #' @param x2 data.frame or xts object
@@ -603,6 +528,7 @@ initEnv();on.exit({uninitEnv()})
 #'#
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 pairWise <- function(x1, x2) {
 
@@ -712,6 +638,7 @@ interleave <- function (x, y)
 #'#
 #' }
 #'@export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 #' @importFrom stringr str_replace_all
 #' @importFrom tidyselect vars_select
@@ -947,6 +874,8 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
 #'#
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo rollapply
 rollApply <- function(
         xTs = NULL, width = NULL, partial = NULL, align = NULL, Fun = NULL
       , by = NULL, by.column = NULL, fill = NULL, coredata = NULL
@@ -1052,6 +981,7 @@ initEnv();on.exit({uninitEnv()})
 #' # explodeXts(ibm[,c("IBM.Open","IBM.Close")], Fun = "TTR::SMA", Whiches = list(n = 2:3))
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom purrr transpose
 #' @importFrom plyr llply
 #' @importFrom DescTools DoCall
@@ -1112,6 +1042,7 @@ initEnv();on.exit({uninitEnv()})
 #' pads beginning date as necessary
 #'
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
 #' @importFrom lubridate %m+%
@@ -1178,6 +1109,7 @@ initEnv();on.exit({uninitEnv()})
 #' # )
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @importFrom tis nberDates
 #' @importFrom zoo as.Date
@@ -1254,6 +1186,7 @@ initEnv();on.exit({uninitEnv()})
 #' # 1954-07-31 0.63
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 fredEomData <- function(Symbol = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1272,6 +1205,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @return xts object of end of month returns
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 wilshire5000indEomData <- function() {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1299,6 +1233,7 @@ nextMonthfromYesterday <- function(x = NULL) {
 
 #' @rdname nextMonthfromYesterday
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 nextMonthfromYesterday.default <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1317,6 +1252,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] "1970-01-31"
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom lubridate days
 #' @importFrom lubridate %m+%
 #' @importFrom Hmisc truncPOSIXt
@@ -1350,6 +1286,7 @@ initEnv();on.exit({uninitEnv()})
 #' #  Date[1:1], format: "1970-01-31"
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 nextMonthfromYesterday.xts <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1366,6 +1303,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @return xts object
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 unRateEomData <- function() {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1383,6 +1321,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 addUnRateEomData <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1419,6 +1358,7 @@ initEnv();on.exit({uninitEnv()})
 #' #  Date[1:2], format: "1970-01-01" "1970-01-02"
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 combineXts <- function(xTs = NULL,xTs1 = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1441,6 +1381,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs1 xts object to merge into xTs
 #' @return xts object
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 combineLogReturns <- function(xTs = NULL, xTs1 = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1457,6 +1398,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object (only takes the index)
 #' @return xts object with the same index as xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 cashLogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1479,6 +1421,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object (only takes the index)
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 addCashLogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1531,6 +1474,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @return xts object
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 wilshire5000LogReturns <- function() {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1551,6 +1495,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 addWilshire5000LogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1568,6 +1513,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @return xts object
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 leadingWilshire5000LogReturns <- function() {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1583,6 +1529,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 addLeadingWilshire5000LogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1602,6 +1549,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs1 source xts object of new weights
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 addWts  <- function(xTs = NULL, xTs1 = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1623,6 +1571,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 #' @importFrom stringr str_detect
 willShire5000EyeBallWts <- function(xTs = NULL) {
@@ -1649,6 +1598,7 @@ initEnv();on.exit({uninitEnv()})
 #' SMAs of the unrate Eyeball Indicator
 #'
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo na.trim
 unrateEyeballIndicators <- function(unrate = NULL) {
 tryCatchLog::tryCatchLog({
@@ -1728,6 +1678,7 @@ SortinoRatioLoss <- function (actual, predicted, ...) {
 #' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
 #' @return re-scaled from low:mim/max*100' to max:100
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DMwR ReScaling
 relativeScale <- function(x, ...) {
 tryCatchLog::tryCatchLog({
@@ -1745,6 +1696,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
 #' @return re-scaled from low:mim/max*100' to max:100
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 relativeScaleImportance <-function(x, cols = c("importance"), ... ) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1787,6 +1739,7 @@ formula_tools___as_character_formula <- function (x, ...) {
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 #' @importFrom dplyr arrange
 #' @importFrom plyr llply
@@ -2129,6 +2082,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 addWillShire5000EyeBallWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2162,6 +2116,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 #' @importFrom stringr str_detect
 cashWts <- function(xTs = NULL) {
@@ -2183,6 +2138,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 appendCashWts  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2200,6 +2156,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param n number of rows to print
 #' @return invisible xts object
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 printTail <- function(xTs = NULL, title = NULL, n = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2226,6 +2183,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] 100000
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 initPorfVal <- function(initVal = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2249,6 +2207,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return zero length vector or column names
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 safeClms  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2281,6 +2240,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] "a"
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 indClms <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2307,6 +2267,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] "b"
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
 valueClms <- function(xTs = NULL) {
@@ -2337,6 +2298,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] "b_wts
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 wtsClms  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
@@ -2365,6 +2327,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param initVal start value of the investor's porfolio
 #' @return xts object of geometric returns
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 portfolioLogReturns <- function(xTs = NULL, initVal = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2400,6 +2363,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param initVal start value of the investor's porfolio
 #' @return xts object of arithmatic returns
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 portfolioMonthlyReturns <- function(xTs = NULL, initVal = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2425,6 +2389,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param title heading
 #' @return xts object of arithmatic returns
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 printCalendar <- function(xTs = NULL, title = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})

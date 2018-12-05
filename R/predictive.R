@@ -53,12 +53,11 @@ xtsize <- function(dfo) {
 }
 
 
-
-
 #' inside and exts environment
 #'
 #' unstable structure to debug inside: holds for 2 seconds then bounces out
 #' within.xts IS TOO VOLITILE: CAN NOT browser()/rstudio debug inside: SOMETHING IS NOT RIGHT
+#'
 #' @export
 within.xts <- function (data, expr, ...) {
   data <- dfize(data)
@@ -122,6 +121,7 @@ ifelse.xts    <- function(test, yes, no) {
 #' @param xTs2 trailing xts object
 #' @return xts object with the same index as xTs1
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 Less <- function(xTs1 = NULL, xTs2 = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
@@ -154,7 +154,10 @@ Less <- function(xTs1 = NULL, xTs2 = NULL) {
 #'   BUT 'without rules' PUTS back (rbind) the last observation
 #'
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 getModelData <- function (x, na.rm = TRUE, source.envir = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
     model <- x
     if (!is.quantmod(model))
@@ -216,7 +219,7 @@ getModelData <- function (x, na.rm = TRUE, source.envir = NULL, ...) {
     model@model.formula = as.formula(paste(colnames(mf)[1], "~",
         paste(colnames(mf)[-1], collapse = "+"), sep = ""))
     return(model)
-}
+})}
 
 
 #' convert time series
@@ -227,7 +230,10 @@ getModelData <- function (x, na.rm = TRUE, source.envir = NULL, ...) {
 #' @param return.class as quantmod:::convert.time.series
 #'
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 quantmod___convert.time.series <- function(fr, return.class) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
     if ("quantmod.OHLC" %in% return.class) {
         class(fr) <- c("quantmod.OHLC", "zoo")
@@ -261,7 +267,7 @@ quantmod___convert.time.series <- function(fr, return.class) {
                 " 'xts' class returned"))
         }
     }
-}
+})}
 
 
 
@@ -272,13 +278,16 @@ quantmod___convert.time.series <- function(fr, return.class) {
 #' see quantmod buildData
 #' and this function can also acquire symbols that are stored in an environment
 #'
-#'@param formula as quantmod buildData
-#'@param na.rm as quantmod buildData
-#'@param return.class  as quantmod buildData
-#'@param source.envir find xts Symbols in this environment
-#'@return "return.class" as quantmod buildData
-#'@export
+#' @param formula as quantmod buildData
+#' @param na.rm as quantmod buildData
+#' @param return.class  as quantmod buildData
+#' @param source.envir find xts Symbols in this environment
+#' @return "return.class" as quantmod buildData
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
 buildData <- function(formula, na.rm = TRUE, return.class = "zoo", source.envir = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
     if (is.quantmod(formula)) {
         fr <- modelData(formula)
@@ -287,7 +296,7 @@ buildData <- function(formula, na.rm = TRUE, return.class = "zoo", source.envir 
         fr <- modelData(specifyModel(formula, na.rm = na.rm, source.envir = NULL, ...))
     }
     fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
-}
+})}
 
 
 
@@ -331,7 +340,10 @@ buildData <- function(formula, na.rm = TRUE, return.class = "zoo", source.envir 
 #'   )
 #'
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 specifyModel <- function (formula, na.rm = TRUE, source.envir = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
     new.quantmod <- new("quantmod")
     formula <- as.formula(formula)
@@ -353,7 +365,7 @@ specifyModel <- function (formula, na.rm = TRUE, source.envir = NULL, ...) {
     new.quantmod@product <- vars[1]
     new.quantmod <- getModelData(new.quantmod, na.rm = na.rm, source.envir = source.envir, ...)
     return(new.quantmod)
-}
+})}
 
 
 
@@ -382,8 +394,11 @@ as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { U
 #'
 #' @rdname as.quantmod
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DataCombine MoveFront
 as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
   # TODO[] # instead of passing outcomename, pass instead, a formula
   x <- DataCombine::MoveFront(x, outcomename )
@@ -422,7 +437,7 @@ as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...)
 
   return(model)
 
-}
+})}
 
 
 #' detect the number of computer cores
@@ -441,6 +456,7 @@ as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...)
 #' [1] 4
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 detectTrueCores <- function() {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -487,6 +503,7 @@ initEnv();on.exit({uninitEnv()})
 #'   , method_train = "xgbTree", tuneGrid = tg, trControl = tc)
 #'
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom caret trainControl train
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
@@ -595,7 +612,11 @@ predictModel.default <- function (object, data, ...) {
 #'
 #' @rdname is.method.available
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 quantmod___is.method.available <- function (method, package) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
     if (!package %in% .packages()) {
         if (package %in% .packages(all.available = TRUE)) {
             cat(paste("loading required package:", package, "\n"))
@@ -607,7 +628,7 @@ quantmod___is.method.available <- function (method, package) {
         }
     }
     return(TRUE)
-}
+})}
 #' @rdname is.method.available
 #' @export
 is.method.available <- function(method, package) quantmod___is.method.available(method = method, package = package)

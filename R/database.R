@@ -10,6 +10,7 @@
 #' @param field.names R column names
 #' @param db.fields database column names
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace_all
@@ -62,6 +63,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param df data.frame (with column names)
 #' @param con DBI database connection
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @importFrom DBI dbQuoteIdentifier dbExecute dbQuoteString
 dfToCREATETable <- function(df, con, Symbol, schname) {
@@ -104,7 +106,7 @@ initEnv();on.exit({uninitEnv()})
                 " ADD PRIMARY KEY ( ", DBI::dbQuoteIdentifier(con, names(colClasses)[1]), ")",
                 ";")
   DBI::dbExecute(con, ddl)
-  dml <- paste0("INSERT INTO ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), 
+  dml <- paste0("INSERT INTO ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                              "(", DBI::dbQuoteIdentifier(con, "Symbols"), ") VALUES (", DBI::dbQuoteString(con, Symbol), ");")
   DBI::dbExecute(con, dml)
   invisible()
@@ -157,6 +159,7 @@ Names <- function(x) {
 #' AssignEnv(List, c("a","b"))
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 AssignEnv <- function(List, nms = NULL, envir = parent.frame()) {
 tryCatchLog::tryCatchLog({
@@ -187,6 +190,7 @@ initEnv();on.exit({uninitEnv()})
 #' is forced to ISO style at conection
 #' @return list of "con" DBI Connection object and "schname" final chosen schema name
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom RPostgreSQL PostgreSQL
 #' @importFrom DBI dbConnect dbExecute dbQuoteIdentifier
 pgConnect <- function(user=NULL,password=NULL,dbname=NULL,schname=NULL,
@@ -237,6 +241,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return vector of characters of table names
 #' The results do not have any order.
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTables <- function(con, schname) {
 tryCatchLog::tryCatchLog({
@@ -271,6 +276,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return vector of characters of column names
 #' The results are ordered.
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTableColumns <- function(con, schname, tblname) {
 tryCatchLog::tryCatchLog({
@@ -310,6 +316,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return vector of characters of primary key column names
 #' The results are ordered.
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTablePrimaryKeyColumns <- function(con, schname, tblname) {
 tryCatchLog::tryCatchLog({
@@ -368,14 +375,15 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' pgCurrentSearchPath <- oneColumn(con, "SHOW SEARCH_PATH;", "CurrentSearchPath")
 #'
-#' pgCurrentTempSchema <- oneColumn(con, 
-#'   "SELECT nspname 
-#'   FROM pg_namespace 
-#'   WHERE oid = pg_my_temp_schema();", 
+#' pgCurrentTempSchema <- oneColumn(con,
+#'   "SELECT nspname
+#'   FROM pg_namespace
+#'   WHERE oid = pg_my_temp_schema();",
 #' "CurrentTempSchema")
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @importFrom DBI dbGetQuery
 oneColumn <- function(con, Query, outName, unQuote = NULL) {
@@ -396,7 +404,7 @@ initEnv();on.exit({uninitEnv()})
   }
   if(unQuote) {
     split(ret,seq_len(NROW(ret))) %>%
-      plyr::llply(function(x) { strsplit(x[[1]], "^\"|\"$")[[1]][2] }) %>% 
+      plyr::llply(function(x) { strsplit(x[[1]], "^\"|\"$")[[1]][2] }) %>%
         do.call(c,.) %>%
           as.data.frame(., stringsAsFactors = FALSE) -> ret
   }
@@ -473,8 +481,8 @@ pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentT
 #' @param CI case insensitive
 #' @examples
 #' \dontrun{
-#' customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"), 
-#'    InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE 
+#' customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"),
+#'    InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE
 #'  )
 #' [1] "date" "o"    "h"    "l"    "c"    "v"    "a"    "E2"   "e3"
 #' }
@@ -537,6 +545,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 getSymbols <- function (Symbols = NULL, env = parent.frame(), reload.Symbols = FALSE,
     verbose = FALSE, warnings = TRUE, src = "yahoo", symbol.lookup = TRUE,
     auto.assign = getOption("getSymbols.auto.assign", TRUE), source.envir = NULL, # BEGIN/END NEW CODE
@@ -686,6 +695,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
 getSymbols.cache <- function (Symbols = NULL, env, return.class = "xts", cache.envir = NULL,  ...) {
@@ -861,6 +871,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbSendQuery fetch  dbGetQuery dbDisconnect dbQuoteIdentifier dbQuoteString
 #' @importFrom rlang eval_bare parse_expr
 getSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, env, return.class = 'xts',
@@ -1037,6 +1048,7 @@ getSymbols.pg <- getSymbols.PostgreSQL
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 getNewSymbols <- function (Symbols = NULL, env = parent.frame(), reload.Symbols = FALSE,
     verbose = FALSE, warnings = TRUE, src = "yahoo", symbol.lookup = TRUE,
     auto.assign = getOption("getSymbols.auto.assign", TRUE), source.envir = NULL,
@@ -1208,6 +1220,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 saveSymbols <- function(Symbols = NULL, env = parent.frame(),
                        source.envir = NULL, Gathering = "source.envir", ...) {
@@ -1338,6 +1351,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #'}
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 saveSymbols.RData <- function (Symbols = NULL,
   file.path = stop("must specify 'file.path'"), source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
@@ -1380,6 +1394,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 saveSymbols.cache <- function (Symbols = NULL, source.envir = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1470,6 +1485,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbExecute dbWriteTable dbQuoteString dbQuoteIdentifier dbDisconnect
 saveSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
@@ -1676,6 +1692,7 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 updatedSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
@@ -1729,6 +1746,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param source.envir location of xts objects
 #' @return a named list of 'updated' properties
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
 updatedSymbols.cache <- function(Symbols = NULL, cache.envir = NULL, ...) {
@@ -1766,6 +1784,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return named list of the object 'updated' property
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbGetQuery dbQuoteString dbQuoteIdentifier
 updatedSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL,
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
@@ -1849,6 +1868,7 @@ updatedSymbols.pg <- updatedSymbols.PostgreSQL
 #'
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 listSymbols <- function(source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
@@ -1887,6 +1907,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return character vector of Symbols
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
 listSymbols.cache <- function(cache.envir = NULL, ...) {
@@ -1921,6 +1942,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return character vector of Symbols
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 listSymbols.PostgreSQL <- function(con = NULL,
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
                                options = NULL, forceISOdate = TRUE,
@@ -1965,6 +1987,7 @@ listSymbols.pg <- listSymbols.PostgreSQL
 #' @param ... passed to src
 #' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 existSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2010,6 +2033,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 existSymbols.cache <- function(Symbols = NULL, cache.envir = NULL,  ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2056,6 +2080,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 existSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL,
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
                                options = NULL, forceISOdate = TRUE,
@@ -2107,6 +2132,7 @@ existSymbols.pg <- existSymbols.PostgreSQL
 #' @return  table last date/time index value
 #' The results do not have any order.
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbGetQuery dbQuoteIdentifier
 pgSchemaTableLastIndex <- function(con, schname = NULL, tblname) {
 tryCatchLog::tryCatchLog({

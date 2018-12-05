@@ -30,10 +30,10 @@ pgCurrentDB <- oneColumn(con, "SELECT current_database();", "CurrentDB")
 
 pgCurrentSearchPath <- oneColumn(con, "SHOW SEARCH_PATH;", "CurrentSearchPath")
 
-pgCurrentTempSchema <- oneColumn(con, 
-  "SELECT nspname 
-  FROM pg_namespace 
-  WHERE oid = pg_my_temp_schema();", 
+pgCurrentTempSchema <- oneColumn(con,
+  "SELECT nspname
+  FROM pg_namespace
+  WHERE oid = pg_my_temp_schema();",
 "CurrentTempSchema")
 
 }

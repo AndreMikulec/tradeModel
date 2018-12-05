@@ -7,6 +7,7 @@
 #' # EXAMPLE
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 UnRateEyeBalltradeModel <- function() {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
@@ -47,6 +48,7 @@ UnRateEyeBalltradeModel <- function() {
 #' # EXAMPLE
 #' }
 #' @export
+#' @importFrom tryCatchLog tryCatchLog
 UnRateMachinetradeModel <- function() {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
