@@ -26,6 +26,7 @@
 #' [1] "Date of length 0"
 #' @rdname converting
 #' @export
+#' @importFrom zoo as.Date
 dfize <- function(xtso) {
   require(xts)
   df <- as.data.frame(xtso)  # zoo::as.data.frame.zoo # xts:::as.data.frame.xts
@@ -381,6 +382,7 @@ as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { U
 #'
 #' @rdname as.quantmod
 #' @export
+#' @importFrom DataCombine MoveFront
 as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...) {
 
   # TODO[] # instead of passing outcomename, pass instead, a formula

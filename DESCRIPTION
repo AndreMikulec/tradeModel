@@ -9,14 +9,15 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends:
-    R (>= 3.5.1),
+    R (>= 3.5.0),
     doParallel,
-    DBI,
-    RPostgreSQL,
     formula.tools,
     quantmod (>= 0.4-3),
     PerformanceAnalytics (>= 1.5.2)
 Imports:
+    zoo,
+    DBI,
+    RPostgreSQL,
     timeSeries,
     rlang,
     magrittr,
@@ -31,6 +32,7 @@ Imports:
     plyr,
     Hmisc, 
     DescTools,
+    DataCombine,
     R.utils,
     tidyr,
     tis,

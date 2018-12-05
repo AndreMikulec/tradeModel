@@ -13,6 +13,7 @@
 #' # Date of length 0
 #' }
 #' @export
+#' @importFrom zoo as.Date
 initDate <- function(date = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -46,6 +47,7 @@ initEnv();on.exit({uninitEnv()})
 #' # Date of length 0
 #' }
 #' @export
+#' @importFrom zoo as.Date
 initXts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -180,8 +182,8 @@ tryCatchLog::tryCatchLog({
   # require(PerformanceAnalytics)
   # so, I can use rstudio projects of packages
   if(!"doParallel" %in% search())           require(doParallel)
-  if(!"DBI" %in% search())                  require(DBI)
-  if(!"RPostgreSQL" %in% search())          require(RPostgreSQL)
+  ### if(!"DBI" %in% search())                  require(DBI)
+  ### if(!"RPostgreSQL" %in% search())          require(RPostgreSQL)
   if(!"formula.tools" %in% search())        require(formula.tools)
   if(!"quantmod" %in% search())             require(quantmod)
   if(!"PerformanceAnalytics" %in% search()) require(PerformanceAnalytics)
@@ -205,7 +207,7 @@ tryCatchLog::tryCatchLog({
   assign("caller_env", rlang::caller_env, envir = environment())
   assign("caller_env", rlang::caller_env, envir = envir)
 
-  assign("as.Date", zoo::as.Date, envir = envir)
+  ### assign("as.Date", zoo::as.Date, envir = envir)
   assign("na.trim", zoo::na.trim, envir = envir)
 
   assign("%>%",  magrittr::`%>%` , envir = envir)
@@ -1196,6 +1198,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom plyr llply
 #' @importFrom tis nberDates
+#' @importFrom zoo as.Date
 timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL, OmitSliceFirstDate = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1204,7 +1207,7 @@ initEnv();on.exit({uninitEnv()})
   if(!length(LongestTimeSlice)) LongestTimeSlice <- FALSE
 
   NBERTISMatrix <-  tis::nberDates()
-  datesFromTIS <-  function(x) as.Date(as.character(x), format = "%Y%m%d")
+  datesFromTIS <-  function(x) zoo::as.Date(as.character(x), format = "%Y%m%d")
   beginNBERDates <- datesFromTIS(NBERTISMatrix[, "Start"])
     endNBERDates <- datesFromTIS(NBERTISMatrix[, "End"  ])
   xts(
@@ -1234,12 +1237,12 @@ initEnv();on.exit({uninitEnv()})
        if(LongestTimeSlice) {
          ActualStart <- index(NBERDates[1,"Start"])
        } else if(LongTimeSlices) {
-         ActualStart <- as.Date(x[["LongStart"]])[allSlicesStart <= as.Date(x[["LongStart"]])]
+         ActualStart <- zoo::as.Date(x[["LongStart"]])[allSlicesStart <= zoo::as.Date(x[["LongStart"]])]
        } else {
-         ActualStart <- as.Date(x[["Start"]])
+         ActualStart <- zoo::as.Date(x[["Start"]])
        }
        # single case (earliest record)
-       if(!length(ActualStart)) ActualStart <- as.Date(x[["Start"]])
+       if(!length(ActualStart)) ActualStart <- zoo::as.Date(x[["Start"]])
        DateSeq <- seq(from = ActualStart, to = zoo::as.Date(x[["End"]]) + 1, by = "month") - 1
        # choose to omit the first observation
        if(!is.null(OmitSliceFirstDate) && OmitSliceFirstDate && length(DateSeq)) DateSeq <- DateSeq[-1]
@@ -1335,6 +1338,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom lubridate days
 #' @importFrom lubridate %m+%
 #' @importFrom Hmisc truncPOSIXt
+#' @importFrom zoo as.Date
 nextMonthfromYesterday.Date <- function(date = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})

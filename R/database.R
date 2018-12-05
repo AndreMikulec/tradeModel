@@ -61,32 +61,33 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param df data.frame (with column names)
 #' @param con DBI database connection
-#' @importFrom plyr llply
 #' @export
+#' @importFrom plyr llply
+#' @importFrom DBI dbQuoteIdentifier dbExecute dbQuoteString
 dfToCREATETable <- function(df, con, Symbol, schname) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   # meta-data table
   if(!"Symbols" %in% pgListSchemaTables(con, "Symbols")) {
-    ddl <- paste0("CREATE TABLE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), "(",
-                            dbQuoteIdentifier(con, "Symbols"),          " TEXT ", ", ",
-                            dbQuoteIdentifier(con, "updated"),          " TIMESTAMP WITH TIMEZONE ", ", ",
-                            dbQuoteIdentifier(con, "updated_R_class") , " TEXT ", ", ",
-                            dbQuoteIdentifier(con, "src"),              " TEXT " ,
+    ddl <- paste0("CREATE TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), "(",
+                            DBI::dbQuoteIdentifier(con, "Symbols"),          " TEXT ", ", ",
+                            DBI::dbQuoteIdentifier(con, "updated"),          " TIMESTAMP WITH TIMEZONE ", ", ",
+                            DBI::dbQuoteIdentifier(con, "updated_R_class") , " TEXT ", ", ",
+                            DBI::dbQuoteIdentifier(con, "src"),              " TEXT " ,
                           ");")
-    dbExecute(con, ddl)
+    DBI::dbExecute(con, ddl)
 
-    ddl <- paste0("ALTER TABLE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
-                          " ADD PRIMARY KEY ( ", dbQuoteIdentifier(con, "Symbols"), ")",
+    ddl <- paste0("ALTER TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+                          " ADD PRIMARY KEY ( ", DBI::dbQuoteIdentifier(con, "Symbols"), ")",
                           ";")
-    dbExecute(con, ddl)
+    DBI::dbExecute(con, ddl)
   }
   # upon creation, do Quote Once:  (1)schema, (2)table and (3)column names
   # the PostgreSQL storage will be: anything_capilized retains it's "" quotes.
 
-  if(schname != "") { dotSchemaQuoted <- paste0(dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
-  schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbol))
+  if(schname != "") { dotSchemaQuoted <- paste0(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+  schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, Symbol))
 
   # column datatypes
   colClasses  <- do.call(c,plyr::llply(df, function(x) {class(x)[1]}))
@@ -97,14 +98,15 @@ initEnv();on.exit({uninitEnv()})
   # xts OTHER supported index date/time classes
   colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
 
-  ddl <- paste0("CREATE TABLE ", schemaSymbolsQuoted ,"(", paste0( dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
-  dbExecute(con, ddl)
+  ddl <- paste0("CREATE TABLE ", schemaSymbolsQuoted ,"(", paste0( DBI::dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
+  DBI::dbExecute(con, ddl)
   ddl <- paste0("ALTER TABLE ", schemaSymbolsQuoted,
-                " ADD PRIMARY KEY ( ", dbQuoteIdentifier(con, names(colClasses)[1]), ")",
+                " ADD PRIMARY KEY ( ", DBI::dbQuoteIdentifier(con, names(colClasses)[1]), ")",
                 ";")
-  dbExecute(con, ddl)
-  dml <- paste0("INSERT INTO ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"), "(", dbQuoteIdentifier(con, "Symbols"), ") VALUES (", dbQuoteString(con, Symbol), ");")
-  dbExecute(con, dml)
+  DBI::dbExecute(con, ddl)
+  dml <- paste0("INSERT INTO ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), 
+                             "(", DBI::dbQuoteIdentifier(con, "Symbols"), ") VALUES (", DBI::dbQuoteString(con, Symbol), ");")
+  DBI::dbExecute(con, dml)
   invisible()
 
 })}
@@ -185,6 +187,8 @@ initEnv();on.exit({uninitEnv()})
 #' is forced to ISO style at conection
 #' @return list of "con" DBI Connection object and "schname" final chosen schema name
 #' @export
+#' @importFrom RPostgreSQL PostgreSQL
+#' @importFrom DBI dbConnect dbExecute dbQuoteIdentifier
 pgConnect <- function(user=NULL,password=NULL,dbname=NULL,schname=NULL,
                       host=NULL,port=NULL,options=NULL,forceISOdate=TRUE) {
 tryCatchLog::tryCatchLog({
@@ -218,8 +222,8 @@ initEnv();on.exit({uninitEnv()})
       schname <- "public"
     }
   }
-  dbExecute(con, "SET TIME ZONE 'UTC';")
-  pgSetCurrentSearchPath(con, dbQuoteIdentifier(con, schname))
+  DBI::dbExecute(con, "SET TIME ZONE 'UTC';")
+  pgSetCurrentSearchPath(con, DBI::dbQuoteIdentifier(con, schname))
   list(con=con,user=user,password=password,dbname=dbname,schname=schname)
 
 })}
@@ -233,11 +237,12 @@ initEnv();on.exit({uninitEnv()})
 #' @return vector of characters of table names
 #' The results do not have any order.
 #' @export
+#' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTables <- function(con, schname) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-    dbGetQuery(con,
+    DBI::dbGetQuery(con,
       paste0(
        "
         SELECT
@@ -247,7 +252,7 @@ initEnv();on.exit({uninitEnv()})
         FROM
             information_schema.tables
         WHERE
-            table_schema     IN (", dbQuoteLiteral(con, schname), ")
+            table_schema     IN (", DBI::dbQuoteLiteral(con, schname), ")
         ;
       "
       )
@@ -266,11 +271,12 @@ initEnv();on.exit({uninitEnv()})
 #' @return vector of characters of column names
 #' The results are ordered.
 #' @export
+#' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTableColumns <- function(con, schname, tblname) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-    dbGetQuery(con,
+    DBI::dbGetQuery(con,
       paste0(
        "
         SELECT
@@ -283,8 +289,8 @@ initEnv();on.exit({uninitEnv()})
             information_schema.columns
         WHERE
             table_schema NOT IN ('information_schema', 'pg_catalog') AND
-            table_schema     IN (", dbQuoteLiteral(con, schname), ") AND
-            table_name       IN (", dbQuoteLiteral(con, tblname), ")
+            table_schema     IN (", DBI::dbQuoteLiteral(con, schname), ") AND
+            table_name       IN (", DBI::dbQuoteLiteral(con, tblname), ")
         ORDER BY ordinal_position
         ;
       "
@@ -304,6 +310,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return vector of characters of primary key column names
 #' The results are ordered.
 #' @export
+#' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTablePrimaryKeyColumns <- function(con, schname, tblname) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -311,7 +318,7 @@ initEnv();on.exit({uninitEnv()})
     # List primary keys for all tables - Postgresql
     #  https://dba.stackexchange.com/questions/11032/list-primary-keys-for-all-tables-postgresql
 
-    dbGetQuery(con,
+    DBI::dbGetQuery(con,
 
       paste0(
        "
@@ -324,8 +331,8 @@ initEnv();on.exit({uninitEnv()})
             information_schema.key_column_usage kc
         WHERE
             tc.table_schema NOT IN ('information_schema', 'pg_catalog') AND
-            tc.table_schema     IN (", dbQuoteLiteral(con, schname), ") AND
-            tc.table_name       IN (", dbQuoteLiteral(con, tblname), ") AND
+            tc.table_schema     IN (", DBI::dbQuoteLiteral(con, schname), ") AND
+            tc.table_name       IN (", DBI::dbQuoteLiteral(con, tblname), ") AND
             tc.constraint_type = 'PRIMARY KEY' AND
             kc.table_name = tc.table_name and kc.table_schema = tc.table_schema AND
             kc.constraint_name = tc.constraint_name
@@ -370,12 +377,13 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom plyr llply
+#' @importFrom DBI dbGetQuery
 oneColumn <- function(con, Query, outName, unQuote = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   if(is.null(unQuote)) unQuote = FALSE
-  res <- dbGetQuery(con, Query)
+  res <- DBI::dbGetQuery(con, Query)
   if(NROW(res)) {
     res <- res[[1]]
     res %>% strsplit(", ") %>%
@@ -428,7 +436,8 @@ pgCurrentSearchPath <- function(con) { oneColumn(con, "SHOW SEARCH_PATH;", "Curr
 #'
 #' @rdname pgCurrent
 #' @export
-pgSetCurrentSearchPath <- function(con, path) { dbExecute(con, paste0("SET SEARCH_PATH TO ", path,";")) }
+#' @importFrom DBI dbExecute
+pgSetCurrentSearchPath <- function(con, path) { DBI::dbExecute(con, paste0("SET SEARCH_PATH TO ", path,";")) }
 
 
 
@@ -471,7 +480,6 @@ pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentT
 #' }
 #' @export
 customSorting <- function(Vector, InitOrder, CI = FALSE) {
-
 
   # custom sorting
   VectorLevels <- InitOrder
@@ -853,6 +861,8 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom DBI dbSendQuery fetch  dbGetQuery dbDisconnect dbQuoteIdentifier dbQuoteString
+#' @importFrom rlang eval_bare
 getSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, env, return.class = 'xts',
                                db.fields=c('o','h','l','c','v','a'),
                                field.names = c('Open','High','Low','Close','Volume','Adjusted'),
@@ -900,7 +910,7 @@ initEnv();on.exit({uninitEnv()})
     Symbols <- Symbols[Symbols %in% db.Symbols]
   }
 
-  if(schname != "") { dotSchemaQuoted <- paste0(dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+  if(schname != "") { dotSchemaQuoted <- paste0(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
 
   schemaSymbolsQuoted <- list()
   Symbols.db.Cols <- list()
@@ -919,10 +929,10 @@ initEnv();on.exit({uninitEnv()})
 
     # custom sorting
     db.fields    <- customSorting(Symbols.db.Cols, InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE)
-    field.names  <- customSorting(field.names, InitOrder = c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted"), CI = TRUE)
+    field.names  <- customSorting(field.names,     InitOrder = c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted"), CI = TRUE)
 
-    db.fieldsQuoted  <-  dbQuoteIdentifier(con, db.fields)
-    schemaSymbolsQuoted[[i]] <-  paste0(dotSchemaQuoted, dbQuoteIdentifier(con, Symbols[[i]]))
+    db.fieldsQuoted  <-  DBI::dbQuoteIdentifier(con, db.fields)
+    schemaSymbolsQuoted[[i]] <-  paste0(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, Symbols[[i]]))
 
     if(sum(c("o", "h", "l", "c") %in% db.fields) == 4) {
       Selection <- paste( db.fieldsQuoted , collapse=',')
@@ -934,11 +944,11 @@ initEnv();on.exit({uninitEnv()})
     }
 
     # ABOVE (^) ALREADY QUOTED
-    query <- paste0("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ",dbQuoteIdentifier(con, "date"), ";")
+    query <- paste0("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ", DBI::dbQuoteIdentifier(con, "date"), ";")
     rs <- DBI::dbSendQuery(con, query)
     fr <- DBI::fetch(rs, n=-1)
 
-    query <- paste0("SELECT ", " * ", " FROM ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols")," WHERE ", dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, Symbols[[i]]), ";")
+    query <- paste0("SELECT ", " * ", " FROM ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols")," WHERE ", DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, Symbols[[i]]), ";")
     SymbolAttributes <- DBI::dbGetQuery(con, query)[,-1,drop =FALSE]
 
     updated <- NULL
@@ -950,7 +960,7 @@ initEnv();on.exit({uninitEnv()})
       if(!updated_R_class %in% c("ts","data.frame")) {
         if(!isNamespaceLoaded(updated_R_class)) requireNamespace(updated_R_class, quietly = TRUE)
       }
-      updated <- eval_bare(parse_expr(paste0("as.", updated_R_class,"(updated)")), environment())
+      updated <- rlang::eval_bare(parse_expr(paste0("as.", updated_R_class,"(updated)")), environment())
     }
     src <- NULL
     if("src" %in% colnames(SymbolAttributes)) src <- SymbolAttributes[["src"]]
@@ -974,7 +984,7 @@ initEnv();on.exit({uninitEnv()})
       assign(Symbols[[i]],fr,env)
     if(verbose) cat('done\n')
   }
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   if(auto.assign)
     return(Symbols)
   return(fr)
@@ -1460,6 +1470,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @export
+#' @importFrom DBI dbExecute dbWriteTable dbQuoteString dbQuoteIdentifier dbDisconnect
 saveSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
   db.fields=c('o','h','l','c','v','a'),
@@ -1558,8 +1569,8 @@ initEnv();on.exit({uninitEnv()})
     if(is.null(xTs)) { message(paste("Symbol ", each.symbol, " was not found s skipping.")); next }
     df  <- xTs2DBDF(xTs, con, field.names = field.names[-1], db.fields = db.fields[-1])
 
-    if(schname != "") { dotSchemaQuoted <- paste0(dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
-    dbExecute(con, paste0("TRUNCATE TABLE ", dotSchemaQuoted, dbQuoteIdentifier(con, each.symbol), ";"))
+    if(schname != "") { dotSchemaQuoted <- paste0(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+    DBI::dbExecute(con, paste0("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
 
     # Goal
     # exist in  R       'Date', 'Open','High','Low','Close','Volume','Adjusted'( along with FRED columns )
@@ -1570,48 +1581,48 @@ initEnv();on.exit({uninitEnv()})
     db.fields    <- customSorting( colnames(df), InitOrder = db.fields, CI = TRUE)
     colnames(df) <- db.fields
 
-    dbWriteTable(con, each.symbol, df, append = T, row.names = F)
+    DBI::dbWriteTable(con, each.symbol, df, append = T, row.names = F)
     # if  each.symbol includes schema name + ".",
     # then dbWriteTable will return TRUE, but it will LIE
 
     updated <- NULL
     if("updated" %in% names(attributes(xTs))) {
-      # OLD: "to_timestamp(", dbQuoteString(con, as.character(Sys.time())), " ,'YYYY-MM-DD HH24:MI:SS')"
+      # OLD: "to_timestamp(", DBI::dbQuoteString(con, as.character(Sys.time())), " ,'YYYY-MM-DD HH24:MI:SS')"
       updated <- attributes(xTs)[["updated"]]
       # How to properly handle timezone when passing POSIXct objects between R and Postgres DBMS?
       # https://stackoverflow.com/questions/40524225/how-to-properly-handle-timezone-when-passing-posixct-objects-between-r-and-postg
       updated <- format(as.POSIXct(updated, tz = Sys.getenv("TZ")), "%Y-%m-%d %H:%M:%OS%z")
-      dbExecute(con, paste0("UPDATE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
+      DBI::dbExecute(con, paste0("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                             " SET ",
-                            dbQuoteIdentifier(con, "updated"), " = ", dbQuoteString(con, updated),
+                            DBI::dbQuoteIdentifier(con, "updated"), " = ", DBI::dbQuoteString(con, updated),
                             " WHERE ",
-                            dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, each.symbol),
+                            DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, each.symbol),
                             ";"))
     }
 
     updated_R_class <- NULL
     if(inherits(xTs,"zoo")) {
       updated_R_class <- class(index(xTs))[1]
-      dbExecute(con, paste0("UPDATE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
+      DBI::dbExecute(con, paste0("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                             " SET ",
-                            dbQuoteIdentifier(con, "updated_R_class")," = ", dbQuoteString(con, updated_R_class),
+                            DBI::dbQuoteIdentifier(con, "updated_R_class")," = ", DBI::dbQuoteString(con, updated_R_class),
                             " WHERE ",
-                            dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, each.symbol),
+                            DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, each.symbol),
                             ";"))
     }
     src <- NULL
     if("src" %in% names(attributes(xTs))) {
       src <- as.character(attributes(xTs)[["src"]])
-      dbExecute(con, paste0("UPDATE ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
+      DBI::dbExecute(con, paste0("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                             " SET ",
-                            dbQuoteIdentifier(con, "src"), " = ", dbQuoteString(con, src),
+                            DBI::dbQuoteIdentifier(con, "src"), " = ", DBI::dbQuoteString(con, src),
                             " WHERE ",
-                            dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, each.symbol),
+                            DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, each.symbol),
                             ";"))
     }
 
   }
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   invisible()
 
 })}
@@ -1755,6 +1766,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ... passed unused
 #' @return named list of the object 'updated' property
 #' @export
+#' @importFrom DBI dbGetQuery dbQuoteString dbQuoteIdentifier
 updatedSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL,
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
                                options = NULL, forceISOdate = TRUE,
@@ -1780,10 +1792,10 @@ initEnv();on.exit({uninitEnv()})
 
   Updateds <- list()
   for(Symbol in DBSymbols) {
-    updated <- dbGetQuery(con, paste0(
-      "SELECT ", dbQuoteIdentifier(con, "updated"),
-      " FROM ", dbQuoteIdentifier(con, schname), ".", dbQuoteIdentifier(con, "Symbols"),
-      " WHERE ", dbQuoteIdentifier(con, "Symbols"), " = ", dbQuoteString(con, Symbol), ";"))
+    updated <- DBI::dbGetQuery(con, paste0(
+      "SELECT ", DBI::dbQuoteIdentifier(con, "updated"),
+      " FROM ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+      " WHERE ", DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, Symbol), ";"))
     updated <- updated[[1]]
     Names(updated)[1] <- Symbol
     Updateds <- c(Updateds, list(updated))
@@ -2095,6 +2107,7 @@ existSymbols.pg <- existSymbols.PostgreSQL
 #' @return  table last date/time index value
 #' The results do not have any order.
 #' @export
+#' @importFrom DBI dbGetQuery dbQuoteIdentifier
 pgSchemaTableLastIndex <- function(con, schname = NULL, tblname) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2104,13 +2117,13 @@ initEnv();on.exit({uninitEnv()})
   }
   if(is.null(schname)) schname <- "Symbols"
 
-    dbGetQuery(con,
+    DBI::dbGetQuery(con,
       paste0(
        "
         SELECT -- NOTE if the primary key has multiple columns then take the leftmost column
-              max(", dbQuoteIdentifier(con, pgListSchemaTablePrimaryKeyColumns(schname, tblname))[1], ")
+              max(", DBI::dbQuoteIdentifier(con, pgListSchemaTablePrimaryKeyColumns(schname, tblname))[1], ")
         FROM
-            ", dbQuoteIdentifier(con, schname),".", dbQuoteIdentifier(con, tblname), "
+            ", DBI::dbQuoteIdentifier(con, schname),".", DBI::dbQuoteIdentifier(con, tblname), "
         ;
       "
       )
