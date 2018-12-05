@@ -216,7 +216,7 @@ tryCatchLog::tryCatchLog({
   ### assign("str_replace", stringr::str_replace, envir = envir)
   ### assign("str_replace_all", stringr::str_replace_all, envir = envir)
   ### assign("str_c", stringr::str_c, envir = envir)
-  ### assign("as_tibble", tibble::as_tibble,  envir = envir)
+
   ### assign("arrange", dplyr::arrange, envir = envir)
   ### assign("map", purrr::map, envir = envir)
   ### assign("llply", plyr::llply, envir = envir)

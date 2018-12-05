@@ -22,7 +22,6 @@ Imports:
     magrittr,
     stringr,
     lubridate, 
-    tibble,
     tidyselect,
     dplyr,
     wrapr,
