@@ -862,7 +862,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom DBI dbSendQuery fetch  dbGetQuery dbDisconnect dbQuoteIdentifier dbQuoteString
-#' @importFrom rlang eval_bare
+#' @importFrom rlang eval_bare parse_expr
 getSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, env, return.class = 'xts',
                                db.fields=c('o','h','l','c','v','a'),
                                field.names = c('Open','High','Low','Close','Volume','Adjusted'),
@@ -960,7 +960,7 @@ initEnv();on.exit({uninitEnv()})
       if(!updated_R_class %in% c("ts","data.frame")) {
         if(!isNamespaceLoaded(updated_R_class)) requireNamespace(updated_R_class, quietly = TRUE)
       }
-      updated <- rlang::eval_bare(parse_expr(paste0("as.", updated_R_class,"(updated)")), environment())
+      updated <- rlang::eval_bare(rlang::parse_expr(paste0("as.", updated_R_class,"(updated)")), environment())
     }
     src <- NULL
     if("src" %in% colnames(SymbolAttributes)) src <- SymbolAttributes[["src"]]

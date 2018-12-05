@@ -7,7 +7,6 @@
 #' initDate
 #' initXts
 #' initEnv
-#' initPrintEnv
 #'
 #' @section Data Aquisition:
 #'

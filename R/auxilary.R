@@ -175,19 +175,31 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] 99999
 #' }
 #' @export
-#' @importFrom futile.logger flog.threshold
-initEnv <- function(init = NULL, envir = rlang::caller_env()) {
+#' @importFrom futile.logger flog.threshold ERROR
+#' @importFrom rlang parse_expr eval_bare caller_env
+initEnv <- function(init = NULL) {
 tryCatchLog::tryCatchLog({
+
+  # tryCatchLog: what level to activate
+  futile.logger::flog.threshold(futile.logger::ERROR)
+
+  # so I have one
+  action <- rlang::parse_expr("assign(\"envi\", environment())")
+  envii <- rlang::caller_env()
+  rlang::eval_bare(action, env = envii)
+
+  assign("%>%",  magrittr::`%>%` , envir = envii)
+
+  if(!"quantmod" %in% search())                 require(quantmod)
+  if(!"PerformanceAnalytics" %in% search())     require(PerformanceAnalytics)
 
   # require(quantmod) # zoo, xts, TTR
   # require(PerformanceAnalytics)
   # so, I can use rstudio projects of packages
-  if(!"doParallel" %in% search())           require(doParallel)
+  ### if(!"doParallel" %in% search())           require(doParallel)
   ### if(!"DBI" %in% search())                  require(DBI)
   ### if(!"RPostgreSQL" %in% search())          require(RPostgreSQL)
-  if(!"formula.tools" %in% search())        require(formula.tools)
-  if(!"quantmod" %in% search())             require(quantmod)
-  if(!"PerformanceAnalytics" %in% search()) require(PerformanceAnalytics)
+  ### if(!"formula.tools" %in% search())        require(formula.tools)
 
   # debugging
   # 1st round (where the error occurs)
@@ -199,19 +211,14 @@ tryCatchLog::tryCatchLog({
   # browser(expr = { <where condition> }
 
   # convenience
-  assign("syms", rlang::syms, envir = envir)
-  assign("!!!", rlang::`!!!`, envir = envir)
-  assign("parse_expr", rlang::parse_expr, envir = environment())
-  assign("parse_expr", rlang::parse_expr, envir = envir)
-  assign("eval_bare",  rlang::eval_bare,  envir = environment())
-  assign("eval_bare",  rlang::eval_bare,  envir = envir)
-  assign("caller_env", rlang::caller_env, envir = environment())
-  assign("caller_env", rlang::caller_env, envir = envir)
+  ### assign("parse_expr", rlang::parse_expr, envir = envir)
+  ### assign("eval_bare",  rlang::eval_bare,  envir = envir)
+  ### assign("caller_env", rlang::caller_env, envir = envir)
 
   ### assign("as.Date", zoo::as.Date, envir = envir)
   ### assign("na.trim", zoo::na.trim, envir = envir)
 
-  assign("%>%",  magrittr::`%>%` , envir = envir)
+
   ### assign("%m+%", lubridate::`%m+%`, envir = envir)
   ### assign("days", lubridate::days, envir = envir)
 
@@ -266,7 +273,7 @@ tryCatchLog::tryCatchLog({
   # namespace ‘spacetime’ is imported by ‘gstat’ so cannot be unloaded
   # trace(loadNamespace, quote(if (package == "spacetime") recover()))
   # xts . . . spacetime . . . gtstat . . . automap . . . UBL
-  # xts . . . required by PerformanceAnalytics ( so will not be detached ) . . . quantico
+  # xts . . . required by PerformanceAnalytics ( so will not be detached ) . . . tradeModel
   # PerformanceAnalytics (>= 1.5.2)
   # if(isNamespaceLoaded("PerformanceAnalytics")) {
   #   ns <- asNamespace("PerformanceAnalytics")
@@ -275,13 +282,6 @@ tryCatchLog::tryCatchLog({
 
   ### assign("list.zip", rlist::list.zip, envir = envir)
 
-  action <- parse_expr("assign(\"envi\", environment())")
-  eval_bare(action, caller_env())
-
-  ops <- options()
-
-  # tryCatchLog: what level to activate
-  futile.logger::flog.threshold(futile.logger::ERROR)
 
   options(warn=2L)
   options(width=10000L) # LIMIT # Note: set Rterm(64 bit) as appropriate
@@ -289,7 +289,8 @@ tryCatchLog::tryCatchLog({
   options(max.print=99999L)
   options(scipen=255L) # Try these = width
   #
-  assign("ops", ops, envir = envir)
+  ops <- options()
+  assign("ops", ops, envir = envii)
 
   #correct for TZ
   oldtz <- Sys.getenv("TZ")
@@ -297,34 +298,13 @@ tryCatchLog::tryCatchLog({
     Sys.setenv(TZ="UTC")
   }
   #
-  assign("oldtz", oldtz, envir = envir)
+  assign("oldtz", oldtz, envir = envii)
 
   invisible()
 
 })}
 
 
-#' sets the printing enviroment
-#'
-#' space-saver - meant to be used at the beginning of a function
-#'
-#' @return printing environment is set
-#' @examples
-#' \dontrun{
-#' # initPrintEnv()
-#' }
-#' @export
-initPrintEnv <- function() {
-tryCatchLog::tryCatchLog({
-  init <- list()
-  init[["digits"]] <- 5L
-  initEnv(init = init)
-  assign("ops"  , ops,   envir = parent.frame())
-  assign("oldtz", oldtz, envir = parent.frame())
-
-  invisible()
-
-})}
 
 
 #' unsets the enviroment
@@ -339,12 +319,13 @@ tryCatchLog::tryCatchLog({
 #' # [1] 5
 #' }
 #' @export
+#' @importFrom rlang caller_env
 uninitEnv <- function() {
 tryCatchLog::tryCatchLog({
 
-  Sys.setenv(TZ=get("oldtz", envir = parent.frame()))
-  options(get("ops", envir = parent.frame()))
-
+  envii <- rlang::caller_env()
+  Sys.setenv(TZ=get("oldtz", envir = envii))
+  options(get("ops",         envir = envii))
   invisible()
 
 })}
@@ -626,7 +607,7 @@ initEnv();on.exit({uninitEnv()})
 pairWise <- function(x1, x2) {
 
   List <- c(list(),plyr::llply(x1, identity), plyr::llply(x2, identity))
-  
+
   L1coord <- seq(from = 1, by = 2, length.out = 0.5*length(List))
   L2coord <- seq(from = 2, by = 2, length.out = 0.5*length(List))
 
@@ -809,7 +790,7 @@ initEnv();on.exit({uninitEnv()})
     # make ONE column to represent all factors
     NotLeftSide %>% UNITE %>%
       # change row.names to FCT_COLS_NAME, drop column 1
-      `row.names<-`(.[[1]]) %>% dplyr::select(-1) %>% 
+      `row.names<-`(.[[1]]) %>% dplyr::select(-1) %>%
         # to one dimension : one BIG wide ROW
         as.matrix %>% R.utils::wrap(sep = DetailColsFixedSep) -> NotLeftSide
 
@@ -825,7 +806,7 @@ initEnv();on.exit({uninitEnv()})
   }
   # choosing # data.table::rbindlist(resultsInList, fill = TRUE)
   # over purrr::map_dfr(resultsInList, identity)
-  # because # data.table::rbindlist(resultsInList) # fill = FALSE(default) 
+  # because # data.table::rbindlist(resultsInList) # fill = FALSE(default)
   # can(flexibly) match by position ( I am matching by "name" )
   resultsOneDF <- as.data.frame(data.table::rbindlist(resultsInList, fill = TRUE), stringsAsFactors = FALSE)
   return(resultsOneDF)
@@ -1086,7 +1067,7 @@ initEnv();on.exit({uninitEnv()})
   xTs2  <- initXts(xTs2)
   if(is.null(FixedSep)) FixedSep = "."
 
-  DescTools::DoCall(expand.grid, Whiches) %>% 
+  DescTools::DoCall(expand.grid, Whiches) %>%
       as.list %>%
         { purrr::transpose(.) } -> WhichesCombinations
   if(!NCOL(WhichesCombinations)){ return(initXts()) }
@@ -2205,8 +2186,8 @@ initEnv();on.exit({uninitEnv()})
 appendCashWts  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-
   xTs  <- initXts(xTs)
+
   addWts(xTs, cashWts(xTs))
 
 })}
@@ -2221,11 +2202,12 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 printTail <- function(xTs = NULL, title = NULL, n = NULL) {
 tryCatchLog::tryCatchLog({
-initPrintEnv();on.exit({uninitEnv()})
+initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
   message(paste0("tail of ", title))
   if(is.null(n)) n = 6
+  options(digits = 5L)
   print(tail(xTs, n = n))
 
   invisible(xTs)
@@ -2445,10 +2427,11 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 printCalendar <- function(xTs = NULL, title = NULL) {
 tryCatchLog::tryCatchLog({
-initPrintEnv();on.exit({uninitEnv()})
+initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
   message(paste0("calendar of ", title))
+  options(digits = 5L)
   print(table.CalendarReturns(xTs, digits = 1, as.perc = TRUE, geometric = TRUE))
 
   invisible(xTs)

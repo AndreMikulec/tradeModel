@@ -4,7 +4,7 @@
 \alias{initEnv}
 \title{sets the enviroment}
 \usage{
-initEnv(init = NULL, envir = rlang::caller_env())
+initEnv(init = NULL)
 }
 \arguments{
 \item{init}{list with names entries of alernate/other options}
