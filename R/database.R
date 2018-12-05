@@ -545,6 +545,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #'
 #' }
 #' @export
+#' @importFrom plyr llply
 #' @importFrom tryCatchLog tryCatchLog
 getSymbols <- function (Symbols = NULL, env = parent.frame(), reload.Symbols = FALSE,
     verbose = FALSE, warnings = TRUE, src = "yahoo", symbol.lookup = TRUE,

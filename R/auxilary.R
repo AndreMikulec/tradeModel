@@ -459,7 +459,7 @@ initEnv();on.exit({uninitEnv()})
 
 #' pairwise interleave of columns
 #'
-#' works better on xts objects ( lapply,plyr::llply structure is held together )
+#' works better on xts objects ( lapply or plyr::llply structure is held together )
 #'
 #' @param x1 data.frame or xts object
 #' @param x2 data.frame or xts object
@@ -1287,12 +1287,13 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom plyr llply
 nextMonthfromYesterday.xts <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(x)
-  lapply(index(xTs), nextMonthfromYesterday) %>%
+  plyr::llply(index(xTs), nextMonthfromYesterday) %>%
     { do.call(c,.) } %>%
       { xts(Coredata(xTs),.) }
 
@@ -1740,6 +1741,7 @@ formula_tools___as_character_formula <- function (x, ...) {
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom plyr llply
 #' @importFrom stringr str_c
 #' @importFrom dplyr arrange
 #' @importFrom plyr llply
@@ -1928,7 +1930,7 @@ initEnv();on.exit({uninitEnv()})
    # determine timeSlices
   DataWobsid <- cbind(Data, obsid = seq_len(NROW(Data)))
 
-  indexSlicesObs <- lapply(AllDataSliceTimeRanges, function(x) { as.integer(coredata(window(DataWobsid, start = x[["start"]], end = x[["end"]])[,"obsid"])) })
+  indexSlicesObs <- plyr::llply(AllDataSliceTimeRanges, function(x) { as.integer(coredata(window(DataWobsid, start = x[["start"]], end = x[["end"]])[,"obsid"])) })
   indexSlicesObsLastIndex <- length(indexSlicesObs)
   indexSlicesOutObs <- list()
   for(i in seq_along(indexSlicesObs)) {

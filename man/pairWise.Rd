@@ -15,7 +15,7 @@ pairWise(x1, x2)
 list of length two of two data.frames or xts objects
 }
 \description{
-works better on xts objects ( lapply structure is held together )
+works better on xts objects ( lapply,plyr::llply structure is held together )
 }
 \examples{
 \dontrun{

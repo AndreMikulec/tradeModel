@@ -324,7 +324,7 @@ initEnv();on.exit({uninitEnv()})
 #' zoo::na.trim(tail(x), sides = "right")
 #'
 #' example ( better: try a do.call )
-#' Symbols <- unlist(lapply( c("MSFT","AAPL","WMT","COST"), function(x) {
+#' Symbols <- unlist(plyr::llply( c("MSFT","AAPL","WMT","COST"), function(x) {
 #'                           l <- list(); l[[x]] <- getSymbols(x, auto.assign = FALSE); l
 #'                           }), recursive = FALSE)
 #' Symbols <- list2env(Symbols)
@@ -381,6 +381,8 @@ as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { U
 
 # from a data.frame, covert to a quantmod object directly
 #
+# CURRENLY NOT USED
+#
 # if I have to do preprocessing ( e.g. a treatment )
 #   therefore the situation may be cheaper to make a quantmod object
 #     from a data.frame
@@ -396,6 +398,7 @@ as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { U
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DataCombine MoveFront
+#' @importFrom plyr llply
 as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -414,7 +417,8 @@ initEnv();on.exit({uninitEnv()})
   # NOTE ALSO EXISTS: as.list.xts() ... , as.list.environment
   #                   USAGE c(as.list.xts(),as.list.xts())
   #
-  Symbols <- lapply(x, function(x) {
+
+  Symbols <- plyr::llply(x, function(x) {
     as.xts(x, order.by = order.by)
   })
   Symbols <- list2env(Symbols)
@@ -634,77 +638,14 @@ initEnv();on.exit({uninitEnv()})
 is.method.available <- function(method, package) quantmod___is.method.available(method = method, package = package)
 
 
-#
+
 # example (TODO [ ]) simplify
 #
-#   all_possible_instrument_log_rets <- xts(, zoo::as.Date(0)[0])
+
+# from quantmod predictModel
 #
-#   will5000ind          <- get_fred_wilshire5000_eom_xts()
-#   will5000ind_log_rets <- ROC(will5000ind)               # which(is.na(will5000ind_log_rets)) # logrithmic
-#   will5000ind_log_rets[is.na(will5000ind_log_rets)] <- 0 # usually just the 1st observation
-#
-#   # will5000ind                       # 1st empty xts
-#   all_possible_instrument_log_rets <- merge.xts(all_possible_instrument_log_rets, will5000ind_log_rets)
-#
-#   # "cash"             # no returns good/bad
-#   cash_log_rets <- xts(rep(0,NROW(all_possible_instrument_log_rets)),index(all_possible_instrument_log_rets))
-#   colnames(cash_log_rets) <- "cash"
-#
-#
-#   # colnames                                   "cash"    +     "will5000ind"
-#   all_possible_instrument_log_rets <- merge.xts(cash_log_rets, all_possible_instrument_log_rets)
-#
-#   unrate_indicator <- get_symbols_xts_eox("UNRATE", src ="FRED", returns = "monthly", pushback_fred_1st_days =  TRUE, month_delay = 1, OHLC = FALSE, indexAt = "lastof")
-#   unrate_indicator <- unrate_indicator[["monthly"]]
-#
-#   #                                                             "unrate"
-#   all_possible_indicators <- merge.xts(all_possible_indicators, unrate_indicator)
-#
-#   unrate <- all_possible_indicators[,"unrate"]
-#
-#   unrate1_indicator <- Less(SMA(    unrate   ,2), SMA(    unrate   ,6))
-#   colnames(unrate1) <- "unrate1"
-#
-#   unrate2_indicator <- Less(SMA(lag(unrate)  ,2), SMA(lag(unrate  ),6))
-#   colnames(unrate2) <- "unrate2"
-#
-#   unrate3_indicator <- Less(SMA(lag(unrate,2),2), SMA(lag(unrate,2),6))
-#   colnames(unrate3) <- "unrate3"
-#
-#   # "unrate", "unrate1", "unrate2", "unrate3"
-#   all_possible_indicators <- merge.xts(all_possible_indicators, unrate1_indicator, unrate2_indicator, unrate3_indicator)
-#
-#   merged <- merge(all_possible_instrument_log_rets, all_possible_indicators)
-#
-#   Symbols <- lapply(as.data.frame(merged), function(x) {
-#     as.xts(x, order.by = index(merged))
-#   })
-#   Symbols <- list2env(Symbols)
-#
-#   specmodel <- specifyModel(will5000ind ~ unrate1 + unrate2 + unrate3, na.rm = TRUE, source.envir = Symbols)
-#
-#   tg <- expand.grid(
-#     nrounds   =  100,
-#     eta       =  c(0.1,0.01),
-#     max_depth =  c(4,6,8,10),
-#     gamma     =  0,
-#     colsample_bytree = c(1,0.5),
-#     min_child_weight = 1,
-#     subsample        = c(1,0.5)
-#   )
-#   tc <- caret::trainControl(method = "cv", number = 5)
-#
-#   builtmodel <- buildModel(specmodel,method="train",training.per=c("1970-12-31","2006-12-31"),
-#                   method_caret = 'xgbTree', tuneGrid = tg, trControl = tc)
-#
-#   gettedModelData <- getModelData(builtmodel, na.rm = TRUE, source.envir = Symbols)
-#
-#   modeldata <- modelData(getted_model_data, data.window = c("2007-01-31","2018-03-31"), exclude.training = TRUE)
-#
-#   #                       # dispatch on caret::train
-#   fitted  <- predictModel(gettedModelData@fitted.model, modeldata)
-#   fitted  <- as.xts(fitted, index(modeldata))
-#
+# does caret train
+# 
 #
 predictModel.train <- function (object, data, ...) {
     if (quantmod___is.method.available('train','caret')) {
