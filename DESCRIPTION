@@ -10,39 +10,40 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 3.5.0),
-    doParallel,
     formula.tools,
     quantmod (>= 0.4-3),
     PerformanceAnalytics (>= 1.5.2)
 Imports:
+    tryCatchLog,
+    futile.logger,
+    rlang,
+    magrittr,
+    parallel,
+    doParallel,
+    tis,
+    timeSeries,
     zoo,
     DBI,
     RPostgreSQL,
-    timeSeries,
-    rlang,
-    magrittr,
     stringr,
     lubridate, 
-    tidyselect,
     data.table,
+    plyr,
     dplyr,
+    tidyselect,
+    tidyr,
     wrapr,
     seplyr,
+    rlist,
     purrr,
-    plyr,
     Hmisc, 
     DescTools,
     DataCombine,
-    R.utils,
-    tidyr,
-    tis,
+    R.utils,    
     caret,
     DMwR,
     UBL,
-    iml,
-    rlist,
-    tryCatchLog,
-    futile.logger
+    iml
 RoxygenNote: 6.1.1
 Suggests: 
       testthat

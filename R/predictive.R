@@ -488,6 +488,8 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @export
 #' @importFrom caret trainControl train
+#' @importFrom parallel makeCluster stopCluster
+#' @importFrom doParallel registerDoParallel
 buildModel.train <- function(quantmod,training.data, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -562,11 +564,11 @@ initEnv();on.exit({uninitEnv()})
     #   nominalTrainWorkflow
     #     info$loop
 
-    cl<-makeCluster(detectTrueCores())
-    registerDoParallel(cl)
+    cl <- parallel::makeCluster(detectTrueCores())
+    doParallel::registerDoParallel(cl)
     set.seed(2L)
     rp <- suppressWarnings( do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots[!names(Dots) %in% "stage"]) ) )
-    stopCluster(cl)
+    parallel::stopCluster(cl)
 
     return(list("fitted"=rp, "inputs"=attr(terms(rp),"term.labels")))
   }

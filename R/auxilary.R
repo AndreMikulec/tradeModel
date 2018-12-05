@@ -175,6 +175,7 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] 99999
 #' }
 #' @export
+#' @importFrom futile.logger flog.threshold
 initEnv <- function(init = NULL, envir = rlang::caller_env()) {
 tryCatchLog::tryCatchLog({
 
@@ -208,7 +209,7 @@ tryCatchLog::tryCatchLog({
   assign("caller_env", rlang::caller_env, envir = envir)
 
   ### assign("as.Date", zoo::as.Date, envir = envir)
-  assign("na.trim", zoo::na.trim, envir = envir)
+  ### assign("na.trim", zoo::na.trim, envir = envir)
 
   assign("%>%",  magrittr::`%>%` , envir = envir)
   ### assign("%m+%", lubridate::`%m+%`, envir = envir)
@@ -1667,6 +1668,7 @@ initEnv();on.exit({uninitEnv()})
 #' SMAs of the unrate Eyeball Indicator
 #'
 #' @export
+#' @importFrom zoo na.trim
 unrateEyeballIndicators <- function(unrate = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1675,7 +1677,7 @@ initEnv();on.exit({uninitEnv()})
 
   # can not do math on leading NAs
   # (actually can not do any math on 'any' NAs)
-  unrate <- na.trim(unrate)
+  unrate <- zoo::na.trim(unrate)
 
   unrate1Indicator <- Less(SMA(    unrate   ,2), SMA(    unrate   ,6))
   colnames(unrate1Indicator) <- "unrate1"
