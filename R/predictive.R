@@ -399,6 +399,7 @@ as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { U
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DataCombine MoveFront
 #' @importFrom plyr llply
+#' @importFrom stringr str_c
 as.quantmod.data.frame  <- function(x, outcomename, order.by, na.rm = TRUE, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -434,7 +435,7 @@ initEnv();on.exit({uninitEnv()})
   #   maybe useful: src
   #   maybe useful: set per Symbol src using setSymbolLookup
 
-  model <- specifyModel(paste0(outcomename, " ~ ", paste0(setdiff(colnames(x), outcomename), collapse = " + "))
+  model <- specifyModel(stringr::str_c(outcomename, " ~ ", paste0(setdiff(colnames(x), outcomename), collapse = " + "))
              , na.rm = na.rm
              , source.envir = Symbols
              , ...)

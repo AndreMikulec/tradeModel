@@ -273,6 +273,7 @@ tryCatchLog::tryCatchLog({
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 logReturns <- function(xTs = NULL)  {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -281,7 +282,7 @@ initEnv();on.exit({uninitEnv()})
 
   xTsLogRets <- ROC(xTs)             # which(is.na(xTsindLogRets)) # logrithmic
   xTsLogRets[is.na(xTsLogRets)] <- 0 # usually just the 1st observation
-  colnames(xTsLogRets)[1] <- paste0(colnames(xTsLogRets)[1], "logrets")
+  colnames(xTsLogRets)[1] <- stringr::str_c(colnames(xTsLogRets)[1], "logrets")
 
   xTsLogRets
 
@@ -2154,12 +2155,13 @@ initEnv();on.exit({uninitEnv()})
 #' @return invisible xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 printTail <- function(xTs = NULL, title = NULL, n = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
-  message(paste0("tail of ", title))
+  message(stringr::str_c("tail of ", title))
   if(is.null(n)) n = 6
   options(digits = 5L)
   print(tail(xTs, n = n))
@@ -2387,12 +2389,13 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object of arithmatic returns
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 printCalendar <- function(xTs = NULL, title = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
-  message(paste0("calendar of ", title))
+  message(stringr::str_c("calendar of ", title))
   options(digits = 5L)
   print(table.CalendarReturns(xTs, digits = 1, as.perc = TRUE, geometric = TRUE))
 

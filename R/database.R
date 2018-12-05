@@ -64,6 +64,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param con DBI database connection
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 #' @importFrom plyr llply
 #' @importFrom DescTools DoCall
 #' @importFrom DBI dbQuoteIdentifier dbExecute dbQuoteString
@@ -73,7 +74,7 @@ initEnv();on.exit({uninitEnv()})
 
   # meta-data table
   if(!"Symbols" %in% pgListSchemaTables(con, "Symbols")) {
-    ddl <- paste0("CREATE TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), "(",
+    ddl <- stringr::str_c("CREATE TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), "(",
                             DBI::dbQuoteIdentifier(con, "Symbols"),          " TEXT ", ", ",
                             DBI::dbQuoteIdentifier(con, "updated"),          " TIMESTAMP WITH TIMEZONE ", ", ",
                             DBI::dbQuoteIdentifier(con, "updated_R_class") , " TEXT ", ", ",
@@ -81,7 +82,7 @@ initEnv();on.exit({uninitEnv()})
                           ");")
     DBI::dbExecute(con, ddl)
 
-    ddl <- paste0("ALTER TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+    ddl <- stringr::str_c("ALTER TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                           " ADD PRIMARY KEY ( ", DBI::dbQuoteIdentifier(con, "Symbols"), ")",
                           ";")
     DBI::dbExecute(con, ddl)
@@ -101,13 +102,13 @@ initEnv();on.exit({uninitEnv()})
   # xts OTHER supported index date/time classes
   colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
 
-  ddl <- paste0("CREATE TABLE ", schemaSymbolsQuoted ,"(", paste0( DBI::dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
+  ddl <- stringr::str_c("CREATE TABLE ", schemaSymbolsQuoted ,"(", stringr::str_c( DBI::dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
   DBI::dbExecute(con, ddl)
-  ddl <- paste0("ALTER TABLE ", schemaSymbolsQuoted,
+  ddl <- stringr::str_c("ALTER TABLE ", schemaSymbolsQuoted,
                 " ADD PRIMARY KEY ( ", DBI::dbQuoteIdentifier(con, names(colClasses)[1]), ")",
                 ";")
   DBI::dbExecute(con, ddl)
-  dml <- paste0("INSERT INTO ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+  dml <- stringr::str_c("INSERT INTO ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                              "(", DBI::dbQuoteIdentifier(con, "Symbols"), ") VALUES (", DBI::dbQuoteString(con, Symbol), ");")
   DBI::dbExecute(con, dml)
   invisible()
@@ -243,13 +244,14 @@ initEnv();on.exit({uninitEnv()})
 #' The results do not have any order.
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 #' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTables <- function(con, schname) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
     DBI::dbGetQuery(con,
-      paste0(
+      stringr::str_c(
        "
         SELECT
               table_catalog -- database
@@ -278,13 +280,14 @@ initEnv();on.exit({uninitEnv()})
 #' The results are ordered.
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 #' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTableColumns <- function(con, schname, tblname) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
     DBI::dbGetQuery(con,
-      paste0(
+      stringr::str_c(
        "
         SELECT
               table_catalog -- database
@@ -318,6 +321,7 @@ initEnv();on.exit({uninitEnv()})
 #' The results are ordered.
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 #' @importFrom DBI dbGetQuery dbQuoteLiteral
 pgListSchemaTablePrimaryKeyColumns <- function(con, schname, tblname) {
 tryCatchLog::tryCatchLog({
@@ -328,7 +332,7 @@ initEnv();on.exit({uninitEnv()})
 
     DBI::dbGetQuery(con,
 
-      paste0(
+      stringr::str_c(
        "
         SELECT   tc.table_catalog -- database
                , tc.table_schema
@@ -446,8 +450,9 @@ pgCurrentSearchPath <- function(con) { oneColumn(con, "SHOW SEARCH_PATH;", "Curr
 #'
 #' @rdname pgCurrent
 #' @export
+#' @importFrom stringr str_c
 #' @importFrom DBI dbExecute
-pgSetCurrentSearchPath <- function(con, path) { DBI::dbExecute(con, paste0("SET SEARCH_PATH TO ", path,";")) }
+pgSetCurrentSearchPath <- function(con, path) { DBI::dbExecute(con, stringr::str_c("SET SEARCH_PATH TO ", path,";")) }
 
 
 
@@ -701,6 +706,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
+#' @importFrom stringr str_c
 getSymbols.cache <- function (Symbols = NULL, env, return.class = "xts", cache.envir = NULL,  ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -740,7 +746,7 @@ initEnv();on.exit({uninitEnv()})
             cat("\n", Symbols[[i]]," does not exist ", "....skipping\n")
             next
         }
-        fr <- get(paste0(".", Symbols[[i]]), envir =  cache.envir)
+        fr <- get(stringr::str_c(".", Symbols[[i]]), envir =  cache.envir)
         if (verbose)
             cat("done.\n")
         if (!is.xts(fr)) {
@@ -876,6 +882,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbSendQuery fetch  dbGetQuery dbDisconnect dbQuoteIdentifier dbQuoteString
+#' @importFrom stringr str_c
 #' @importFrom rlang eval_bare parse_expr
 getSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, env, return.class = 'xts',
                                db.fields=c('o','h','l','c','v','a'),
@@ -924,7 +931,7 @@ initEnv();on.exit({uninitEnv()})
     Symbols <- Symbols[Symbols %in% db.Symbols]
   }
 
-  if(schname != "") { dotSchemaQuoted <- paste0(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+  if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
 
   schemaSymbolsQuoted <- list()
   Symbols.db.Cols <- list()
@@ -946,7 +953,7 @@ initEnv();on.exit({uninitEnv()})
     field.names  <- customSorting(field.names,     InitOrder = c("Date", "Open", "High", "Low", "Close", "Volume", "Adjusted"), CI = TRUE)
 
     db.fieldsQuoted  <-  DBI::dbQuoteIdentifier(con, db.fields)
-    schemaSymbolsQuoted[[i]] <-  paste0(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, Symbols[[i]]))
+    schemaSymbolsQuoted[[i]] <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, Symbols[[i]]))
 
     if(sum(c("o", "h", "l", "c") %in% db.fields) == 4) {
       Selection <- paste( db.fieldsQuoted , collapse=',')
@@ -958,11 +965,11 @@ initEnv();on.exit({uninitEnv()})
     }
 
     # ABOVE (^) ALREADY QUOTED
-    query <- paste0("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ", DBI::dbQuoteIdentifier(con, "date"), ";")
+    query <- stringr::str_c("SELECT ", Selection," FROM ", schemaSymbolsQuoted[[i]]," ORDER BY ", DBI::dbQuoteIdentifier(con, "date"), ";")
     rs <- DBI::dbSendQuery(con, query)
     fr <- DBI::fetch(rs, n=-1)
 
-    query <- paste0("SELECT ", " * ", " FROM ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols")," WHERE ", DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, Symbols[[i]]), ";")
+    query <- stringr::str_c("SELECT ", " * ", " FROM ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols")," WHERE ", DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, Symbols[[i]]), ";")
     SymbolAttributes <- DBI::dbGetQuery(con, query)[,-1,drop =FALSE]
 
     updated <- NULL
@@ -974,7 +981,7 @@ initEnv();on.exit({uninitEnv()})
       if(!updated_R_class %in% c("ts","data.frame")) {
         if(!isNamespaceLoaded(updated_R_class)) requireNamespace(updated_R_class, quietly = TRUE)
       }
-      updated <- rlang::eval_bare(rlang::parse_expr(paste0("as.", updated_R_class,"(updated)")), environment())
+      updated <- rlang::eval_bare(rlang::parse_expr(stringr::str_c("as.", updated_R_class,"(updated)")), environment())
     }
     src <- NULL
     if("src" %in% colnames(SymbolAttributes)) src <- SymbolAttributes[["src"]]
@@ -1225,6 +1232,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
+#' @importFrom stringr str_c
 #' @importFrom DescTools DoCall
 saveSymbols <- function(Symbols = NULL, env = parent.frame(),
                        source.envir = NULL, Gathering = "source.envir", ...) {
@@ -1302,7 +1310,7 @@ initEnv();on.exit({uninitEnv()})
   # ( because list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case)
   SamexTsGetSymbols <- intersect(tolower(names(xTsGetSymbolsDotgetSymbols)),tolower(names(xTsGetSymbolssource.envir)))
   if(length(SamexTsGetSymbols)) {
-    stop(paste0("In saveSymbols, duplicate case-insenstive naames found in ", paste0(SamexTsGetSymbols, collapse = ", ")))
+    stop(stringr::str_c("In saveSymbols, duplicate case-insenstive naames found in ", paste0(SamexTsGetSymbols, collapse = ", ")))
   }
 
                                        # keep compatible with quantmod::saveSymbols
@@ -1321,7 +1329,7 @@ initEnv();on.exit({uninitEnv()})
     DescTools::DoCall(saveSymbols.RData, c(list(), source.envir = list2env(xTsGetSymbols), Dots))
   }
   if("trg" %in% names(Dots)) {
-    DescTools::DoCall(paste0("saveSymbols",".", Dots[["trg"]]), c(list(),
+    DescTools::DoCall(stringr::str_c("saveSymbols",".", Dots[["trg"]]), c(list(),
       Symbols = Symbols, source.envir = source.envir, Dots[!names(Dots) %in% "trg"]))
   }
 
@@ -1399,6 +1407,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 saveSymbols.cache <- function (Symbols = NULL, source.envir = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1414,7 +1423,7 @@ initEnv();on.exit({uninitEnv()})
     if(is.null(Symbols)) EnvSymbols <- RetrievedSymbols
 
     for(each.symbol in EnvSymbols) {
-        assign(paste0(".", each.symbol), source.list[[each.symbol]], envir = cache.envir)
+        assign(stringr::str_c(".", each.symbol), source.list[[each.symbol]], envir = cache.envir)
     }
     invisible()
 })}
@@ -1490,6 +1499,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 #' @importFrom DBI dbExecute dbWriteTable dbQuoteString dbQuoteIdentifier dbDisconnect
 saveSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
@@ -1589,8 +1599,8 @@ initEnv();on.exit({uninitEnv()})
     if(is.null(xTs)) { message(paste("Symbol ", each.symbol, " was not found s skipping.")); next }
     df  <- xTs2DBDF(xTs, con, field.names = field.names[-1], db.fields = db.fields[-1])
 
-    if(schname != "") { dotSchemaQuoted <- paste0(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
-    DBI::dbExecute(con, paste0("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
+    if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+    DBI::dbExecute(con, stringr::str_c("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
 
     # Goal
     # exist in  R       'Date', 'Open','High','Low','Close','Volume','Adjusted'( along with FRED columns )
@@ -1612,7 +1622,7 @@ initEnv();on.exit({uninitEnv()})
       # How to properly handle timezone when passing POSIXct objects between R and Postgres DBMS?
       # https://stackoverflow.com/questions/40524225/how-to-properly-handle-timezone-when-passing-posixct-objects-between-r-and-postg
       updated <- format(as.POSIXct(updated, tz = Sys.getenv("TZ")), "%Y-%m-%d %H:%M:%OS%z")
-      DBI::dbExecute(con, paste0("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+      DBI::dbExecute(con, stringr::str_c("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                             " SET ",
                             DBI::dbQuoteIdentifier(con, "updated"), " = ", DBI::dbQuoteString(con, updated),
                             " WHERE ",
@@ -1623,7 +1633,7 @@ initEnv();on.exit({uninitEnv()})
     updated_R_class <- NULL
     if(inherits(xTs,"zoo")) {
       updated_R_class <- class(index(xTs))[1]
-      DBI::dbExecute(con, paste0("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+      DBI::dbExecute(con, stringr::str_c("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                             " SET ",
                             DBI::dbQuoteIdentifier(con, "updated_R_class")," = ", DBI::dbQuoteString(con, updated_R_class),
                             " WHERE ",
@@ -1633,7 +1643,7 @@ initEnv();on.exit({uninitEnv()})
     src <- NULL
     if("src" %in% names(attributes(xTs))) {
       src <- as.character(attributes(xTs)[["src"]])
-      DBI::dbExecute(con, paste0("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+      DBI::dbExecute(con, stringr::str_c("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                             " SET ",
                             DBI::dbQuoteIdentifier(con, "src"), " = ", DBI::dbQuoteString(con, src),
                             " WHERE ",
@@ -1698,6 +1708,7 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
+#' @importFrom stringr str_c
 #' @importFrom DescTools DoCall
 updatedSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
@@ -1736,7 +1747,7 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols <- list()
   if("src" %in% names(Dots)) {
-    SrcSymbols <- DescTools::DoCall(paste0("updatedSymbols",".", Dots[["src"]]), c(list(),
+    SrcSymbols <- DescTools::DoCall(stringr::str_c("updatedSymbols",".", Dots[["src"]]), c(list(),
                     Symbols = Symbols, source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
    }
   c(list(),EnvSymbols, SrcSymbols)
@@ -1790,6 +1801,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return named list of the object 'updated' property
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 #' @importFrom DBI dbGetQuery dbQuoteString dbQuoteIdentifier
 updatedSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL,
                                user=NULL,password=NULL,dbname=NULL,schname = NULL,host='localhost',port=5432,
@@ -1816,7 +1828,7 @@ initEnv();on.exit({uninitEnv()})
 
   Updateds <- list()
   for(Symbol in DBSymbols) {
-    updated <- DBI::dbGetQuery(con, paste0(
+    updated <- DBI::dbGetQuery(con, stringr::str_c(
       "SELECT ", DBI::dbQuoteIdentifier(con, "updated"),
       " FROM ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
       " WHERE ", DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, Symbol), ";"))
@@ -1875,6 +1887,7 @@ updatedSymbols.pg <- updatedSymbols.PostgreSQL
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
+#' @importFrom stringr str_c
 #' @importFrom DescTools DoCall
 listSymbols <- function(source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
@@ -1898,7 +1911,7 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols <- c()
   if("src" %in% names(Dots)) {
-    SrcSymbols <- DescTools::DoCall(paste0("listSymbols",".", Dots[["src"]]), c(list(),
+    SrcSymbols <- DescTools::DoCall(stringr::str_c("listSymbols",".", Dots[["src"]]), c(list(),
                     source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
   }
   c(EnvSymbols, SrcSymbols)
@@ -1988,8 +2001,9 @@ listSymbols.pg <- listSymbols.PostgreSQL
 #' @param ... passed to src
 #' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
-#' @importFrom DescTools DoCall
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom DescTools DoCall
 existSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2019,7 +2033,7 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols <- character(0)
   if("src" %in% names(Dots)) {
-    Results <- DescTools::DoCall(paste0("existSymbols",".", Dots[["src"]]), c(list(),
+    Results <- DescTools::DoCall(stringr::str_c("existSymbols",".", Dots[["src"]]), c(list(),
                     Symbols = Symbols, source.envir =  source.envir, Dots[!names(Dots) %in% "src"]))
     return(Results)
   }
@@ -2135,6 +2149,7 @@ existSymbols.pg <- existSymbols.PostgreSQL
 #' The results do not have any order.
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom DescTools DoCall
 #' @importFrom DBI dbGetQuery dbQuoteIdentifier
 pgSchemaTableLastIndex <- function(con, schname = NULL, tblname) {
 tryCatchLog::tryCatchLog({
@@ -2146,7 +2161,7 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(schname)) schname <- "Symbols"
 
     DBI::dbGetQuery(con,
-      paste0(
+      stringr::str_c(
        "
         SELECT -- NOTE if the primary key has multiple columns then take the leftmost column
               max(", DBI::dbQuoteIdentifier(con, pgListSchemaTablePrimaryKeyColumns(schname, tblname))[1], ")
