@@ -245,7 +245,7 @@ tryCatchLog::tryCatchLog({
 
   ### assign("nberDates", tis::nberDates, envir = envir)
 
-  assign("trainControl", caret::trainControl, envir = envir)
+  ### assign("trainControl", caret::trainControl, envir = envir)
 
   # DAMN spacetime WARNING happens AFTER I add TORGO'S UBL
   ### assign("ImpSampRegress", UBL::ImpSampRegress, envir = envir)
@@ -1797,6 +1797,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom UBL ImpSampRegress
 #' @importFrom iml Predictor FeatureImp Interaction
 #' @importFrom rlist list.zip
+#' @importFrom caret trainControl
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2033,7 +2034,7 @@ initEnv();on.exit({uninitEnv()})
 
   # fitting
 
-  trControl  <- trainControl(method = "cv", number = if(!is.null(indexSlicesObs)) { length(indexSlicesObs) } else { 5 },
+  trControl  <- caret::trainControl(method = "cv", number = if(!is.null(indexSlicesObs)) { length(indexSlicesObs) } else { 5 },
                              index    = if(!is.null(indexSlicesObs))    { indexSlicesObs }    else { NULL },
                              indexOut = if(!is.null(indexSlicesOutObs)) { indexSlicesOutObs } else { NULL },
                              summaryFunction = SortinoRatioSummary # formals(caret::trainControl) # to put back non-NULL args

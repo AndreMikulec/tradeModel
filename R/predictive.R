@@ -485,6 +485,7 @@ initEnv();on.exit({uninitEnv()})
 #'   , method_train = "xgbTree", tuneGrid = tg, trControl = tc)
 #'
 #' @export
+#' @importFrom caret trainControl train
 buildModel.train <- function(quantmod,training.data, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -540,7 +541,7 @@ initEnv();on.exit({uninitEnv()})
     Dots[["stage"]] <- NULL
 
     if(!"trControl" %in% DotsOrigNames) {
-      trControl <- trainControl(method = "cv", number = 5)
+      trControl <- caret::trainControl(method = "cv", number = 5)
       Dots[["trControl"]] <- trControl
     }
 
