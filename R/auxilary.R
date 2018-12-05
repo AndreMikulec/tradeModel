@@ -1785,6 +1785,17 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' formula.tools:::as.character.formula
+#'
+#' @export
+formula_tools___as_character_formula <- function (x, ...) {
+    form <- paste(deparse(x), collapse = " ")
+    form <- gsub("\\s+", " ", form, perl = FALSE)
+    return(form)
+}
+
+
+
 #' add Willshire 5000 Index weights using Machine learning
 #'
 #' This is the workhorse function. This is where the magic/logic happens.
@@ -1804,6 +1815,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom iml Predictor FeatureImp Interaction
 #' @importFrom rlist list.zip
 #' @importFrom caret trainControl
+#' @importFrom formula.tools lhs.vars
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1839,7 +1851,7 @@ initEnv();on.exit({uninitEnv()})
   specifiedUnrateModel
 
   # I can only train, test, validate where I have 'model target' predictee values
-  ModelTarget          <- lhs.vars((formula(specifiedUnrateModel)))
+  ModelTarget          <- formula.tools::lhs.vars((formula(specifiedUnrateModel)))
   ModelTargetFirstDate <- head(index(na.trim(xTs[,ModelTarget])),1)
   ModelTargetTrainTestFirstDate <- ModelTargetFirstDate
 
@@ -1904,8 +1916,8 @@ initEnv();on.exit({uninitEnv()})
       # values lhs of formula with values LESS than zero are MORE relevant (financial losses)
       # Therefore, I want new 150% percent MORE "financial loss data"
       # Keeping all of the financial profits
-      # C.perc = list(1.0, 2.5))
-      UBLDataFormula <- as.formula(stringr::str_c(as.character(formula(specifiedUnrateModel)), " + index")) # need the index to COPY
+      # C.perc = list(1.0, 2.5))                # formula.tools:::as.character.formula
+      UBLDataFormula <- as.formula(stringr::str_c(formula_tools___as_character_formula(formula(specifiedUnrateModel)), " + index")) # need the index to COPY
       UBLResults     <- UBL::ImpSampRegress(UBLDataFormula, UBLDataCompleteCases, rel = Relevance, thr.rel = 0.5,  C.perc = list(1.0, 2.5))
       # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
       # NOTE: no NEW index Values are created.
