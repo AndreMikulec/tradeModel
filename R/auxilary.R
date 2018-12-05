@@ -243,7 +243,7 @@ tryCatchLog::tryCatchLog({
   ### assign("truncPOSIXt",  Hmisc::truncPOSIXt,  envir = envir)
   ### assign("wtd.quantile", Hmisc::wtd.quantile, envir = envir)
 
-  assign("nberDates", tis::nberDates, envir = envir)
+  ### assign("nberDates", tis::nberDates, envir = envir)
 
   assign("trainControl", caret::trainControl, envir = envir)
 
@@ -1195,6 +1195,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom plyr llply
+#' @importFrom tis nberDates
 timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL, OmitSliceFirstDate = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
