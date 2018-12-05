@@ -643,6 +643,7 @@ interleave <- function (x, y)
 #' @importFrom stringr str_replace_all
 #' @importFrom tidyselect vars_select
 #' @importFrom tidyselect matches
+#' @importFrom DescTools DoCall
 #' @importFrom dplyr select
 #' @importFrom seplyr select_se
 #' @importFrom wrapr let
@@ -661,15 +662,7 @@ liquifyDF <- function(x
                       ) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-  # require(magrittr)
-  # require(R.utils)
-  # require(stringr)
-  # require(wrapr)
-  # require(seplyr)
-  # require(tidyselect)
-  # require(dplyr)
-  # require(tidyr)
-  # require(data.table)
+
   xOrig <- x
 
   if(NROW(x) == 0) { message("liquifyDF found zero rows"); return(data.frame()) }
@@ -683,7 +676,7 @@ initEnv();on.exit({uninitEnv()})
   # "dateindexid" "dateindexFact"(100% correlated column)
   ConstCols <- tidyselect::vars_select(names(x), tidyselect::matches(ConstColsRegex))
 
-  UniqueIDInteraction <- do.call(interaction, list(x[, UniqueIDCols, drop = F], drop = T))
+  UniqueIDInteraction <- DescTools::DoCall(interaction, list(x[, UniqueIDCols, drop = F], drop = T))
   xSplittedByUniqueID <- split(x, f = UniqueIDInteraction)
 
   resultsInList <- list()
@@ -1287,6 +1280,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom DescTools DoCall
 #' @importFrom plyr llply
 nextMonthfromYesterday.xts <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
@@ -1294,7 +1288,7 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(x)
   plyr::llply(index(xTs), nextMonthfromYesterday) %>%
-    { do.call(c,.) } %>%
+    { DescTools::DoCall(c,.) } %>%
       { xts(Coredata(xTs),.) }
 
 })}
@@ -1747,6 +1741,7 @@ formula_tools___as_character_formula <- function (x, ...) {
 #' @importFrom plyr llply
 #' @importFrom dplyr case_when
 #' @importFrom Hmisc wtd.quantile
+#' @importFrom DescTools DoCall
 #' @importFrom UBL ImpSampRegress
 #' @importFrom iml Predictor FeatureImp Interaction
 #' @importFrom rlist list.zip
@@ -2015,8 +2010,8 @@ initEnv();on.exit({uninitEnv()})
   # what makes the most sense is to use the
   # original (non-'added(removed) records) train/test data
   predictor = iml::Predictor$new(builtUnrateModel@fitted.model,
-    data = as.data.frame(xTs[do.call(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.inputs], stringsAsFactor = FALSE),
-    y =       c(coredata(xTs[do.call(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.target]))
+    data = as.data.frame(xTs[DescTools::DoCall(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.inputs], stringsAsFactor = FALSE),
+    y =       c(coredata(xTs[DescTools::DoCall(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.target]))
   )
   message("iml: Feature Importance; Shuffling each feature and measuring how much the performance drops")
   imp = iml::FeatureImp$new(predictor, loss = SortinoRatioLoss)

@@ -65,6 +65,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
+#' @importFrom DescTools DoCall
 #' @importFrom DBI dbQuoteIdentifier dbExecute dbQuoteString
 dfToCREATETable <- function(df, con, Symbol, schname) {
 tryCatchLog::tryCatchLog({
@@ -92,7 +93,7 @@ initEnv();on.exit({uninitEnv()})
   schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, Symbol))
 
   # column datatypes
-  colClasses  <- do.call(c,plyr::llply(df, function(x) {class(x)[1]}))
+  colClasses  <- DescTools::DoCall(c,plyr::llply(df, function(x) {class(x)[1]}))
   colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
   colClasses[colClasses %in%   "Date"]       <- "DATE"
   colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
@@ -386,6 +387,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @importFrom DBI dbGetQuery
+#' @importFrom DescTools DoCall
 oneColumn <- function(con, Query, outName, unQuote = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -405,7 +407,7 @@ initEnv();on.exit({uninitEnv()})
   if(unQuote) {
     split(ret,seq_len(NROW(ret))) %>%
       plyr::llply(function(x) { strsplit(x[[1]], "^\"|\"$")[[1]][2] }) %>%
-        do.call(c,.) %>%
+        { DescTools::DoCall(c,.) } %>%
           as.data.frame(., stringsAsFactors = FALSE) -> ret
   }
   colnames(ret) <- outName
@@ -1223,6 +1225,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
+#' @importFrom DescTools DoCall
 saveSymbols <- function(Symbols = NULL, env = parent.frame(),
                        source.envir = NULL, Gathering = "source.envir", ...) {
 tryCatchLog::tryCatchLog({
@@ -1315,10 +1318,10 @@ initEnv();on.exit({uninitEnv()})
 
  # keep compatible with quantmod::saveSymbols
   if("file.path" %in% names(Dots) && is.null(source.envirPassed)) {
-    do.call(saveSymbols.RData, c(list(), source.envir = list2env(xTsGetSymbols), Dots))
+    DescTools::DoCall(saveSymbols.RData, c(list(), source.envir = list2env(xTsGetSymbols), Dots))
   }
   if("trg" %in% names(Dots)) {
-    do.call(paste0("saveSymbols",".", Dots[["trg"]]), c(list(),
+    DescTools::DoCall(paste0("saveSymbols",".", Dots[["trg"]]), c(list(),
       Symbols = Symbols, source.envir = source.envir, Dots[!names(Dots) %in% "trg"]))
   }
 
@@ -1695,6 +1698,7 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
+#' @importFrom DescTools DoCall
 updatedSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1732,7 +1736,7 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols <- list()
   if("src" %in% names(Dots)) {
-    SrcSymbols <- do.call(paste0("updatedSymbols",".", Dots[["src"]]), c(list(),
+    SrcSymbols <- DescTools::DoCall(paste0("updatedSymbols",".", Dots[["src"]]), c(list(),
                     Symbols = Symbols, source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
    }
   c(list(),EnvSymbols, SrcSymbols)
@@ -1871,6 +1875,7 @@ updatedSymbols.pg <- updatedSymbols.PostgreSQL
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
+#' @importFrom DescTools DoCall
 listSymbols <- function(source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1893,7 +1898,7 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols <- c()
   if("src" %in% names(Dots)) {
-    SrcSymbols <- do.call(paste0("listSymbols",".", Dots[["src"]]), c(list(),
+    SrcSymbols <- DescTools::DoCall(paste0("listSymbols",".", Dots[["src"]]), c(list(),
                     source.envir = source.envir, Dots[!names(Dots) %in% "src"]))
   }
   c(EnvSymbols, SrcSymbols)
@@ -1973,11 +1978,6 @@ initEnv();on.exit({uninitEnv()})
 listSymbols.pg <- listSymbols.PostgreSQL
 
 
-
-
-
-
-
 #' xts object symbols
 #'
 #'looks in source.envir xor "src" exclusively
@@ -1988,6 +1988,7 @@ listSymbols.pg <- listSymbols.PostgreSQL
 #' @param ... passed to src
 #' @return R named list of Symbols and results (TRUE/FALSE)
 #' @export
+#' @importFrom DescTools DoCall
 #' @importFrom tryCatchLog tryCatchLog
 existSymbols <- function(Symbols = NULL, source.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
@@ -2018,7 +2019,7 @@ initEnv();on.exit({uninitEnv()})
 
   SrcSymbols <- character(0)
   if("src" %in% names(Dots)) {
-    Results <- do.call(paste0("existSymbols",".", Dots[["src"]]), c(list(),
+    Results <- DescTools::DoCall(paste0("existSymbols",".", Dots[["src"]]), c(list(),
                     Symbols = Symbols, source.envir =  source.envir, Dots[!names(Dots) %in% "src"]))
     return(Results)
   }

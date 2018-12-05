@@ -323,7 +323,7 @@ initEnv();on.exit({uninitEnv()})
 #' Error in runSum(x, n) : Series contains non-leading NAs
 #' zoo::na.trim(tail(x), sides = "right")
 #'
-#' example ( better: try a do.call )
+#' example ( better: try a DescTools::DoCall )
 #' Symbols <- unlist(plyr::llply( c("MSFT","AAPL","WMT","COST"), function(x) {
 #'                           l <- list(); l[[x]] <- getSymbols(x, auto.assign = FALSE); l
 #'                           }), recursive = FALSE)
@@ -511,6 +511,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom caret trainControl train
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
+#  # DescTools DoCall
 buildModel.train <- function(quantmod,training.data, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -588,7 +589,12 @@ initEnv();on.exit({uninitEnv()})
     cl <- parallel::makeCluster(detectTrueCores())
     doParallel::registerDoParallel(cl)
     set.seed(2L)
-    rp <- suppressWarnings( do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots[!names(Dots) %in% "stage"]) ) )
+
+    # DescTools::DoCall
+    #   Error in model.frame.default(form = <formula> +  invalid type (closure) for variable '(weights)'
+    # I do not know why this Error occurs: sometime, I will try to figure this out
+    # (so for now, just revert back to "do.call")
+    rp <- suppressWarnings(do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots[!names(Dots) %in% "stage"]) ) )
     parallel::stopCluster(cl)
 
     return(list("fitted"=rp, "inputs"=attr(terms(rp),"term.labels")))
@@ -645,7 +651,7 @@ is.method.available <- function(method, package) quantmod___is.method.available(
 # from quantmod predictModel
 #
 # does caret train
-# 
+#
 #
 predictModel.train <- function (object, data, ...) {
     if (quantmod___is.method.available('train','caret')) {

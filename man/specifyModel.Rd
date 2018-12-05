@@ -29,7 +29,7 @@ specifyModel
 Error in runSum(x, n) : Series contains non-leading NAs
 zoo::na.trim(tail(x), sides = "right")
 
-example ( better: try a do.call )
+example ( better: try a DescTools::DoCall )
 Symbols <- unlist(plyr::llply( c("MSFT","AAPL","WMT","COST"), function(x) {
                           l <- list(); l[[x]] <- getSymbols(x, auto.assign = FALSE); l
                           }), recursive = FALSE)
