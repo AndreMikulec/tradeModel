@@ -270,10 +270,7 @@ tryCatchLog::tryCatchLog({
   #   unloadNamespace(ns)
   # }
 
-  # currenlty NOT USED
-  assign("l2df", berryFunctions::l2df, envir = envir)
-
-  assign("list.zip", rlist::list.zip, envir = envir)
+  ### assign("list.zip", rlist::list.zip, envir = envir)
 
   action <- parse_expr("assign(\"envi\", environment())")
   eval_bare(action, caller_env())
@@ -1797,6 +1794,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom Hmisc wtd.quantile
 #' @importFrom UBL ImpSampRegress
 #' @importFrom iml Predictor FeatureImp Interaction
+#' @importFrom rlist list.zip
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
