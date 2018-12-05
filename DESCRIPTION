@@ -23,6 +23,7 @@ Imports:
     stringr,
     lubridate, 
     tidyselect,
+    data.table,
     dplyr,
     wrapr,
     seplyr,
