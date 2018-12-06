@@ -3,3 +3,5 @@
 NOTES\.txt
 ^\.RData[.]*
 ^\.Rhistory
+dump.*
+tryCatchLog\.logged\.txt

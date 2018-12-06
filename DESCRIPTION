@@ -13,8 +13,9 @@ Depends:
     quantmod (>= 0.4-3),
     PerformanceAnalytics (>= 1.5.2)
 Imports:
-    tryCatchLog,
     futile.logger,
+    tryCatchLog,
+    logging,
     rlang,
     magrittr,
     formula.tools,

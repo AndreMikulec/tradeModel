@@ -6,3 +6,5 @@
 /.RDataTmp*
 .Rproj.user
 /NOTES.txt
+dump*
+tryCatchLog.logged.txt

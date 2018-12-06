@@ -180,19 +180,20 @@ initEnv();on.exit({uninitEnv()})
 #' # [1] 99999
 #' }
 #' @export
-#' @importFrom futile.logger flog.threshold ERROR
+#' @importFrom futile.logger flog.threshold ERROR flog.appender appender.tee
+#' @importFrom logging basicConfig
 #' @importFrom rlang parse_expr eval_bare caller_env
 #' @importFrom magrittr %>%
 #' @importFrom tryCatchLog tryCatchLog
 initEnv <- function(init = NULL) {
+# tryCatchLog: what level to activate
+futile.logger::flog.threshold(futile.logger::ERROR)
+futile.logger::flog.appender(futile.logger::appender.tee("tryCatchLog.logged.txt"))
+logging::basicConfig()
 tryCatchLog::tryCatchLog({
-
-  # tryCatchLog: what level to activate
-  futile.logger::flog.threshold(futile.logger::ERROR)
-
   # so I have one
   action <- rlang::parse_expr("assign(\"envi\", environment())")
-  envii <- rlang::caller_env()
+  envii  <- rlang::caller_env()
   rlang::eval_bare(action, env = envii)
 
   # LATER MOVE THIS DOWN INTO FUNCTIONS
@@ -202,12 +203,25 @@ tryCatchLog::tryCatchLog({
   if(!"quantmod" %in% search())                 require(quantmod)
   if(!"PerformanceAnalytics" %in% search())     require(PerformanceAnalytics)
 
-  options(warn=2L)
+  # TOO MUCH INFORMATION ( BUT DOES WORK )
+  # action <- rlang::parse_expr("assign(\"ssc\", toString(sys.calls()[[length(sys.calls())]]) )")
+  # rlang::eval_bare(action, env = envii)
+  # action <- rlang::parse_expr("print(ssc)")
+  # rlang::eval_bare(action, env = envii)
+
+  # options(warn=2L)
+  options(warn=1L) # so, I can use BELOW: options(tryCatchLog.write.error.dump.file = TRUE)
   options(width=10000L) # LIMIT # Note: set Rterm(64 bit) as appropriate
   options(digits=if(is.null(init[["digits"]])) { 22L } else {init[["digits"]]})
   options(max.print=99999L)
   options(scipen=255L) # Try these = width
-  #
+
+  # BECAUSE MY "WARNINGS ARE CONVERTED TO ERRORS" ( ABOVE: options(warn=2L) )
+  # I can not directly use this feature
+  # Error in save(list = names(.GlobalEnv), file = outfile, version = version,  :
+  # (converted from warning) 'package:stats' may not be available when loading
+  options(tryCatchLog.write.error.dump.file = TRUE)
+
   ops <- options()
   assign("ops", ops, envir = envii)
 
@@ -1736,6 +1750,7 @@ formula_tools___as_character_formula <- function (x, ...) {
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom logging loginfo
 #' @importFrom plyr llply
 #' @importFrom stringr str_c
 #' @importFrom dplyr arrange
@@ -1751,6 +1766,8 @@ formula_tools___as_character_formula <- function (x, ...) {
 willShire5000MachineWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  logging::loginfo("Begin: willShire5000MachineWts")
 
   # received xTs( will5000idxlogrets, cashlogrets, unrate )
   # merge.xts target, indictors, and predictors into merged xTs
@@ -1882,7 +1899,6 @@ initEnv();on.exit({uninitEnv()})
   # [ ] BETER OFF
   # FIX: SINCE UBL/OTHER can ADD/REMOVE records
   # [ ] BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
-
 
   # determine slices of index and indexOut
   # pass through
@@ -2069,9 +2085,61 @@ initEnv();on.exit({uninitEnv()})
 
   colnames(FittedSignal)[1] <- stringr::str_c(ModelTarget, "_wts")
 
+  logging::loginfo("End:   willShire5000MachineWts")
+
   FittedSignal
 
-})}
+}, error = function(e) { ErrorHandler(e = e) } ) }
+
+
+
+#' error handler function meant for tryCatchLog::tryCatchLog
+#'
+#' @param e input from
+#' tryCatchLog::tryCatchLog(. . . , error = function(e) { ErrorHandler(e) })"
+#' @param useENVI getOption("useENVI") option.
+#' If NULL or TRUE, will use get("envi") to search for
+#' the calling environment location that is stored in "envi"
+#' Otherwise, will just get the calling environment from parent.frame(8)
+#' @importFrom DescTools DoCall
+#' @importFrom plyr llply
+#' @export
+ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
+
+  if(is.null(useENVI) || useENVI) {useENVI <- TRUE} else {useENVI <- FALSE}
+
+  message("Look up into the summary(^) and detail(^) stacks")
+  message("for the exact error location: FILE.R#LINE.")
+  message("Error follows: . . .")
+  writeLines("print(str(e))")
+  print(str(e))
+  writeLines("print(str(as.list(e$call)))")
+  print(str(as.list(e$call)))
+  message("Rerun exact ERROR with")
+  message("this:    DescTools::DoCall(as.list(e$call)[[1]],unlist(as.list(e$call)[-1]))")
+  message("")
+
+  if(useENVI && exists("envi")) {
+    envi <- get("envi")
+  } else {
+    # envi <- parent.frame(6)
+    # envi <- parent.frame(7) # should choose the outer ONE
+    # [ ] FIX: INSTEAD: should have manually searched UP for the 2nd occurance of "envi"
+    envi <- parent.frame(7)
+  }
+  eENames <- ls(envir = envi, all.names = TRUE, sort = F)
+  eE <- plyr::llply(eENames, function(x) { get(x, envir = envi) } )
+  Names(eE) <- eENames
+  eE <- list2env(eE)
+  message("Inspect the last know contents of the local (calling) environment")
+  message("using:    ls.str(eE) or str(as.list(eE))")
+
+  browser()
+
+  invisible()
+}
+
+
 
 
 
