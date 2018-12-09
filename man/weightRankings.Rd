@@ -12,9 +12,9 @@ weightRankings(xTs, target, TrainStart, TrainEnd, weightings = NULL,
 
 \item{target}{the column being predicted}
 
-\item{TrainStart}{passed to window.xts start}
+\item{TrainStart}{absolute training start date}
 
-\item{TrainEnd}{passed to window.xts start}
+\item{TrainEnd}{absolute training end date}
 
 \item{weightings}{passed to Hmisc::wtd.quantile weights}
 
@@ -32,9 +32,10 @@ The weights are then
 }
 \details{
 simply multiplied by the classification error at each iteration of the learning process.
-  Front Neurorobot. 2013; 7: 21.
-  Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
-  PMCID: PMC3885826
-  Gradient boosting machines, a tutorial
-  http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
+
+Gradient boosting machines, a tutoria
+Front Neurorobot. 2013; 7: 21.
+Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
+PMCID: PMC3885826l
+http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
 }

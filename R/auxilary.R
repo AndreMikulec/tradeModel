@@ -1769,75 +1769,141 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-  #' weights
-  #'
-  #' xgboost weights ( using objective(y hieght) value to determine 'how much I care'(weights))
-  #' The weights are then
-  #'
-  #'   simply multiplied by the classification error at each iteration of the learning process.
-  #'   Front Neurorobot. 2013; 7: 21.
-  #'   Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
-  #'   PMCID: PMC3885826
-  #'   Gradient boosting machines, a tutorial
-  #'   http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
-  #'
-  #' @param xTs data
-  #' @param target the column being predicted
-  #' @param TrainStart passed to window.xts start
-  #' @param TrainEnd passed to window.xts start
-  #' @param weightings passed to Hmisc::wtd.quantile weights
-  #' @param probs passed to Hmisc::wtd.quantile probs
-  #' Default is seven(7) intervals of probs = c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00)
-  #' @param CaseAdj new (re)values for values of the intervals 7:1 (from probs)
-  #' Must be passed to dplyr::case_when as a quoted list of formulas.
-  #' Passed as formula elements:  BareWeightRankings == <oldvalue> ~ <newvalue>
-  #' See the default (in the code: tradeModel::AdjustedWeightRankings )
-  #' @export
-  #' @importFrom Hmisc wtd.quantile
-  #' @importFrom dplyr case_when
-  #' @importFrom DescTools DoCall
-  #' @importFrom tryCatchLog tryCatchLog
-  weightRankings <- function(xTs, target, TrainStart, TrainEnd, weightings = NULL, probs = NULL, CaseAdj = NULL) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+#' weights
+#'
+#' xgboost weights ( using objective(y hieght) value to determine 'how much I care'(weights))
+#' The weights are then
+#'
+#' simply multiplied by the classification error at each iteration of the learning process.
+#'
+#' Gradient boosting machines, a tutoria
+#' Front Neurorobot. 2013; 7: 21.
+#' Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
+#' PMCID: PMC3885826l
+#' http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
+#'
+#' @param xTs data
+#' @param target the column being predicted
+#' @param TrainStart absolute training start date
+#' @param TrainEnd absolute training end date
+#' @param weightings passed to Hmisc::wtd.quantile weights
+#' @param probs passed to Hmisc::wtd.quantile probs
+#' Default is seven(7) intervals of probs = c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00)
+#' @param CaseAdj new (re)values for values of the intervals 7:1 (from probs)
+#' Must be passed to dplyr::case_when as a quoted list of formulas.
+#' Passed as formula elements:  BareWeightRankings == <oldvalue> ~ <newvalue>
+#' See the default (in the code: tradeModel::AdjustedWeightRankings )
+#' @export
+#' @importFrom Hmisc wtd.quantile
+#' @importFrom dplyr case_when
+#' @importFrom DescTools DoCall
+#' @importFrom tryCatchLog tryCatchLog
+weightRankings <- function(xTs, target, TrainStart, TrainEnd, weightings = NULL, probs = NULL, CaseAdj = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
-    Objectives <- as.vector(coredata(window(xTs, start = TrainStart, end = TrainEnd))[, target])
-    # lower values have lower rank numbers
-    if(is.null(probs)) {
-      probs <- c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00)
-    } else {
-      probs <- probs
-    }
-    findInterval(x =  Objectives,
-      # SEE MY NOTES: CURRENTLY REVIEWING different weights determiners
-      # https://cran.r-project.org/web/packages/freqweights/freqweights.pdf
-      vec = Hmisc::wtd.quantile(
-        x = Objectives,
-        weights = if(is.null(weightings)) { rep(1, NROW(Objectives)) } else { weightings } , # SEE MY NOTES
-        probs   = probs,
-        na.rm = FALSE
-      ),
-    rightmost.closed = TRUE) %>%
-      {.*(-1) } %>% { . + NROW(probs) } -> BareWeightRankings # (intervals(7)) values # { NROW(probs) - 1} # through 1
-      # lower numbers 'now' have higher rank numbers
-    if(is.null(CaseAdj)) {
-      CaseAdj <- quote(list(
-        BareWeightRankings == 7 ~ 30, # from 7  1%
-        BareWeightRankings == 6 ~ 15, # from 6 10%
-        BareWeightRankings == 5 ~  8, # from 5 25%
-        TRUE                    ~ BareWeightRankings
-      ))
-    } else {
-      CaseAdj <- CaseAdj
-    }
-    CaseAdj <- eval(CaseAdj)
-    DescTools::DoCall(dplyr::case_when, CaseAdj) -> AdjustedWeightRankings #
-    # to be sent as to buildModel.train, as
-    # weights = AdjustedWeightRankings
-    # if the model is xgboost [xgbTree], then it does USE it
-    AdjustedWeightRankings
+  Objectives <- as.vector(coredata(window(xTs, start = TrainStart, end = TrainEnd))[, target])
+  # lower values have lower rank numbers
+  if(is.null(probs)) {
+    probs <- c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00)
+  } else {
+    probs <- probs
+  }
+  findInterval(x =  Objectives,
+    # SEE MY NOTES: CURRENTLY REVIEWING different weights determiners
+    # https://cran.r-project.org/web/packages/freqweights/freqweights.pdf
+    vec = Hmisc::wtd.quantile(
+      x = Objectives,
+      weights = if(is.null(weightings)) { rep(1, NROW(Objectives)) } else { weightings } , # SEE MY NOTES
+      probs   = probs,
+      na.rm = FALSE
+    ),
+  rightmost.closed = TRUE) %>%
+    {.*(-1) } %>% { . + NROW(probs) } -> BareWeightRankings # (intervals(7)) values # { NROW(probs) - 1} # through 1
+    # lower numbers 'now' have higher rank numbers
+  if(is.null(CaseAdj)) {
+    CaseAdj <- quote(list(
+      BareWeightRankings == 7 ~ 30, # from 7  1%
+      BareWeightRankings == 6 ~ 15, # from 6 10%
+      BareWeightRankings == 5 ~  8, # from 5 25%
+      TRUE                    ~ BareWeightRankings
+    ))
+  } else {
+    CaseAdj <- CaseAdj
+  }
+  CaseAdj <- eval(CaseAdj)
+  DescTools::DoCall(dplyr::case_when, CaseAdj) -> AdjustedWeightRankings
+  # to be sent as to buildModel.train, as
+  # weights = AdjustedWeightRankings
+  # if the model is xgboost [xgbTree], then it does USE it
+  AdjustedWeightRankings
 
-  })}
+})}
+
+
+
+#' Rob Hyndman style time slices
+#'
+#' create time slice indexes to be passed to aret::trainControl index and indexOut
+#' My visual observation is that this model DOES \*worse\* than general cross validateion
+#' This is because, per time slice, less observations exist to TRAIN/TEST over
+#'
+#' @param xTs data
+#' @param SlicesAllData list of index slice date vectors
+#' @param TrainStart absolute training start date
+#' @param TrainEnd absolute training end date
+#' @return list of indexSlicesObs and indexSlicesOutObs position indexes
+#' meant to be passed to caret::trainControl index and indexOut
+#' @export
+#' @importFrom plyr llply
+#' @importFrom tryCatchLog tryCatchLog
+indexSlices <- function(xTs, SlicesAllData, TrainStart, TrainEnd) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+                                                        # any UBL (or OTHER) functions that could have
+                                                        # crept-in/created new observations that exist OUT-of-RANGE
+                                                        # GARANTEED TO BE WITHIN c(TrainingBegin, TrainingEnd)
+                              # ONLY NBER DATE RANGES                      # Re-defining Training* to be more date-restricte
+  AllDataSliceTimeRanges <- plyr::llply(SlicesAllData, function(x)  c(start= max(head(x,1),TrainStart), end = min(TrainEnd,tail(x,1))) )
+  # should be min(earliest)
+  FirstLoop <- TRUE
+  for(i in seq_along(AllDataSliceTimeRanges)) {
+    if(FirstLoop) {
+      TrainStart  <- AllDataSliceTimeRanges[[i]][["start"]]
+      FirstLoop <- FALSE
+    } else {
+      TrainStart < min(TrainStart, AllDataSliceTimeRanges[[i]][["start"]])
+    }
+  }
+  # should be max(latest)
+  FirstLoop <- TRUE
+  for(i in rev(seq_along(AllDataSliceTimeRanges))) {
+    if(FirstLoop) {
+      TrainEnd  <- AllDataSliceTimeRanges[[i]][["end"]]
+      FirstLoop <- FALSE
+    } else {
+      TrainEnd < max(TrainStart, AllDataSliceTimeRanges[[i]][["end"]])
+    }
+  }
+
+  Data <- xTs
+   # determine timeSlices
+  DataWobsid <- cbind(Data, obsid = seq_len(NROW(Data)))
+
+  indexSlicesObs <- plyr::llply(AllDataSliceTimeRanges, function(x) { as.integer(coredata(window(DataWobsid, start = x[["start"]], end = x[["end"]])[,"obsid"])) })
+  indexSlicesObsLastIndex <- length(indexSlicesObs)
+  indexSlicesOutObs <- list()
+  for(i in seq_along(indexSlicesObs)) {
+    if(i != indexSlicesObsLastIndex) {
+      indexSlicesOutObs[i] <- indexSlicesObs[i+1]
+    } else {
+      indexSlicesOutObs[i] <- indexSlicesObs[1] # gets the first set,
+    }                                           # otherwise, if I choose the 4th set
+  }                                             # then it(4th set) would be tested TWICE (and I do not want that)
+
+  return(list(indexSlicesObs = indexSlicesObs, indexSlicesOutObs = indexSlicesOutObs))
+})}
 
 
 
@@ -1881,17 +1947,6 @@ initEnv();on.exit({uninitEnv()})
   xTs <- merge(xTs, Indicators)
 
   xTs <- initXts(xTs)
-
-  # # IF REMOVE ".fun = " then RStudio can debug
-  # # create an environment of xts objects
-  # plyr::llply(as.data.frame(xTs),
-  #   .fun =  function(x) {
-  #     as.xts(x, order.by = index(xTs))
-  #   }
-  # ) -> SymbolsOrig
-  #
-  # # reorders in alphabetical order
-  # Symbols <- list2env(SymbolsOrig)
 
   # ordered R environment of Symbols
   Symbols <- xTsCols2SymbolsEnv(xTs)
@@ -2000,66 +2055,28 @@ initEnv();on.exit({uninitEnv()})
     stop("\"length(NBERAllData) == length(NBERFocusedData)\" is not TRUE")
   }
   # FIX: check if ANY NEW UBL records found its way into the VALIDATION area
-  # [ ] BETER OFF
+  # [ ] BETTER OFF
   # FIX: SINCE UBL/OTHER can ADD/REMOVE records
   # [ ] BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
 
-  # determine slices of index and indexOut
-  # pass through
+  # # determine slices of index and indexOut
+  # indexSlices(
+  #     # data.window = c(TrainingBegin, TrainingEnd)
+  #     # Update currently specified or built model with most recent data
+  #     # remove the last record(NO) (na.rm = FALSE)
+  #     # "2007-01-31" (actual "2001-12-31")
+  #     xTs = modelData(getModelData(specifiedUnrateModel, na.rm = FALSE, source.envir = Symbols))
+  #   , SlicesAllData = NBERAllData
+  #   , TrainStart = TrainingBegin
+  #   , TrainEnd   = TrainingEnd
+  # ) -> Sliced
+  # # determine slices of index and indexOut to caret trainControl
+  # # pass through
+  # indexSlicesObs    <- Sliced[["indexSlicesObs"]]
+  # indexSlicesOutObs <- Sliced[["indexSlicesOutObs"]]
+  # lousy performance: so I turned off
   indexSlicesObs    <- NULL
   indexSlicesOutObs <- NULL
-
-  # MY VISUAL OBSERVATION: model DOES *worse*: option; less observation to TRAIN/TEST over
-
-                                                        # any UBL (or OTHER) functions that could have
-                                                        # crept-in/created new observations that exist OUT-of-RANGE
-                                                        # GARANTEED TO BE WITHIN c(TrainingBegin, TrainingEnd)
-                                 # ONLY NBER DATE RANGES                     # Re-defining Training* to be more date-restrictev
-  AllDataSliceTimeRanges <- plyr::llply(NBERAllData, function(x)  c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1))) )
-  # should be min(earliest)
-  FirstLoop <- TRUE
-  for(i in seq_along(AllDataSliceTimeRanges)) {
-    if(FirstLoop) {
-      TrainingBegin  <- AllDataSliceTimeRanges[[i]][["start"]]
-      FirstLoop <- FALSE
-    } else {
-      TrainingBegin < min(TrainingBegin, AllDataSliceTimeRanges[[i]][["start"]])
-    }
-  }
-  # should be max(latest)
-  FirstLoop <- TRUE
-  for(i in rev(seq_along(AllDataSliceTimeRanges))) {
-    if(FirstLoop) {
-      TrainingEnd  <- AllDataSliceTimeRanges[[i]][["end"]]
-      FirstLoop <- FALSE
-    } else {
-      TrainingEnd < max(TrainingBegin, AllDataSliceTimeRanges[[i]][["end"]])
-    }
-  }
-
-  # Update currently specified or built model with most recent data
-  specifiedUnrateModel <- getModelData(specifiedUnrateModel, na.rm = FALSE, source.envir = Symbols)
-                                                            # remove the last record(NO)
-                                                            # "2007-01-31" (actual "2001-12-31")
-
-  Data <- modelData(specifiedUnrateModel) # , data.window = c(TrainingBegin, TrainingEnd)
-   # determine timeSlices
-  DataWobsid <- cbind(Data, obsid = seq_len(NROW(Data)))
-
-  indexSlicesObs <- plyr::llply(AllDataSliceTimeRanges, function(x) { as.integer(coredata(window(DataWobsid, start = x[["start"]], end = x[["end"]])[,"obsid"])) })
-  indexSlicesObsLastIndex <- length(indexSlicesObs)
-  indexSlicesOutObs <- list()
-  for(i in seq_along(indexSlicesObs)) {
-    if(i != indexSlicesObsLastIndex) {
-      indexSlicesOutObs[i] <- indexSlicesObs[i+1]
-    } else {
-      indexSlicesOutObs[i] <- indexSlicesObs[1] # gets the first set,
-    }                                           # otherwise, if I choose the 4th set
-  }                                             # then it(4th set) would be tested TWICE (and I do not want that)
-  # lousy: so I turned off
-  indexSlicesObs    <- NULL
-  indexSlicesOutObs <- NULL
-
 
   weightRankings(
       xTs = Data
