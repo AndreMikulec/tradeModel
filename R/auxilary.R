@@ -1846,19 +1846,19 @@ initEnv();on.exit({uninitEnv()})
   #                                             as.Date("1970-12-31")
   # [ ] FIX: SHOULD BE renamed NBERAllData, NBERFocusedData
   NBERAllData     <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
-  FocusedData <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
+  NBERFocusedData <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
 
-  # should be min(earliest),max(latest) Date of (NBERAllData,FocusedData)
-  TrainingBegin <- min(head(NBERAllData[[1]],1), head(FocusedData[[1]],1))
-  TrainingEnd   <- max(tail(NBERAllData[[length(NBERAllData)]],1), tail(NBERAllData[[length(FocusedData)]],1))
+  # should be min(earliest),max(latest) Date of (NBERAllData,NBERFocusedData)
+  TrainingBegin <- min(head(NBERAllData[[1]],1), head(NBERFocusedData[[1]],1))
+  TrainingEnd   <- max(tail(NBERAllData[[length(NBERAllData)]],1), tail(NBERAllData[[length(NBERFocusedData)]],1))
   # FIX: validation (zone) and exact records and (timeindex) needs to be nown
   # [ ] BETTER(BELOW) use intersect(dates) and "duplicated.data.frame"
   #     to determine if any UBL created records leak INTO the validation AREA
 
   # prepare for caret timeslices index and indexOut
   trControl <- NULL
-  if(length(NBERAllData) == length(FocusedData)) {
-    NumbSlices <- length(FocusedData)
+  if(length(NBERAllData) == length(NBERFocusedData)) {
+    NumbSlices <- length(NBERFocusedData)
 
     # ANDRE balancing
 
@@ -1870,9 +1870,9 @@ initEnv();on.exit({uninitEnv()})
       # Torgo new 2018, 2017,2018 slides
       # To balance the data: how many replica copies do I need?
       # ANDRE DECISION
-      # copy over enough so that the FocusedData and and NBERAllData numbers of records are balanced
-      NumbReplicaCopies <- ceiling((length(NBERAllData[[slice]]) - length(FocusedData[[slice]]))/length(FocusedData[[slice]]))
-      FocusedDataOrigSliceData <- Data[FocusedData[[slice]]]
+      # copy over enough so that the NBERFocusedData and and NBERAllData numbers of records are balanced
+      NumbReplicaCopies <- ceiling((length(NBERAllData[[slice]]) - length(NBERFocusedData[[slice]]))/length(NBERFocusedData[[slice]]))
+      FocusedDataOrigSliceData <- Data[NBERFocusedData[[slice]]]
       for(copy in seq_len(NumbReplicaCopies)) {
         TrainingData <- rbind(TrainingData, FocusedDataOrigSliceData)
       }
@@ -1928,7 +1928,7 @@ initEnv();on.exit({uninitEnv()})
     }
 
   } else {
-    stop("\"length(NBERAllData) == length(FocusedData)\" is not TRUE")
+    stop("\"length(NBERAllData) == length(NBERFocusedData)\" is not TRUE")
   }
   # FIX: check if ANY NEW UBL records found its way into the VALIDATION area
   # [ ] BETER OFF
@@ -2150,7 +2150,7 @@ ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
   print(str(e))
   writeLines("print(str(as.list(e$call)))")
   print(str(as.list(e$call)))
-  message("Rerun exact ERROR with")
+  message("IF as.list(e$call)[[1]] is visible, Rerun exact ERROR with")
   message("this:    DescTools::DoCall(as.list(e$call)[[1]],unlist(as.list(e$call)[-1]))")
   message("")
 
