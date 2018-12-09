@@ -1738,6 +1738,36 @@ formula_tools___as_character_formula <- function (x, ...) {
 }
 
 
+#' column split an xts object into
+#' an environment of column-xts objects
+#'
+#' uses S3 function: xts:::as.data.frame.xts
+#'
+#' @param xTs xts object
+#' @export
+#' @importFrom plyr llply
+xTsCols2SymbolsEnv <- function(xTs) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # IF REMOVE ".fun = " then RStudio can debug
+  # create an environment of xts objects
+  plyr::llply(as.data.frame(xTs),
+    function(x) {
+      xx <- as.xts(x, order.by = index(xTs))
+      # (+) non-core attributes (user) [if any]
+      xtsAttributes(xx) <- xtsAttributes(xTs)
+      xx
+    }
+  ) -> SymbolsOrig
+
+  # reorders in alphabetical order
+  Symbols <- list2env(SymbolsOrig)
+  Symbols
+
+})}
+
+
 
 #' add Willshire 5000 Index weights using Machine learning
 #'
@@ -1782,16 +1812,19 @@ initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
 
-  # IF REMOVE ".fun = " then RStudio can debug
-  # create an environment of xts objects
-  plyr::llply(as.data.frame(xTs),
-    .fun =  function(x) {
-      as.xts(x, order.by = index(xTs))
-    }
-  ) -> SymbolsOrig
+  # # IF REMOVE ".fun = " then RStudio can debug
+  # # create an environment of xts objects
+  # plyr::llply(as.data.frame(xTs),
+  #   .fun =  function(x) {
+  #     as.xts(x, order.by = index(xTs))
+  #   }
+  # ) -> SymbolsOrig
+  #
+  # # reorders in alphabetical order
+  # Symbols <- list2env(SymbolsOrig)
 
-  # reorders in alphabetical order
-  Symbols <- list2env(SymbolsOrig)
+  # ordered R environment of Symbols
+  Symbols <- xTsCols2SymbolsEnv(xTs)
 
   # traditionally the first column is the target variable
   specifyModel(formula = as.formula(stringr::str_c( colnames(xTs)[1], " ~ ", stringr::str_c(colnames(Indicators), collapse = " + ")))
@@ -1882,6 +1915,8 @@ initEnv();on.exit({uninitEnv()})
           res <- as.xts(x[["UBLResult"]], order.by = UBLResultsIndex)
           indexClass(res)  <- indexClass(TrainingData)
           indexFormat(res) <- indexFormat(TrainingData)
+          # (+) non-core attributes (user) [if any]
+          xtsAttributes(res) <- xtsAttributes(TrainingData)
           res <- rbind(res, Data[,x[["ColName"]]][TrainingEnd < index(Data)])
           return(res)
         }
