@@ -1845,19 +1845,19 @@ initEnv();on.exit({uninitEnv()})
   #                                             HARD-CODED(I just know this)        Desired end "2006-12-31", but actual end is "2001-11-30"
   #                                             as.Date("1970-12-31")
   # [ ] FIX: SHOULD BE renamed NBERAllData, NBERFocusedData
-  AllData     <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
+  NBERAllData     <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
   FocusedData <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
 
-  # should be min(earliest),max(latest) Date of (AllData,FocusedData)
-  TrainingBegin <- min(head(AllData[[1]],1), head(FocusedData[[1]],1))
-  TrainingEnd   <- max(tail(AllData[[length(AllData)]],1), tail(AllData[[length(FocusedData)]],1))
+  # should be min(earliest),max(latest) Date of (NBERAllData,FocusedData)
+  TrainingBegin <- min(head(NBERAllData[[1]],1), head(FocusedData[[1]],1))
+  TrainingEnd   <- max(tail(NBERAllData[[length(NBERAllData)]],1), tail(NBERAllData[[length(FocusedData)]],1))
   # FIX: validation (zone) and exact records and (timeindex) needs to be nown
   # [ ] BETTER(BELOW) use intersect(dates) and "duplicated.data.frame"
   #     to determine if any UBL created records leak INTO the validation AREA
 
   # prepare for caret timeslices index and indexOut
   trControl <- NULL
-  if(length(AllData) == length(FocusedData)) {
+  if(length(NBERAllData) == length(FocusedData)) {
     NumbSlices <- length(FocusedData)
 
     # ANDRE balancing
@@ -1870,8 +1870,8 @@ initEnv();on.exit({uninitEnv()})
       # Torgo new 2018, 2017,2018 slides
       # To balance the data: how many replica copies do I need?
       # ANDRE DECISION
-      # copy over enough so that the FocusedData and and AllData numbers of records are balanced
-      NumbReplicaCopies <- ceiling((length(AllData[[slice]]) - length(FocusedData[[slice]]))/length(FocusedData[[slice]]))
+      # copy over enough so that the FocusedData and and NBERAllData numbers of records are balanced
+      NumbReplicaCopies <- ceiling((length(NBERAllData[[slice]]) - length(FocusedData[[slice]]))/length(FocusedData[[slice]]))
       FocusedDataOrigSliceData <- Data[FocusedData[[slice]]]
       for(copy in seq_len(NumbReplicaCopies)) {
         TrainingData <- rbind(TrainingData, FocusedDataOrigSliceData)
@@ -1928,7 +1928,7 @@ initEnv();on.exit({uninitEnv()})
     }
 
   } else {
-    stop("\"length(AllData) == length(FocusedData)\" is not TRUE")
+    stop("\"length(NBERAllData) == length(FocusedData)\" is not TRUE")
   }
   # FIX: check if ANY NEW UBL records found its way into the VALIDATION area
   # [ ] BETER OFF
@@ -1946,7 +1946,7 @@ initEnv();on.exit({uninitEnv()})
                                                         # crept-in/created new observations that exist OUT-of-RANGE
                                                         # GARANTEED TO BE WITHIN c(TrainingBegin, TrainingEnd)
                                  # ONLY NBER DATE RANGES                     # Re-defining Training* to be more date-restrictev
-  AllDataSliceTimeRanges <- plyr::llply(AllData, function(x)  c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1))) )
+  AllDataSliceTimeRanges <- plyr::llply(NBERAllData, function(x)  c(start= max(head(x,1),TrainingBegin), end = min(TrainingEnd,tail(x,1))) )
   # should be min(earliest)
   FirstLoop <- TRUE
   for(i in seq_along(AllDataSliceTimeRanges)) {
@@ -2062,8 +2062,8 @@ initEnv();on.exit({uninitEnv()})
   # what makes the most sense is to use the
   # original (non-'added(removed) records) train/test data
   predictor = iml::Predictor$new(builtUnrateModel@fitted.model,
-    data = as.data.frame(xTs[DescTools::DoCall(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.inputs], stringsAsFactor = FALSE),
-    y =       c(coredata(xTs[DescTools::DoCall(c,AllData),  colnames(xTs) %in% builtUnrateModel@model.target]))
+    data = as.data.frame(xTs[DescTools::DoCall(c,NBERAllData),  colnames(xTs) %in% builtUnrateModel@model.inputs], stringsAsFactor = FALSE),
+    y =       c(coredata(xTs[DescTools::DoCall(c,NBERAllData),  colnames(xTs) %in% builtUnrateModel@model.target]))
   )
   message("iml: Feature Importance; Shuffling each feature and measuring how much the performance drops")
   imp = iml::FeatureImp$new(predictor, loss = SortinoRatioLoss)
