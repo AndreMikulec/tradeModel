@@ -1746,6 +1746,7 @@ formula_tools___as_character_formula <- function (x, ...) {
 #' @param xTs xts object
 #' @export
 #' @importFrom plyr llply
+#' @importFrom tryCatchLog tryCatchLog
 xTsCols2SymbolsEnv <- function(xTs) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1768,6 +1769,77 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+  #' weights
+  #'
+  #' xgboost weights ( using objective(y hieght) value to determine 'how much I care'(weights))
+  #' The weights are then
+  #'
+  #'   simply multiplied by the classification error at each iteration of the learning process.
+  #'   Front Neurorobot. 2013; 7: 21.
+  #'   Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
+  #'   PMCID: PMC3885826
+  #'   Gradient boosting machines, a tutorial
+  #'   http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
+  #'
+  #' @param xTs data
+  #' @param target the column being predicted
+  #' @param TrainStart passed to window.xts start
+  #' @param TrainEnd passed to window.xts start
+  #' @param weightings passed to Hmisc::wtd.quantile weights
+  #' @param probs passed to Hmisc::wtd.quantile probs
+  #' Default is seven(7) intervals of probs = c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00)
+  #' @param CaseAdj new (re)values for values of the intervals 7:1 (from probs)
+  #' Must be passed to dplyr::case_when as a quoted list of formulas.
+  #' Passed as formula elements:  BareWeightRankings == <oldvalue> ~ <newvalue>
+  #' See the default (in the code: tradeModel::AdjustedWeightRankings )
+  #' @export
+  #' @importFrom Hmisc wtd.quantile
+  #' @importFrom dplyr case_when
+  #' @importFrom DescTools DoCall
+  #' @importFrom tryCatchLog tryCatchLog
+  weightRankings <- function(xTs, target, TrainStart, TrainEnd, weightings = NULL, probs = NULL, CaseAdj = NULL) {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+    Objectives <- as.vector(coredata(window(xTs, start = TrainStart, end = TrainEnd))[, target])
+    # lower values have lower rank numbers
+    if(is.null(probs)) {
+      probs <- c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00)
+    } else {
+      probs <- probs
+    }
+    findInterval(x =  Objectives,
+      # SEE MY NOTES: CURRENTLY REVIEWING different weights determiners
+      # https://cran.r-project.org/web/packages/freqweights/freqweights.pdf
+      vec = Hmisc::wtd.quantile(
+        x = Objectives,
+        weights = if(is.null(weightings)) { rep(1, NROW(Objectives)) } else { weightings } , # SEE MY NOTES
+        probs   = probs,
+        na.rm = FALSE
+      ),
+    rightmost.closed = TRUE) %>%
+      {.*(-1) } %>% { . + NROW(probs) } -> BareWeightRankings # (intervals(7)) values # { NROW(probs) - 1} # through 1
+      # lower numbers 'now' have higher rank numbers
+    if(is.null(CaseAdj)) {
+      CaseAdj <- quote(list(
+        BareWeightRankings == 7 ~ 30, # from 7  1%
+        BareWeightRankings == 6 ~ 15, # from 6 10%
+        BareWeightRankings == 5 ~  8, # from 5 25%
+        TRUE                    ~ BareWeightRankings
+      ))
+    } else {
+      CaseAdj <- CaseAdj
+    }
+    CaseAdj <- eval(CaseAdj)
+    DescTools::DoCall(dplyr::case_when, CaseAdj) -> AdjustedWeightRankings #
+    # to be sent as to buildModel.train, as
+    # weights = AdjustedWeightRankings
+    # if the model is xgboost [xgbTree], then it does USE it
+    AdjustedWeightRankings
+
+  })}
+
+
 
 #' add Willshire 5000 Index weights using Machine learning
 #'
@@ -1785,8 +1857,6 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom stringr str_c
 #' @importFrom dplyr arrange
 #' @importFrom plyr llply
-#' @importFrom dplyr case_when
-#' @importFrom Hmisc wtd.quantile
 #' @importFrom DescTools DoCall
 #' @importFrom UBL ImpSampRegress
 #' @importFrom iml Predictor FeatureImp Interaction
@@ -1844,7 +1914,6 @@ initEnv();on.exit({uninitEnv()})
   #                                             I do not have any Predictee information earlier than this
   #                                             HARD-CODED(I just know this)        Desired end "2006-12-31", but actual end is "2001-11-30"
   #                                             as.Date("1970-12-31")
-  # [ ] FIX: SHOULD BE renamed NBERAllData, NBERFocusedData
   NBERAllData     <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
   NBERFocusedData <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
 
@@ -1992,46 +2061,18 @@ initEnv();on.exit({uninitEnv()})
   indexSlicesOutObs <- NULL
 
 
-  # weights
-
-  # I am passing ( also when I decide that I am not sending weights )
-  # pass through
-  AdjustedWeightRankings <- NULL
-                            #rep(1,NROW(window(Data, start = TrainingBegin, end = TrainingEnd)))
-  #
-  # xgboost weights ( using objective(y hieght) value to determine 'how much I care'(weights))
-  # The weights are then
-  #
-  #   simply multiplied by the classification error at each iteration of the learning process.
-  #
-  #   Front Neurorobot. 2013; 7: 21.
-  #   Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
-  #   PMCID: PMC3885826
-  #   Gradient boosting machines, a tutorial
-  #   http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
-  #
-  Objectives <- as.vector(coredata(window(Data, start = TrainingBegin, end = TrainingEnd))[, ModelTarget])
-  # lower values have lower rank numbers
-  findInterval(x =  Objectives,
-    # SEE MY NOTES: CURRENTLY REVIEWING different weights determiners
-    # https://cran.r-project.org/web/packages/freqweights/freqweights.pdf
-               vec = Hmisc::wtd.quantile(
-                 x = Objectives,
-                 weights = rep(1, NROW(Objectives)), # SEE MY NOTES
-                 probs = c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00),
-                 na.rm = FALSE ),
-              rightmost.closed = TRUE) %>%
-                {.*(-1) } %>% { . + 8 } -> BareWeightRankings # values 7 through 1
-                # lower numbers 'now' have higher rank numbers
-  dplyr::case_when(
-    BareWeightRankings == 7 ~ 30, # from 7  1%
-    BareWeightRankings == 6 ~ 15, # from 6 10%
-    BareWeightRankings == 5 ~  8, # from 5 25%
-    TRUE                    ~ BareWeightRankings
-  ) -> AdjustedWeightRankings #
-  # to be sent as to buildModel.train, as
-  # weights = AdjustedWeightRankings
-  # if the model is xgboost [xgbTree], then it does USE it
+  weightRankings(
+      xTs = Data
+    , target = ModelTarget
+    , TrainStart = TrainingBegin
+    , TrainEnd   = TrainingEnd
+    , CaseAdj    = quote(list(
+        BareWeightRankings == 7 ~ 30, # from 7  1%
+        BareWeightRankings == 6 ~ 15, # from 6 10%
+        BareWeightRankings == 5 ~  8, # from 5 25%
+        TRUE                    ~ BareWeightRankings
+      ))
+  ) -> AdjustedWeightRankings
 
   # fitting
 
@@ -2048,7 +2089,7 @@ initEnv();on.exit({uninitEnv()})
                                  training.per=c(TrainingBegin, TrainingEnd),
                                  trControl = trControl,
                                  stage = "Test", # alternate  # "Production" "Test"
-                                 weights = AdjustedWeightRankings, # weights
+                                 weights = if(!is.null(AdjustedWeightRankings)) { AdjustedWeightRankings } else { NULL }, # weights
                                  maximize = TRUE,
                                  metric = "ratio"
                                  )
