@@ -1764,7 +1764,6 @@ initEnv();on.exit({uninitEnv()})
   ) -> SymbolsOrig
 
   # reorders in alphabetical order
-  browser()
   Symbols <- list2env(SymbolsOrig)
   Symbols
 
@@ -1856,6 +1855,23 @@ initEnv();on.exit({uninitEnv()})
 #' @param TrainEnd absolute training end date
 #' @return list of indexSlicesObs and indexSlicesOutObs position indexes
 #' meant to be passed to caret::trainControl index and indexOut
+#' \dontrun{
+#' # determine slices of index and indexOut
+#' indexSlices(
+#'     # data.window = c(TrainingBegin, TrainingEnd)
+#'     # Update currently specified or built model with most recent data
+#'     # remove the last record(NO) (na.rm = FALSE)
+#'     # "2007-01-31" (actual "2001-12-31")
+#'     xTs = modelData(specifiedUnrateModel, exclude.training = TRUE) # not defined yet
+#'   , SlicesAllData = NBERAllData
+#'   , TrainStart = TrainingBegin
+#'   , TrainEnd   = TrainingEnd
+#' ) -> Sliced
+#' # determine slices of index and indexOut to caret trainControl
+#' # pass through
+#' indexSlicesObs    <- Sliced[["indexSlicesObs"]]
+#' indexSlicesOutObs <- Sliced[["indexSlicesOutObs"]]
+#' }
 #' @export
 #' @importFrom plyr llply
 #' @importFrom tryCatchLog tryCatchLog
@@ -1905,6 +1921,206 @@ initEnv();on.exit({uninitEnv()})
   }                                             # then it(4th set) would be tested TWICE (and I do not want that)
 
   return(list(indexSlicesObs = indexSlicesObs, indexSlicesOutObs = indexSlicesOutObs))
+})}
+
+
+
+
+#' give more observations to the focused data
+#'
+#' produce more focused data duplicate observations
+#' such that focused data as at least the same number of observations
+#' as "all observations - focused observations"
+#'
+#' @param xTs xts object of training data
+#' @param SlicesAllData list of index slice date vectors
+#' @param SlicesFocusedData list of index slice date vectors
+#' @param TrainStart absolute training start date
+#' @param TrainEnd absolute training end date
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+balanceFocusedData <- function(
+    xTs
+  , SlicesFocusedData
+  , SlicesAllData
+  , TrainStart
+  , TrainEnd
+) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  if(length(SlicesAllData) != length(SlicesFocusedData)) {
+    stop("In balanceFocusedData: need length(SlicesAllData) == length(SlicesFocusedData)")
+  }
+  NumbSlices <- length(SlicesFocusedData)
+  # ANDRE balancing
+
+  # determine the Focused timeslices to (replicate)copy
+  Data <- xTs
+  TrainingData <- window(Data, start = TrainStart, end = TrainEnd)
+  for(slice in seq_len(NumbSlices)) {
+    # x-num-ish it:(bind a 2nd,3rd,4th copy)
+    # Torgo new 2018, 2017,2018 slides
+    # To balance the data: how many replica copies do I need?
+    # ANDRE DECISION
+    # copy over enough (or more) so that the
+    # SlicesFocusedData and and SlicesAllData numbers of records are balanced
+    NumbReplicaCopies <- ceiling((length(SlicesAllData[[slice]]) - length(SlicesFocusedData[[slice]]))/length(SlicesFocusedData[[slice]]))
+    FocusedDataOrigSliceData <- Data[SlicesFocusedData[[slice]]]
+    for(copy in seq_len(NumbReplicaCopies)) {
+      TrainingData <- rbind(TrainingData, FocusedDataOrigSliceData)
+    }
+  }
+  # add back validation area data
+  AdjData <- rbind(TrainingData, xTs[!index(xTs) %in% index(TrainingData), ])
+  AdjData
+
+})}
+
+
+
+
+#' create/remove more or less observations determined by an UBL function
+#'
+#' produce more or less duplicate/near observations
+#'
+#' @param xTs xts object of training data
+#' @param Fmla formula that is sent to the UBL function
+#' @param TrainStart absolute training start date
+#' @param TrainEnd absolute training end date
+#' @param UBLFunction package UBL *Regress function ( default is ImpSampRegress ),
+#' entered as enclosed in a "string" or bare
+#' @param ... passed to the UBL function
+#' if the UBLFunction is ImpSampRegress, then defaults are the following:
+#' thr.rel = 0.5,  C.perc = list(1.0, 2.5),
+#' rel: values less than zero are important, values greater than zero are not important
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom UBL ImpSampRegress SmoteRegress RandOverRegress RandUnderRegress UtilOptimRegress
+#' @importFrom DescTools DoCall
+balanceByUBLData <- function(
+    xTs
+  , Fmla
+  , TrainStart = NULL
+  , TrainEnd = NULL
+  , UBLFunction = NULL
+  , ...
+) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  Data <- xTs
+  TrainingData <- window(Data, start = TrainStart, end = TrainEnd)
+  # utility based learning
+  UBLData <- cbind(as.data.frame(TrainingData), index = as.POSIXct(index(TrainingData)))
+  row.names(UBLData) <- NULL
+  UBLDataCompleteCases <- UBLData[complete.cases(UBLData),,drop = FALSE]
+
+                                              # formula.tools:::as.character.formula
+  UBLDataFormula <- as.formula(stringr::str_c(formula_tools___as_character_formula(Fmla), " + index")) # need the index to COPY
+
+  if(!is.null(UBLFunction)) {
+    if(mode(UBLFunction) == "function") {
+      UBLFunction = match.fun(UBLFunction)
+    } else {
+      UBLFunction <- UBLFunction
+    }
+  } else {
+    UBLFunction <- UBL::ImpSampRegress
+  }
+
+  Dots <- list(...)
+  if("dat"   %in% names(Dots))
+    DoData <- list(dat   = UBLDataCompleteCases)
+  # UBL::UtilOptimRegress
+  if("train" %in% names(Dots))
+    DoData <- list(train = UBLDataCompleteCases)
+
+  # values lhs of formula with values LESS than zero are MORE relevant (financial losses)
+  #
+  #
+  # UBL functions;  or 'create new observations'
+  #                x-axis   y-axis
+  #                 y-val,  rel(height), slope at height(y-axis)
+  if(!"rel" %in% names(Dots)){
+    rel <- matrix(c(
+                       -0.01, 1.0, 0.0, # negative y-values ( I care *much* about )
+                        0.00, 0.5, 0.5,
+                        0.01, 0.0, 0.0  # positive y-values ( I do not care *much* about )
+                        )
+                 , ncol = 3
+                 , byrow = TRUE)
+  } else {
+    rel <- Dots[["rel"]]
+  }
+  if(!"thr.rel" %in% names(Dots)) {
+    thr.rel = 0.5
+  } else {
+    thr.rel <- Dots[["thr.rel"]]
+  }
+  if(!"C.perc" %in% names(Dots)) {
+    # I want new 150% percent MORE "financial loss data"
+    # Keeping all of the financial profits
+    # C.perc = list(1.0, 2.5))
+    C.perc = list(1.0, 2.5)
+  } else {
+    C.perc <- Dots[["C.perc"]]
+  }
+
+  if(identical(UBLFunction, UBL::ImpSampRegress)) {
+    # WERCS: WEighted Relevance-based Combination Strategy
+    UBLResults <- DescTools::DoCall(UBL::ImpSampRegress
+      , c(list(), form = UBLDataFormula, dat = list(UBLDataCompleteCases)
+      , rel = list(rel), thr.rel = thr.rel,  C.perc = list(C.perc)
+      , Dots[!names(Dots) %in% c("form","dat","train","rel","thr.rel","C.perc")] )
+    )
+    # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
+    # NOTE: no NEW index Values are created.
+    # I CAN NOT garnantee that all UBL functons do NOT do that
+  } else {
+    # anything else
+    UBLResults <- DescTools::DoCall(UBLFunction, c(list(), form = UBLDataFormula, DoData, Dots[!names(Dots) %in% c("form","dat","train")] ) )
+  }
+
+  UBLResultsIndex <- UBLResults[["index"]]
+  UBLResults      <- UBLResults[, !colnames(UBLResults) %in% "index" , drop = FALSE]
+
+  # redefine
+  TrainingData <- as.xts(as.matrix(UBLResults), order.by = UBLResultsIndex)
+  indexClass(TrainingData)  <- indexClass(xTs)
+  indexFormat(TrainingData) <- indexFormat(xTs)
+  # (+) non-core attributes (user) [if any]
+  xtsAttributes(TrainingData) <- xtsAttributes(xTs)
+
+  # prevent any leaking of 'new' [if any] UBL data into the validation area
+  TrainingData <- window(TrainingData, start = TrainStart, end = TrainEnd)
+  # add back validation area data
+  AdjData <- rbind(TrainingData, xTs[!index(xTs) %in% index(TrainingData),])
+  AdjData
+
+})}
+
+
+
+#' low-level set the values quantmod object slots
+#'
+#' # methods/html/slot.html
+#'
+#' @param x quantmod object
+#' @param ... list of name-value pairs
+#' @export
+`modelData<-` <- function(x, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # LATER: FIX [ ]:MAYBE CHECK FOR A quantmod object
+  # LATER: FIX [ ]:MAYBE CHECK FOR A valid slot name
+  Dots <-list(...)$value
+  for(i in names(Dots)){
+    slot(x, i) <- Dots[[i]]
+  }
+  x
 })}
 
 
@@ -1964,6 +2180,7 @@ initEnv();on.exit({uninitEnv()})
   ModelTargetFirstDate <- head(index(na.trim(xTs[,ModelTarget])),1)
   ModelTargetTrainTestFirstDate <- ModelTargetFirstDate
 
+  # NOTE: [ ] FIX: SHOULD NOT USE xTs HERE
   ModelTargetLastDate <- tail(index(na.trim(xTs[,ModelTarget])),1)
   # Later, I want to validate, so I save researve some dates(2007+)
   ModelTargetTrainTestLastDate <- min(as.Date("2006-12-31"), ModelTargetLastDate)
@@ -1977,114 +2194,26 @@ initEnv();on.exit({uninitEnv()})
   # should be min(earliest),max(latest) Date of (NBERAllData,NBERFocusedData)
   TrainingBegin <- min(head(NBERAllData[[1]],1), head(NBERFocusedData[[1]],1))
   TrainingEnd   <- max(tail(NBERAllData[[length(NBERAllData)]],1), tail(NBERAllData[[length(NBERFocusedData)]],1))
-  # FIX: validation (zone) and exact records and (timeindex) needs to be nown
-  # [ ] BETTER(BELOW) use intersect(dates) and "duplicated.data.frame"
-  #     to determine if any UBL created records leak INTO the validation AREA
 
-  # FIX: check if ANY NEW UBL records found its way into the VALIDATION area
-  # [ ] BETTER OFF
-  # FIX: SINCE UBL/OTHER can ADD/REMOVE records
-  # [ ] BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
+  balanceFocusedData(
+      xTs               = modelData(specifiedUnrateModel) # exclude.training not built/defined yet
+    , SlicesAllData     = NBERAllData
+    , SlicesFocusedData = NBERFocusedData
+    , TrainStart        = TrainingBegin
+    , TrainEnd          = TrainingEnd
+  ) -> TrainingData
+  modelData(specifiedUnrateModel) <- list(model.data = TrainingData)
 
-  # prepare for caret timeslices index and indexOut
-  trControl <- NULL
-  if(length(NBERAllData) == length(NBERFocusedData)) {
-    browser()
-    NumbSlices <- length(NBERFocusedData)
-
-    # ANDRE balancing
-
-    # determine the Focused timeslices to (replicate)copy
-    Data <- modelData(specifiedUnrateModel)
-    TrainingData <- window(Data, start = TrainingBegin, end = TrainingEnd)
-    for(slice in seq_len(NumbSlices)) {
-      # x-num-ish it:(bind a 2nd,3rd,4th copy)
-      # Torgo new 2018, 2017,2018 slides
-      # To balance the data: how many replica copies do I need?
-      # ANDRE DECISION
-      # copy over enough so that the NBERFocusedData and and NBERAllData numbers of records are balanced
-      NumbReplicaCopies <- ceiling((length(NBERAllData[[slice]]) - length(NBERFocusedData[[slice]]))/length(NBERFocusedData[[slice]]))
-      FocusedDataOrigSliceData <- Data[NBERFocusedData[[slice]]]
-      for(copy in seq_len(NumbReplicaCopies)) {
-        TrainingData <- rbind(TrainingData, FocusedDataOrigSliceData)
-      }
-
-      # UBL functionons;  or 'create new observations'
-      #                x-axis   y-axis
-      #                 y-val,  rel(height), slope at height(y-axis)
-      Relevance <- matrix(c(
-                         -0.01, 1.0, 0.0, # negative y-values ( I care *much* about )
-                          0.00, 0.5, 0.5,
-                          0.01, 0.0, 0.0  # positive y-values ( I do not care much about )
-                          )
-                   , ncol = 3
-                   , byrow = TRUE)
-
-      # utility based learning
-
-      UBLData <- cbind(as.data.frame(TrainingData), index = as.POSIXct(index(TrainingData))); row.names(UBLData) <- NULL
-      # ? UBL::ImpSampRegress example
-      UBLDataCompleteCases <- UBLData[complete.cases(UBLData),,drop = FALSE]
-
-      # WERCS: WEighted Relevance-based Combination Strategy
-      # values lhs of formula with values LESS than zero are MORE relevant (financial losses)
-      # Therefore, I want new 150% percent MORE "financial loss data"
-      # Keeping all of the financial profits
-      # C.perc = list(1.0, 2.5))                # formula.tools:::as.character.formula
-      UBLDataFormula <- as.formula(stringr::str_c(formula_tools___as_character_formula(formula(specifiedUnrateModel)), " + index")) # need the index to COPY
-      UBLResults     <- UBL::ImpSampRegress(UBLDataFormula, UBLDataCompleteCases, rel = Relevance, thr.rel = 0.5,  C.perc = list(1.0, 2.5))
-      # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
-      # NOTE: no NEW index Values are created.
-      # I CAN NOT garnantee that all UBL functons do NOT do that
-      UBLResultsIndex <- UBLResults[["index"]]
-      UBLResults      <- UBLResults[, !colnames(UBLResults) %in% "index" , drop = FALSE]
-
-      # convert back
-      # need the xts column names
-      # IF REMOVE ".fun = " then RStudio can debug
-      plyr::llply(rlist::list.zip(UBLResult = UBLResults, ColName = colnames(UBLResults)),
-        .fun = function(x) {
-          res <- as.xts(x[["UBLResult"]], order.by = UBLResultsIndex)
-          indexClass(res)  <- indexClass(TrainingData)
-          indexFormat(res) <- indexFormat(TrainingData)
-          # (+) non-core attributes (user) [if any]
-          xtsAttributes(res) <- xtsAttributes(TrainingData)
-          res <- rbind(res, Data[,x[["ColName"]]][TrainingEnd < index(Data)])
-          return(res)
-        }
-      ) -> UpDatedSymbols
-      # reorders in alphabetical order
-      # MASSIVE CHANGE HERE ... mostly ZEROS in Final CALENDAR
-      # update Symbols with UBLResults
-      Symbols <- list2env(UpDatedSymbols)
-    }
-
-  } else {
-    stop("\"length(NBERAllData) == length(NBERFocusedData)\" is not TRUE")
-  }
-
-
-  # # determine slices of index and indexOut
-  # indexSlices(
-  #     # data.window = c(TrainingBegin, TrainingEnd)
-  #     # Update currently specified or built model with most recent data
-  #     # remove the last record(NO) (na.rm = FALSE)
-  #     # "2007-01-31" (actual "2001-12-31")
-  #     xTs = modelData(getModelData(specifiedUnrateModel, na.rm = FALSE, source.envir = Symbols))
-  #   , SlicesAllData = NBERAllData
-  #   , TrainStart = TrainingBegin
-  #   , TrainEnd   = TrainingEnd
-  # ) -> Sliced
-  # # determine slices of index and indexOut to caret trainControl
-  # # pass through
-  # indexSlicesObs    <- Sliced[["indexSlicesObs"]]
-  # indexSlicesOutObs <- Sliced[["indexSlicesOutObs"]]
-  # lousy performance: so I turned off
-  indexSlicesObs    <- NULL
-  indexSlicesOutObs <- NULL
+  balanceByUBLData(
+      xTs  = modelData(specifiedUnrateModel) # exclude.training not built/defined yet
+    , Fmla = formula(specifiedUnrateModel)
+    , TrainStart        = TrainingBegin
+    , TrainEnd          = TrainingEnd
+  ) -> TrainingData
+  modelData(specifiedUnrateModel) <- list(model.data = TrainingData)
 
   weightRankings(
-      xTs = modelData(getModelData(specifiedUnrateModel, na.rm = FALSE, source.envir = Symbols))
+      xTs = modelData(specifiedUnrateModel) # exclude.training not built/defined yet
     , target = ModelTarget
     , TrainStart = TrainingBegin
     , TrainEnd   = TrainingEnd
@@ -2098,11 +2227,15 @@ initEnv();on.exit({uninitEnv()})
 
   # fitting
 
+  if(!"indexSlicesObs" %in% ls())    indexSlicesObs    <- NULL
+  if(!"indexSlicesOutObs" %in% ls()) indexSlicesOutObs <- NULL
   trControl  <- caret::trainControl(method = "cv", number = if(!is.null(indexSlicesObs)) { length(indexSlicesObs) } else { 5 },
                              index    = if(!is.null(indexSlicesObs))    { indexSlicesObs }    else { NULL },
                              indexOut = if(!is.null(indexSlicesOutObs)) { indexSlicesOutObs } else { NULL },
                              summaryFunction = SortinoRatioSummary # formals(caret::trainControl) # to put back non-NULL args
                              )
+
+  if(!"AdjustedWeightRankings" %in% ls()) AdjustedWeightRankings <- NULL
                                                     # first/last dates that the "predictee" dates are available
                                                     # "1970-12-31","2006-12-31"(actual "2001-11-30")
   message(stringr::str_c("Begin buildModel - ", as.character(formula(specifiedUnrateModel))), "")
@@ -2120,7 +2253,6 @@ initEnv();on.exit({uninitEnv()})
   print(builtUnrateModel)
   message("Model Variable Importance of the Chosen Model")
   print(relativeScale(varImp(builtUnrateModel@fitted.model, scale = FALSE)$imp))
-
 
   # what makes the most sense is to use the
   # original (non-'added(removed) records) train/test data
@@ -2147,8 +2279,8 @@ initEnv();on.exit({uninitEnv()})
                                                      # remove the last record(NO)
                                                      # "2007-01-31" (actual "2001-12-31")
 
-  # just after TrainTest                               # FIX: SINCE UBL/OTHER can ADD/REMOVE records
-                                                       # [ ] BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
+  # just after TrainTest
+  # BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
   ValidationPredictionBegin <- as.character(head(index(xTs[TrainingEnd < index(xTs)]),1))
   # lastest data, ModelTarget data can ( and in very  last data will ) be NA
   ValidationPredictionEnd   <- as.character(tail(index(xTs),1))

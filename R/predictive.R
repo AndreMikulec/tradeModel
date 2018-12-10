@@ -373,12 +373,14 @@ initEnv();on.exit({uninitEnv()})
 #' an environment of column-xts objects
 #'
 #' @param x data.frame object
+#' @param order.by xts compabile index
+#' @param xts.attributes list of xts attributes to apply
 #' @export
 #' @importFrom plyr llply
 #' @importFrom rlist list.zip
 #' @importFrom plyr llply
 #' @importFrom tryCatchLog tryCatchLog
-DFCols2SymbolsEnv <- function(x, order.by) {
+DFCols2SymbolsEnv <- function(x, order.by, xts.attributes = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -388,6 +390,7 @@ initEnv();on.exit({uninitEnv()})
     function(x) {
       xx <- as.xts(x[["df"]], order.by = order.by)
       colnames(xx)[1] <- x[["ColName"]]
+      xtsAttributes(xx) <- xts.attributes
       xx
     }
   ) -> SymbolsOrig

@@ -5,10 +5,14 @@
 \title{column split a data.frame object into
 an environment of column-xts objects}
 \usage{
-DFCols2SymbolsEnv(x, order.by)
+DFCols2SymbolsEnv(x, order.by, xts.attributes = NULL)
 }
 \arguments{
 \item{x}{data.frame object}
+
+\item{order.by}{xts compabile index}
+
+\item{xts.attributes}{list of xts attributes to apply}
 }
 \description{
 column split a data.frame object into

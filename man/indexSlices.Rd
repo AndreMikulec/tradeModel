@@ -18,6 +18,23 @@ indexSlices(xTs, SlicesAllData, TrainStart, TrainEnd)
 \value{
 list of indexSlicesObs and indexSlicesOutObs position indexes
 meant to be passed to caret::trainControl index and indexOut
+\dontrun{
+# determine slices of index and indexOut
+indexSlices(
+    # data.window = c(TrainingBegin, TrainingEnd)
+    # Update currently specified or built model with most recent data
+    # remove the last record(NO) (na.rm = FALSE)
+    # "2007-01-31" (actual "2001-12-31")
+    xTs = modelData(specifiedUnrateModel, exclude.training = TRUE) # not defined yet
+  , SlicesAllData = NBERAllData
+  , TrainStart = TrainingBegin
+  , TrainEnd   = TrainingEnd
+) -> Sliced
+# determine slices of index and indexOut to caret trainControl
+# pass through
+indexSlicesObs    <- Sliced[["indexSlicesObs"]]
+indexSlicesOutObs <- Sliced[["indexSlicesOutObs"]]
+}
 }
 \description{
 create time slice indexes to be passed to aret::trainControl index and indexOut
