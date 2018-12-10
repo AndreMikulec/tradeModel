@@ -1753,9 +1753,10 @@ initEnv();on.exit({uninitEnv()})
 
   # IF REMOVE ".fun = " then RStudio can debug
   # create an environment of xts objects
-  plyr::llply(as.data.frame(xTs),
+  plyr::llply(rlist::list.zip(xTs = as.data.frame(xTs), ColName = colnames(xTs)),
     function(x) {
-      xx <- as.xts(x, order.by = index(xTs))
+      xx <- as.xts(x[["xTs"]], order.by = index(xTs))
+      colnames(xx)[1] <- x[["ColName"]]
       # (+) non-core attributes (user) [if any]
       xtsAttributes(xx) <- xtsAttributes(xTs)
       xx
@@ -1763,6 +1764,7 @@ initEnv();on.exit({uninitEnv()})
   ) -> SymbolsOrig
 
   # reorders in alphabetical order
+  browser()
   Symbols <- list2env(SymbolsOrig)
   Symbols
 
@@ -1979,9 +1981,15 @@ initEnv();on.exit({uninitEnv()})
   # [ ] BETTER(BELOW) use intersect(dates) and "duplicated.data.frame"
   #     to determine if any UBL created records leak INTO the validation AREA
 
+  # FIX: check if ANY NEW UBL records found its way into the VALIDATION area
+  # [ ] BETTER OFF
+  # FIX: SINCE UBL/OTHER can ADD/REMOVE records
+  # [ ] BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
+
   # prepare for caret timeslices index and indexOut
   trControl <- NULL
   if(length(NBERAllData) == length(NBERFocusedData)) {
+    browser()
     NumbSlices <- length(NBERFocusedData)
 
     # ANDRE balancing
@@ -2054,10 +2062,7 @@ initEnv();on.exit({uninitEnv()})
   } else {
     stop("\"length(NBERAllData) == length(NBERFocusedData)\" is not TRUE")
   }
-  # FIX: check if ANY NEW UBL records found its way into the VALIDATION area
-  # [ ] BETTER OFF
-  # FIX: SINCE UBL/OTHER can ADD/REMOVE records
-  # [ ] BETTER OFF deciding THIS(validation records) early AND HARCODING THE DATES
+
 
   # # determine slices of index and indexOut
   # indexSlices(
@@ -2079,7 +2084,7 @@ initEnv();on.exit({uninitEnv()})
   indexSlicesOutObs <- NULL
 
   weightRankings(
-      xTs = Data
+      xTs = modelData(getModelData(specifiedUnrateModel, na.rm = FALSE, source.envir = Symbols))
     , target = ModelTarget
     , TrainStart = TrainingBegin
     , TrainEnd   = TrainingEnd

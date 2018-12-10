@@ -369,6 +369,37 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' column split a data.frame object into
+#' an environment of column-xts objects
+#'
+#' @param x data.frame object
+#' @export
+#' @importFrom plyr llply
+#' @importFrom rlist list.zip
+#' @importFrom plyr llply
+#' @importFrom tryCatchLog tryCatchLog
+DFCols2SymbolsEnv <- function(x, order.by) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # IF REMOVE ".fun = " then RStudio can debug
+  # create an environment of xts objects
+  plyr::llply(rlist::list.zip(df = x, ColName = colnames(x)),
+    function(x) {
+      xx <- as.xts(x[["df"]], order.by = order.by)
+      colnames(xx)[1] <- x[["ColName"]]
+      xx
+    }
+  ) -> SymbolsOrig
+
+  # reorders in alphabetical order
+  Symbols <- list2env(SymbolsOrig)
+  Symbols
+
+})}
+
+
+
 #' converts to a quantmod object
 #'
 #' @rdname as.quantmod
@@ -377,7 +408,6 @@ as.quantmod.default <- function(x, outcomename, order.by, na.rm = TRUE, ...) { i
 #' @rdname as.quantmod
 #' @export
 as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { UseMethod("as.quantmod") }
-
 
 # from a data.frame, covert to a quantmod object directly
 #
@@ -419,10 +449,7 @@ initEnv();on.exit({uninitEnv()})
   #                   USAGE c(as.list.xts(),as.list.xts())
   #
 
-  Symbols <- plyr::llply(x, function(x) {
-    as.xts(x, order.by = order.by)
-  })
-  Symbols <- list2env(Symbols)
+  Symbols <- DFCols2SymbolsEnv(x, order.by = order.by)
 
   # assign where specifyModel ( getModelData ( exists ) ) can find
 
