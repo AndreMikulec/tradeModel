@@ -516,6 +516,131 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 
 
 
+#' American Association of Individual Investors (AAII) weekly sentiment survey
+#'
+#' @description
+#' Data represents what direction members feel the
+#' stock market will be in next 6 months.
+#'
+#' @details
+#' The sentiment survey measures the percentage of individual investors who are
+#' bullish, bearish, and neutral on the stock market short term;
+#' individuals are polled from the AAII Web site on a weekly basis.
+#' Only one vote per member is accepted in each weekly voting period.
+#'
+#' @param Symbols  a character vector specifying the names of each symbol to be loaded
+#' Possible Symbols are the following:
+#' "SENTIMENT" (means get all of the columns);
+#' otherwise, get specific columns;
+#' "Bullish", "Neutral", "Bearish",
+#' "Bullish8WMA", "BullBearSpread",
+#' "BullishAvg", "BullishAvgPStd", "BullishAvgNStd",
+#' "SP500WHigh", "SP500WLow", and "SP500WClose"
+#' @param env where to create objects. (.GlobalEnv)
+#' @param return.class desired class of returned object.
+#' Can be xts, zoo, data.frame, or xts (default)
+#' @param force re-download data from AAII ( not implemented yet )
+#' @param ... additional parameters
+#' @return A call to getSymbols.aaii will load into the specified
+#' environment one object for each \code{Symbol} specified,
+#' with class defined by \code{return.class}.
+#' @author Jeffrey A. Ryan
+#' @author Andre Mikulec (adapted original code to work with AAII sentiment data)
+#' @references
+#' \cite{AAII Investor Sentiment Survey \url{https://www.aaii.com/sentimentsurvey}}
+#' @references
+#' \cite{Sentiment Survey Past Results \url{https://www.aaii.com/sentimentsurvey/sent_results}}
+#' @seealso
+#' \code{\link{getSymbols}}
+#' \code{\link{setSymbolLookup}}
+#' @keywords data
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo as.Date
+#' @importFrom readxl read_xls
+#' @importFrom xts xts
+#' @examples
+#' \dontrun{
+#'
+#' getSymbols("SENTIMENT", src = "AAII")
+#' getSymbols("BullBearSpread", src = "AAII")
+#' }
+#' @export
+getSymbols.AAII <- function(Symbols, env, return.class = "xts", ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+    # LATER: STORE TO PERSISTENT LOCATION ( could be tmp file XOR ./data directory )
+    # POSSIBLY noted in options(aaii_SENTIMENT_path2file)
+    # using: file.info(x)$ctime
+    #   detect create date: if too young; do not download again
+    #     instead, use what is in getOption("aaii_SENTIMENT_path2file") )
+    # however, force=TRUE # redownload from AAII
+    # use to develop: path.package("xts")
+    # IF( use .data and in a "package")
+    # [1] "W:/R-3.5._/R_LIBS_USER_3.5._/<package>"
+    # dir(paste0(path.package("<package>"),"/","data"))
+    # [1] "aaii_SENTIMENT.rda"
+
+    importDefaults("getSymbols.AAII")
+    this.env <- environment()
+    for (var in names(list(...))) {
+        assign(var, list(...)[[var]], this.env)
+    }
+    if (!hasArg("verbose"))
+        verbose <- FALSE
+    if (!hasArg("auto.assign"))
+        auto.assign <- TRUE
+    AAII.URL <- "https://www.aaii.com/files/surveys/sentiment.xls"
+    tmp <- tempfile()
+    on.exit(unlink(tmp))
+
+    # every Thursday
+    Dates <- seq.Date(from = zoo::as.Date("1987-06-26"), to = Sys.Date(), by = "7 day")
+
+    col_names = c("ReportedDate",
+      "Bullish", "Neutral", "Bearish", "Total", # always 100%
+      "Bullish8WMA", "BullBearSpread",
+      "BullishAvg", "BullishAvgPStd", "BullishAvgNStd",
+      "SP500WHigh", "SP500WLow", "SP500WClose")
+
+    if (verbose)
+        cat("downloading ", "SENTIMENT", ".....\n\n")
+    quantmod___try.download.file(AAII.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
+
+    # data.frame
+    fr <- readxl::read_xls(path = tmp, sheet = "SENTIMENT",
+           col_names = col_names,
+           col_types = c("date", rep("numeric",12)), skip = 5L,
+           n_max = length(Dates))
+
+    if (verbose)
+        cat("done.\n")
+    fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
+        src = "AAII", updated = Sys.time())
+
+    for (i in 1:length(Symbols)) {
+
+        # User only wants an individual column
+        # Note: BAD user choices: ReportedDate and Total
+        if(Symbols[[i]] != "SENTIMENT") {
+           if (verbose)
+             cat("selecting ", Symbols[[i]], ".....\n\n")
+          fr <- fr[, Symbols[[i]]]
+        }
+
+        fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
+        if (auto.assign)
+            assign(Symbols[[i]], fr, env)
+    }
+    if (auto.assign)
+        return(Symbols)
+    return(fr)
+
+})}
+
+
+
+
 
 #' quantmod getSymbols with source.envir
 #'

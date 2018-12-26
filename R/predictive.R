@@ -222,6 +222,48 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+#' try to download a file
+#'
+#' see pacakge quantmod quantmod:::convert.time.series
+#'
+#' @param url as quantmod:::try.download.file
+#' @param destfile as quantmod:::try.download.file
+#' @param method as quantmod:::try.download.file
+#' @param quiet as quantmod:::try.download.file
+#' @param mode as quantmod:::try.download.file
+#' @param extra as quantmod:::try.download.file
+#' @param ... as quantmod:::try.download.file
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+quantmod___try.download.file <- function (url, destfile, method, quiet = FALSE, mode = "w", cacheOK = TRUE,
+    extra = getOption("download.file.extra"), ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+    if (missing(method))
+        method <- getOption("download.file.method", default = "auto")
+    try.download <- try({
+        download.file(url, destfile, method, quiet, mode, cacheOK,
+            extra)
+    }, silent = TRUE)
+    if (inherits(try.download, "try-error")) {
+        if (requireNamespace("downloader", quietly = TRUE)) {
+            downloader::download(url, destfile = destfile, quiet = quiet,
+                mode = mode, cacheOK = cacheOK, extra = extra)
+        }
+        else {
+            errcond <- attr(try.download, "condition")
+            stop("Failed to download file. Error message:\n",
+                errcond$message, "\n", "If this is related to https, possible solutions are:\n",
+                "1. Explicitly pass method= via the getSymbols call (or via setDefaults)\n",
+                "2. Install downloader, which may be able to automagically determine a method\n",
+                "3. Set the download.file.method global option",
+                call. = FALSE)
+        }
+    }
+})}
+
+
+
 #' convert time series
 #'
 #' see pacakge quantmod quantmod:::convert.time.series
