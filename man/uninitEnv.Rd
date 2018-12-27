@@ -2,15 +2,18 @@
 % Please edit documentation in R/auxilary.R
 \name{uninitEnv}
 \alias{uninitEnv}
-\title{unsets the enviroment}
+\title{unsets the enviroment
+space-saver - meant to be used at the beginning of a function}
 \usage{
 uninitEnv()
 }
 \value{
-environment is un-set
+options, and TZ are un-set
 }
 \description{
-space-saver - meant to be used at the beginning of a function
+Variable ops from the calling environment resets R options
+Environment variable TZ using the calling environment variable oldtz
+resets.
 }
 \examples{
 \dontrun{

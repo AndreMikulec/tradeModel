@@ -528,6 +528,9 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' individuals are polled from the AAII Web site on a weekly basis.
 #' Only one vote per member is accepted in each weekly voting period.
 #'
+#' The latest published date/data is every Thursday.
+#' The delivery date is Thursday evening (UNVERIFIED)
+#'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' Possible Symbols are the following:
 #' "SENTIMENT" (means get all of the columns);
@@ -539,7 +542,9 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' @param env where to create objects. (.GlobalEnv)
 #' @param return.class desired class of returned object.
 #' Can be xts, zoo, data.frame, or xts (default)
-#' @param force re-download data from AAII ( not implemented yet )
+#' @param force re-download data from AAII ( SEE THE EXAMPLES )
+#' The hidden variable ".aaii_SENTIMENT_path2file" located in the
+#' environment of parameter env is the last know location of the "xls" file
 #' @param ... additional parameters
 #' @return A call to getSymbols.aaii will load into the specified
 #' environment one object for each \code{Symbol} specified,
@@ -562,19 +567,23 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' \dontrun{
 #'
 #' getSymbols("SENTIMENT", src = "AAII")
-#' getSymbols("BullBearSpread", src = "AAII")
+#' # common usage
+#' if(!exists("BullBearSpread")) getSymbols("BullBearSpread", src = "AAII")
+#'
+#' # During Thursdays, if the user has a long R session that starts in the morning and
+#' # continues through the evening, the user may want to get a new 'updated'
+#' # Excel 'xls' file with the new results of this weeks vote.
+#' # The Symbol name does not matter.  All symbols are from the same 'xls' file
+#' getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII", force = TRUE)
+#'
 #' }
 #' @export
 getSymbols.AAII <- function(Symbols, env, return.class = "xts", ...) {
 tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
+initEnv(); on.exit({uninitEnv()})
 
-    # LATER: STORE TO PERSISTENT LOCATION ( could be tmp file XOR ./data directory )
-    # POSSIBLY noted in options(aaii_SENTIMENT_path2file)
-    # using: file.info(x)$ctime
-    #   detect create date: if too young; do not download again
-    #     instead, use what is in getOption("aaii_SENTIMENT_path2file") )
-    # however, force=TRUE # redownload from AAII
+    # LATER: COULD STORE TO A 'MORE' PERSISTENT LOCATION
+    #   could be a ./data directory
     # use to develop: path.package("xts")
     # IF( use .data and in a "package")
     # [1] "W:/R-3.5._/R_LIBS_USER_3.5._/<package>"
@@ -590,22 +599,55 @@ initEnv();on.exit({uninitEnv()})
         verbose <- FALSE
     if (!hasArg("auto.assign"))
         auto.assign <- TRUE
-    AAII.URL <- "https://www.aaii.com/files/surveys/sentiment.xls"
-    tmp <- tempfile()
-    on.exit(unlink(tmp))
+
+    if(!exists("force", envir = this.env, inherits = FALSE))
+        force = FALSE
+
+    browser()
+    if(exists(".aaii_SENTIMENT_path2file", envir = env, inherits = FALSE)) {
+      assign("tmp", get(".aaii_SENTIMENT_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    } else {
+      tmp <- NULL
+    }
+    if( !is.null(tmp) &&
+        !is.na(file.info(tmp)$mtime) &&
+        !force
+    ) {
+    } else {
+
+        # possible clean-up
+        oldtmp <- tmp
+        if(!is.null(oldtmp) && !is.na(file.info(oldtmp)$mtime)) on.exit(unlink(oldtmp))
+
+        AAII.URL <- "https://www.aaii.com/files/surveys/sentiment.xls"
+        tmp <- tempfile(fileext = ".xls") # AAII still uses the OLD format ( DEC 2018 )
+        # do not remove the 'tmp' file
+        # In this R session, keep the file around and available for the next query [if any]
+        # the site https://www.aaii.com is NOT engineered
+        # to handle MANY data queries, NOR denial of service attacks
+        #
+        # on.exit(unlink(tmp))
+
+        if (verbose)
+            cat("downloading ", "SENTIMENT", ".....\n\n")
+        quantmod___try.download.file(AAII.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
+        assign(".aaii_SENTIMENT_path2file", tmp, envir = env, inherits = FALSE)
+
+    }
+
+    if (verbose)
+        cat("reading disk file ", tmp, ".....\n\n")
 
     # every Thursday
     Dates <- seq.Date(from = zoo::as.Date("1987-06-26"), to = Sys.Date(), by = "7 day")
+
+    # Last verified: DEC 2018
 
     col_names = c("ReportedDate",
       "Bullish", "Neutral", "Bearish", "Total", # always 100%
       "Bullish8WMA", "BullBearSpread",
       "BullishAvg", "BullishAvgPStd", "BullishAvgNStd",
       "SP500WHigh", "SP500WLow", "SP500WClose")
-
-    if (verbose)
-        cat("downloading ", "SENTIMENT", ".....\n\n")
-    quantmod___try.download.file(AAII.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
 
     # data.frame
     fr <- readxl::read_xls(path = tmp, sheet = "SENTIMENT",
@@ -614,9 +656,10 @@ initEnv();on.exit({uninitEnv()})
            n_max = length(Dates))
 
     if (verbose)
-        cat("done.\n")
+        cat("done.\n\n")
     fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
-        src = "AAII", updated = Sys.time())
+              src = "AAII", updated = Sys.time())
+    fri <- fr
 
     for (i in 1:length(Symbols)) {
 
@@ -625,16 +668,16 @@ initEnv();on.exit({uninitEnv()})
         if(Symbols[[i]] != "SENTIMENT") {
            if (verbose)
              cat("selecting ", Symbols[[i]], ".....\n\n")
-          fr <- fr[, Symbols[[i]]]
+          fri <- fr[, Symbols[[i]]]
         }
 
-        fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
+        fri <- quantmod___convert.time.series(fr = fri, return.class = return.class)
         if (auto.assign)
-            assign(Symbols[[i]], fr, env)
+            assign(Symbols[[i]], fri, env)
     }
     if (auto.assign)
         return(Symbols)
-    return(fr)
+    return(fri)
 
 })}
 

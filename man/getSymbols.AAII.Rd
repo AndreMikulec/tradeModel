@@ -23,7 +23,9 @@ Can be xts, zoo, data.frame, or xts (default)}
 
 \item{...}{additional parameters}
 
-\item{force}{re-download data from AAII ( not implemented yet )}
+\item{force}{re-download data from AAII ( SEE THE EXAMPLES )
+The hidden variable ".aaii_SENTIMENT_path2file" located in the
+environment of parameter env is the last know location of the "xls" file}
 }
 \value{
 A call to getSymbols.aaii will load into the specified
@@ -39,12 +41,23 @@ The sentiment survey measures the percentage of individual investors who are
 bullish, bearish, and neutral on the stock market short term;
 individuals are polled from the AAII Web site on a weekly basis.
 Only one vote per member is accepted in each weekly voting period.
+
+The latest published date/data is every Thursday.
+The delivery date is Thursday evening (UNVERIFIED)
 }
 \examples{
 \dontrun{
 
 getSymbols("SENTIMENT", src = "AAII")
-getSymbols("BullBearSpread", src = "AAII")
+# common usage
+if(!exists("BullBearSpread")) getSymbols("BullBearSpread", src = "AAII")
+
+# During Thursdays, if the user has a long R session that starts in the morning and
+# continues through the evening, the user may want to get a new 'updated'
+# Excel 'xls' file with the new results of this weeks vote.
+# The Symbol name does not matter.  All symbols are from the same 'xls' file
+getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII", force = TRUE)
+
 }
 }
 \references{

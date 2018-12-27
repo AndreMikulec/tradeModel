@@ -166,12 +166,13 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' sets the enviroment
-#'
 #' space-saver - meant to be used at the beginning of a function
 #'
-#' @param init list with names entries of alernate/other options
-#' @param envir where to return the options
-#' @return environment is set
+#' Variable ops from the calling environment sets R options
+#' Environment variable TZ using the calling environment variable oldtz
+#' sets.
+#'
+#' @return envi, options, and TZ are set
 #' @examples
 #' \dontrun{
 #' # > options(max.print=88888L)
@@ -222,7 +223,18 @@ tryCatchLog::tryCatchLog({
   # (converted from warning) 'package:stats' may not be available when loading
   options(tryCatchLog.write.error.dump.file = TRUE)
 
+  # ops <- options()
+  # # pre-save options to ignore
+  # ops <- ops[!names(ops) %in% ignore_ops]
+  # options(ops)
+  # assign("ops", ops, envir = envii)
+
+  # pre-save options to not-ignore
+  # ops_not_ignored <- options()[!names(options()) %in% ignore_ops]
+  # assign("ops", options(ops_not_ignored), envir = envii)
+
   ops <- options()
+  options(ops)
   assign("ops", ops, envir = envii)
 
   #correct for TZ
@@ -241,10 +253,13 @@ tryCatchLog::tryCatchLog({
 
 
 #' unsets the enviroment
-#'
 #' space-saver - meant to be used at the beginning of a function
 #'
-#' @return environment is un-set
+#' Variable ops from the calling environment resets R options
+#' Environment variable TZ using the calling environment variable oldtz
+#' resets.
+#'
+#' @return options, and TZ are un-set
 #' @examples
 #' \dontrun{
 #' # > uninitEnv()
@@ -257,9 +272,29 @@ tryCatchLog::tryCatchLog({
 uninitEnv <- function() {
 tryCatchLog::tryCatchLog({
 
+  # eventually calling envir will NOT BE the lexically calling environment
   envii <- rlang::caller_env()
   Sys.setenv(TZ=get("oldtz", envir = envii))
-  options(get("ops",         envir = envii))
+
+  # ops <- get("ops", envir = envii)
+  # # post-save options to ignore
+  # ops <- ops[!names(ops) %in% ignore_ops]
+  # options(ops)
+
+  # # post-save options to ignore
+  # ops_ignored <- options()[names(options()) %in% ignore_ops]
+  #
+  # ops_temp <- get("ops", envir = envii)
+  # # remove
+  # ops <- ops_temp[!names(ops_temp)  %in% ignore_ops]
+  # options(ops)
+  #
+  # # add back
+  # options(ops_ignored)
+
+  ops <- get("ops", envir = envii)
+  options(ops)
+
   invisible()
 
 })}

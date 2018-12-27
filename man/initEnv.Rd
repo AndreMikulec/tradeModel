@@ -2,20 +2,18 @@
 % Please edit documentation in R/auxilary.R
 \name{initEnv}
 \alias{initEnv}
-\title{sets the enviroment}
+\title{sets the enviroment
+space-saver - meant to be used at the beginning of a function}
 \usage{
 initEnv(init = NULL)
 }
-\arguments{
-\item{init}{list with names entries of alernate/other options}
-
-\item{envir}{where to return the options}
-}
 \value{
-environment is set
+envi, options, and TZ are set
 }
 \description{
-space-saver - meant to be used at the beginning of a function
+Variable ops from the calling environment sets R options
+Environment variable TZ using the calling environment variable oldtz
+sets.
 }
 \examples{
 \dontrun{
