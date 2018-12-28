@@ -529,7 +529,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' Only one vote per member is accepted in each weekly voting period.
 #'
 #' The latest published date/data is every Thursday.
-#' The delivery date is Thursday evening (UNVERIFIED)
+#' The delivery time is during Friday (UNVERIFIED)
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' Possible Symbols are the following:
@@ -561,8 +561,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' @keywords data
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
-#' @importFrom readxl read_xls
-#' @importFrom xts xts
+#  ## @importFrom readxl read_xls # Namespace dependencies not required: ??? ##
 #' @examples
 #' \dontrun{
 #'
@@ -570,10 +569,11 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' # common usage
 #' if(!exists("BullBearSpread")) getSymbols("BullBearSpread", src = "AAII")
 #'
-#' # During Thursdays, if the user has a long R session that starts in the morning and
+#' # During Fridays, if the user has a long R session that starts in the morning and
 #' # continues through the evening, the user may want to get a new 'updated'
 #' # Excel 'xls' file with the new results of this weeks vote.
 #' # The Symbol name does not matter.  All symbols are from the same 'xls' file
+#' # The dates are as of Thursday each week
 #' getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII", force = TRUE)
 #'
 #' }
@@ -603,7 +603,6 @@ initEnv(); on.exit({uninitEnv()})
     if(!exists("force", envir = this.env, inherits = FALSE))
         force = FALSE
 
-    browser()
     if(exists(".aaii_SENTIMENT_path2file", envir = env, inherits = FALSE)) {
       assign("tmp", get(".aaii_SENTIMENT_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
     } else {
@@ -1933,6 +1932,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_replace
+#' @importFrom plyr llply
 updatedSymbols.cache <- function(Symbols = NULL, cache.envir = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1942,11 +1942,31 @@ initEnv();on.exit({uninitEnv()})
 
   AllSymbols <- updatedSymbols(source.envir = cache.envir)
 
-  LessAllSymbols   <- AllSymbols[stringr::str_detect(Names(AllSymbols),"^[.].+") &
-                                !stringr::str_detect(Names(AllSymbols),"^[.]Random[.]seed$")]
-  Names(LessAllSymbols) <- stringr::str_replace(Names(LessAllSymbols), "^[.]","")
-  RetrievedSymbols <- LessAllSymbols
-  RetrievedSymbols
+  # LessAllSymbols   <- AllSymbols[stringr::str_detect(Names(AllSymbols),"^[.].+") &
+  #                               !stringr::str_detect(Names(AllSymbols),"^[.]Random[.]seed$")]
+  # cache stored symbols require .UPPPECASE ( so I can disinquish from other NON-symbols)
+  ## LessAllSymbols   <- AllSymbols[stringr::str_detect(Names(AllSymbols),"^[.][A-Z]+")]
+  ## Names(LessAllSymbols) <- stringr::str_replace(Names(LessAllSymbols), "^[.]","")
+  ## RetrievedSymbols <- LessAllSymbols
+  ## RetrievedSymbols
+
+  if(!is.null(Symbols)) {
+
+    # remove the beginning dot (if any)
+    Names(AllSymbols) <- stringr::str_replace(Names(AllSymbols), "^[.]","")
+    return(AllSymbols[Names(AllSymbols) %in% Symbols])
+
+  } else { # take a guess (1) EVERYTHING that begins with a dot(.) anded_with
+           #              (2) EVERYTHING that updatedSymbols(FROM ABOVE) returned non-NA data
+
+    LessAllSymbols   <- AllSymbols[stringr::str_detect(Names(AllSymbols),"^[.].+")]
+    Names(LessAllSymbols) <- stringr::str_replace(Names(LessAllSymbols), "^[.]","")
+    NamesLessAllSymbols <- Names(LessAllSymbols)
+                                     # (2): could be more robust: check for xts allowable index classes
+    LessAllSymbols <- LessAllSymbols[unlist(plyr::llply(LessAllSymbols, function(x) { !is.na(x) }))]
+    return(LessAllSymbols)
+
+  }
 
 })}
 

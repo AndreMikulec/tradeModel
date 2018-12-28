@@ -18,6 +18,13 @@ indexSlices(xTs, SlicesAllData, TrainStart, TrainEnd)
 \value{
 list of indexSlicesObs and indexSlicesOutObs position indexes
 meant to be passed to caret::trainControl index and indexOut
+}
+\description{
+create time slice indexes to be passed to aret::trainControl index and indexOut
+My visual observation is that this model DOES \*worse\* than general cross validateion
+This is because, per time slice, less observations exist to TRAIN/TEST over
+}
+\examples{
 \dontrun{
 # determine slices of index and indexOut
 indexSlices(
@@ -35,9 +42,4 @@ indexSlices(
 indexSlicesObs    <- Sliced[["indexSlicesObs"]]
 indexSlicesOutObs <- Sliced[["indexSlicesOutObs"]]
 }
-}
-\description{
-create time slice indexes to be passed to aret::trainControl index and indexOut
-My visual observation is that this model DOES \*worse\* than general cross validateion
-This is because, per time slice, less observations exist to TRAIN/TEST over
 }

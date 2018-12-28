@@ -43,7 +43,7 @@ individuals are polled from the AAII Web site on a weekly basis.
 Only one vote per member is accepted in each weekly voting period.
 
 The latest published date/data is every Thursday.
-The delivery date is Thursday evening (UNVERIFIED)
+The delivery time is during Friday (UNVERIFIED)
 }
 \examples{
 \dontrun{
@@ -52,10 +52,11 @@ getSymbols("SENTIMENT", src = "AAII")
 # common usage
 if(!exists("BullBearSpread")) getSymbols("BullBearSpread", src = "AAII")
 
-# During Thursdays, if the user has a long R session that starts in the morning and
+# During Fridays, if the user has a long R session that starts in the morning and
 # continues through the evening, the user may want to get a new 'updated'
 # Excel 'xls' file with the new results of this weeks vote.
 # The Symbol name does not matter.  All symbols are from the same 'xls' file
+# The dates are as of Thursday each week
 getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII", force = TRUE)
 
 }

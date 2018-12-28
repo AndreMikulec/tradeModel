@@ -1379,6 +1379,127 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
+#' University of Michigan: Consumer Sentiment
+#'
+#' From FRED (historical) and briefing.com (recent)
+#'
+#' Recent data is from
+#' Univ. of Michigan Consumer Sentiment - Prelim:
+#' \cite{Univ. of Michigan Consumer Sentiment - Prelim \url{https://www.briefing.com/investor/calendars/economic/releases/mich.htm}}
+#'
+#' Original data is from here:
+#' \cite{surveys of consumers UNIVERSITY OF MICHIGAN \url{https://data.sca.isr.umich.edu/tables.php}}
+#'
+#' Historical data is from here.
+#' At the request of the source, the data is delayed by 1 month:
+#' \cite{University of Michigan: Consumer Sentiment \url{https://fred.stlouisfed.org/series/UMCSENT}}
+#'
+#' \cite{University of Michigan: Consumer Sentiment raw data \url{https://fred.stlouisfed.org/data/UMCSENT.txt}}
+#'
+#' @return xts object
+#' @importFrom tryCatchLog tryCatchLog
+#  ## @importFrom htmltab htmltab # Namespace dependencies not required: ??? ##
+#' @importFrom DescTools Year
+#' @importFrom zoo as.Date
+#' @importFrom stringr str_c
+#' @export
+UMCSentimentData <- function() {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  rs <- fredData(Symbol = "UMCSENT")
+
+  rt <- htmltab::htmltab(  # google chrome ( DEC 2018 )
+          doc = "https://www.briefing.com/investor/calendars/economic/releases/mich.htm"
+        , which = '//*[@id="InPlayEqContent"]/div[4]/div[1]/table'
+        , rm_nodata_cols = F)
+
+  rt <- rt[rt$Category == "Sentiment",][!colnames(rt) %in% "Category"] %>% unlist
+  NowYear <-  DescTools::Year(Sys.Date())
+  dataRecent  <- as.numeric(rt)
+  indexRecent <- zoo::as.Date(stringr::str_c("01-", names(rt), "-", NowYear), format = "%d-%b-%Y")
+  rt <- xts(dataRecent, indexRecent); colnames(rt) <- "UMCSENT"
+  # splice
+  rst <- rbind(rs,rt)
+  # remove the first(earliest) duplicate index
+  rst <- rst[!duplicated(index(rst), fromLast = TRUE),]
+  rst
+
+})}
+
+
+
+#' end of month University of Michigan: Consumer Sentiment
+#' from FRED (historical) and briefing.com (recent)
+#'
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+UMCSentimentEomData <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # index adjust
+  # last known University of Michigan: Consumer Sentiment : when I recieved it
+  UMCSentimentData() %>%
+    nextMonthfromYesterday %>%
+      trimLeadingNAGaps
+
+})}
+
+
+#' trim leading NAs and leading gaps of NAs
+#'
+#' Some FRED early data was delivered less
+#' frequently than later FRED data.
+#' Remove that earlier wider-gapped data.
+#'
+#' Also, many functions in R CRAN package TTR
+#' will return an error if leading NA values are found
+#'
+#' @param xTs xts object
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom plyr llply
+trimLeadingNAGaps <- function(xTs) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+  #  for a single column matrix, plyr::aaply is broken
+  as.matrix(as.data.frame(plyr::llply(as.data.frame(coredata(xTs)), function(x) {
+           if(!any(is.na(x))) return(x)
+           x[seq_len(max(which(is.na(x))))] <- NA_real_
+           x
+  }))) -> coredata(xTs)
+  xTs
+
+})}
+
+
+
+
+#' add University of Michigan: Consumer Sentiment
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addUMCSentimentEomData <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  xTs  <- initXts(xTs)
+
+  UMCSentiment <- UMCSentimentEomData()
+
+  combineLogReturns(xTs, UMCSentiment)
+
+})}
+
+
+
 #' join two xts objects
 #'
 #' handles the edge case: if BOTH have no coredata (then merge.xts produces
@@ -1890,6 +2011,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param TrainEnd absolute training end date
 #' @return list of indexSlicesObs and indexSlicesOutObs position indexes
 #' meant to be passed to caret::trainControl index and indexOut
+#' @examples
 #' \dontrun{
 #' # determine slices of index and indexOut
 #' indexSlices(
