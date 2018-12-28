@@ -1337,8 +1337,12 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(x)
-  plyr::llply(index(xTs), nextMonthfromYesterday) %>%
-    { DescTools::DoCall(c,.) } %>%
+  # plyr::llply(index(xTs), nextMonthfromYesterday) %>%
+  #   { DescTools::DoCall(c,.) } %>%
+  #     { xts(Coredata(xTs),.) }
+
+  xTs  <- initXts(x)
+  nextMonthfromYesterday(index(xTs)) %>%
       { xts(Coredata(xTs),.) }
 
 })}
