@@ -561,6 +561,8 @@ customSorting <- function(Vector, InitOrder, CI = FALSE) {
 #' @keywords data
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
+#  ## @importFrom htmltab htmltab # Namespace dependencies not required: ??? ##
+#' @importFrom stringr str_replace
 #  ## @importFrom readxl read_xls # Namespace dependencies not required: ??? ##
 #' @examples
 #' \dontrun{
@@ -659,6 +661,44 @@ initEnv(); on.exit({uninitEnv()})
     fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
               src = "AAII", updated = Sys.time())
     fri <- fr
+    rs <- fri
+
+    rt <- htmltab::htmltab(  # google chrome ( DEC 2018 )
+            doc = "https://www.aaii.com/sentimentsurvey/sent_results"
+          , which = '//*[@id="page_content"]/table[1]'
+          , rm_nodata_cols = F)
+
+    # I JUST NEED THE TOP ROW ( THE REST I GET FROM EXCEL )
+    rt <- rt[1,,drop = FALSE]
+    rt[["Reported Date"]] <- stringr::str_replace(rt[["Reported Date"]], ":", "")
+    indexRecent <- zoo::as.Date(rt[["Reported Date"]], format = "%B %d")
+    rt <- rt[,!colnames(rt) %in% "Reported Date", drop = FALSE]
+    dataColnames <- colnames(rt)
+    dataRecent <- as.numeric(stringr::str_replace(unlist(rt), "%", ""))/100.0
+    rt <- xts(matrix(dataRecent, ncol = length(dataColnames)), indexRecent); colnames(rt) <- dataColnames
+
+    # prepare to splice
+
+    # rs coredata(c)
+    rsc <- colnames(rs)[!colnames(rs) %in% colnames(rt)]
+    rsc <- as.list(rsc)
+    Names(rsc) <- unlist(rsc)
+    NamesRSC <- Names(rsc)
+
+    rsc <- plyr::llply(rsc, function(x) NA_real_)  %>%
+           unlist %>% { matrix(., ncol = length(NamesRSC), dimnames = list(list(),NamesRSC)) }
+
+    # rt coredata(c)
+    rtc <- cbind(coredata(rt), rsc)
+    rtc <- rtc[,customSorting(Vector = colnames(rtc), InitOrder = colnames(rs)), drop = FALSE]
+    rt <- xts(rtc, index(rt))
+
+    # splice
+    rst <- rbind(rs,rt)
+    # remove the first(earliest) duplicate index
+    rst <- rst[!duplicated(index(rst), fromLast = TRUE),]
+    fr <- rst
+    fri <- fr # pass-throught on "SENTIMENT"
 
     for (i in 1:length(Symbols)) {
 
