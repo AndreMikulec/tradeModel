@@ -25,7 +25,7 @@
 #'
 #' @section Date Manipulation:
 #'
-#' nextMonthfromYesterday
+#' eomIndex
 #'
 #' @section Data Clustering:
 #'

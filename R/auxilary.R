@@ -1264,34 +1264,34 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param x xts object or Date object
 #' @return xts object or data object with the index moved up
-#' @rdname nextMonthfromYesterday
+#' @rdname eomIndex
 #' @export
-nextMonthfromYesterday <- function(x = NULL) {
+eomIndex <- function(x = NULL) {
 
   # tryCatchLog is not allowed here
-  UseMethod("nextMonthfromYesterday")
+  UseMethod("eomIndex")
 
 }
 
 
-#' @rdname nextMonthfromYesterday
+#' @rdname eomIndex
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-nextMonthfromYesterday.default <- function(x = NULL) {
+eomIndex.default <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  stop("No nextMonthfromYesterday method for <input>")
+  stop("No eomIndex method for <input>")
 
 })}
 
 
 #' @param x date object
-#' @rdname nextMonthfromYesterday
+#' @rdname eomIndex
 #' @examples
 #' \dontrun{
 #' # > require(xts)
-#' # > nextMonthfromYesterday(zoo::as.Date("1970-01-12"))
+#' # > eomIndex(zoo::as.Date("1970-01-12"))
 #' # [1] "1970-01-31"
 #' }
 #' @export
@@ -1300,7 +1300,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom lubridate %m+%
 #' @importFrom Hmisc truncPOSIXt
 #' @importFrom zoo as.Date
-nextMonthfromYesterday.Date <- function(x = NULL) {
+eomIndex.Date <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -1316,12 +1316,12 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' @rdname nextMonthfromYesterday
+#' @rdname eomIndex
 #' @examples
 #' \dontrun{
 #' # > require(xts)
 #' # > xTs <- xts(, zoo::as.Date("1970-01-12"))
-#' # > nextMonthfromYesterday(xTs)
+#' # > eomIndex(xTs)
 #' # Data:
 #' # numeric(0)
 #' #
@@ -1332,17 +1332,17 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DescTools DoCall
 #' @importFrom plyr llply
-nextMonthfromYesterday.xts <- function(x = NULL) {
+eomIndex.xts <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(x)
-  # plyr::llply(index(xTs), nextMonthfromYesterday) %>%
+  # plyr::llply(index(xTs), eomIndex) %>%
   #   { DescTools::DoCall(c,.) } %>%
   #     { xts(Coredata(xTs),.) }
 
   xTs  <- initXts(x)
-  nextMonthfromYesterday(index(xTs)) %>%
+  eomIndex(index(xTs)) %>%
       { xts(Coredata(xTs),.) }
 
 })}
@@ -1360,7 +1360,7 @@ initEnv();on.exit({uninitEnv()})
   # index adjust
   # last known unemployment rate: when I recieved it; one month later
    fredData(Symbol = "UNRATE") %>%
-    nextMonthfromYesterday
+    eomIndex
 
 })}
 
@@ -1447,7 +1447,7 @@ initEnv();on.exit({uninitEnv()})
   # index adjust
   # last known University of Michigan: Consumer Sentiment : when I recieved it
   UMCSentimentData() %>%
-    nextMonthfromYesterday %>%
+    eomIndex %>%
       trimLeadingNAGaps
 
 })}
