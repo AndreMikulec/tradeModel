@@ -503,8 +503,6 @@ dbUpdate <- function(con, trgt = "mtcars", keys = c("rn"), df = mtcars, varHint 
   if(!isNamespaceLoaded("data.table")) # AFTER THIS FUNCTION IS PUT INTO A PACAKGE, THEN REMOVE THIS STMT
           loadNamespace("data.table")  # AFTER THIS FUNCTION IS PUT INTO A PACAKGE, THEN REMOVE THIS STMT
 
-
-
   newData <- data.table::data.table(df, key=keys)
   # determine the verticle subset of data to collect from the server
   SelectWhereExactlies <- vector(mode = "character")
@@ -535,8 +533,8 @@ dbUpdate <- function(con, trgt = "mtcars", keys = c("rn"), df = mtcars, varHint 
   # ignores key columns
   # ignores [extra] columns not both present in the
   #   'results of the SELECT' and the the data.frame
-  MatchingXCols     <- stringr::str_subset(colnames(mergedData), "[.]x$")
-  MatchingColsRoots <- stringr::str_replace(MatchingXCols, "[.]x$", "")
+  MatchingXCols     <- stringr::str_subset(colnames(mergedData), "[.]x\\d*$")
+  MatchingColsRoots <- stringr::str_replace(MatchingXCols, "[.]x\\d*$", "")
 
   # prepare to process by row
   Splits <-interaction(mergedData[, keys, with=FALSE], drop = TRUE)
