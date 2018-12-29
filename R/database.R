@@ -420,6 +420,175 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' single quote
+#'
+#' @param x vector of strings
+#' @importFrom stringr str_c
+#' @importFrom plyr llply
+#' @export
+siQuote <- function(x) {
+  unlist(plyr::llply(x, function(x) stringr::str_c("'", x, "'", collapse = "")))
+}
+
+
+
+#' update a database table with 'updated' data
+#'
+#' WORKINPROGRESS
+#' note: beforehand LIKE caroline make SURE that each
+#' has the same column names as the OTHER
+#' hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
+#'
+#' TODO [ ] INSTEAD: UPLOAD/WRITE TO A *temporary* TABLE (HIGH)
+#' TODO [ ] part of dbUpsert <- function() { dbAddColumn, dbInsert, dbUpdate }
+#'
+#' # NOT necessarily in ordesr
+#' TODO [ ] reorder columns to match db table see ( currenly assumned ) BUT NOW
+#'   add that code in here ( see caroline dbWriteTable2, my implementation, my
+#'   'sort using factor code' in a tradeModel function )
+#' TODO [ ] make argument keys = NULL, then detect and reject is.null(keys)
+#' TODO [ ] allow non-joined mass updates: keys = c() and UpDateWhereExactly = "1 = 1"
+#' TODO [ ] replace siQuote with DBI:: dbQuoteLiteral, dbQuoteString ( see tradeModel )
+#' TODO [ ] in more places dbQuoteIdentifier ( see tradeModel )
+#' TODO [ ] handle PostgreSQL schemas
+#' TODO [ ] handle 'newer' package RPostgre
+#' TODO   [ ] create a REAL temp table instead of a real real table (SEE ABOVE
+#'
+#' @param con DBI connection
+#' @param trgt remote server side string database table name of old data
+#' @param keys trgt remote server side vector of strings of table
+#' column names that make up a unique id for the row
+#' @param df local client side data.frame of 'updated data'
+#' @param varHint optional vector of character column names. Performance optimization
+#' techique to limit the number of rows returned
+#' from the database server to the client(R).
+#' User must specify as paired position values.
+#' e.g. varHint = "dateindex", valHint = "17000"
+#' or e.g. varHint = c("dateindex", "ticker"), valHint = c("dateindex","'AAPL'")
+#' Otherwise if varHint/valHint are not specified,
+#' then the unique combinations of the keys of the 'updated data' data.frame df
+#' are sent to the server to limit the number of rows returned from the server
+#' Position matches one to one with valHint
+#' @param valHint
+#' See varHint. Position matches one to one with varHint
+#' @importFrom stringr str_c str_subset str_replace
+# non-exported S3 methods # data.table:::merge.data.table data.table:::split.data.table
+#' @import data.table
+#' @importFrom data.table data.table
+#' @importFrom DBI dbWriteTable dbGetQuery dbQuoteIdentifier dbBegin dbCommit
+#' @importFrom plyr llply
+#' @export
+#' @examples
+#' \dontrun{
+#'
+#' # setup
+#' SuBmtcars <- mtcars[c(1,5),1:2]
+#' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
+#' rownames(oldData) <- NULL
+#' oldData[1,2] <- NA; oldData[2,3] <- NA
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
+#'
+#' newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
+#' rownames(newData) <- NULL
+#' newData[2,2] <- NA; newData[1,3] <- NA
+#'
+#' dbUpdate(con, df = newData)
+#' DBI::dbDisconnect(con)
+#'
+#'}
+dbUpdate <- function(con, trgt = "mtcars", keys = c("rn"), df = mtcars, varHint = NULL, valHint = NULL) {
+
+  # non-exported S3 methods data.table:::merge.data.table data.table:::split.data.table
+  if(!isNamespaceLoaded("data.table")) # AFTER THIS FUNCTION IS PUT INTO A PACAKGE, THEN REMOVE THIS STMT
+          loadNamespace("data.table")  # AFTER THIS FUNCTION IS PUT INTO A PACAKGE, THEN REMOVE THIS STMT
+
+
+
+  newData <- data.table::data.table(df, key=keys)
+  # determine the verticle subset of data to collect from the server
+  SelectWhereExactlies <- vector(mode = "character")
+  if(is.null(varHint)) {
+    Splits <-interaction(newData[, keys, with=FALSE], drop = TRUE)
+    Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
+    for(spl in Splitted) {
+      keyvals <-  unlist(spl)
+      keyvals <- if(!is.numeric(keyvals)) siQuote(keyvals)
+      SelectWhereExactly <- stringr::str_c("(", stringr::str_c(keys, " = ", keyvals, collapse = " AND "), ")", collapse = "")
+      SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
+    }
+  } else {
+    SelectWhereExactly <- stringr::str_c("(", stringr::str_c(varHint, " = ", valHint, collapse = " AND "), ")", collapse = "")
+    SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
+  }
+  if(length(SelectWhereExactlies)) {
+    SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " OR "), collapse = "")
+  }
+  # actually collect that server data
+  #  do not bring back too many columns
+  ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
+  oldData <- DBI::dbGetQuery(con, stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", trgt, SelectWhereExactlies))
+  oldData <- data.table::data.table(oldData, key=keys)
+
+  # determine columns ( to later test for "changed" data)
+  mergedData <- merge(oldData, newData, sort = FALSE) # , by = keys # defaults to the shared key
+  # ignores key columns
+  # ignores [extra] columns not both present in the
+  #   'results of the SELECT' and the the data.frame
+  MatchingXCols     <- stringr::str_subset(colnames(mergedData), "[.]x$")
+  MatchingColsRoots <- stringr::str_replace(MatchingXCols, "[.]x$", "")
+
+  # prepare to process by row
+  Splits <-interaction(mergedData[, keys, with=FALSE], drop = TRUE)
+  Splitted <- split(mergedData, f = Splits)
+
+  UpDateStmts <- vector(mode = "character")
+  UpDateTarget <- stringr::str_c("UPDATE ", trgt, " trg ", " SET ")
+  UpDateFrom  <- stringr::str_c(trgt, "_src val ", " ")
+  UpDateWhere <- stringr::str_c(stringr::str_c("trg.",keys), " = ", stringr::str_c("val.",keys), collapse = " AND ")
+
+  # create UPDATE statements
+  UpDateStmts   <- vector(mode = "character")
+  for(spl in Splitted) {
+    UpDateSetColl <- vector(mode = "character")
+    for(nm in MatchingColsRoots){
+      LValue = stringr::str_c(nm,".x")
+      RValue = stringr::str_c(nm,".y")
+            # both sides have a value and different from each other
+      if( ( !is.na(spl[[LValue]]) && !is.na(spl[[RValue]]) && (spl[[LValue]] != spl[[RValue]]) ) ||
+            # left side does not have a value # right side does have a value
+          (  is.na(spl[[LValue]]) && !is.na(spl[[RValue]]) )
+      ) {
+        UpDateSet   <- stringr::str_c(nm, " = ", "val.", nm, " ")
+        UpDateSetColl <- c(UpDateSetColl,UpDateSet)
+      }
+    }
+    if(length(UpDateSetColl)) {
+      keyvals <- unlist(plyr::llply(keys, function(x) { spl[[x]] }))
+      names(keyvals) <- keys # names not used
+      keyvals <- if(!is.numeric(keyvals)) siQuote(keyvals)
+      UpDateWhereExactly <- stringr::str_c(stringr::str_c("trg.",keys), " = ", keyvals, collapse = " AND ")
+      UpdateFromWhere <- stringr::str_c(" FROM ", UpDateFrom, " WHERE ", UpDateWhere, " AND ", UpDateWhereExactly)
+      UpDateSets <- stringr::str_c(UpDateSetColl, collapse = ", ")
+      UpDateStmt <- stringr::str_c(UpDateTarget, UpDateSets, UpdateFromWhere, "; ")
+      UpDateStmts <- c(UpDateStmts, UpDateStmt)
+    }
+  }
+  if(length(UpDateStmts)) {
+    DBI::dbWriteTable(con, stringr::str_c(trgt, "_src"), newData, row.names = FALSE)
+    DBI::dbBegin(con)
+    UpDateStmts <- stringr::str_c(UpDateStmts, collapse = "")
+    message(UpDateStmts)
+    DBI::dbExecute(con, UpDateStmts)
+    DBI::dbCommit(con)
+    DBI::dbExecute(con, stringr::str_c("DROP TABLE ", trgt, "_src", ";"))
+  }
+  invisible()
+
+}
+
+
+
 #' get PostgreSQL current user name
 #'
 #' @rdname pgCurrent
