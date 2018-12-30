@@ -132,7 +132,7 @@ Less <- function(xTs1 = NULL, xTs2 = NULL) {
   xTs1 - xTs2
 
 })}
-
+# NEED: #' e.g. Less: X2 - X1, LogDiff: log(X2/X1), FracChg: X2/X1 - 1, ArithDiff: X2/X1
 
 
 

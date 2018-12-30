@@ -986,6 +986,45 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' multi outer
+#'
+#' Applies reduction of outer amoung multiple vectors
+#' FUN has a required formals that are similar to "paste". See the example.
+#'
+#' @author Steven Walker
+#' @references
+#' \cite{R CRAN package multitable \url{https://cran.r-project.org/src/contrib/Archive/multitable}}
+#'
+#' \cite{R package multitable \url{https://github.com/stevencarlislewalker/multitable}}
+#' @param x list or vectors of values
+#' @param ... dots; one function FUN to applied to the vectors
+#' @return array
+#' @examples
+#' \dontrun{
+#'
+#' multitable___mouter(list(LETTERS[1:3], letters[1:2], 1:3), paste0)
+#' multitable___mouter(list(LETTERS[1:3], letters[1:2], 1:3), paste)
+#'
+#' # Require FUN function formals to be similar to "paste"
+#' pasteDot <- function(..., sep = ".", collapse = NULL) { paste(..., sep = sep, collapse = collapse) }
+#' multitable___mouter(list(LETTERS[1:3], letters[1:2], 1:3), pasteDot)
+#'
+#' # convert the array to a vector
+#' c(multitable___mouter(list(LETTERS[1:3], letters[1:2], 1:3), pasteDot))
+
+#' }
+#' @export
+multitable___mouter <- function(x, ...){
+  spouter <- function(x, y) outer(x, y, ...)
+  Reduce("spouter", x)
+}
+
+
+
+
+
+
+
 
 
 #' expland out xts
