@@ -4,8 +4,16 @@
 \alias{RC}
 \title{relative change}
 \usage{
-RC(xTs, base = 0, lag = 1)
+RC(xTs, base = 0, lag = 1, log = FALSE, ...)
+}
+\arguments{
+\item{base}{choose -1 to look into the future}
 }
 \description{
 relative change
+}
+\examples{
+\dontrun{
+xTs1 <- xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+}
 }

@@ -4,7 +4,10 @@
 \alias{AC}
 \title{absolute change}
 \usage{
-AC(xTs, base = 0, lag = 1)
+AC(xTs, base = 0, lag = 1, ...)
+}
+\arguments{
+\item{base}{choose -1 to look into the future}
 }
 \description{
 absolute change

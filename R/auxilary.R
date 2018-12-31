@@ -1035,65 +1035,154 @@ pasteDot <- function(..., sep = ".", collapse = NULL) {
 }
 
 
+#' lag an xts object
+#'
+#' does not complain when: k > NROW(xTs)
+#'
+#' @param k choose -1 to look into the future
+#' @export
+LagXts <- function(xTs, k = 1, na.pad = TRUE, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  if(k > NROW(xTs)) {
+    coredata(xTs)[] <- NA
+    return(xTs)
+  }
+  lag.xts(x = xTs, k = k, na.pad = na.pad, ...)
+
+})}
 
 
 #' absolute change
 #'
+#' @param base choose -1 to look into the future
 #' @export
-AC <- function(xTs, base = 0, lag = 1) {
+AC <- function(xTs, base = 0, lag = 1, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
-  lag.xts(xTs1, base + 0) - lag.xts(xTs1, base + lag)
+  xTs <- initXts(xTs)
+  lag.xts(xTs1, base) - lag.xts(xTs1, base + lag)
 
-}
+})}
 
 
 #' relative change
 #'
+#' @param base choose -1 to look into the future
+#' @examples
+#' \dontrun{
+#' xTs1 <- xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+#' }
+#' @importFrom plyr aaply
 #' @export
-RC <- function(xTs, base = 0, lag = 1) {
+RC <- function(xTs, base = 0, lag = 1, log = FALSE, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
-  # I do not know how to do
+  xTs <- initXts(xTs)
+  NegNegTest <- (LagXts(xTs1, base) < 0) & (LagXts(xTs1, base + lag) < 0)
+  if(any(coredata(NegNegTest) == TRUE))
+    stop("RC currenly can not handle negative numerator with a negative denominator")
+  Res <- LagXts(xTs1, base)/LagXts(xTs1, base + lag)
+  if(log) Res <- log(Res)
+  return(Res)
 
-  # Common  <- lag.xts(xTs1, base + 0)/lag.xts(xTs1, base + lag)
-  # NegNeg  <- 2 - abs(lag.xts(xTs1, base + 0)/lag.xts(xTs1, base + lag))
-  # NegNegTest <- (lag.xts(xTs1, base + 0) < 0) & (lag.xts(xTs1, base + lag) < 0)
+  # I DO NOT KNOW HOW TO IMPLEMENT (UNTRIED)
+  # NegNeg Solution
+  # NegNeg  <- 2 - abs(LagXts(xTs1, base)/LagXts(xTs1, base + lag))
+  this.envir <- environment()
+  if(any(coredata(NegNegTest) == TRUE)) {
+    arrayIndicies <- arrayInd(which(coredata(NegNegTest) == FALSE), dim(coredata(NegNegTest)))
+    plyr::aaply(arrayIndicies,1, function(x) {
+      Res[arrayIndicies[1,1], arrayIndicies[1,2]] <-
+         2 - abs(LagXts(xTs1[arrayIndicies[1,1], arrayIndicies[1,2]], base)/LagXts(xTs1[arrayIndicies[1,1], arrayIndicies[1,2]], base + lag))
+      assign("Res", Res, envir = this.envir)
+    })
+  }
+  Res
 
-  # xTsList <- list()
-  # for(i in NVAR(xTs) {
-  #   for(j in NROW(xTs) {
-  #
-  #     if( (lag.xts(xTs1[i,j], base + 0) < 0) & (lag.xts(xTs1[i,j], base + lag) < 0)) {
-  #       2 - abs(lag.xts(xTs1[i,j], base + 0)/lag.xts(xTs1[i,j], base + lag))
-  #     } else {
-  #       lag.xts(xTs1, base + 0)/lag.xts(xTs1, base + lag)
-  #     } -> xTsElement
-  #    xTsList <- c(list(),xTsList, list(xTsElement))
-  #   }
-  # }
-  # DescTools::DoCall(merge, xTsList)
-
-
-}
+})}
 
 
 #' relative percent change
 #'
+#' most useful for tracking: velocity, acceleration, and jerk
+#'
+#' @param base choose -1 to look into the future
 #' @export
-RPC <- function(xTs, base = 0, lag = 1) {
+RPC <- function(xTs, base = 0, lag = 1, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
-  AC(xTs, base = 0, lag = 1)/ abs(lag.xts(xTs1, base + lag))
+  xTs <- initXts(xTs)
+  AC(xTs, base = base, lag = 1)/ abs(LagXts(xTs1, base + lag))
 
-}
+})}
 
 
 #' absolute percent change
 #'
+#' @param base choose -1 to look into the future
 #' @export
-APC <- function(xTs, base = 0, lag = 1) {
+APC <- function(xTs, base = 0, lag = 1, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
-  AC(xTs, base = 0, lag = 1)/ lag.xts(xTs1, base + lag)
+  xTs <- initXts(xTs)
+  AC(xTs, base = base, lag = 1)/LagXts(xTs1, base + lag)
+
+})}
+
+
+#' lag and/or difference and/or use a function(Fun) upon and xts object
+#'
+#' @param lag as diff.xts
+#' @param differences as diff.xts
+#' @param arithmetic as diff.xts
+#' @param log as diff.xts
+#' @param na.pad as diff.xts
+#' @param Fun differencing function.  Meant to change the xTs in some way. (Default diff[.xts])
+#' @param ... dots passed
+#' @importFrom DescTools DoCall
+#' @export
+diffXts <- function(x, lag=1, differences=1, arithmetic=TRUE, log=FALSE, na.pad=TRUE, Fun = diff, ...) {
+
+  Fun = match.fun(Fun)
+  Dots <- list(...)
+
+  if(!is.null(lag)) {
+    if(!is.integer(lag) && any(is.na(as.integer(lag))))
+      stop("'lag' must be integer")
+  }
+
+  if(!is.null(differences)) {
+    differences <- as.integer(differences[1L])
+    if(is.na(differences))
+      stop("'differences' must be integer")
+  }
+
+  if(is.logical(x))
+    x <- .xts(matrix(as.integer(x),ncol=NCOL(x)), .index(x), indexClass(x))
+
+  # if the use want's to do differencing
+  if(!is.null(differences) && !is.na(differences) && is.numeric(differences)) {
+
+    if(differences > 1) {
+      x <- DescTools::DoCall(Fun, c(list(),   lag=lag,   arithmetic=arithmetic, log=log, na.pad=na.pad, Fun = Fun, Dots))
+      diffXts(x, lag=lag, differences=differences - 1,   arithmetic=arithmetic, log=log, na.pad=na.pad, Fun = Fun,   ...)
+    } else {
+        return(
+          DescTools::DoCall(Fun, c(list(), lag=lag,      arithmetic=arithmetic, log=log, na.pad=na.pad, Fun = Fun, Dots))
+        )
+    }
+
+  }
 
 }
+
 
 
 #' expland out xts
@@ -1131,11 +1220,11 @@ APC <- function(xTs, base = 0, lag = 1) {
 #' # ibm <- getSymbols("IBM", from = "1970-01-01", to = "1970-01-13", auto.assign = FALSE)
 #' # explodeXts(ibm[,c("IBM.Open","IBM.Close")], Fun = "TTR::SMA", Whiches = list(n = 2:3))
 #' }
-#' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom purrr transpose
 #' @importFrom plyr llply
 #' @importFrom DescTools DoCall
+#' @export
 explodeXts <- function(  xTs1 = NULL, xTs2 = NULL, Fun = NULL
                        , Whiches   = NULL
                        , AltName   = NULL, Prefix = NULL, FixedSep  = NULL

@@ -4,8 +4,11 @@
 \alias{RPC}
 \title{relative percent change}
 \usage{
-RPC(xTs, base = 0, lag = 1)
+RPC(xTs, base = 0, lag = 1, ...)
+}
+\arguments{
+\item{base}{choose -1 to look into the future}
 }
 \description{
-relative percent change
+most useful for tracking: velocity, acceleration, and jerk
 }
