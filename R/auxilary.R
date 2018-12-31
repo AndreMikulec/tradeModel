@@ -1097,8 +1097,8 @@ initEnv();on.exit({uninitEnv()})
   if(any(coredata(NegNegTest) == TRUE)) {
     arrayIndicies <- arrayInd(which(coredata(NegNegTest) == FALSE), dim(coredata(NegNegTest)))
     plyr::aaply(arrayIndicies,1, function(x) {
-      Res[arrayIndicies[1,1], arrayIndicies[1,2]] <-
-         2 - abs(LagXts(xTs1[arrayIndicies[1,1], arrayIndicies[1,2]], base)/LagXts(xTs1[arrayIndicies[1,1], arrayIndicies[1,2]], base + lag))
+      coredata(Res[arrayIndicies[1,1], arrayIndicies[1,2]]) <-
+         2 - abs(coredata(LagXts(xTs1[arrayIndicies[1,1], arrayIndicies[1,2]], base))/coredata(LagXts(xTs1[arrayIndicies[1,1], arrayIndicies[1,2]], base + lag)))
       assign("Res", Res, envir = this.envir)
     })
   }
