@@ -123,8 +123,8 @@ ifelse.xts    <- function(test, yes, no) {
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 Less <- function(xTs1 = NULL, xTs2 = NULL) {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
   xTs1  <- initXts(xTs1)
   xTs2  <- initXts(xTs2)
@@ -132,8 +132,8 @@ Less <- function(xTs1 = NULL, xTs2 = NULL) {
   xTs1 - xTs2
 
 })}
-# NEED: #' e.g. Less: X2 - X1, LogDiff: log(X2/X1), FracChg: X2/X1 - 1, ArithDiff: X2/X1
 
+#' NEED YET: e.g. initLag: index(X1) - #, Less: X2 - X1, LogDiff: log(X2/X1), FracChg: X2/X1 - 1, ArithDiff: X2/X1
 
 
 

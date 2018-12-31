@@ -990,6 +990,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' Applies reduction of outer amoung multiple vectors
 #' FUN has a required formals that are similar to "paste". See the example.
+#' NOT USED ANYWHERE
 #'
 #' @author Steven Walker
 #' @references
@@ -1021,10 +1022,78 @@ multitable___mouter <- function(x, ...){
 
 
 
+#' paste with the default dot(.) separator
+#'
+#' NOT USED ANYWHERE
+#'
+#' @param ... dots as paste
+#' @param sep as paste
+#' @param collapse as paste
+#' @export
+pasteDot <- function(..., sep = ".", collapse = NULL) {
+  paste(..., sep = sep, collapse = collapse)
+}
 
 
 
 
+#' absolute change
+#'
+#' @export
+AC <- function(xTs, base = 0, lag = 1) {
+
+  lag.xts(xTs1, base + 0) - lag.xts(xTs1, base + lag)
+
+}
+
+
+#' relative change
+#'
+#' @export
+RC <- function(xTs, base = 0, lag = 1) {
+
+  # I do not know how to do
+
+  # Common  <- lag.xts(xTs1, base + 0)/lag.xts(xTs1, base + lag)
+  # NegNeg  <- 2 - abs(lag.xts(xTs1, base + 0)/lag.xts(xTs1, base + lag))
+  # NegNegTest <- (lag.xts(xTs1, base + 0) < 0) & (lag.xts(xTs1, base + lag) < 0)
+
+  # xTsList <- list()
+  # for(i in NVAR(xTs) {
+  #   for(j in NROW(xTs) {
+  #
+  #     if( (lag.xts(xTs1[i,j], base + 0) < 0) & (lag.xts(xTs1[i,j], base + lag) < 0)) {
+  #       2 - abs(lag.xts(xTs1[i,j], base + 0)/lag.xts(xTs1[i,j], base + lag))
+  #     } else {
+  #       lag.xts(xTs1, base + 0)/lag.xts(xTs1, base + lag)
+  #     } -> xTsElement
+  #    xTsList <- c(list(),xTsList, list(xTsElement))
+  #   }
+  # }
+  # DescTools::DoCall(merge, xTsList)
+
+
+}
+
+
+#' relative percent change
+#'
+#' @export
+RPC <- function(xTs, base = 0, lag = 1) {
+
+  AC(xTs, base = 0, lag = 1)/ abs(lag.xts(xTs1, base + lag))
+
+}
+
+
+#' absolute percent change
+#'
+#' @export
+APC <- function(xTs, base = 0, lag = 1) {
+
+  AC(xTs, base = 0, lag = 1)/ lag.xts(xTs1, base + lag)
+
+}
 
 
 #' expland out xts

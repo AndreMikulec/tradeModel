@@ -2,7 +2,8 @@
 % Please edit documentation in R/predictive.R
 \name{getModelData}
 \alias{getModelData}
-\title{quantmod getModelData with parameter source.envir}
+\title{NEED YET: e.g. initLag: index(X1) - #, Less: X2 - X1, LogDiff: log(X2/X1), FracChg: X2/X1 - 1, ArithDiff: X2/X1
+quantmod getModelData with parameter source.envir}
 \usage{
 getModelData(x, na.rm = TRUE, source.envir = NULL, ...)
 }

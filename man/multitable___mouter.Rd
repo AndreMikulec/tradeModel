@@ -17,6 +17,7 @@ array
 \description{
 Applies reduction of outer amoung multiple vectors
 FUN has a required formals that are similar to "paste". See the example.
+NOT USED ANYWHERE
 }
 \examples{
 \dontrun{
