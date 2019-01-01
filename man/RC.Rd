@@ -14,6 +14,13 @@ relative change
 }
 \examples{
 \dontrun{
+
 xTs1 <- xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+RC(xTs1)
+           [,1] [,2]
+1970-01-01   NA   NA
+1970-01-02   -2    2
+1970-01-03    0    2
+
 }
 }

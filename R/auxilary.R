@@ -1074,7 +1074,14 @@ initEnv();on.exit({uninitEnv()})
 #' @param base choose -1 to look into the future
 #' @examples
 #' \dontrun{
+#'
 #' xTs1 <- xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+#' RC(xTs1)
+#'            [,1] [,2]
+#' 1970-01-01   NA   NA
+#' 1970-01-02   -2    2
+#' 1970-01-03    0    2
+#'
 #' }
 #' @importFrom plyr aaply
 #' @export
@@ -1083,25 +1090,25 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
-  NegNegTest <- (LagXts(xTs1, base) < 0) & (LagXts(xTs1, base + lag) < 0)
-  if(any(coredata(NegNegTest) == TRUE))
-    stop("RC currenly can not handle negative numerator with a negative denominator")
+  # optimistic
   Res <- LagXts(xTs1, base)/LagXts(xTs1, base + lag)
-  if(log) Res <- log(Res)
-  return(Res)
 
-  # I DO NOT KNOW HOW TO IMPLEMENT (UNTRIED)
-  # NegNeg Solution
-  # NegNeg  <- 2 - abs(LagXts(xTs1, base)/LagXts(xTs1, base + lag))
+  # make sure UNDERSTAND the contexts of
+  # NEGnon-lag / NEGlagged
+  # use with MUCH care
+  # SOMEDAY optimize this (to not be element-by-element)
+  # I have not found any R package that does that
   this.envir <- environment()
+  NegNegTest <- (LagXts(xTs1, base) < 0) & (LagXts(xTs1, base + lag) < 0)
   if(any(coredata(NegNegTest) == TRUE)) {
-    arrayIndicies <- arrayInd(which(coredata(NegNegTest) == FALSE), dim(coredata(NegNegTest)))
-    plyr::aaply(arrayIndicies,1, function(x) {
-      coredata(Res[arrayIndicies[1,1], arrayIndicies[1,2]]) <-
-         2 - abs(coredata(LagXts(xTs1[arrayIndicies[1,1], arrayIndicies[1,2]], base))/coredata(LagXts(xTs1[arrayIndicies[1,1], arrayIndicies[1,2]], base + lag)))
+    arrayIndicies <- which(coredata(NegNegTest), arr.ind = TRUE)
+    plyr::aaply(arrayIndicies, 1, function(x) {
+      coredata(Res)[x[1], x[2]] <-
+         2 - abs(coredata(LagXts(xTs1, base)[x[1], x[2]])/coredata(LagXts(xTs1, base + lag)[x[1], x[2]]))
       assign("Res", Res, envir = this.envir)
     })
   }
+  if(log) Res <- log(Res)
   Res
 
 })}
