@@ -438,33 +438,73 @@ siQuote <- function(x) {
 }
 
 
+#' addto/update a database with new information
+#'
+#' @export
+pgUpSertDB_STUB <- function(...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  pgAddTable(...)
+  pgpgAddColumn(...)
+  pgInsert(...)
+  pgUpdate(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, ... )
+
+})}
+
+
+
+#' add a table to a database
+#'
+#' @export
+pgAddTable_STUB <- function(...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+})}
+
+
+
+#' add a column to a database table
+#'
+#' @export
+pgAddColumn_STUB <- function(...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+})}
+
+
+#' inserat into a database table 'new' data
+#'
+#' TODO [ ] reorder df columns to match DB Server table LOOK AT . . .
+#'   add that code in here ( see caroline dbWriteTable2 ),
+#'   or
+#'   my implementation, my 'sort using factor code' in a tradeModel function )
+#'
+#' @export
+pgInsert_STUB <- function(...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+})}
+
 
 #' update a database table with 'updated' data
 #'
-#' WORKINPROGRESS
 #' note: beforehand LIKE caroline make SURE that each
 #' has the same column names as the OTHER
 #' hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
 #'
-#' TODO [IN PROGRESS] INSTEAD: UPLOAD/WRITE TO A *temporary* TABLE (HIGH)
 #' TODO [TOMORROW] part of dbUpsert <- function() { pgAddColumn, pgInsert, pgUpdate }
 #'
-#' # NOT necessarily in ordesr
-#' TODO [UNPDATE SATEMENTS - NOT APPLIC] reorder columns to match db table see ( currenly assumned ) BUT NOW
-#'   add that code in here ( see caroline dbWriteTable2, my implementation, my
-#'   'sort using factor code' in a tradeModel function )
-#' TODO [x] make argument keys = NULL, then detect and reject is.null(keys)
-#' TODO [NOT SURE] allow non-joined mass updates: keys = c() and UpDateWhereExactly = "1 = 1"
-#' TODO [x] replace siQuote with DBI:: dbQuoteLiteral, dbQuoteString ( see tradeModel )
-#' TODO [x] in more places dbQuoteIdentifier ( see tradeModel )
-#' TODO [x] handle PostgreSQL schemas
-#' TODO [NOT DOING] handle 'newer' package RPostgre
-#' TODO [IN PROGRESS] create a REAL temp table instead of a real real table (SEE ABOVE
+
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
 #' @param keys trgt remote server side vector of strings of table
-#' column names that make up a unique id for the row
+#' column names that make up a unique id for the row.
+#' keys can not be zero length. keys can not be null.
 #' @param schname schema name
 #' @param df local client side data.frame of 'updated data'
 #' @param varHint optional vector of character column names. Performance optimization
@@ -503,8 +543,10 @@ siQuote <- function(x) {
 #' rownames(newData) <- NULL
 #' newData[2,2] <- NA; newData[1,3] <- NA
 #'
+#' # not "prepare.query"
 #' pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
 #'
+#' # "prepare.query"
 #' dbExecute(con, "DROP TABLE mtcars")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #' pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public",
@@ -558,11 +600,13 @@ initEnv();on.exit({uninitEnv()})
       Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
     }
   }
+  if(!exists("Splitted", envir = environment(), inherits = FALSE))
+    Splitted <- list()
   for(spl in Splitted) {
     keyvals <-  unlist(spl)
     if(length(keyvals)) {
       keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
-      SelectWhereExactly <- stringr::str_c("(", stringr::str_c(keys, " = ", keyvals, collapse = " AND "), ")", collapse = "")
+      SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, keys), " = ", keyvals, collapse = " AND "), ")", collapse = "")
       SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
     }
   }
@@ -571,7 +615,7 @@ initEnv();on.exit({uninitEnv()})
   }
   # extra subsetting (If any)
   if(!is.null(varHint) && !is.null(valHint)) {
-    SelectWhereExactly <- stringr::str_c("(", stringr::str_c(varHint, " = ", valHint, collapse = " AND "), ")", collapse = "")
+    SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, varHint), " = ", valHint, collapse = " AND "), ")", collapse = "")
     SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
   }
   # combine subsetting
@@ -590,6 +634,7 @@ initEnv();on.exit({uninitEnv()})
 
   # match to the common key and
   # determine columns ( to later test for "changed" data)
+  # keys can not be null (if keys are null then no join is produced)
   mergedData <- merge(oldData, newData, sort = FALSE) # , by = keys # defaults to the shared key
   if(NROW(mergedData) == 0) {
     message(stringr::str_c("pgUpdate targeting table: ", schemaTrgtTableQuoted, " merge, did not find any common values. Nothing to update . . . "))
@@ -618,7 +663,7 @@ initEnv();on.exit({uninitEnv()})
   UpDateFrom  <- stringr::str_c(tempTableQuoted, " val ")
   UpDateWhere <-  vector(mode = "character")
   if(length(keys)) {
-    UpDateWhere <- stringr::str_c(stringr::str_c("trg.",keys), " = ", stringr::str_c("val.",keys), collapse = " AND ")
+    UpDateWhere <- stringr::str_c(stringr::str_c("trg.",DBI::dbQuoteIdentifier(con, keys)), " = ", stringr::str_c("val.", DBI::dbQuoteIdentifier(con, keys)), collapse = " AND ")
   }
 
   # create UPDATE statements specifics
@@ -633,7 +678,7 @@ initEnv();on.exit({uninitEnv()})
             # left side does not have a value # right side does have a value
           (  is.na(spl[[LValue]]) && !is.na(spl[[RValue]]) )
       ) {
-        UpDateSet   <- stringr::str_c(nm, " = ", "val.", nm, " ")
+        UpDateSet   <- stringr::str_c(DBI::dbQuoteIdentifier(con, nm), " = ", "val.", DBI::dbQuoteIdentifier(con, nm), " ")
         UpDateSetColl <- c(UpDateSetColl,UpDateSet)
       }
     }
@@ -641,7 +686,7 @@ initEnv();on.exit({uninitEnv()})
       keyvals <- unlist(plyr::llply(keys, function(x) { spl[[x]] }))
       names(keyvals) <- keys # names not used
       keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
-      UpDateWhereExactly <- stringr::str_c(stringr::str_c("trg.",keys), " = ", keyvals, collapse = " AND ")
+      UpDateWhereExactly <- stringr::str_c(stringr::str_c("trg.", DBI::dbQuoteIdentifier(con, keys)), " = ", keyvals, collapse = " AND ")
       UpdateFromWhere <- stringr::str_c(" FROM ", UpDateFrom, " WHERE ", UpDateWhere, " AND ", UpDateWhereExactly)
       UpDateSets <- stringr::str_c(UpDateSetColl, collapse = ", ")
       UpDateStmt <- stringr::str_c(UpDateTarget, UpDateSets, UpdateFromWhere, "; ")
@@ -713,6 +758,8 @@ initEnv();on.exit({uninitEnv()})
 
     # RPostgreSQL PostgreSQLConnection class connecion "temporary" parameter is ignored
     # RPostgre    PqConnection class connection        "temporary" is used
+    # writetempTable is 'not quoted' because executed in the
+    # string value part of dbExistsTable and in "C code"
     DBI::dbWriteTable(con, writetempTable, newData[, c(keys, MatchingColsRoots), with=FALSE] , row.names = FALSE, overwrite = FALSE, append = TRUE, temporary = TRUE)
 
     DBI::dbBegin(con)

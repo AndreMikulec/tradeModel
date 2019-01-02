@@ -13,7 +13,8 @@ pgUpdate(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
 \item{trgt}{remote server side string database table name of old data}
 
 \item{keys}{trgt remote server side vector of strings of table
-column names that make up a unique id for the row}
+column names that make up a unique id for the row.
+keys can not be zero length. keys can not be null.}
 
 \item{schname}{schema name}
 
@@ -43,26 +44,12 @@ An alternative way to to specify the password is throught the environment
 variable PGPASS.  E.g. Sys.setenv("PGPASSWORD" = "postgres")}
 }
 \description{
-WORKINPROGRESS
 note: beforehand LIKE caroline make SURE that each
 has the same column names as the OTHER
 hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
 }
 \details{
-TODO [IN PROGRESS] INSTEAD: UPLOAD/WRITE TO A *temporary* TABLE (HIGH)
 TODO [TOMORROW] part of dbUpsert <- function() { pgAddColumn, pgInsert, pgUpdate }
-
-# NOT necessarily in ordesr
-TODO [UNPDATE SATEMENTS - NOT APPLIC] reorder columns to match db table see ( currenly assumned ) BUT NOW
-  add that code in here ( see caroline dbWriteTable2, my implementation, my
-  'sort using factor code' in a tradeModel function )
-TODO [x] make argument keys = NULL, then detect and reject is.null(keys)
-TODO [NOT SURE] allow non-joined mass updates: keys = c() and UpDateWhereExactly = "1 = 1"
-TODO [x] replace siQuote with DBI:: dbQuoteLiteral, dbQuoteString ( see tradeModel )
-TODO [x] in more places dbQuoteIdentifier ( see tradeModel )
-TODO [x] handle PostgreSQL schemas
-TODO [NOT DOING] handle 'newer' package RPostgre
-TODO [IN PROGRESS] create a REAL temp table instead of a real real table (SEE ABOVE
 }
 \examples{
 \dontrun{
@@ -80,8 +67,10 @@ newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 rownames(newData) <- NULL
 newData[2,2] <- NA; newData[1,3] <- NA
 
+# not "prepare.query"
 pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
 
+# "prepare.query"
 dbExecute(con, "DROP TABLE mtcars")
 DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public",
