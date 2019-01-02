@@ -16,6 +16,9 @@ no value, or a single value with with comma separted internal parts}
 
 \item{unQuote}{(default: FALSE) strip beginning(") and end quotes(")}
 }
+\value{
+single column data.frame
+}
 \description{
 returns One column from a database (con)
 }

@@ -10,5 +10,5 @@ siQuote(x)
 \item{x}{vector of strings}
 }
 \description{
-single quote
+NOT USED ANYWHERE
 }

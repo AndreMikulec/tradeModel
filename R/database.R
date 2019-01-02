@@ -95,6 +95,9 @@ initEnv();on.exit({uninitEnv()})
 
   # column datatypes
   colClasses  <- DescTools::DoCall(c,plyr::llply(df, function(x) {class(x)[1]}))
+  colClasses[colClasses     == "logical"]    <- "BOOLEAN"
+  colClasses[colClasses     == "character"]  <- "TEXT"
+  colClasses[colClasses     == "integer"]    <- "INTEGER"
   colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
   colClasses[colClasses %in%   "Date"]       <- "DATE"
   colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
@@ -205,10 +208,10 @@ initEnv();on.exit({uninitEnv()})
   if(!requireNamespace("RPostgreSQL", quietly=TRUE))
     stop("package:",dQuote("RPostgreSQL"),"cannot be loaded.")
 
-  if(is.null(user))     user     <- "Symbols"
-  if(is.null(password)) password <- "Symbols"
-  if(is.null(dbname))   dbname   <- "Symbols"
-  if(is.null(schname))  schname  <- "Symbols"
+  if(is.null(user))     { user     <- "Symbols"; Sys.setenv("PGUSER"     = "Symbols") }
+  if(is.null(password)) { password <- "Symbols"; Sys.setenv("PGPASSWORD" = "Symbols") }
+  if(is.null(dbname))   { dbname   <- "Symbols"; Sys.setenv("PGDATABASE" = "Symbols") }
+  if(is.null(schname))  { schname  <- "Symbols" }
   if(is.null(user) || is.null(password) || is.null(dbname)) {
     stop(paste(
         'At least one connection argument (',sQuote('user'),
@@ -230,6 +233,7 @@ initEnv();on.exit({uninitEnv()})
   }
   DBI::dbExecute(con, "SET TIME ZONE 'UTC';")
   pgSetCurrentSearchPath(con, DBI::dbQuoteIdentifier(con, schname))
+  Sys.setenv("TRADEMODEL_SYMBOLS_SCHEMA" = schname)
   list(con=con,user=user,password=password,dbname=dbname,schname=schname)
 
 })}
@@ -369,6 +373,7 @@ initEnv();on.exit({uninitEnv()})
 #' no value, or a single value with with comma separted internal parts
 #' @param outName the new column name
 #' @param unQuote (default: FALSE) strip beginning(") and end quotes(")
+#' @return single column data.frame
 #' @examples
 #' \dontrun{
 #'
@@ -400,7 +405,7 @@ initEnv();on.exit({uninitEnv()})
   res <- DBI::dbGetQuery(con, Query)
   if(NROW(res)) {
     res <- res[[1]]
-    res %>% strsplit(", ") %>%
+    res %>% { if(is.character(.)) { strsplit(., ", ") } else { . } } %>%
       {identity(.)[[1]]} %>% as.data.frame(stringsAsFactors = F) %>%
         {colnames(.)[1] <- outName; .} -> ret
   } else {
@@ -422,6 +427,8 @@ initEnv();on.exit({uninitEnv()})
 
 #' single quote
 #'
+#' NOT USED ANYWHERE
+#'
 #' @param x vector of strings
 #' @importFrom stringr str_c
 #' @importFrom plyr llply
@@ -439,45 +446,47 @@ siQuote <- function(x) {
 #' has the same column names as the OTHER
 #' hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
 #'
-#' TODO [ ] INSTEAD: UPLOAD/WRITE TO A *temporary* TABLE (HIGH)
-#' TODO [ ] part of dbUpsert <- function() { dbAddColumn, dbInsert, dbUpdate }
+#' TODO [IN PROGRESS] INSTEAD: UPLOAD/WRITE TO A *temporary* TABLE (HIGH)
+#' TODO [TOMORROW] part of dbUpsert <- function() { pgAddColumn, pgInsert, pgUpdate }
 #'
 #' # NOT necessarily in ordesr
-#' TODO [ ] reorder columns to match db table see ( currenly assumned ) BUT NOW
+#' TODO [UNPDATE SATEMENTS - NOT APPLIC] reorder columns to match db table see ( currenly assumned ) BUT NOW
 #'   add that code in here ( see caroline dbWriteTable2, my implementation, my
 #'   'sort using factor code' in a tradeModel function )
-#' TODO [ ] make argument keys = NULL, then detect and reject is.null(keys)
-#' TODO [ ] allow non-joined mass updates: keys = c() and UpDateWhereExactly = "1 = 1"
-#' TODO [ ] replace siQuote with DBI:: dbQuoteLiteral, dbQuoteString ( see tradeModel )
-#' TODO [ ] in more places dbQuoteIdentifier ( see tradeModel )
-#' TODO [ ] handle PostgreSQL schemas
-#' TODO [ ] handle 'newer' package RPostgre
-#' TODO   [ ] create a REAL temp table instead of a real real table (SEE ABOVE
+#' TODO [x] make argument keys = NULL, then detect and reject is.null(keys)
+#' TODO [NOT SURE] allow non-joined mass updates: keys = c() and UpDateWhereExactly = "1 = 1"
+#' TODO [x] replace siQuote with DBI:: dbQuoteLiteral, dbQuoteString ( see tradeModel )
+#' TODO [x] in more places dbQuoteIdentifier ( see tradeModel )
+#' TODO [x] handle PostgreSQL schemas
+#' TODO [NOT DOING] handle 'newer' package RPostgre
+#' TODO [IN PROGRESS] create a REAL temp table instead of a real real table (SEE ABOVE
 #'
-#' @param con DBI connection
+#' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
 #' @param keys trgt remote server side vector of strings of table
 #' column names that make up a unique id for the row
+#' @param schname schema name
 #' @param df local client side data.frame of 'updated data'
 #' @param varHint optional vector of character column names. Performance optimization
 #' techique to limit the number of rows returned
 #' from the database server to the client(R).
 #' User must specify as paired position values.
 #' e.g. varHint = "dateindex", valHint = "17000"
-#' or e.g. varHint = c("dateindex", "ticker"), valHint = c("dateindex","'AAPL'")
-#' Otherwise if varHint/valHint are not specified,
-#' then the unique combinations of the keys of the 'updated data' data.frame df
-#' are sent to the server to limit the number of rows returned from the server
+#' or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'")
 #' Position matches one to one with valHint
+#' Note, also for performance reasons,
+#' the unique combinations of the keys of the 'updated data' data.frame df
+#' are sent to the server, also, the reason is to limit the number of rows returned from the server.
 #' @param valHint
-#' See varHint. Position matches one to one with varHint
-#' @importFrom stringr str_c str_subset str_replace
-# non-exported S3 methods # data.table:::merge.data.table data.table:::split.data.table
-#' @import data.table
-#' @importFrom data.table data.table
-#' @importFrom DBI dbWriteTable dbGetQuery dbQuoteIdentifier dbBegin dbCommit
-#' @importFrom plyr llply
-#' @export
+#' See varHint. Position matches one to one with varHint.
+#' @param prepare.query FALSE(default) will use RPostgres PostgreSQLConnection
+#' If TRUE, will use package RPostgre PqConnection
+#' @param password (REQUIRED if prepare.query == TRUE) passed
+#' to package RPostgres dbConnect to create a
+#' class PqConnection connection.  This is needed to to a prepare.query
+#' and create an intermediate TEMPORARY TABLE on the database server.
+#' An alternative way to to specify the password is throught the environment
+#' variable PGPASS.  E.g. Sys.setenv("PGPASSWORD" = "postgres")
 #' @examples
 #' \dontrun{
 #'
@@ -486,6 +495,7 @@ siQuote <- function(x) {
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 #' rownames(oldData) <- NULL
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
+#'
 #' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'
@@ -493,59 +503,125 @@ siQuote <- function(x) {
 #' rownames(newData) <- NULL
 #' newData[2,2] <- NA; newData[1,3] <- NA
 #'
-#' dbUpdate(con, df = newData)
+#' pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
+#'
+#' dbExecute(con, "DROP TABLE mtcars")
+#' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
+#' pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public",
+#'   df = newData, prepare.query = TRUE, password = "postgres")
+#'
 #' DBI::dbDisconnect(con)
 #'
 #'}
-dbUpdate <- function(con, trgt = "mtcars", keys = c("rn"), df = mtcars, varHint = NULL, valHint = NULL) {
+#' @importFrom stringr str_c str_subset str_replace str_split
+# non-exported S3 methods # data.table:::merge.data.table data.table:::split.data.table
+#' @import data.table
+#' @importFrom data.table data.table
+#' @importFrom DescTools DoCall
+#' @importFrom DBI dbWriteTable dbGetQuery dbQuoteIdentifier dbQuoteString dbBegin dbCommit
+#' @importFrom plyr llply
+#' @importFrom RPostgres Postgres
+#' @export
+pgUpdate <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, ... ) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
-  # non-exported S3 methods data.table:::merge.data.table data.table:::split.data.table
-  if(!isNamespaceLoaded("data.table")) # AFTER THIS FUNCTION IS PUT INTO A PACAKGE, THEN REMOVE THIS STMT
-          loadNamespace("data.table")  # AFTER THIS FUNCTION IS PUT INTO A PACAKGE, THEN REMOVE THIS STMT
+  Dots <- list(...)
 
+  if(is.null(trgt)) stop("pgUpdate trgt can not be null")
+  if(is.null(keys)) stop("pgUpdate keys can not be null")
+  #
+  # MAYBE later I want SPECIFY a schname in
+  # some other WAY (similar to what I have in other programs)
+  if(is.null(schname)) stop("pgUpdate schname can not be null")
+  #
+  if(is.null(df))   stop("pgUpdate df can not be null")
+
+  if(is.null(Dots[["prepare.query"]])) {
+    prepare.query <- FALSE
+  } else {
+    prepare.query = Dots[["prepare.query"]]
+  }
+
+  if(NROW(df) == 0) {
+     message("pgUpdate df has zero(0) rows.  Nothing is to do . . . ")
+     return(invisible())
+  }
   newData <- data.table::data.table(df, key=keys)
-  # determine the verticle subset of data to collect from the server
+
+  # from df, determine the verticle subset (WHERE) of data to collect from the server
+  # initial subsetting
   SelectWhereExactlies <- vector(mode = "character")
-  if(is.null(varHint)) {
+  if(length(keys)){
     Splits <-interaction(newData[, keys, with=FALSE], drop = TRUE)
-    Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
-    for(spl in Splitted) {
-      keyvals <-  unlist(spl)
-      keyvals <- if(!is.numeric(keyvals)) siQuote(keyvals)
+    if(length(Splits)){
+      Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
+    }
+  }
+  for(spl in Splitted) {
+    keyvals <-  unlist(spl)
+    if(length(keyvals)) {
+      keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
       SelectWhereExactly <- stringr::str_c("(", stringr::str_c(keys, " = ", keyvals, collapse = " AND "), ")", collapse = "")
       SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
     }
-  } else {
+  }
+  if(length(SelectWhereExactlies)) {
+    SelectWhereExactlies <- stringr::str_c("(" , stringr::str_c(SelectWhereExactlies, collapse = " OR "), ")", collapse = "")
+  }
+  # extra subsetting (If any)
+  if(!is.null(varHint) && !is.null(valHint)) {
     SelectWhereExactly <- stringr::str_c("(", stringr::str_c(varHint, " = ", valHint, collapse = " AND "), ")", collapse = "")
     SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
   }
+  # combine subsetting
   if(length(SelectWhereExactlies)) {
-    SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " OR "), collapse = "")
+    SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " AND "), collapse = "")
   }
-  # actually collect that server data
+
+  if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+  schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
+
+  # actually go to the DB server then collect and bring down to R that server data
   #  do not bring back too many columns
   ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
-  oldData <- DBI::dbGetQuery(con, stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", trgt, SelectWhereExactlies))
+  oldData <- DBI::dbGetQuery(con, stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies))
   oldData <- data.table::data.table(oldData, key=keys)
 
+  # match to the common key and
   # determine columns ( to later test for "changed" data)
   mergedData <- merge(oldData, newData, sort = FALSE) # , by = keys # defaults to the shared key
+  if(NROW(mergedData) == 0) {
+    message(stringr::str_c("pgUpdate targeting table: ", schemaTrgtTableQuoted, " merge, did not find any common values. Nothing to update . . . "))
+    return(invisible())
+  }
   # ignores key columns
   # ignores [extra] columns not both present in the
-  #   'results of the SELECT' and the the data.frame
-  MatchingXCols     <- stringr::str_subset(colnames(mergedData), "[.]x\\d*$")
-  MatchingColsRoots <- stringr::str_replace(MatchingXCols, "[.]x\\d*$", "")
+  #   'results of the SELECT from the DB server' and determined by the column names of data.frame (df)
+  MatchingXCols     <- stringr::str_subset(colnames(mergedData), "[.]x$")
+  MatchingColsRoots <- stringr::str_replace(MatchingXCols, "[.]x$", "")
+  if(!length(MatchingColsRoots)){
+    message(stringr::str_c("pgUpdate targeting table: ", schemaTrgtTableQuoted, " MatchingColsRoots, did not find any common columns. Nothing to update . . ."))
+    return(invisible())
+  }
 
   # prepare to process by row
-  Splits <-interaction(mergedData[, keys, with=FALSE], drop = TRUE)
+  Splits   <- seq_len(NROW(mergedData))
   Splitted <- split(mergedData, f = Splits)
 
+  # create UPDATE statements commons
   UpDateStmts <- vector(mode = "character")
-  UpDateTarget <- stringr::str_c("UPDATE ", trgt, " trg ", " SET ")
-  UpDateFrom  <- stringr::str_c(trgt, "_src val ", " ")
-  UpDateWhere <- stringr::str_c(stringr::str_c("trg.",keys), " = ", stringr::str_c("val.",keys), collapse = " AND ")
+  UpDateTarget <- stringr::str_c("UPDATE ", schemaTrgtTableQuoted, " trg ", " SET ")
 
-  # create UPDATE statements
+  tempTable       <- stringr::str_c(trgt, "_src")
+  tempTableQuoted <- DBI::dbQuoteIdentifier(con, tempTable)
+  UpDateFrom  <- stringr::str_c(tempTableQuoted, " val ")
+  UpDateWhere <-  vector(mode = "character")
+  if(length(keys)) {
+    UpDateWhere <- stringr::str_c(stringr::str_c("trg.",keys), " = ", stringr::str_c("val.",keys), collapse = " AND ")
+  }
+
+  # create UPDATE statements specifics
   UpDateStmts   <- vector(mode = "character")
   for(spl in Splitted) {
     UpDateSetColl <- vector(mode = "character")
@@ -564,7 +640,7 @@ dbUpdate <- function(con, trgt = "mtcars", keys = c("rn"), df = mtcars, varHint 
     if(length(UpDateSetColl)) {
       keyvals <- unlist(plyr::llply(keys, function(x) { spl[[x]] }))
       names(keyvals) <- keys # names not used
-      keyvals <- if(!is.numeric(keyvals)) siQuote(keyvals)
+      keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
       UpDateWhereExactly <- stringr::str_c(stringr::str_c("trg.",keys), " = ", keyvals, collapse = " AND ")
       UpdateFromWhere <- stringr::str_c(" FROM ", UpDateFrom, " WHERE ", UpDateWhere, " AND ", UpDateWhereExactly)
       UpDateSets <- stringr::str_c(UpDateSetColl, collapse = ", ")
@@ -573,18 +649,111 @@ dbUpdate <- function(con, trgt = "mtcars", keys = c("rn"), df = mtcars, varHint 
     }
   }
   if(length(UpDateStmts)) {
-    DBI::dbWriteTable(con, stringr::str_c(trgt, "_src"), newData, row.names = FALSE)
+
+    # create an in-memory table on the DB server
+    colClasses  <- DescTools::DoCall(c,plyr::llply(newData, function(x) {class(x)[1]}))
+    # column datatypes
+    colClasses[colClasses     == "logical"]    <- "BOOLEAN"
+    colClasses[colClasses     == "character"]  <- "TEXT"
+    colClasses[colClasses     == "integer"]    <- "INTEGER"
+    colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
+    colClasses[colClasses %in%   "Date"]       <- "DATE"
+    colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
+    # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
+    # xts OTHER supported index date/time classes
+    colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
+
+    # would prefer less disk I/O so I would prefer to create a TEMPORARY table
+    # R package Postgre can do that in dbWriteTable
+    # but authose chose to have each statement prepared (so update statements may be slow )
+    if(prepare.query) {
+      if(inherits(con, "PostgreSQLConnection")) {
+        con2 <- try( {DBI::dbConnect(RPostgres::Postgres(),
+          user     = pgCurrentUser(con)[[1]],
+          dbname   = pgCurrentDB(con)[[1]],
+          port     = pgCurrentPort(con)[[1]],
+          hostaddr = pgCurrentHostAddress(con)[[1]],
+          password =       if(!is.null(Dots[["password"]]))    { Dots[["password"]] }
+                      # would still! get this from the system environment, but I will be explicit
+                      else if(nchar(Sys.getenv("PGPASSWORD"))) { Sys.getenv("PGPASSWORD") }
+                      else { NULL } # elsewhere
+        )}, silent = TRUE)
+      }
+      if(inherits(con2, "try-error")) {
+        # doTemp <- ""
+        rm(con2)
+      } else if(inherits(con2, "PqConnection")) {
+        # doTemp <- "TEMP"
+        con <- con2; rm(con2)
+        pgSetCurrentSearchPath(con, schname)
+      } else {
+        stop("pgUpdate could not make a new late connection")
+      }
+    }
+
+    ddl <- stringr::str_c("CREATE TEMP TABLE ", tempTableQuoted ,"(", stringr::str_c( DBI::dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
+    DBI::dbExecute(con, ddl)
+
+    if(any(names(colClasses) %in% keys)) {
+      ddl <- stringr::str_c("ALTER TABLE ", tempTableQuoted,
+                    " ADD PRIMARY KEY ( ", stringr::str_c(DBI::dbQuoteIdentifier(con, names(colClasses)[names(colClasses) %in% keys]), collapse = ", "), ")",
+                    ";")
+      DBI::dbExecute(con, ddl)
+    }
+
+    if(inherits(con, "PostgreSQLConnection")) {
+      # so dbExistsTable, will return TRUE and NOT CREATE a foreground table
+      # showMethods("dbExistsTable", includeDefs = TRUE, inherited = TRUE)
+      # so PostgreSQLConnection
+      writetempTable <- c(pgCurrentTempSchema(con)[[1]], tempTable)
+    }
+    if(inherits(con, "PqConnection")){
+      writetempTable <- tempTable
+    }
+
+    # RPostgreSQL PostgreSQLConnection class connecion "temporary" parameter is ignored
+    # RPostgre    PqConnection class connection        "temporary" is used
+    DBI::dbWriteTable(con, writetempTable, newData[, c(keys, MatchingColsRoots), with=FALSE] , row.names = FALSE, overwrite = FALSE, append = TRUE, temporary = TRUE)
+
     DBI::dbBegin(con)
-    UpDateStmts <- stringr::str_c(UpDateStmts, collapse = "")
-    message(UpDateStmts)
-    DBI::dbExecute(con, UpDateStmts)
+    message(stringr::str_c(stringr::str_split(stringr::str_c(UpDateStmts, collapse = ""), ";\\s+")[[1]], ";\n"))
+    # RPostgre PqConnection class connection SUCKS (What are they thinking?)
+    # Error in result_create(conn@ptr, statement) :
+    # Failed to prepare query: ERROR:  cannot insert multiple commands into a prepared statement
+    if(inherits(con, "PqConnection")) {
+      plyr::llply(UpDateStmts, function(x) { DBI::dbExecute(con, x) } )
+    }
+    if(inherits(con, "PostgreSQLConnection")) {
+      UpDateStmts <- stringr::str_c(UpDateStmts, collapse = "")
+      DBI::dbExecute(con, UpDateStmts)
+    }
     DBI::dbCommit(con)
-    DBI::dbExecute(con, stringr::str_c("DROP TABLE ", trgt, "_src", ";"))
+    DBI::dbExecute(con, stringr::str_c("DROP TABLE ", tempTableQuoted, ";"))
+  } else {
+    message(stringr::str_c("pgUpdate targeting table: ", schemaTrgtTableQuoted, " using df, did not find any eligible updates. Nothing to update . . ."))
   }
   invisible()
 
-}
+})}
 
+
+#' get PostgreSQL host address
+#'
+#' Find the host name and port using PSQL commands
+#' https://stackoverflow.com/questions/5598517/find-the-host-name-and-port-using-psql-commands
+#'
+#' @rdname pgCurrent
+#' @export
+pgCurrentHostAddress <- function(con) { oneColumn(con, "SELECT inet_server_addr();", "CurrentHostAddress") }
+
+#' get PostgreSQL host address
+#'
+#' Find the host name and port using PSQL commands
+#' https://stackoverflow.com/questions/5598517/find-the-host-name-and-port-using-psql-commands
+#'
+#' @rdname pgCurrent
+#' @export
+pgCurrentPort <- function(con) { oneColumn(con, "SELECT inet_server_port();", "CurrentPort") }
 
 
 #' get PostgreSQL current user name
