@@ -2,7 +2,6 @@
 
 
 
-
 #' convert an OHLC xTs into aN OHLC data.frame MEANT to be loaded into a database
 #'
 #' @param xTs OHLC[V][A] object
@@ -94,16 +93,19 @@ initEnv();on.exit({uninitEnv()})
   schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, Symbol))
 
   # column datatypes
-  colClasses  <- DescTools::DoCall(c,plyr::llply(df, function(x) {class(x)[1]}))
-  colClasses[colClasses     == "logical"]    <- "BOOLEAN"
-  colClasses[colClasses     == "character"]  <- "TEXT"
-  colClasses[colClasses     == "integer"]    <- "INTEGER"
-  colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
-  colClasses[colClasses %in%   "Date"]       <- "DATE"
-  colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
-  # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
-  # xts OTHER supported index date/time classes
-  colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
+
+  # colClasses  <- DescTools::DoCall(c,plyr::llply(df, function(x) {class(x)[1]}))
+  # colClasses[colClasses     == "logical"]    <- "BOOLEAN"
+  # colClasses[colClasses     == "character"]  <- "TEXT"
+  # colClasses[colClasses     == "integer"]    <- "INTEGER"
+  # colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
+  # colClasses[colClasses %in%   "Date"]       <- "DATE"
+  # colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
+  # # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
+  # # xts OTHER supported index date/time classes
+  # colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
+
+  colClasses <- pgDFColClasses(df[, , drop = FALSE])
 
   ddl <- stringr::str_c("CREATE TABLE ", schemaSymbolsQuoted ,"(", stringr::str_c( DBI::dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
   DBI::dbExecute(con, ddl)
@@ -789,17 +791,20 @@ initEnv();on.exit({uninitEnv()})
   if(length(UpDateStmts)) {
 
     # create an in-memory table on the DB server
-    colClasses  <- DescTools::DoCall(c,plyr::llply(newData, function(x) {class(x)[1]}))
-    # column datatypes
-    colClasses[colClasses     == "logical"]    <- "BOOLEAN"
-    colClasses[colClasses     == "character"]  <- "TEXT"
-    colClasses[colClasses     == "integer"]    <- "INTEGER"
-    colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
-    colClasses[colClasses %in%   "Date"]       <- "DATE"
-    colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
-    # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
-    # xts OTHER supported index date/time classes
-    colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
+
+    # colClasses  <- DescTools::DoCall(c,plyr::llply(newData, function(x) {class(x)[1]}))
+    # # column datatypes
+    # colClasses[colClasses     == "logical"]    <- "BOOLEAN"
+    # colClasses[colClasses     == "character"]  <- "TEXT"
+    # colClasses[colClasses     == "integer"]    <- "INTEGER"
+    # colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
+    # colClasses[colClasses %in%   "Date"]       <- "DATE"
+    # colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
+    # # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
+    # # xts OTHER supported index date/time classes
+    # colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
+
+    colClasses <- pgDFColClasses(newData[, , drop = FALSE])
 
     # would prefer less disk I/O so I would prefer to create a TEMPORARY table
     # R package Postgre can do that in dbWriteTable
