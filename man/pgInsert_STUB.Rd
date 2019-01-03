@@ -2,13 +2,19 @@
 % Please edit documentation in R/database.R
 \name{pgInsert_STUB}
 \alias{pgInsert_STUB}
-\title{inserat into a database table 'new' data}
+\title{insert into a database table 'new' data}
 \usage{
 pgInsert_STUB(...)
 }
 \description{
-TODO [ ] reorder df columns to match DB Server table LOOK AT . . .
-  add that code in here ( see caroline dbWriteTable2 ),
-  or
-  my implementation, my 'sort using factor code' in a tradeModel function )
+TODO [ ] (IF NECESSARY)
+ reorder df columns to match DB Server table LOOK AT . . .
+ add that code in here ( see caroline dbWriteTable2 ),
+ or
+ my implementation, my 'sort using factor code' in a tradeModel function )
+}
+\details{
+note: beforehand LIKE caroline make SURE that each
+has the same column names as the OTHER
+hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
 }

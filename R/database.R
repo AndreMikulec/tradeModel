@@ -465,22 +465,112 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add a column to a database table
+#' from R data.frame column types, determine Server DB data types
 #'
+#' @param df local client side data.frame. If df's class `[` method
+#' drops single dimentions to vectors the call by using
+#' pgDFColClasses(df[, "col1", drop = F])
+#' @return named vector of names of column names and
+#' values of Server DB column data types
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom plyr llply
+#' @importFrom DescTools DoCall
+#' @importFrom DBI dbExecute
+#' @importFrom plyr llply
+#' @examples
+#' \dontrun{
+#'
+#' pgDFColClasses(mtcars[, "cyl", drop = F])
+#'             cyl
+#' "NUMERIC(14,3)"
+#'
+#' }
 #' @export
-pgAddColumn_STUB <- function(...) {
+pgDFColClasses <- function(df = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+                                                 # prevent dropping a single dimention to a vector
+  colClasses  <- DescTools::DoCall(c,plyr::llply(as.data.frame(df, stringsAsFactors = FALSE), function(x) {class(x)[1]}))
+  # column datatypes
+  colClasses[colClasses     == "logical"]    <- "BOOLEAN"
+  colClasses[colClasses     == "character"]  <- "TEXT"
+  colClasses[colClasses     == "integer"]    <- "INTEGER"
+  colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
+  colClasses[colClasses %in%   "Date"]       <- "DATE"
+  colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
+  # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
+  # xts OTHER supported index date/time classes
+  colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
+  return(colClasses)
 
 })}
 
 
-#' inserat into a database table 'new' data
+
+#' add a column to a database table
 #'
-#' TODO [ ] reorder df columns to match DB Server table LOOK AT . . .
-#'   add that code in here ( see caroline dbWriteTable2 ),
-#'   or
-#'   my implementation, my 'sort using factor code' in a tradeModel function )
+#' matches by colum name. If the column the does not
+#' exist on the Server DB, then the column is added
+#' by ALTER TABLE <trgt> ADD ( column ) called each per new column.
+
+#' @param con DBI connection PostgreSQL
+#' @param trgt remote server side string database table name of old data
+#' @param schname schema name
+#' @param df local client side data.frame of 'updated data'. Only the column
+#' names are matched to the Server DB table
+#'
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom DescTools DoCall
+#' @importFrom stringr str_c
+#' @importFrom plyr llply
+#' @importFrom DBI dbQuoteIdentifier dbExecute
+#' @examples
+#' \dontrun{
+#'
+#'  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#'  DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
+#'  pgAddColumnType(con, trgt = "mtcars", schname = "public", df = data.frame(rnk = 0L))
+#'
+#' }
+#' @export
+pgAddColumnType <- function(con, trgt = NULL, schname = NULL, df = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  if(is.null(schname) || (nchar(schname) == 0)) stop("pgAddColumnType requires schname")
+  schemaDotQuoted <- stringr::str_c( DBI::dbQuoteIdentifier(con, schname), ".")
+
+  trgtQuoted <- DBI::dbQuoteIdentifier(con, trgt)
+  schematrgtQuoted <- stringr::str_c(schemaDotQuoted, trgtQuoted)
+
+  trgtColumns <- pgListSchemaTableColumns(con = con, schname = schname, tblname = trgt)
+  NewColumns <- colnames(df)[!colnames(df) %in% trgtColumns]
+  if(!length(NewColumns)) {
+    message("pgAddColumnType did not find any new columns to add")
+    return(invisible())
+  }
+  colClasses <- pgDFColClasses(df[, NewColumns, drop = F])
+
+  ddl <- stringr::str_c("ALTER TABLE ", schematrgtQuoted ," ADD COLUMN ", stringr::str_c( DBI::dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ";")
+  DBI::dbExecute(con, ddl)
+
+  return(invisible())
+
+})}
+
+
+#' insert into a database table 'new' data
+#'
+#' TODO [ ] (IF NECESSARY)
+#'  reorder df columns to match DB Server table LOOK AT . . .
+#'  add that code in here ( see caroline dbWriteTable2 ),
+#'  or
+#'  my implementation, my 'sort using factor code' in a tradeModel function )
+#'
+#' note: beforehand LIKE caroline make SURE that each
+#' has the same column names as the OTHER
+#' hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
 #'
 #' @export
 pgInsert_STUB <- function(...) {
@@ -492,13 +582,9 @@ initEnv();on.exit({uninitEnv()})
 
 #' update a database table with 'updated' data
 #'
-#' note: beforehand LIKE caroline make SURE that each
-#' has the same column names as the OTHER
-#' hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
 #'
+#' TODO [ ] dbQuote* valHint
 #' TODO [TOMORROW] part of dbUpsert <- function() { pgAddColumn, pgInsert, pgUpdate }
-#'
-
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
@@ -555,14 +641,21 @@ initEnv();on.exit({uninitEnv()})
 #' DBI::dbDisconnect(con)
 #'
 #'}
-#' @importFrom stringr str_c str_subset str_replace str_split
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom plyr llply
+#' @importFrom stringr str_subset str_replace str_split
 # non-exported S3 methods # data.table:::merge.data.table data.table:::split.data.table
 #' @import data.table
 #' @importFrom data.table data.table
 #' @importFrom DescTools DoCall
-#' @importFrom DBI dbWriteTable dbGetQuery dbQuoteIdentifier dbQuoteString dbBegin dbCommit
+#' @importFrom DBI dbWriteTable dbGetQuery dbQuoteIdentifier dbQuoteString dbBegin dbCommit dbExecute
 #' @importFrom plyr llply
 #' @importFrom RPostgres Postgres
+#' @examples
+#' \dontrun{
+#'
+#'
+#' }
 #' @export
 pgUpdate <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, ... ) {
 tryCatchLog::tryCatchLog({

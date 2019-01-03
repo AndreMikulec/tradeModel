@@ -44,11 +44,7 @@ An alternative way to to specify the password is throught the environment
 variable PGPASS.  E.g. Sys.setenv("PGPASSWORD" = "postgres")}
 }
 \description{
-note: beforehand LIKE caroline make SURE that each
-has the same column names as the OTHER
-hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
-}
-\details{
+TODO [ ] dbQuote* valHint
 TODO [TOMORROW] part of dbUpsert <- function() { pgAddColumn, pgInsert, pgUpdate }
 }
 \examples{
@@ -77,6 +73,10 @@ pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public",
   df = newData, prepare.query = TRUE, password = "postgres")
 
 DBI::dbDisconnect(con)
+
+}
+\dontrun{
+
 
 }
 }
