@@ -1425,7 +1425,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' Possible Symbols are the following:
-#' "SENTIMENT" (means get all of the columns);
+#' "AAIIsentiment" (means get all of the columns);
 #' otherwise, get specific columns;
 #' "Bullish", "Neutral", "Bearish",
 #' "Bullish8WMA", "BullBearSpread",
@@ -1497,8 +1497,8 @@ initEnv(); on.exit({uninitEnv()})
     if(!exists("force", envir = this.env, inherits = FALSE))
         force = FALSE
 
-    if(exists(".aaii_SENTIMENT_path2file", envir = env, inherits = FALSE)) {
-      assign("tmp", get(".aaii_SENTIMENT_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    if(exists(".AAIIsentiment_path2file", envir = env, inherits = FALSE)) {
+      assign("tmp", get(".AAIIsentiment_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
     } else {
       tmp <- NULL
     }
@@ -1522,9 +1522,9 @@ initEnv(); on.exit({uninitEnv()})
         # on.exit(unlink(tmp))
 
         if (verbose)
-            cat("downloading ", "SENTIMENT", ".....\n\n")
+            cat("downloading ", "AAIIsentiment", ".....\n\n")
         quantmod___try.download.file(AAII.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
-        assign(".aaii_SENTIMENT_path2file", tmp, envir = env, inherits = FALSE)
+        assign(".AAIIsentiment_path2file", tmp, envir = env, inherits = FALSE)
 
     }
 
@@ -1587,16 +1587,16 @@ initEnv(); on.exit({uninitEnv()})
 
     # splice
     rst <- rbind(rs,rt)
-    # remove the first(earliest) duplicate index
+    # remove the first(earliest) [if any] duplicate index
     rst <- rst[!duplicated(index(rst), fromLast = TRUE),]
     fr <- rst
-    fri <- fr # pass-throught on "SENTIMENT"
+    fri <- fr # pass-throught on "AAIIsentiment"
 
     for (i in 1:length(Symbols)) {
 
         # User only wants an individual column
         # Note: BAD user choices: ReportedDate and Total
-        if(Symbols[[i]] != "SENTIMENT") {
+        if(Symbols[[i]] != "AAIIsentiment") {
            if (verbose)
              cat("selecting ", Symbols[[i]], ".....\n\n")
           fri <- fr[, Symbols[[i]]]

@@ -9,7 +9,7 @@ getSymbols.AAII(Symbols, env, return.class = "xts", ...)
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded
 Possible Symbols are the following:
-"SENTIMENT" (means get all of the columns);
+"AAIIsentiment" (means get all of the columns);
 otherwise, get specific columns;
 "Bullish", "Neutral", "Bearish",
 "Bullish8WMA", "BullBearSpread",
