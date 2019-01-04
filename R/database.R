@@ -693,10 +693,6 @@ initEnv();on.exit({uninitEnv()})
 
 #' insert into a database table 'new' data
 #'
-#' TODO [ ] (IF NECESSARY)
-#'  reorder df columns to match DB Server table LOOK AT . . .
-#'  add that code in here ( see caroline dbWriteTable2 ),
-#'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
 #' @param keys trgt remote server side vector of strings of table
@@ -988,6 +984,10 @@ initEnv();on.exit({uninitEnv()})
 #' @param valHint
 #' See varHint. Position matches one to one with varHint.
 #' Parameter valHint is sent to pgOldData.
+#' @param AppendConditions  create UPDATE statements rule specifics  c("LRvaluesDiff", "LnaRvalue")(default)
+#' "LRvaluesDiff" is 'both sides (old/new) have a value and different from each other'
+#' "LnaRvalue" is 'left side (old) does not have a value and right side (new) does have a value'
+#' "Always" is 'both sides (old/new) values do not matter. Always append'
 #' @param prepare.query FALSE(default) will use RPostgres PostgreSQLConnection
 #' If TRUE, will use package RPostgre PqConnection
 #' @param password (REQUIRED if prepare.query == TRUE) passed
@@ -1036,7 +1036,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom plyr llply
 #' @importFrom RPostgres Postgres
 #' @export
-pgUpdate <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, ... ) {
+pgUpdate <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, AppendConditions = NULL, ... ) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -1050,6 +1050,8 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(schname)) stop("pgUpdate schname can not be null")
   #
   if(is.null(df)) stop("pgUpdate df can not be null")
+
+  if(is.null(AppendConditions)) AppendConditions <- c("LRvaluesDiff", "LnaRvalue")
 
   if(is.null(Dots[["prepare.query"]])) {
     prepare.query <- FALSE
@@ -1144,17 +1146,20 @@ initEnv();on.exit({uninitEnv()})
     UpDateWhere <- stringr::str_c(stringr::str_c("trg.",DBI::dbQuoteIdentifier(con, keys)), " = ", stringr::str_c("val.", DBI::dbQuoteIdentifier(con, keys)), collapse = " AND ")
   }
 
-  # create UPDATE statements specifics
+  # create UPDATE statements rule specifics
   UpDateStmts   <- vector(mode = "character")
   for(spl in Splitted) {
     UpDateSetColl <- vector(mode = "character")
     for(nm in MatchingColsRoots){
       LValue = stringr::str_c(nm,".x")
       RValue = stringr::str_c(nm,".y")
-            # both sides have a value and different from each other
-      if( ( !is.na(spl[[LValue]]) && !is.na(spl[[RValue]]) && (spl[[LValue]] != spl[[RValue]]) ) ||
-            # left side does not have a value # right side does have a value
-          (  is.na(spl[[LValue]]) && !is.na(spl[[RValue]]) )
+          # both sides have a value and different from each other
+      if( (any(AppendConditions %in% "LRvaluesDiff") && ( !is.na(spl[[LValue]]) && !is.na(spl[[RValue]]) && (spl[[LValue]] != spl[[RValue]]) )) ||
+          # left side does not have a value # right side does have a value
+          (any(AppendConditions %in% "LnaRvalue") && (  is.na(spl[[LValue]]) && !is.na(spl[[RValue]]) )) ||
+          # always append (ideal for small data that rarely changes (and may be hard to track) )
+          # both sides values do not matter. Always append
+          (any(AppendConditions %in% "Always"))
       ) {
         UpDateSet   <- stringr::str_c(DBI::dbQuoteIdentifier(con, nm), " = ", "val.", DBI::dbQuoteIdentifier(con, nm), " ")
         UpDateSetColl <- c(UpDateSetColl,UpDateSet)

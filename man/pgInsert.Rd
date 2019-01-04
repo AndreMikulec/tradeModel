@@ -37,9 +37,7 @@ what to insert DO NOT EXISTS on the Server DB
 Here, only the keys are checked for 'no duplicates'}
 }
 \description{
-TODO [ ] (IF NECESSARY)
- reorder df columns to match DB Server table LOOK AT . . .
- add that code in here ( see caroline dbWriteTable2 ),
+insert into a database table 'new' data
 }
 \examples{
 \dontrun{

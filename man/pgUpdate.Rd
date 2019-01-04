@@ -5,7 +5,7 @@
 \title{update a database table with 'updated' data}
 \usage{
 pgUpdate(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
-  varHint = NULL, valHint = NULL, ...)
+  varHint = NULL, valHint = NULL, AppendConditions = NULL, ...)
 }
 \arguments{
 \item{con}{DBI connection PostgreSQL}
@@ -32,6 +32,11 @@ Parameter varHint is sent to pgOldData.}
 
 \item{valHint}{See varHint. Position matches one to one with varHint.
 Parameter valHint is sent to pgOldData.}
+
+\item{AppendConditions}{create UPDATE statements rule specifics  c("LRvaluesDiff", "LnaRvalue")(default)
+"LRvaluesDiff" is 'both sides (old/new) have a value and different from each other'
+"LnaRvalue" is 'left side (old) does not have a value and right side (new) does have a value'
+"Always" is 'both sides (old/new) values do not matter. Always append'}
 
 \item{prepare.query}{FALSE(default) will use RPostgres PostgreSQLConnection
 If TRUE, will use package RPostgre PqConnection}
