@@ -5,7 +5,7 @@
 \title{collect from the Server DB a limited amount of data restricted by df and VarHint}
 \usage{
 pgOldData(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
-  varHint = NULL, valHint = NULL)
+  varHint = NULL, valHint = NULL, IntentionFor = NULL)
 }
 \arguments{
 \item{con}{DBI connection PostgreSQL}
@@ -30,8 +30,15 @@ or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'")
 Position matches one to one with valHint}
 
 \item{valHint}{See varHint. Position matches one to one with varHint.}
+
+\item{IntentionFor}{"UPDATE"(default), will collect 'key matching data.'
+Otherwise "INSERT", will not collect 'key matching data.
+About, "INSERT", the situation is best to use varHint and valHint to
+generate some "INSERT" key to key comparison data.}
 }
 \description{
+Elegible Server DB data that is available for update/insert.
+The idea is to get data from the server, so that one MAY want to update/insert.
 For performance reasons,
 the unique combinations of the keys of the data.frame df
 are sent to the server, to limit the number of rows returned from the server.
@@ -50,17 +57,16 @@ columns from db to be new columns on the Server DB
 # setup
 SuBmtcars <- mtcars[c(1,5),1:2]
 oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
-rownames(oldData) <- NULL
 oldData[1,2] <- NA; oldData[2,3] <- NA
 
 con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 
 newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
-rownames(newData) <- NULL
 newData[2,2] <- NA; newData[1,3] <- NA
 
-pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
+oldData <- pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
 
 DBI::dbDisconnect(con)
 

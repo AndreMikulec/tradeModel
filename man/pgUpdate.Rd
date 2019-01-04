@@ -18,7 +18,8 @@ keys can not be zero length. keys can not be null.}
 
 \item{schname}{schema name}
 
-\item{df}{local client side data.frame of 'updated data'}
+\item{df}{local client side data.frame of 'updated data'
+if parameter oldData is not null, then df is not used.}
 
 \item{varHint}{optional vector of character column names. Performance optimization
 techique to limit the number of rows returned
@@ -26,12 +27,11 @@ from the database server to the client(R).
 User must specify as paired position values.
 e.g. varHint = "dateindex", valHint = "17000"
 or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'")
-Position matches one to one with valHint
-Note, also for performance reasons,
-the unique combinations of the keys of the 'updated data' data.frame df
-are sent to the server, also, the reason is to limit the number of rows returned from the server.}
+Position matches one to one with valHint.
+Parameter varHint is sent to pgOldData.}
 
-\item{valHint}{See varHint. Position matches one to one with varHint.}
+\item{valHint}{See varHint. Position matches one to one with varHint.
+Parameter valHint is sent to pgOldData.}
 
 \item{prepare.query}{FALSE(default) will use RPostgres PostgreSQLConnection
 If TRUE, will use package RPostgre PqConnection}
@@ -44,7 +44,10 @@ An alternative way to to specify the password is throught the environment
 variable PGPASS.  E.g. Sys.setenv("PGPASSWORD" = "postgres")}
 }
 \description{
-update a database table with 'updated' data
+For performance reasons,
+the unique combinations of the keys of the data.frame df
+are sent to the server, to limit the number of
+rows returned from the server by pgOldData
 }
 \examples{
 \dontrun{
@@ -52,30 +55,27 @@ update a database table with 'updated' data
 # setup
 SuBmtcars <- mtcars[c(1,5),1:2]
 oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
-rownames(oldData) <- NULL
 oldData[1,2] <- NA; oldData[2,3] <- NA
 
 con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 
 newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
-rownames(newData) <- NULL
 newData[2,2] <- NA; newData[1,3] <- NA
 
 # not "prepare.query"
+
+# this
 pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
 
+# xor
 # "prepare.query"
-dbExecute(con, "DROP TABLE mtcars")
 DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public",
   df = newData, prepare.query = TRUE, password = "postgres")
 
 DBI::dbDisconnect(con)
-
-}
-\dontrun{
-
 
 }
 }

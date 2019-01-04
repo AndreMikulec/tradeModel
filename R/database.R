@@ -318,6 +318,49 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' of a specific PostgreSQL database schema table, show its columns and data types
+#'
+#' @param con PostgreSQL DBI connection
+#' @param schema name
+#' @param table name
+#' @return data.frame of characters of schema, table, column, and human readable type
+#' ordered by ordinal position
+#' The results are ordered.
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom DBI dbGetQuery dbQuoteLiteral
+pgSchemaTableColumnTypes <- function(con, schname, tblname) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+    DBI::dbGetQuery(con,
+      stringr::str_c(
+       "
+        SELECT
+        --   table_catalog -- database
+        --  , table_schema
+        --  ,
+              table_name
+            , column_name
+            , udt_name -- human readable datatype
+        FROM
+            information_schema.columns
+        WHERE
+            table_schema NOT IN ('information_schema', 'pg_catalog') AND
+            table_schema     IN (", DBI::dbQuoteLiteral(con, schname), ") AND
+            table_name       IN (", DBI::dbQuoteLiteral(con, tblname), ")
+        ORDER BY ordinal_position
+        ;
+      "
+      )
+    ) -> db.Schema.tbl
+    db.Schema.tbl
+
+})}
+
+
+
 #' of a specific PostgreSQL database schema table, show its primary key columns
 #'
 #' @param con PostgreSQL DBI connection
@@ -567,17 +610,106 @@ initEnv();on.exit({uninitEnv()})
 #' TODO [ ] (IF NECESSARY)
 #'  reorder df columns to match DB Server table LOOK AT . . .
 #'  add that code in here ( see caroline dbWriteTable2 ),
-#'  or
-#'  my implementation, my 'sort using factor code' in a tradeModel function )
 #'
-#' note: beforehand LIKE caroline make SURE that each
-#' has the same column names as the OTHER
-#' hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
+#' @param con DBI connection PostgreSQL
+#' @param trgt remote server side string database table name of old data
+#' @param keys trgt remote server side vector of strings of table
+#' column names that make up a unique id for the row.
+#' keys can not be zero length. keys can not be null.
+#' @param schname schema name
+#' @param df local client side data.frame of limited data
+#' that determines what data is to be returned from the Server DB
+#' @param varHint optional vector of character column names. Performance optimization
+#' techique to limit the number of rows returned
+#' from the database server to the client(R).
+#' User must specify as paired position values.
+#' e.g. varHint = "dateindex", valHint = "17000"
+#' or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'").
+#' Position matches one to one with valHint.
+#' @param oldData previously collected limited server DB data used to
+#' restrict what is updated/inserted.  If not provide by the user then
+#' the oldData will be (re)generated from df.
+#' Here oldData is used to CHECK that the key columns that I
+#' what to insert DO NOT EXISTS on the Server DB
+#' Here, only the keys are checked for 'no duplicates'
+#' @examples
+#' \dontrun{
 #'
+#' # setup
+#' SuBmtcars <- mtcars[c(1,5),1:2]
+#' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
+#' oldData[1,2] <- NA; oldData[2,3] <- NA
+#'
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
+#' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
+#'
+#' newInsData <- data.table::data.table(mtcars[12, 2, drop = FALSE], keep.rownames=TRUE, key="rn")
+#' pgInsert(con, trgt = "mtcars", keys = "rn", schname = "public", df = newInsData, varHint = "cyl", valHint = "8")
+#'
+#' }
+#' @importFrom data.table data.table rbindlist
+#' @importFrom DBI dbWriteTable
 #' @export
-pgInsert_STUB <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, ... ) {
+pgInsert <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  if(is.null(trgt)) stop("pgUpdate trgt can not be null")
+  if(is.null(keys)) stop("pgUpdate keys can not be null")
+  #
+  # MAYBE later I want SPECIFY a schname in
+  # some other WAY (similar to what I have in other programs)
+  if(is.null(schname)) stop("pgUpdate schname can not be null")
+  #
+  if(is.null(df)) stop("pgUpdate df can not be null")
+
+  if(NROW(df) == 0) {
+     message("pgUpdate df has zero(0) rows.  Nothing is to do . . . ")
+     return(invisible())
+  }
+
+  # Server DB column names
+  serverDBColumns <-  pgListSchemaTableColumns(con, schname = schname, tblname = trgt)
+
+  # IntentionFor == "INSERT" (best to limit data by varHint and valHint)
+  # IntentionFor == "INSERT" (SELECT keys FROM )
+    # limit local key columns to only just Server DB existing columns
+  oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor = "INSERT")
+  # garantee order of the Server DB columns
+  oldData <- oldData[, customSorting(colnames(oldData), serverDBColumns, sortVectorExcess = FALSE), with=FALSE]
+
+  newData <- data.table::data.table(df[, , drop = FALSE], key=keys)
+  # fill in missing columns on the R client side that exist on the Server DB
+  SchemaTableColumnTypes <- pgSchemaTableColumnTypes(con, schname = schname, tblname = trgt)
+  SchemaTableColumnTypesSplitted <- split(SchemaTableColumnTypes, f = seq_len(NROW(SchemaTableColumnTypes)))
+  for(Column in SchemaTableColumnTypesSplitted) {
+    if(!Column[["column_name"]] %in% colnames(newData)) {
+      newColData <- rep(NA_integer_, NROW(newData))
+      switch(Column[["udt_name"]]
+        , "int4"   = as.integer(newColData)
+        , "text"   = as.character(newColData)
+        , "float8" = as.numeric(newColData)
+        , "bool"   = as.logical(newColData)
+        , "numeric" = as.numeric(newColData)
+        , "timestamp" = as.as.POSIXct(newColData, tz = "UTC")
+        ) -> newColData
+      newData[[Column[["column_name"]]]] <- newColData
+    }
+  }
+
+  # Reorder the newData columns to match the order on the Server DB
+  newData <- newData[, customSorting(colnames(newData), serverDBColumns, sortVectorExcess = FALSE), with=FALSE]
+
+  # just select key columns
+  newKeyData <- newData[, keys, with=FALSE]
+  newKeyoldData <- rbindlist(list(newKeyData, oldData))
+  # choose rows with never duplicates
+  NewDataIndex <- !duplicated(newKeyoldData) & !duplicated(newKeyoldData, fromLast = TRUE)
+
+  # append up to the Server DB
+  DBI::dbWriteTable(con, c(schname, trgt),newData[NewDataIndex[seq_len(NROW(newKeyData))], ], row.names = FALSE, overwrite = FALSE, append = TRUE)
+  return(invisible())
 
 })}
 
@@ -585,6 +717,8 @@ initEnv();on.exit({uninitEnv()})
 
 #' collect from the Server DB a limited amount of data restricted by df and VarHint
 #'
+#' Elegible Server DB data that is available for update/insert.
+#' The idea is to get data from the server, so that one MAY want to update/insert.
 #' For performance reasons,
 #' the unique combinations of the keys of the data.frame df
 #' are sent to the server, to limit the number of rows returned from the server.
@@ -613,23 +747,26 @@ initEnv();on.exit({uninitEnv()})
 #' Position matches one to one with valHint
 #' @param valHint
 #' See varHint. Position matches one to one with varHint.
+#' @param IntentionFor "UPDATE"(default), will collect 'key matching data.'
+#' Otherwise "INSERT", will not collect 'key matching data.
+#' About, "INSERT", the situation is best to use varHint and valHint to
+#' generate some "INSERT" key to key comparison data.
 #' @examples
 #' \dontrun{
 #'
 #' # setup
 #' SuBmtcars <- mtcars[c(1,5),1:2]
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
-#' rownames(oldData) <- NULL
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
 #'
 #' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'
 #' newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
-#' rownames(newData) <- NULL
 #' newData[2,2] <- NA; newData[1,3] <- NA
 #'
-#' pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
+#' oldData <- pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
 #'
 #' DBI::dbDisconnect(con)
 #'
@@ -641,7 +778,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom data.table data.table
 #' @importFrom DBI dbGetQuery dbQuoteIdentifier dbQuoteString
 #' @export
-pgOldData <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL) {
+pgOldData <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, IntentionFor = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -659,6 +796,8 @@ initEnv();on.exit({uninitEnv()})
      return(invisible())
   }
 
+  if(is.null(IntentionFor)) IntentionFor <- "UPDATE"
+
   newData <- data.table::data.table(df, key=keys)
 
   # if a column is found in newData and not found on the Server DB,
@@ -670,33 +809,38 @@ initEnv();on.exit({uninitEnv()})
     warning("pgOldData found in df column(s) that do not exist on the Server DB.\nThose df column(s) have been removed.")
   }
 
-  # from df, determine the verticle subset (WHERE) of data to collect from the server
-  # initial subsetting
+  SelectWhereExactlies <- vector(mode = "character")
 
-  if(any(keys %in% colnames(newData))) {
-    if(length(keys)){
-      Splits <-interaction(newData[, keys, with=FALSE], drop = TRUE)
-      if(length(Splits)){
-        Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
+  # from df, determine the verticle subset (WHERE) of data to collect from the server
+  # initial subsetting for (UPDATEs)
+  if(IntentionFor == "UPDATE") {
+
+    if(any(keys %in% colnames(newData))) {
+      if(length(keys)){
+        Splits <-interaction(newData[, keys, with=FALSE], drop = TRUE)
+        if(length(Splits)){
+          Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
+        }
       }
     }
+
+    if(!exists("Splitted", envir = environment(), inherits = FALSE))
+      Splitted <- list()
+    for(spl in Splitted) {
+      keyvals <-  unlist(spl)
+      if(length(keyvals)) {
+        keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
+        SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, keys), " = ", keyvals, collapse = " AND "), ")", collapse = "")
+        SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
+      }
+    }
+    if(length(SelectWhereExactlies)) {
+      SelectWhereExactlies <- stringr::str_c("(" , stringr::str_c(SelectWhereExactlies, collapse = " OR "), ")", collapse = "")
+    }
+
   }
 
-  SelectWhereExactlies <- vector(mode = "character")
-  if(!exists("Splitted", envir = environment(), inherits = FALSE))
-    Splitted <- list()
-  for(spl in Splitted) {
-    keyvals <-  unlist(spl)
-    if(length(keyvals)) {
-      keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
-      SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, keys), " = ", keyvals, collapse = " AND "), ")", collapse = "")
-      SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
-    }
-  }
-  if(length(SelectWhereExactlies)) {
-    SelectWhereExactlies <- stringr::str_c("(" , stringr::str_c(SelectWhereExactlies, collapse = " OR "), ")", collapse = "")
-  }
-  # extra subsetting (If any)
+  # extra subsetting (If any) # Heavily desired in the case of IntentionFor =="INSERT"
   if(!is.null(varHint) && !is.null(valHint)) {
     SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, varHint), " = ", valHint, collapse = " AND "), ")", collapse = "")
     SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
@@ -711,7 +855,17 @@ initEnv();on.exit({uninitEnv()})
 
   # actually go to the Server DB then collect and bring down that server data to local R
   #  do not bring back too many columns
-  ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
+  if(IntentionFor == "UPDATE") {
+    ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
+  }
+  if(IntentionFor == "INSERT") {
+    if(length(keys)){
+      ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, keys), collapse = ", ")
+    } else {
+      ColnamesAndCommas <- "'t'"
+    }
+  }
+
   SQLSelection <- stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies)
   oldServerData <- DBI::dbGetQuery(con, SQLSelection)
   message(SQLSelection)
@@ -726,7 +880,8 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' For performance reasons,
 #' the unique combinations of the keys of the data.frame df
-#' are sent to the server, to limit the number of rows returned from the server
+#' are sent to the server, to limit the number of
+#' rows returned from the server by pgOldData
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
@@ -735,15 +890,18 @@ initEnv();on.exit({uninitEnv()})
 #' keys can not be zero length. keys can not be null.
 #' @param schname schema name
 #' @param df local client side data.frame of 'updated data'
+#' if parameter oldData is not null, then df is not used.
 #' @param varHint optional vector of character column names. Performance optimization
 #' techique to limit the number of rows returned
 #' from the database server to the client(R).
 #' User must specify as paired position values.
 #' e.g. varHint = "dateindex", valHint = "17000"
 #' or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'")
-#' Position matches one to one with valHint
+#' Position matches one to one with valHint.
+#' Parameter varHint is sent to pgOldData.
 #' @param valHint
 #' See varHint. Position matches one to one with varHint.
+#' Parameter valHint is sent to pgOldData.
 #' @param prepare.query FALSE(default) will use RPostgres PostgreSQLConnection
 #' If TRUE, will use package RPostgre PqConnection
 #' @param password (REQUIRED if prepare.query == TRUE) passed
@@ -758,21 +916,22 @@ initEnv();on.exit({uninitEnv()})
 #' # setup
 #' SuBmtcars <- mtcars[c(1,5),1:2]
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
-#' rownames(oldData) <- NULL
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
 #'
 #' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'
 #' newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
-#' rownames(newData) <- NULL
 #' newData[2,2] <- NA; newData[1,3] <- NA
 #'
 #' # not "prepare.query"
+#'
+#' # this
 #' pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
 #'
+#' # xor
 #' # "prepare.query"
-#' dbExecute(con, "DROP TABLE mtcars")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #' pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public",
 #'   df = newData, prepare.query = TRUE, password = "postgres")
@@ -804,7 +963,7 @@ initEnv();on.exit({uninitEnv()})
   # some other WAY (similar to what I have in other programs)
   if(is.null(schname)) stop("pgUpdate schname can not be null")
   #
-  if(is.null(df))   stop("pgUpdate df can not be null")
+  if(is.null(df)) stop("pgUpdate df can not be null")
 
   if(is.null(Dots[["prepare.query"]])) {
     prepare.query <- FALSE
@@ -860,7 +1019,7 @@ initEnv();on.exit({uninitEnv()})
   # oldData <- DBI::dbGetQuery(con, stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies))
   # oldData <- data.table::data.table(oldData, key=keys)
 
-  oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint)
+  oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor == "UPDATE")
 
   if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
   schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
