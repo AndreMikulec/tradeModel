@@ -575,18 +575,155 @@ initEnv();on.exit({uninitEnv()})
 #' hand written during DEC 2018 vacation ( 100% ANY UNTESTED )
 #'
 #' @export
-pgInsert_STUB <- function(...) {
+pgInsert_STUB <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, ... ) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
 })}
 
 
+
+#' collect from the Server DB a limited amount of data restricted by df and VarHint
+#'
+#' For performance reasons,
+#' the unique combinations of the keys of the data.frame df
+#' are sent to the server, to limit the number of rows returned from the server.
+#'
+#' if a column is found in df and not found on the Server DB,
+#' then, the function removes that column from df,
+#' (because that column can not be selected from the Server DB),
+#' and the user is warned about the column removal.
+#' Hint, before running this function, run pgAddColumnType, to garantee(create)
+#' columns from db to be new columns on the Server DB
+#'
+#' @param con DBI connection PostgreSQL
+#' @param trgt remote server side string database table name of old data
+#' @param keys trgt remote server side vector of strings of table
+#' column names that make up a unique id for the row.
+#' keys can not be zero length. keys can not be null.
+#' @param schname schema name
+#' @param df local client side data.frame of limited data
+#' that determines what data is to be returned from the Server DB
+#' @param varHint optional vector of character column names. Performance optimization
+#' techique to limit the number of rows returned
+#' from the database server to the client(R).
+#' User must specify as paired position values.
+#' e.g. varHint = "dateindex", valHint = "17000"
+#' or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'")
+#' Position matches one to one with valHint
+#' @param valHint
+#' See varHint. Position matches one to one with varHint.
+#' @examples
+#' \dontrun{
+#'
+#' # setup
+#' SuBmtcars <- mtcars[c(1,5),1:2]
+#' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
+#' rownames(oldData) <- NULL
+#' oldData[1,2] <- NA; oldData[2,3] <- NA
+#'
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
+#'
+#' newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
+#' rownames(newData) <- NULL
+#' newData[2,2] <- NA; newData[1,3] <- NA
+#'
+#' pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
+#'
+#' DBI::dbDisconnect(con)
+#'
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+# non-exported S3 methods #  data.table:::split.data.table
+#' @import data.table
+#' @importFrom data.table data.table
+#' @importFrom DBI dbGetQuery dbQuoteIdentifier dbQuoteString
+#' @export
+pgOldData <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  if(is.null(trgt)) stop("pgOldData trgt can not be null")
+  if(is.null(keys)) stop("pgOldData keys can not be null")
+  #
+  # MAYBE later I want SPECIFY a schname in
+  # some other WAY (similar to what I have in other programs)
+  if(is.null(schname)) stop("pgOldData schname can not be null")
+  #
+  if(is.null(df))   stop("pgOldData df can not be null")
+
+  if(NROW(df) == 0) {
+     message("pgOldData df has zero(0) rows.  Nothing is to do . . . ")
+     return(invisible())
+  }
+
+  newData <- data.table::data.table(df, key=keys)
+
+  # if a column is found in newData and not found on the Server DB,
+  # then, now, remove that column from newData, (because that column can not be selected
+  # from the Server DB), and send the user a warning about the column removal.
+  serverDBColumns <-  pgListSchemaTableColumns(con, schname = schname, tblname = trgt)
+  if(any(!colnames(newData) %in% serverDBColumns)) {
+    newData <- newData[ , colnames(newData)[colnames(newData) %in% serverDBColumns], with = FALSE]
+    warning("pgOldData found in df column(s) that do not exist on the Server DB.\nThose df column(s) have been removed.")
+  }
+
+  # from df, determine the verticle subset (WHERE) of data to collect from the server
+  # initial subsetting
+
+  if(any(keys %in% colnames(newData))) {
+    if(length(keys)){
+      Splits <-interaction(newData[, keys, with=FALSE], drop = TRUE)
+      if(length(Splits)){
+        Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
+      }
+    }
+  }
+
+  SelectWhereExactlies <- vector(mode = "character")
+  if(!exists("Splitted", envir = environment(), inherits = FALSE))
+    Splitted <- list()
+  for(spl in Splitted) {
+    keyvals <-  unlist(spl)
+    if(length(keyvals)) {
+      keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
+      SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, keys), " = ", keyvals, collapse = " AND "), ")", collapse = "")
+      SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
+    }
+  }
+  if(length(SelectWhereExactlies)) {
+    SelectWhereExactlies <- stringr::str_c("(" , stringr::str_c(SelectWhereExactlies, collapse = " OR "), ")", collapse = "")
+  }
+  # extra subsetting (If any)
+  if(!is.null(varHint) && !is.null(valHint)) {
+    SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, varHint), " = ", valHint, collapse = " AND "), ")", collapse = "")
+    SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
+  }
+  # combine subsetting
+  if(length(SelectWhereExactlies)) {
+    SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " AND "), collapse = "")
+  }
+
+  if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+  schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
+
+  # actually go to the Server DB then collect and bring down that server data to local R
+  #  do not bring back too many columns
+  ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
+  SQLSelection <- stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies)
+  oldServerData <- DBI::dbGetQuery(con, SQLSelection)
+  message(SQLSelection)
+  oldServerData <- data.table::data.table(oldServerData, key=keys)
+  oldServerData
+
+})}
+
+
+
+
 #' update a database table with 'updated' data
-#'
-#'
-#' TODO [ ] dbQuote* valHint
-#' TODO [TOMORROW] part of dbUpsert <- function() { pgAddColumn, pgInsert, pgUpdate }
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
@@ -684,48 +821,54 @@ initEnv();on.exit({uninitEnv()})
      message("pgUpdate df has zero(0) rows.  Nothing is to do . . . ")
      return(invisible())
   }
-  newData <- data.table::data.table(df, key=keys)
 
-  # from df, determine the verticle subset (WHERE) of data to collect from the server
-  # initial subsetting
-  SelectWhereExactlies <- vector(mode = "character")
-  if(length(keys)){
-    Splits <-interaction(newData[, keys, with=FALSE], drop = TRUE)
-    if(length(Splits)){
-      Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
-    }
-  }
-  if(!exists("Splitted", envir = environment(), inherits = FALSE))
-    Splitted <- list()
-  for(spl in Splitted) {
-    keyvals <-  unlist(spl)
-    if(length(keyvals)) {
-      keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
-      SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, keys), " = ", keyvals, collapse = " AND "), ")", collapse = "")
-      SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
-    }
-  }
-  if(length(SelectWhereExactlies)) {
-    SelectWhereExactlies <- stringr::str_c("(" , stringr::str_c(SelectWhereExactlies, collapse = " OR "), ")", collapse = "")
-  }
-  # extra subsetting (If any)
-  if(!is.null(varHint) && !is.null(valHint)) {
-    SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, varHint), " = ", valHint, collapse = " AND "), ")", collapse = "")
-    SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
-  }
-  # combine subsetting
-  if(length(SelectWhereExactlies)) {
-    SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " AND "), collapse = "")
-  }
+  # newData <- data.table::data.table(df, key=keys)
+  #
+  # # from df, determine the verticle subset (WHERE) of data to collect from the server
+  # # initial subsetting
+  # SelectWhereExactlies <- vector(mode = "character")
+  # if(length(keys)){
+  #   Splits <-interaction(newData[, keys, with=FALSE], drop = TRUE)
+  #   if(length(Splits)){
+  #     Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
+  #   }
+  # }
+  # if(!exists("Splitted", envir = environment(), inherits = FALSE))
+  #   Splitted <- list()
+  # for(spl in Splitted) {
+  #   keyvals <-  unlist(spl)
+  #   if(length(keyvals)) {
+  #     keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
+  #     SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, keys), " = ", keyvals, collapse = " AND "), ")", collapse = "")
+  #     SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
+  #   }
+  # }
+  # if(length(SelectWhereExactlies)) {
+  #   SelectWhereExactlies <- stringr::str_c("(" , stringr::str_c(SelectWhereExactlies, collapse = " OR "), ")", collapse = "")
+  # }
+  # # extra subsetting (If any)
+  # if(!is.null(varHint) && !is.null(valHint)) {
+  #   SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, varHint), " = ", valHint, collapse = " AND "), ")", collapse = "")
+  #   SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
+  # }
+  # # combine subsetting
+  # if(length(SelectWhereExactlies)) {
+  #   SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " AND "), collapse = "")
+  # }
+  #
+  # if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+  # schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
+  #
+  # # actually go to the DB server then collect and bring down to R that server data
+  # #  do not bring back too many columns
+  # ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
+  # oldData <- DBI::dbGetQuery(con, stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies))
+  # oldData <- data.table::data.table(oldData, key=keys)
+
+  oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint)
 
   if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
   schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
-
-  # actually go to the DB server then collect and bring down to R that server data
-  #  do not bring back too many columns
-  ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
-  oldData <- DBI::dbGetQuery(con, stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies))
-  oldData <- data.table::data.table(oldData, key=keys)
 
   # match to the common key and
   # determine columns ( to later test for "changed" data)
@@ -954,37 +1097,60 @@ pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentT
 
 #' custom sort a vector
 #'
-#' excess is appended to the end ( CI sort or CS sort )
-#'
-#' # Custom Sorting in R
-#' # 2014
-#' # https://stackoverflow.com/questions/23995285/custom-sorting-in-r
-#' # AND
-#' # Case insensitive sort of vector of string in R
-#' # 2015
-#' # https://stackoverflow.com/questions/29890303/case-insensitive-sort-of-vector-of-string-in-r
+#' excess Vector elements are appended to the end ( sort or not sort, CI sort or CS sort )
+#' other elements found in InitOrder that are 'not found in Vector' are ignored
 #'
 #' @param Vector vector to be sorted
 #' @param InitOrder starting custom sorting ( without the excess )
-#' @param CI case insensitive
+#' @param CI FALSE(default) whether or not Vector excess columns that are
+#' not found in InitOrder  are sorted 'not case insensitive'(TRUE) or
+#' ncase sensitive'(FALSE)
+#' @param sortVectorExcess TRUE(default) weather or not Vector excess columns
+#' are attempted to be sorted (TRUE) or not attempted to be sorted (FALSE)
+#' @return vector Vector sorted by InitOrder
+#' @references
+#' \cite{Custom Sorting in R \url{https://stackoverflow.com/questions/23995285/custom-sorting-in-r}}
+#' @references
+#' \cite{Case insensitive sort of vector of string in R \url{https://stackoverflow.com/questions/29890303/case-insensitive-sort-of-vector-of-string-in-r}}
 #' @examples
 #' \dontrun{
+#'
 #' customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"),
 #'    InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE
-#'  )
+#' )
 #' [1] "date" "o"    "h"    "l"    "c"    "v"    "a"    "E2"   "e3"
+#'
+#' customSorting(c("E","B","C","D","A"), c("D","B","C"), sortVectorExcess = FALSE)
+#' [1] "D" "B" "C" "E" "A"
+#'
+#' # excess(Vector)  "G", "F"
+#' customSorting(c("G", "D","B","C", "F"), c("E","B","C","D","A"), sortVectorExcess = FALSE)
+#' [1] "B" "C" "D" "G" "F"
+#'
+#' # other(InitOrder) ignored "F"
+#' customSorting(c("E","B","C","D","A"), c("F", "D","B","C"), sortVectorExcess = FALSE)
+#' [1] "D" "B" "C" "E" "A"
+#'
 #' }
 #' @export
-customSorting <- function(Vector, InitOrder, CI = FALSE) {
+customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE) {
 
   # custom sorting
   VectorLevels <- InitOrder
   VectorExcess <- setdiff(Vector, VectorLevels)
   if(CI == FALSE) {
-    VectorExcessCS <-   sort(VectorExcess)
+    if(sortVectorExcess) {
+      VectorExcessCS <-   sort(VectorExcess)
+    } else {
+      VectorExcessCS <-        VectorExcess
+    }
     VectorExcessCaseDetermined <- VectorExcessCS
   } else {
-    VectorExcessCI <-   VectorExcess[order(tolower(VectorExcess))]
+    if(sortVectorExcess) {
+      VectorExcessCI <-   VectorExcess[order(tolower(VectorExcess))]
+    } else {
+      VectorExcessCI <-   VectorExcess
+    }
     VectorExcessCaseDetermined <- VectorExcessCI
   }
   VectorExcessCaseDeterminedLevels <- c(VectorLevels, VectorExcessCaseDetermined)

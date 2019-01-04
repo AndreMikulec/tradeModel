@@ -4,32 +4,50 @@
 \alias{customSorting}
 \title{custom sort a vector}
 \usage{
-customSorting(Vector, InitOrder, CI = FALSE)
+customSorting(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE)
 }
 \arguments{
 \item{Vector}{vector to be sorted}
 
 \item{InitOrder}{starting custom sorting ( without the excess )}
 
-\item{CI}{case insensitive}
+\item{CI}{FALSE(default) whether or not Vector excess columns that are
+not found in InitOrder  are sorted 'not case insensitive'(TRUE) or
+ncase sensitive'(FALSE)}
+
+\item{sortVectorExcess}{TRUE(default) weather or not Vector excess columns
+are attempted to be sorted (TRUE) or not attempted to be sorted (FALSE)}
+}
+\value{
+vector Vector sorted by InitOrder
 }
 \description{
-excess is appended to the end ( CI sort or CS sort )
-}
-\details{
-# Custom Sorting in R
-# 2014
-# https://stackoverflow.com/questions/23995285/custom-sorting-in-r
-# AND
-# Case insensitive sort of vector of string in R
-# 2015
-# https://stackoverflow.com/questions/29890303/case-insensitive-sort-of-vector-of-string-in-r
+excess Vector elements are appended to the end ( sort or not sort, CI sort or CS sort )
+other elements found in InitOrder that are 'not found in Vector' are ignored
 }
 \examples{
 \dontrun{
+
 customSorting( c("a","v", "E2", "c","l", "e3" ,"h","o","date"),
    InitOrder = c("date", "o", "h", "l", "c", "v", "a"), CI = TRUE
- )
+)
 [1] "date" "o"    "h"    "l"    "c"    "v"    "a"    "E2"   "e3"
+
+customSorting(c("E","B","C","D","A"), c("D","B","C"), sortVectorExcess = FALSE)
+[1] "D" "B" "C" "E" "A"
+
+# excess(Vector)  "G", "F"
+customSorting(c("G", "D","B","C", "F"), c("E","B","C","D","A"), sortVectorExcess = FALSE)
+[1] "B" "C" "D" "G" "F"
+
+# other(InitOrder) ignored "F"
+customSorting(c("E","B","C","D","A"), c("F", "D","B","C"), sortVectorExcess = FALSE)
+[1] "D" "B" "C" "E" "A"
+
 }
+}
+\references{
+\cite{Custom Sorting in R \url{https://stackoverflow.com/questions/23995285/custom-sorting-in-r}}
+
+\cite{Case insensitive sort of vector of string in R \url{https://stackoverflow.com/questions/29890303/case-insensitive-sort-of-vector-of-string-in-r}}
 }

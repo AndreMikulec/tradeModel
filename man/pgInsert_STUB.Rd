@@ -4,7 +4,8 @@
 \alias{pgInsert_STUB}
 \title{insert into a database table 'new' data}
 \usage{
-pgInsert_STUB(...)
+pgInsert_STUB(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
+  varHint = NULL, valHint = NULL, ...)
 }
 \description{
 TODO [ ] (IF NECESSARY)

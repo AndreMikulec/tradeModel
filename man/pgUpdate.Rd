@@ -44,8 +44,7 @@ An alternative way to to specify the password is throught the environment
 variable PGPASS.  E.g. Sys.setenv("PGPASSWORD" = "postgres")}
 }
 \description{
-TODO [ ] dbQuote* valHint
-TODO [TOMORROW] part of dbUpsert <- function() { pgAddColumn, pgInsert, pgUpdate }
+update a database table with 'updated' data
 }
 \examples{
 \dontrun{
