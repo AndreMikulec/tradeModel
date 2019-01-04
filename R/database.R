@@ -481,7 +481,7 @@ initEnv();on.exit({uninitEnv()})
   if(unQuote) {
     split(ret,seq_len(NROW(ret))) %>%
       plyr::llply(function(x) { strsplit(x[[1]], "^\"|\"$")[[1]][2] }) %>%
-        { DescTools::DoCall(c,.) } %>%
+        { DescTools::DoCall(get("c"),.) } %>%
           as.data.frame(., stringsAsFactors = FALSE) -> ret
   }
   colnames(ret) <- outName
@@ -544,7 +544,8 @@ siQuote <- function(x) {
 #' newInsData <- data.table::data.table(mtcars[12, 2, drop = FALSE], keep.rownames=TRUE, key="rn")
 #'
 #' # new data
-#' pgUpsize(con, trgt = "mtcars", keys = "rn", schname = "public", df = newInsData, varHint = "cyl", valHint = "8")
+#' pgUpsize(con, trgt = "mtcars", keys = "rn", schname = "public",
+#'   df = newInsData, varHint = "cyl", valHint = "8")
 #' # current data
 #' pgUpsize(con, trgt = "mtcars", keys = "rn", schname = "public", df = newData)
 #'
@@ -622,7 +623,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
                                                  # prevent dropping a single dimention to a vector
-  colClasses  <- DescTools::DoCall(c,plyr::llply(as.data.frame(df, stringsAsFactors = FALSE), function(x) {class(x)[1]}))
+  colClasses  <- DescTools::DoCall(get("c"),plyr::llply(as.data.frame(df, stringsAsFactors = FALSE), function(x) {class(x)[1]}))
   # column datatypes
   colClasses[colClasses     == "logical"]    <- "BOOLEAN"
   colClasses[colClasses     == "character"]  <- "TEXT"
@@ -727,7 +728,8 @@ initEnv();on.exit({uninitEnv()})
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'
 #' newInsData <- data.table::data.table(mtcars[12, 2, drop = FALSE], keep.rownames=TRUE, key="rn")
-#' pgInsert(con, trgt = "mtcars", keys = "rn", schname = "public", df = newInsData, varHint = "cyl", valHint = "8")
+#' pgInsert(con, trgt = "mtcars", keys = "rn", schname = "public",
+#'   df = newInsData, varHint = "cyl", valHint = "8")
 #'
 #' }
 #' @importFrom data.table data.table rbindlist
@@ -1481,9 +1483,10 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
-#  ## @importFrom htmltab htmltab # Namespace dependencies not required: ??? ##
+#' @importFrom plyr llply
+#' @importFrom htmltab htmltab
 #' @importFrom stringr str_replace
-#  ## @importFrom readxl read_xls # Namespace dependencies not required: ??? ##
+#' @importFrom readxl read_xls
 #' @export
 getSymbols.AAII <- function(Symbols, env, return.class = "xts", ...) {
 tryCatchLog::tryCatchLog({
@@ -2703,10 +2706,6 @@ initEnv();on.exit({uninitEnv()})
     # E.G.! NEW COLUMNS, DIFFERENT R/POSTGRESQL CLASS OF the index
     # then MAYBE
     # dbWriteTable WILL FAIL? and/or
-    # DIFFERENT PROBLEM with MISSING other COLUMNS?
-    # SEE caroline::dbWriteTable2
-    # SEE RPostgre::dbWriteTable
-    # SEE MY OWN NOTES
     # (I HAVE NOT HANDLED THESE 'change' CASES)
     # NOTE: the INDEX type probably will not change
     # BUT getting NEW added COLUMNS would be COMMON

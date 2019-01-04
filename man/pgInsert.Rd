@@ -52,7 +52,8 @@ DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 
 newInsData <- data.table::data.table(mtcars[12, 2, drop = FALSE], keep.rownames=TRUE, key="rn")
-pgInsert(con, trgt = "mtcars", keys = "rn", schname = "public", df = newInsData, varHint = "cyl", valHint = "8")
+pgInsert(con, trgt = "mtcars", keys = "rn", schname = "public",
+  df = newInsData, varHint = "cyl", valHint = "8")
 
 }
 }

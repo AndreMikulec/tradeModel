@@ -56,7 +56,8 @@ newData[2,2] <- NA; newData[1,3] <- NA
 newInsData <- data.table::data.table(mtcars[12, 2, drop = FALSE], keep.rownames=TRUE, key="rn")
 
 # new data
-pgUpsize(con, trgt = "mtcars", keys = "rn", schname = "public", df = newInsData, varHint = "cyl", valHint = "8")
+pgUpsize(con, trgt = "mtcars", keys = "rn", schname = "public",
+  df = newInsData, varHint = "cyl", valHint = "8")
 # current data
 pgUpsize(con, trgt = "mtcars", keys = "rn", schname = "public", df = newData)
 
