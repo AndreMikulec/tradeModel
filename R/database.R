@@ -61,31 +61,44 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param df data.frame (with column names)
 #' @param con DBI database connection
+#' @param Symbol new table name. Eg.g Could be a company TICKER or a FRED column.
+#' @param schname schema name
+#' @param keys column(s) that will be the PRIMARY KEY of the new table.
+#' If left as NULL, the furthest left most column (lowest ordinal order) postion will be chosen.
+#' Othwerwise, a character vector of column names
+#' @param SymbolsTable c("CREATE", "UPDATE")(default) 'check and CREATE' a "Symbols" table.
+#' Attempt to "UPDATE" a "Symbols" table. Can be one or the other or both.
+#' Also, can be anything else, e.g. choose FALSE, to easily visually signal
+#' to not do "Symbols" CREATE/UPDATE.
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
-#' @importFrom plyr llply
-#' @importFrom DescTools DoCall
 #' @importFrom DBI dbQuoteIdentifier dbExecute dbQuoteString
-dfToCREATETable <- function(df, con, Symbol, schname) {
+dfToCREATETable <- function(df, con, Symbol, schname, keys = NULL, SymbolsTable = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  # meta-data table
-  if(!"Symbols" %in% pgListSchemaTables(con, "Symbols")) {
-    ddl <- stringr::str_c("CREATE TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), "(",
-                            DBI::dbQuoteIdentifier(con, "Symbols"),          " TEXT ", ", ",
-                            DBI::dbQuoteIdentifier(con, "updated"),          " TIMESTAMP WITH TIMEZONE ", ", ",
-                            DBI::dbQuoteIdentifier(con, "updated_R_class") , " TEXT ", ", ",
-                            DBI::dbQuoteIdentifier(con, "src"),              " TEXT " ,
-                          ");")
-    DBI::dbExecute(con, ddl)
+  if(is.null(keys)) keys <- 1
+  if(is.null(SymbolsTable)) SymbolsTable <- c("CREATE", "UPDATE")
 
-    ddl <- stringr::str_c("ALTER TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
-                          " ADD PRIMARY KEY ( ", DBI::dbQuoteIdentifier(con, "Symbols"), ")",
-                          ";")
-    DBI::dbExecute(con, ddl)
+  # meta-data table
+  if("CREATE" %in% SymbolsTable) {
+    if(!"Symbols" %in% pgListSchemaTables(con, "Symbols")) {
+      ddl <- stringr::str_c("CREATE TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), "(",
+                              DBI::dbQuoteIdentifier(con, "Symbols"),          " TEXT ", ", ",
+                              DBI::dbQuoteIdentifier(con, "updated"),          " TIMESTAMP WITH TIMEZONE ", ", ",
+                              DBI::dbQuoteIdentifier(con, "updated_R_class") , " TEXT ", ", ",
+                              DBI::dbQuoteIdentifier(con, "src"),              " TEXT " ,
+                            ");")
+      DBI::dbExecute(con, ddl)
+
+      ddl <- stringr::str_c("ALTER TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+                            " ADD PRIMARY KEY ( ", DBI::dbQuoteIdentifier(con, "Symbols"), ")",
+                            ";")
+      DBI::dbExecute(con, ddl)
+    }
   }
+
   # upon creation, do Quote Once:  (1)schema, (2)table and (3)column names
   # the PostgreSQL storage will be: anything_capilized retains it's "" quotes.
 
@@ -107,15 +120,22 @@ initEnv();on.exit({uninitEnv()})
 
   colClasses <- pgDFColClasses(df[, , drop = FALSE])
 
+  if(is.numeric(keys))   { TablePrimKeyCols <- names(colClasses)[keys] }
+  if(is.character(keys)) { TablePrimKeyCols <- names(colClasses)[names(colClasses) %in% keys] }
+
   ddl <- stringr::str_c("CREATE TABLE ", schemaSymbolsQuoted ,"(", stringr::str_c( DBI::dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
   DBI::dbExecute(con, ddl)
   ddl <- stringr::str_c("ALTER TABLE ", schemaSymbolsQuoted,
-                " ADD PRIMARY KEY ( ", DBI::dbQuoteIdentifier(con, names(colClasses)[1]), ")",
+                " ADD PRIMARY KEY ( ", stringr::str_c(DBI::dbQuoteIdentifier(con, TablePrimKeyCols), collapse = ", "), ")",
                 ";")
   DBI::dbExecute(con, ddl)
-  dml <- stringr::str_c("INSERT INTO ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
-                             "(", DBI::dbQuoteIdentifier(con, "Symbols"), ") VALUES (", DBI::dbQuoteString(con, Symbol), ");")
-  DBI::dbExecute(con, dml)
+
+  if("UPDATE" %in% SymbolsTable) {
+    dml <- stringr::str_c("INSERT INTO ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+                               "(", DBI::dbQuoteIdentifier(con, "Symbols"), ") VALUES (", DBI::dbQuoteString(con, Symbol), ");")
+    DBI::dbExecute(con, dml)
+  }
+
   invisible()
 
 })}
@@ -483,17 +503,70 @@ siQuote <- function(x) {
 }
 
 
+
 #' addto/update a database with new information
 #'
+#' @param con DBI connection PostgreSQL
+#' @param trgt remote server side string database table name of old data
+#' @param keys trgt remote server side vector of strings of table
+#' column names that make up a unique id for the row.
+#' keys can not be zero length. keys can not be null.
+#' @param schname schema name
+#' @param df local client side data.frame of 'updated data'
+#' if parameter oldData is not null, then df is not used.
+#' @param varHint optional vector of character column names. Performance optimization
+#' techique to limit the number of rows returned
+#' from the database server to the client(R).
+#' User must specify as paired position values.
+#' e.g. varHint = "dateindex", valHint = "17000"
+#' or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'")
+#' Position matches one to one with valHint.
+#' Parameter varHint is sent to pgOldData.
+#' @param valHint
+#' See varHint. Position matches one to one with varHint.
+#' Parameter valHint is sent to pgOldData.
+#' @param ... dots passed to pgUpdate
+#' @examples
+#' \dontrun{
+#'
+#' # setup
+#' SuBmtcars <- mtcars[c(1,5),1:2]
+#' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
+#' oldData[1,2] <- NA; oldData[2,3] <- NA
+#'
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
+#' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
+#'
+#' newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
+#' newData[2,2] <- NA; newData[1,3] <- NA
+#'
+#' newInsData <- data.table::data.table(mtcars[12, 2, drop = FALSE], keep.rownames=TRUE, key="rn")
+#'
+#' # new data
+#' pgUpsize(con, trgt = "mtcars", keys = "rn", schname = "public", df = newInsData, varHint = "cyl", valHint = "8")
+#' # current data
+#' pgUpsize(con, trgt = "mtcars", keys = "rn", schname = "public", df = newData)
+#'
+#' DBI::dbDisconnect(con)
+#'
+#'}
 #' @export
-pgUpSertDB_STUB <- function(...) {
+pgUpsize <- function(con, trgt = NULL, keys = NULL, schname = NULL, df = NULL, varHint = NULL, valHint = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  pgAddTable(...)
-  pgpgAddColumn(...)
-  pgInsert(...)
+  # if the schema.table does not exist then add it.
+  pgAddTable(con, trgt = trgt, keys = keys, schname = schname, df = df)
+  # of any columns that exist in df but do not exist on the Server DB,
+  # add those new columns to the Server DB
+  pgAddColumnType(con, trgt = trgt, schname = schname, df = df)
+  # new rows that do not exist on the server ( uniquely identified by keys )
+  pgInsert(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint)
+  # current rows that already exist on the server ( uniquely identified by keys )
   pgUpdate(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, ... )
+
+  invisible()
 
 })}
 
@@ -501,11 +574,24 @@ initEnv();on.exit({uninitEnv()})
 
 #' add a table to a database
 #'
+#' @param df data.frame (with column names)
+#' @param con DBI database connection
+#' @param Symbol new table name. E.g Could be a company TICKER or a FRED column.
+#' @param schname schema name
+#' @param keys trgt remote server side vector of strings of table
+#' column names that make up a unique id for the row.
+#' keys can not be zero length. keys can not be null.
 #' @export
-pgAddTable_STUB <- function(...) {
+pgAddTable <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  if(!DBI::dbExistsTable(con, c(schname, trgt))) {
+    dfToCREATETable(df, con, Symbol = trgt, schname = schname, keys = keys, SymbolsTable = FALSE)
+  } else {
+    message("pgAddTable skipping table.  It is already there")
+  }
+  invisible()
 })}
 
 
@@ -556,7 +642,7 @@ initEnv();on.exit({uninitEnv()})
 #' add a column to a database table
 #'
 #' matches by colum name. If the column the does not
-#' exist on the Server DB, then the column is added
+#' exist on the Server DB, then the column is added to the Server DB
 #' by ALTER TABLE <trgt> ADD ( column ) called each per new column.
 
 #' @param con DBI connection PostgreSQL
@@ -1019,7 +1105,7 @@ initEnv();on.exit({uninitEnv()})
   # oldData <- DBI::dbGetQuery(con, stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies))
   # oldData <- data.table::data.table(oldData, key=keys)
 
-  oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor == "UPDATE")
+  oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor = "UPDATE")
 
   if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
   schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))

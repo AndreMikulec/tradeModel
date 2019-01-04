@@ -5,12 +5,26 @@
 \title{from column names and datatypes, make a CREATE TABLE statement
 needed to persistently store data}
 \usage{
-dfToCREATETable(df, con, Symbol, schname)
+dfToCREATETable(df, con, Symbol, schname, keys = NULL,
+  SymbolsTable = NULL)
 }
 \arguments{
 \item{df}{data.frame (with column names)}
 
 \item{con}{DBI database connection}
+
+\item{Symbol}{new table name. Eg.g Could be a company TICKER or a FRED column.}
+
+\item{schname}{schema name}
+
+\item{keys}{column(s) that will be the PRIMARY KEY of the new table.
+If left as NULL, the furthest left most column (lowest ordinal order) postion will be chosen.
+Othwerwise, a character vector of column names}
+
+\item{SymbolsTable}{c("CREATE", "UPDATE")(default) 'check and CREATE' a "Symbols" table.
+Attempt to "UPDATE" a "Symbols" table. Can be one or the other or both.
+Also, can be anything else, e.g. choose FALSE, to easily visually signal
+to not do "Symbols" CREATE/UPDATE.}
 }
 \description{
 also register its meta-data
