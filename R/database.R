@@ -722,8 +722,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-
 #' update a database table with 'updated' data
+#'
+#' For performance reasons,
+#' the unique combinations of the keys of the data.frame df
+#' are sent to the server, to limit the number of rows returned from the server
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
@@ -739,9 +742,6 @@ initEnv();on.exit({uninitEnv()})
 #' e.g. varHint = "dateindex", valHint = "17000"
 #' or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'")
 #' Position matches one to one with valHint
-#' Note, also for performance reasons,
-#' the unique combinations of the keys of the 'updated data' data.frame df
-#' are sent to the server, also, the reason is to limit the number of rows returned from the server.
 #' @param valHint
 #' See varHint. Position matches one to one with varHint.
 #' @param prepare.query FALSE(default) will use RPostgres PostgreSQLConnection
@@ -782,7 +782,7 @@ initEnv();on.exit({uninitEnv()})
 #'}
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
-#' @importFrom stringr str_subset str_replace str_split
+#' @importFrom stringr str_c str_subset str_replace str_split
 # non-exported S3 methods # data.table:::merge.data.table data.table:::split.data.table
 #' @import data.table
 #' @importFrom data.table data.table
@@ -790,11 +790,6 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom DBI dbWriteTable dbGetQuery dbQuoteIdentifier dbQuoteString dbBegin dbCommit dbExecute
 #' @importFrom plyr llply
 #' @importFrom RPostgres Postgres
-#' @examples
-#' \dontrun{
-#'
-#'
-#' }
 #' @export
 pgUpdate <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, ... ) {
 tryCatchLog::tryCatchLog({
