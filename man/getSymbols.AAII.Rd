@@ -23,12 +23,17 @@ Can be xts, zoo, data.frame, or xts (default)}
 
 \item{...}{additional parameters}
 
-\item{force}{re-download data from AAII ( SEE THE EXAMPLES )
-The hidden variable ".aaii_SENTIMENT_path2file" located in the
-environment of parameter env is the last know location of the "xls" file}
+\item{force}{FALSE(default) re-download data from AAII ( See the examples. )
+The hidden variables ".AAIIsentiment_path2file" and
+".AAIISentimentSurveyPastResults_path2file" located in the
+environment of parameter env are the last know location of the "xls" file
+and the "html" file.  Generally, using this parameter "force = TRUE"
+is NOT necessary: the hidden variables are persistent through the
+entire R session.  Also, send parameter "verbose = TRUE" to see
+the *path2file locations.}
 }
 \value{
-A call to getSymbols.aaii will load into the specified
+A call to getSymbols.AAII will load into the specified
 environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
@@ -57,7 +62,15 @@ if(!exists("BullBearSpread")) getSymbols("BullBearSpread", src = "AAII")
 # Excel 'xls' file with the new results of this weeks vote.
 # The Symbol name does not matter.  All symbols are from the same 'xls' file
 # The dates are as of Thursday each week
+getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII")
+
+# force requery of data from the AAII site
+# will collect one new xls (historical obs) file and one new html (latest obs) file
 getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII", force = TRUE)
+
+# all columns in one xts object
+
+#' getSymbols("AAIIsentiment", src = "AAII")
 
 }
 }

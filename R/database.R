@@ -1434,11 +1434,16 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #' @param env where to create objects. (.GlobalEnv)
 #' @param return.class desired class of returned object.
 #' Can be xts, zoo, data.frame, or xts (default)
-#' @param force re-download data from AAII ( SEE THE EXAMPLES )
-#' The hidden variable ".aaii_SENTIMENT_path2file" located in the
-#' environment of parameter env is the last know location of the "xls" file
+#' @param force FALSE(default) re-download data from AAII ( See the examples. )
+#' The hidden variables ".AAIIsentiment_path2file" and
+#' ".AAIISentimentSurveyPastResults_path2file" located in the
+#' environment of parameter env are the last know location of the "xls" file
+#' and the "html" file.  Generally, using this parameter "force = TRUE"
+#' is NOT necessary: the hidden variables are persistent through the
+#' entire R session.  Also, send parameter "verbose = TRUE" to see
+#' the *path2file locations.
 #' @param ... additional parameters
-#' @return A call to getSymbols.aaii will load into the specified
+#' @return A call to getSymbols.AAII will load into the specified
 #' environment one object for each \code{Symbol} specified,
 #' with class defined by \code{return.class}.
 #' @author Jeffrey A. Ryan
@@ -1451,11 +1456,6 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #' \code{\link{getSymbols}}
 #' \code{\link{setSymbolLookup}}
 #' @keywords data
-#' @importFrom tryCatchLog tryCatchLog
-#' @importFrom zoo as.Date
-#  ## @importFrom htmltab htmltab # Namespace dependencies not required: ??? ##
-#' @importFrom stringr str_replace
-#  ## @importFrom readxl read_xls # Namespace dependencies not required: ??? ##
 #' @examples
 #' \dontrun{
 #'
@@ -1468,21 +1468,26 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #' # Excel 'xls' file with the new results of this weeks vote.
 #' # The Symbol name does not matter.  All symbols are from the same 'xls' file
 #' # The dates are as of Thursday each week
+#' getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII")
+#'
+#' # force requery of data from the AAII site
+#' # will collect one new xls (historical obs) file and one new html (latest obs) file
 #' getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII", force = TRUE)
 #'
+#' # all columns in one xts object
+#'
+#' #' getSymbols("AAIIsentiment", src = "AAII")
+#'
 #' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo as.Date
+#  ## @importFrom htmltab htmltab # Namespace dependencies not required: ??? ##
+#' @importFrom stringr str_replace
+#  ## @importFrom readxl read_xls # Namespace dependencies not required: ??? ##
 #' @export
 getSymbols.AAII <- function(Symbols, env, return.class = "xts", ...) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
-
-    # LATER: COULD STORE TO A 'MORE' PERSISTENT LOCATION
-    #   could be a ./data directory
-    # use to develop: path.package("xts")
-    # IF( use .data and in a "package")
-    # [1] "W:/R-3.5._/R_LIBS_USER_3.5._/<package>"
-    # dir(paste0(path.package("<package>"),"/","data"))
-    # [1] "aaii_SENTIMENT.rda"
 
     importDefaults("getSymbols.AAII")
     this.env <- environment()
@@ -1496,6 +1501,8 @@ initEnv(); on.exit({uninitEnv()})
 
     if(!exists("force", envir = this.env, inherits = FALSE))
         force = FALSE
+
+    # begin xls area
 
     if(exists(".AAIIsentiment_path2file", envir = env, inherits = FALSE)) {
       assign("tmp", get(".AAIIsentiment_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
@@ -1514,12 +1521,11 @@ initEnv(); on.exit({uninitEnv()})
 
         AAII.URL <- "https://www.aaii.com/files/surveys/sentiment.xls"
         tmp <- tempfile(fileext = ".xls") # AAII still uses the OLD format ( DEC 2018 )
+        #
         # do not remove the 'tmp' file
         # In this R session, keep the file around and available for the next query [if any]
         # the site https://www.aaii.com is NOT engineered
         # to handle MANY data queries, NOR denial of service attacks
-        #
-        # on.exit(unlink(tmp))
 
         if (verbose)
             cat("downloading ", "AAIIsentiment", ".....\n\n")
@@ -1527,7 +1533,6 @@ initEnv(); on.exit({uninitEnv()})
         assign(".AAIIsentiment_path2file", tmp, envir = env, inherits = FALSE)
 
     }
-
     if (verbose)
         cat("reading disk file ", tmp, ".....\n\n")
 
@@ -1535,7 +1540,6 @@ initEnv(); on.exit({uninitEnv()})
     Dates <- seq.Date(from = zoo::as.Date("1987-06-26"), to = Sys.Date(), by = "7 day")
 
     # Last verified: DEC 2018
-
     col_names = c("ReportedDate",
       "Bullish", "Neutral", "Bearish", "Total", # always 100%
       "Bullish8WMA", "BullBearSpread",
@@ -1555,8 +1559,44 @@ initEnv(); on.exit({uninitEnv()})
     fri <- fr
     rs <- fri
 
+    # end xls area
+
+    # begin html area
+
+    if(exists(".AAIISentimentSurveyPastResults_path2file", envir = env, inherits = FALSE)) {
+      assign("tmppage", get(".AAIISentimentSurveyPastResults_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    } else {
+      tmppage <- NULL
+    }
+    if( !is.null(tmppage) &&
+        !is.na(file.info(tmppage)$mtime) &&
+        !force
+    ) {
+    } else {
+
+        # possible clean-up
+        oldtmppage <- tmppage
+        if(!is.null(oldtmppage) && !is.na(file.info(oldtmppage)$mtime)) on.exit(unlink(oldtmppage))
+
+        AAII.URL <- "https://www.aaii.com/sentimentsurvey/sent_results"
+        tmppage <- tempfile(fileext = ".html") # AAII still uses the OLD format ( DEC 2018 )
+        #
+        # do not remove the 'tmppage' file
+        # In this R session, keep the file around and available for the next query [if any]
+        # the site https://www.aaii.com is NOT engineered
+        # to handle MANY data queries, NOR denial of service attacks
+
+        if (verbose)
+            cat("downloading ", "AAIISentimentSurveyPastResults", ".....\n\n")
+        quantmod___try.download.file(AAII.URL, destfile = tmppage, quiet = !verbose, mode = "wb", ...)
+        assign(".AAIISentimentSurveyPastResults_path2file", tmppage, envir = env, inherits = FALSE)
+
+    }
+    if (verbose)
+        cat("reading disk file ", tmppage, ".....\n\n")
+
     rt <- htmltab::htmltab(  # google chrome ( DEC 2018 )
-            doc = "https://www.aaii.com/sentimentsurvey/sent_results"
+            doc = tmppage
           , which = '//*[@id="page_content"]/table[1]'
           , rm_nodata_cols = F)
 
@@ -1568,6 +1608,8 @@ initEnv(); on.exit({uninitEnv()})
     dataColnames <- colnames(rt)
     dataRecent <- as.numeric(stringr::str_replace(unlist(rt), "%", ""))/100.0
     rt <- xts(matrix(dataRecent, ncol = length(dataColnames)), indexRecent); colnames(rt) <- dataColnames
+
+    # end html area
 
     # prepare to splice
 
@@ -1586,11 +1628,14 @@ initEnv(); on.exit({uninitEnv()})
     rt <- xts(rtc, index(rt))
 
     # splice
+
     rst <- rbind(rs,rt)
     # remove the first(earliest) [if any] duplicate index
     rst <- rst[!duplicated(index(rst), fromLast = TRUE),]
     fr <- rst
     fri <- fr # pass-throught on "AAIIsentiment"
+
+    # decompose [if any] into [many] Symbol(s), then return
 
     for (i in 1:length(Symbols)) {
 
