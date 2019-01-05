@@ -49,7 +49,7 @@ initEnv();on.exit({uninitEnv()})
 #'# (
 #'#   "Symbols" text NOT NULL,
 #'#   updated timestamp with time zone,
-#'#   "updated_R_class" text,
+#'#   "index_R_class" text,
 #'#   src text,
 #'#   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
 #'# )
@@ -87,7 +87,7 @@ initEnv();on.exit({uninitEnv()})
       ddl <- stringr::str_c("CREATE TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), "(",
                               DBI::dbQuoteIdentifier(con, "Symbols"),          " TEXT ", ", ",
                               DBI::dbQuoteIdentifier(con, "updated"),          " TIMESTAMP WITH TIMEZONE ", ", ",
-                              DBI::dbQuoteIdentifier(con, "updated_R_class") , " TEXT ", ", ",
+                              DBI::dbQuoteIdentifier(con, "index_R_class") , " TEXT ", ", ",
                               DBI::dbQuoteIdentifier(con, "src"),              " TEXT " ,
                             ");")
       DBI::dbExecute(con, ddl)
@@ -2122,13 +2122,13 @@ initEnv();on.exit({uninitEnv()})
     updated <- NULL
     if("updated" %in% colnames(SymbolAttributes)) updated <- SymbolAttributes[["updated"]]
 
-    updated_R_class <- NULL
-    if("updated_R_class" %in% colnames(SymbolAttributes)) {
-      updated_R_class <- SymbolAttributes[["updated_R_class"]]
-      if(!updated_R_class %in% c("ts","data.frame")) {
-        if(!isNamespaceLoaded(updated_R_class)) requireNamespace(updated_R_class, quietly = TRUE)
+    index_R_class <- NULL
+    if("index_R_class" %in% colnames(SymbolAttributes)) {
+      index_R_class <- SymbolAttributes[["index_R_class"]]
+      if(!index_R_class %in% c("ts","data.frame")) {
+        if(!isNamespaceLoaded(index_R_class)) requireNamespace(index_R_class, quietly = TRUE)
       }
-      updated <- rlang::eval_bare(rlang::parse_expr(stringr::str_c("as.", updated_R_class,"(updated)")), environment())
+      updated <- rlang::eval_bare(rlang::parse_expr(stringr::str_c("as.", index_R_class,"(updated)")), environment())
     }
     src <- NULL
     if("src" %in% colnames(SymbolAttributes)) src <- SymbolAttributes[["src"]]
@@ -2603,7 +2603,7 @@ initEnv();on.exit({uninitEnv()})
 #'# (
 #'#   "Symbols" text NOT NULL,
 #'#   updated timestamp with time zone,
-#'#   "updated_R_class" text,
+#'#   "index_R_class" text,
 #'#   src text,
 #'#   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
 #'# )
@@ -2742,9 +2742,6 @@ initEnv();on.exit({uninitEnv()})
     if(is.null(xTs)) { message(paste("Symbol ", each.symbol, " was not found s skipping.")); next }
     df  <- xTs2DBDF(xTs, con, field.names = field.names[-1], db.fields = db.fields[-1])
 
-    if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
-    DBI::dbExecute(con, stringr::str_c("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
-
     # Goal
     # exist in  R       'Date', 'Open','High','Low','Close','Volume','Adjusted'( along with FRED columns )
     # translate from those
@@ -2753,6 +2750,10 @@ initEnv();on.exit({uninitEnv()})
     # custom sorting
     db.fields    <- customSorting( colnames(df), InitOrder = db.fields, CI = TRUE)
     colnames(df) <- db.fields
+
+    browser()
+    if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+    DBI::dbExecute(con, stringr::str_c("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
 
     DBI::dbWriteTable(con, each.symbol, df, append = T, row.names = F)
     # if  each.symbol includes schema name + ".",
@@ -2773,12 +2774,12 @@ initEnv();on.exit({uninitEnv()})
                             ";"))
     }
 
-    updated_R_class <- NULL
+    index_R_class <- NULL
     if(inherits(xTs,"zoo")) {
-      updated_R_class <- class(index(xTs))[1]
+      index_R_class <- class(index(xTs))[1]
       DBI::dbExecute(con, stringr::str_c("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
                             " SET ",
-                            DBI::dbQuoteIdentifier(con, "updated_R_class")," = ", DBI::dbQuoteString(con, updated_R_class),
+                            DBI::dbQuoteIdentifier(con, "index_R_class")," = ", DBI::dbQuoteString(con, index_R_class),
                             " WHERE ",
                             DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, each.symbol),
                             ";"))

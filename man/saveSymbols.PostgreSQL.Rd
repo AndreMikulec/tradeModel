@@ -65,7 +65,7 @@ CREATE SCHEMA "Symbols"
 # (
 #   "Symbols" text NOT NULL,
 #   updated timestamp with time zone,
-#   "updated_R_class" text,
+#   "index_R_class" text,
 #   src text,
 #   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
 # )
