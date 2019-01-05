@@ -64,8 +64,10 @@ initEnv();on.exit({uninitEnv()})
 #' @param Symbol new table name. Eg.g Could be a company TICKER or a FRED column.
 #' @param schname schema name
 #' @param keys column(s) that will be the PRIMARY KEY of the new table.
-#' If left as NULL, the furthest left most column (lowest ordinal order) postion will be chosen.
-#' Othwerwise, a character vector of column names
+#' If left as NULL, the furthest left most column (lowest ordinal order) postion (1) will be chosen.
+#' Othwerwise, a character vector of column names.
+#' Otherwise, a numeric vector of column positions in the df ( from left to right )
+#' Otherwise, "NONE", that means "do not add a PRIMARY KEY"
 #' @param SymbolsTable c("CREATE", "UPDATE")(default) 'check and CREATE' a "Symbols" table.
 #' Attempt to "UPDATE" a "Symbols" table. Can be one or the other or both.
 #' Also, can be anything else, e.g. choose FALSE, to easily visually signal
@@ -78,7 +80,9 @@ dfToCREATETable <- function(df, con, Symbol, schname, keys = NULL, SymbolsTable 
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  # keys can also be "NONE" (see the if-then) below
   if(is.null(keys)) keys <- 1
+
   if(is.null(SymbolsTable)) SymbolsTable <- c("CREATE", "UPDATE")
 
   # meta-data table
@@ -87,7 +91,7 @@ initEnv();on.exit({uninitEnv()})
       ddl <- stringr::str_c("CREATE TABLE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"), "(",
                               DBI::dbQuoteIdentifier(con, "Symbols"),          " TEXT ", ", ",
                               DBI::dbQuoteIdentifier(con, "updated"),          " TIMESTAMP WITH TIMEZONE ", ", ",
-                              DBI::dbQuoteIdentifier(con, "index_R_class") , " TEXT ", ", ",
+                              DBI::dbQuoteIdentifier(con, "index_R_class"),    " TEXT ", ", ",
                               DBI::dbQuoteIdentifier(con, "src"),              " TEXT " ,
                             ");")
       DBI::dbExecute(con, ddl)
@@ -106,29 +110,21 @@ initEnv();on.exit({uninitEnv()})
   schemaSymbolsQuoted <-  paste0(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, Symbol))
 
   # column datatypes
-
-  # colClasses  <- DescTools::DoCall(c,plyr::llply(df, function(x) {class(x)[1]}))
-  # colClasses[colClasses     == "logical"]    <- "BOOLEAN"
-  # colClasses[colClasses     == "character"]  <- "TEXT"
-  # colClasses[colClasses     == "integer"]    <- "INTEGER"
-  # colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
-  # colClasses[colClasses %in%   "Date"]       <- "DATE"
-  # colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
-  # # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
-  # # xts OTHER supported index date/time classes
-  # colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
-
   colClasses <- pgDFColClasses(df[, , drop = FALSE])
 
-  if(is.numeric(keys))   { TablePrimKeyCols <- names(colClasses)[keys] }
-  if(is.character(keys)) { TablePrimKeyCols <- names(colClasses)[names(colClasses) %in% keys] }
+  if(is.numeric(keys))   { TablePrimKeyCols <- Names(colClasses)[keys] }
+  if(is.character(keys)) { TablePrimKeyCols <- Names(colClasses)[names(colClasses) %in% keys] }
 
+  # Note: PostgreSQL does allow zero column tables ( SQLite does not. )
   ddl <- stringr::str_c("CREATE TABLE ", schemaSymbolsQuoted ,"(", stringr::str_c( DBI::dbQuoteIdentifier(con, names(colClasses)), " ", colClasses, collapse = ", "), ");")
   DBI::dbExecute(con, ddl)
-  ddl <- stringr::str_c("ALTER TABLE ", schemaSymbolsQuoted,
-                " ADD PRIMARY KEY ( ", stringr::str_c(DBI::dbQuoteIdentifier(con, TablePrimKeyCols), collapse = ", "), ")",
-                ";")
-  DBI::dbExecute(con, ddl)
+
+  if(length(colClasses) && (keys != "NONE")) {
+    ddl <- stringr::str_c("ALTER TABLE ", schemaSymbolsQuoted,
+                  " ADD PRIMARY KEY ( ", stringr::str_c(DBI::dbQuoteIdentifier(con, TablePrimKeyCols), collapse = ", "), ")",
+                  ";")
+    DBI::dbExecute(con, ddl)
+  }
 
   if("UPDATE" %in% SymbolsTable) {
     dml <- stringr::str_c("INSERT INTO ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
@@ -622,8 +618,9 @@ pgDFColClasses <- function(df = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-                                                 # prevent dropping a single dimention to a vector
   colClasses  <- DescTools::DoCall(get("c"),plyr::llply(as.data.frame(df, stringsAsFactors = FALSE), function(x) {class(x)[1]}))
+  if(is.null(colClasses)) colClasses <- vector(mode = "character")
+
   # column datatypes
   colClasses[colClasses     == "logical"]    <- "BOOLEAN"
   colClasses[colClasses     == "character"]  <- "TEXT"
@@ -634,6 +631,9 @@ initEnv();on.exit({uninitEnv()})
   # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
   # xts OTHER supported index date/time classes
   colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
+  # NOTE: to represent a non-simple R class in a PostgreSQL datatype, one may need TWO [or more] columns
+  #       FUTURE WORK?
+
   return(colClasses)
 
 })}
@@ -1066,49 +1066,6 @@ initEnv();on.exit({uninitEnv()})
      return(invisible())
   }
 
-  # newData <- data.table::data.table(df, key=keys)
-  #
-  # # from df, determine the verticle subset (WHERE) of data to collect from the server
-  # # initial subsetting
-  # SelectWhereExactlies <- vector(mode = "character")
-  # if(length(keys)){
-  #   Splits <-interaction(newData[, keys, with=FALSE], drop = TRUE)
-  #   if(length(Splits)){
-  #     Splitted <-  split(newData[, keys, with=FALSE], f = Splits)
-  #   }
-  # }
-  # if(!exists("Splitted", envir = environment(), inherits = FALSE))
-  #   Splitted <- list()
-  # for(spl in Splitted) {
-  #   keyvals <-  unlist(spl)
-  #   if(length(keyvals)) {
-  #     keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
-  #     SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, keys), " = ", keyvals, collapse = " AND "), ")", collapse = "")
-  #     SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
-  #   }
-  # }
-  # if(length(SelectWhereExactlies)) {
-  #   SelectWhereExactlies <- stringr::str_c("(" , stringr::str_c(SelectWhereExactlies, collapse = " OR "), ")", collapse = "")
-  # }
-  # # extra subsetting (If any)
-  # if(!is.null(varHint) && !is.null(valHint)) {
-  #   SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, varHint), " = ", valHint, collapse = " AND "), ")", collapse = "")
-  #   SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
-  # }
-  # # combine subsetting
-  # if(length(SelectWhereExactlies)) {
-  #   SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " AND "), collapse = "")
-  # }
-  #
-  # if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
-  # schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
-  #
-  # # actually go to the DB server then collect and bring down to R that server data
-  # #  do not bring back too many columns
-  # ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
-  # oldData <- DBI::dbGetQuery(con, stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies))
-  # oldData <- data.table::data.table(oldData, key=keys)
-
   oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor = "UPDATE")
 
   if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
@@ -1179,20 +1136,6 @@ initEnv();on.exit({uninitEnv()})
     }
   }
   if(length(UpDateStmts)) {
-
-    # create an in-memory table on the DB server
-
-    # colClasses  <- DescTools::DoCall(c,plyr::llply(newData, function(x) {class(x)[1]}))
-    # # column datatypes
-    # colClasses[colClasses     == "logical"]    <- "BOOLEAN"
-    # colClasses[colClasses     == "character"]  <- "TEXT"
-    # colClasses[colClasses     == "integer"]    <- "INTEGER"
-    # colClasses[colClasses     == "numeric"]    <- "NUMERIC(14,3)"
-    # colClasses[colClasses %in%   "Date"]       <- "DATE"
-    # colClasses[colClasses %in%   "POSIXct"]    <- "TIMESTAMP WITH TIMEZONE"
-    # # ACTUALLY I HAVE NO EXPERIENCE ( THIS IS AN EDUCATED WILD GUESS: LATER, I WILL EXPERIMENT/TEST/FIX THIS )
-    # # xts OTHER supported index date/time classes
-    # colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
 
     colClasses <- pgDFColClasses(newData[, , drop = FALSE])
 
@@ -2618,6 +2561,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param field.names names existing in starting columns
 #' @param db.fields character vector indicating
 #' names of fields to insert
+#' @param keys passed to dfToCREATETable.  See ? dfToCREATETable
 #' @param user username(default "Symbols") to access database
 #' @param password password(default "Symbols") to access database
 #' @param dbname database name (default "Symbols")
@@ -2651,7 +2595,9 @@ initEnv();on.exit({uninitEnv()})
 saveSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
   db.fields=c('o','h','l','c','v','a'),
-  user=NULL,password=NULL,dbname=NULL,schname=NULL,host='localhost',port=5432,options=NULL, forceISOdate = TRUE,
+  keys = NULL,
+  user=NULL,password=NULL,dbname=NULL,schname=NULL,host='localhost',port=5432,
+  options=NULL, forceISOdate = TRUE,
   ...)  {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2720,7 +2666,7 @@ initEnv();on.exit({uninitEnv()})
 
       # create NEW CREATE TABLE statements"
       # column names
-      dfToCREATETable(df = df, con = con, Symbol = each.symbol, schname = schname)
+      dfToCREATETable(df = df, con = con, Symbol = each.symbol, schname = schname, keys = keys)
 
       new.db.symbol <- c(new.db.symbol, each.symbol)
       tempList <- list(); tempList[[each.symbol]] <- df

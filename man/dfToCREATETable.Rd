@@ -18,8 +18,10 @@ dfToCREATETable(df, con, Symbol, schname, keys = NULL,
 \item{schname}{schema name}
 
 \item{keys}{column(s) that will be the PRIMARY KEY of the new table.
-If left as NULL, the furthest left most column (lowest ordinal order) postion will be chosen.
-Othwerwise, a character vector of column names}
+If left as NULL, the furthest left most column (lowest ordinal order) postion (1) will be chosen.
+Othwerwise, a character vector of column names.
+Otherwise, a numeric vector of column positions in the df ( from left to right )
+Otherwise, "NONE", that means "do not add a PRIMARY KEY"}
 
 \item{SymbolsTable}{c("CREATE", "UPDATE")(default) 'check and CREATE' a "Symbols" table.
 Attempt to "UPDATE" a "Symbols" table. Can be one or the other or both.
