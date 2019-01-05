@@ -2759,6 +2759,9 @@ initEnv();on.exit({uninitEnv()})
     # if  each.symbol includes schema name + ".",
     # then dbWriteTable will return TRUE, but it will LIE
 
+    # pgAdmin3 LTS (BigSQL) mentioned that I should do
+    DBI::dbExecute(con, stringr::str_c("VACUUM (VERBOSE, ANALYZE) ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
+
     updated <- NULL
     if("updated" %in% names(attributes(xTs))) {
       # OLD: "to_timestamp(", DBI::dbQuoteString(con, as.character(Sys.time())), " ,'YYYY-MM-DD HH24:MI:SS')"
