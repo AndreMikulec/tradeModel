@@ -2603,10 +2603,18 @@ initEnv();on.exit({uninitEnv()})
 #' @param db.fields character vector indicating
 #' names of fields to insert
 #' @param keys passed to dfToCREATETable and dfGetPKEYNames
-#' @param placeNewRecords "AddOnlyNew" (default).
+#' @param placeNewRecords "TruncateTable" (default).
+#' TRUNCATE TABLE the table contents ("TruncateTable").
 #' Append 'new' records determined by 'new' inbound key values
 #' to the table via pgInsert ("AddOnlyNew").
-#' TRUNCATE TABLE the table contents ("TruncateTable").
+#' NOTE, user choice is specific to the nature of the changing source
+#' data.  For example, FRED historical data is typically static: e.g. UNRATE
+#' (but maybe not all historic data in FRED is static.  Therefore, in the
+#' case of most FRED data, a good choice may be, "AddOnlyNew". Differently,
+#' Yahoo finanical stock data is very often re-adjuste to account
+#' for split and dividends, therefore yesterday's query on data may
+#' be useless.  Therefore, in the case of Yahoo financial stock data, a
+#' good choice may be "TruncateTable"
 #' @param varHint if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert
 #' @param valHint if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert
 #' @param user username(default "Symbols") to access database
@@ -2650,7 +2658,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("saveSymbols.PostgreSQL")
 
-  if(is.null(placeNewRecords)) placeNewRecords <- "AddOnlyNew"
+  if(is.null(placeNewRecords)) placeNewRecords <- "TruncateTable"
 
   schnamePassed <- schname
   SymbolsPassed <- Symbols
