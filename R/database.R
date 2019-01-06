@@ -2040,9 +2040,11 @@ initEnv();on.exit({uninitEnv()})
   if(!hasArg("verbose")) verbose <- FALSE
   if(!hasArg("auto.assign")) auto.assign <- TRUE
 
+  conWasOrigNULL <- FALSE
   if(is.null(con)) {
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
     AssignEnv(DBConMeta, c("con"))
+    conWasOrigNULL <- TRUE
   }
   schname <- pgCurrentSchema(con)[[1]]
   if(!is.null(schnamePassed) && schnamePassed != schname) schname <- schnamePassed
@@ -2116,6 +2118,8 @@ initEnv();on.exit({uninitEnv()})
     src <- NULL
     if("src" %in% colnames(SymbolAttributes)) src <- SymbolAttributes[["src"]]
 
+    # SHOULD I HAVE THIS HERE?  I DO NOT ANYWHERE ELSE
+    # [ ] REMOVE ME
     DBI::dbDisconnect(con)
 
     order.by= do.call(c,fr[,1, drop = F])
@@ -2135,7 +2139,8 @@ initEnv();on.exit({uninitEnv()})
       assign(Symbols[[i]],fr,env)
     if(verbose) cat('done\n')
   }
-  DBI::dbDisconnect(con)
+  if(conWasOrigNULL)
+    DBI::dbDisconnect(con)
   if(auto.assign)
     return(Symbols)
   return(fr)
@@ -2684,9 +2689,11 @@ initEnv();on.exit({uninitEnv()})
   }
   if(!hasArg("verbose")) verbose <- FALSE
 
+  conWasOrigNULL <- FALSE
   if(is.null(con)) {
     DBConMeta <- pgConnect(user=user,password=password,dbname=dbname,schname=schname,host=host,port=port,options=options,forceISOdate=forceISOdate)
     AssignEnv(DBConMeta, c("con"))
+    conWasOrigNULL <- TRUE
   }
   schname <- pgCurrentSchema(con)[[1]]
   if(!is.null(schnamePassed) && schnamePassed != schname) schname <- schnamePassed
@@ -2845,9 +2852,8 @@ initEnv();on.exit({uninitEnv()})
     }
 
   }
-  # SHOULD I HAVE THIS HERE?  I DO NOT ANYWHERE ELSE
-  # [ ] REMOVE ME
-  DBI::dbDisconnect(con)
+  if(conWasOrigNULL)
+    DBI::dbDisconnect(con)
   invisible()
 
 })}
