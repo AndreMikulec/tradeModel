@@ -7,7 +7,13 @@
 LagXts(xTs, k = 1, na.pad = TRUE, ...)
 }
 \arguments{
+\item{xTs}{xts object}
+
 \item{k}{choose -1 to look into the future}
+
+\item{na.pad}{as lag.xts}
+
+\item{...}{dots passed to lag.xts}
 }
 \description{
 does not complain when: k > NROW(xTs)

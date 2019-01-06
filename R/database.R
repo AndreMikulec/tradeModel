@@ -821,7 +821,6 @@ initEnv();on.exit({uninitEnv()})
     }
   }
 
-  browser()
   # Reorder the newData columns to match the order on the Server DB
   newData <- newData[, customSorting(colnames(newData), serverDBColumns, sortVectorExcess = FALSE), with=FALSE]
 
@@ -2771,7 +2770,6 @@ initEnv();on.exit({uninitEnv()})
       dotSchemaQuoted <- ""
     }
 
-    browser()
     if(placeNewRecords == "TruncateTable") {
       DBI::dbExecute(con, stringr::str_c("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
 
@@ -2810,7 +2808,6 @@ initEnv();on.exit({uninitEnv()})
 
     }
 
-    browser()
     updated <- NULL
     if("updated" %in% names(attributes(xTs))) {
       # OLD: "to_timestamp(", DBI::dbQuoteString(con, as.character(Sys.time())), " ,'YYYY-MM-DD HH24:MI:SS')"

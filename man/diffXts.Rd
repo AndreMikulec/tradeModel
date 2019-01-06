@@ -8,6 +8,8 @@ diffXts(x, lag = 1, differences = 1, arithmetic = TRUE,
   log = FALSE, na.pad = TRUE, Fun = diff, ...)
 }
 \arguments{
+\item{x}{as diff.xts}
+
 \item{lag}{as diff.xts}
 
 \item{differences}{as diff.xts}

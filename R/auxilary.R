@@ -1040,7 +1040,11 @@ pasteDot <- function(..., sep = ".", collapse = NULL) {
 #'
 #' does not complain when: k > NROW(xTs)
 #'
+#' @param xTs xts object
 #' @param k choose -1 to look into the future
+#' @param na.pad as lag.xts
+#' @param ... dots passed to lag.xts
+#' @importFrom tryCatchLog tryCatchLog
 #' @export
 LagXts <- function(xTs, k = 1, na.pad = TRUE, ...) {
 tryCatchLog::tryCatchLog({
@@ -1058,7 +1062,10 @@ initEnv();on.exit({uninitEnv()})
 
 #' absolute change
 #'
-#' @param base choose -1 to look into the future
+#' @param xTs xts object
+#' @param base choose -1 (or less) to look into the future
+#' @param lag observations backwards
+#' @importFrom tryCatchLog tryCatchLog
 #' @export
 AC <- function(xTs, base = 0, lag = 1, ...) {
 tryCatchLog::tryCatchLog({
@@ -1072,7 +1079,9 @@ initEnv();on.exit({uninitEnv()})
 
 #' relative change
 #'
-#' @param base choose -1 to look into the future
+#' @param xTs xts object
+#' @param base choose -1 (or less) to look into the future
+#' @param lag observations backwards
 #' @examples
 #' \dontrun{
 #'
@@ -1081,36 +1090,81 @@ initEnv();on.exit({uninitEnv()})
 #'            [,1] [,2]
 #' 1970-01-01   NA   NA
 #' 1970-01-02   -2    2
-#' 1970-01-03    0    2
+#' 1970-01-03   -1    2 # sign(-2)*(-4 - (-2))/-2 == -1
 #'
 #' }
-#' @importFrom plyr aaply
+#' @importFrom tryCatchLog tryCatchLog
 #' @export
 RC <- function(xTs, base = 0, lag = 1, log = FALSE, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
-  # optimistic
-  Res <- LagXts(xTs1, base)/LagXts(xTs1, base + lag)
 
-  # make sure UNDERSTAND the contexts of
-  # NEGnon-lag / NEGlagged
-  # use with MUCH care
-  # SOMEDAY optimize this (to not be element-by-element)
-  # I have not found any R package that does that
-  this.envir <- environment()
+  # ? `[`
+  #
+  # x[i]
+  # x[i] <- value
+  #
+  # A third form of indexing is via a
+  # numeric matrix with the
+  #   one column for each dimension: each row of the index matrix
+  #     then selects a single element of the array,
+  #       and the result is a vector.
+  # Negative indices are not allowed in the index matrix.
+  # NA and zero values are allowed:
+  #   rows of an index matrix containing a zero are ignored,
+  #   whereas rows containing an NA produce an NA in the result.
+  #
+  # Indexing via a character matrix with one column per dimensions is also supported
+  # if the array has dimension names.
+  #   As with numeric matrix indexing, each row of the index matrix selects a single element of the array.
+  #   Indices are matched against the appropriate dimension names. N
+  #   A is allowed and will produce an NA in the result.
+  #   Unmatched indices as well as the empty string ("") are not allowed and will result in an error.
+
   NegNegTest <- (LagXts(xTs1, base) < 0) & (LagXts(xTs1, base + lag) < 0)
+  #
   if(any(coredata(NegNegTest) == TRUE)) {
-    arrayIndicies <- which(coredata(NegNegTest), arr.ind = TRUE)
-    plyr::aaply(arrayIndicies, 1, function(x) {
-      coredata(Res)[x[1], x[2]] <-
-         2 - abs(coredata(LagXts(xTs1, base)[x[1], x[2]])/coredata(LagXts(xTs1, base + lag)[x[1], x[2]]))
-      assign("Res", Res, envir = this.envir)
-    })
+
+    NewCoreXts <- coredata(xTs)
+
+    arrayIndiciesNegNeg  <- which( coredata(NegNegTest), arr.ind = TRUE)
+    arrayIndiciesRegular <- which(!coredata(NegNegTest), arr.ind = TRUE)
+
+    # regular common case
+    NewCoreXts[arrayIndiciesRegular] <-
+                  coredata(LagXts(xTs1, base))[arrayIndiciesRegular]/
+                  coredata(LagXts(xTs1, base + lag))[arrayIndiciesRegular]
+
+    # neg/neg rare case: (LagXts(xTs1, base) < 0) & (LagXts(xTs1, base + lag) < 0)
+    # bad interpretation
+
+    # make sure one UNDERSTANDs the contexts of
+    # NEG-nonlag / NEGlagged
+    # use with with MUCH care
+
+    # > sign(-4)*(-5 - (-4))/-4
+    # [1] -0.25 # 25% percent less
+
+    # > sign(-2)*(-4 - (-2))/-2
+    # [1] -1 # one full proportion less
+
+    NewCoreXts[arrayIndiciesNegNeg] <-
+              sign(  coredata(LagXts(xTs1, base + lag))[arrayIndiciesNegNeg] ) *
+                  (
+                       coredata(LagXts(xTs1, base))[arrayIndiciesNegNeg] -
+                     ( coredata(LagXts(xTs1, base + lag))[arrayIndiciesNegNeg] )
+                  ) /
+                  coredata(LagXts(xTs1, base + lag))[arrayIndiciesNegNeg]
+
+    coredata(xTs) <- NewCoreXts
+
+  } else {
+    xTs <- LagXts(xTs1, base)/LagXts(xTs1, base + lag)
   }
-  if(log) Res <- log(Res)
-  Res
+  if(log) Res <- log(xTs)
+  xTs
 
 })}
 
@@ -1118,8 +1172,13 @@ initEnv();on.exit({uninitEnv()})
 #' relative percent change
 #'
 #' most useful for tracking: velocity, acceleration, and jerk
+#' To get accelleration and jerk use with
+#' diffXts and differences = 1 and 2 respectively.
 #'
-#' @param base choose -1 to look into the future
+#' @param xTs xts object
+#' @param base choose -1 (or less) to look into the future
+#' @param lag observations backwards
+#' @importFrom tryCatchLog tryCatchLog
 #' @export
 RPC <- function(xTs, base = 0, lag = 1, ...) {
 tryCatchLog::tryCatchLog({
@@ -1133,7 +1192,10 @@ initEnv();on.exit({uninitEnv()})
 
 #' absolute percent change
 #'
-#' @param base choose -1 to look into the future
+#' @param xTs xts object
+#' @param base choose -1 (or less) to look into the future
+#' @param lag observations backwards
+#' @importFrom tryCatchLog tryCatchLog
 #' @export
 APC <- function(xTs, base = 0, lag = 1, ...) {
 tryCatchLog::tryCatchLog({
@@ -1147,6 +1209,7 @@ initEnv();on.exit({uninitEnv()})
 
 #' lag and/or difference and/or use a function(Fun) upon and xts object
 #'
+#' @param x as diff.xts
 #' @param lag as diff.xts
 #' @param differences as diff.xts
 #' @param arithmetic as diff.xts
@@ -1154,9 +1217,12 @@ initEnv();on.exit({uninitEnv()})
 #' @param na.pad as diff.xts
 #' @param Fun differencing function.  Meant to change the xTs in some way. (Default diff[.xts])
 #' @param ... dots passed
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DescTools DoCall
 #' @export
 diffXts <- function(x, lag=1, differences=1, arithmetic=TRUE, log=FALSE, na.pad=TRUE, Fun = diff, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
   Fun = match.fun(Fun)
   Dots <- list(...)
@@ -1189,7 +1255,7 @@ diffXts <- function(x, lag=1, differences=1, arithmetic=TRUE, log=FALSE, na.pad=
 
   }
 
-}
+})}
 
 
 

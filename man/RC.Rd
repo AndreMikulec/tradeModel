@@ -7,7 +7,11 @@
 RC(xTs, base = 0, lag = 1, log = FALSE, ...)
 }
 \arguments{
-\item{base}{choose -1 to look into the future}
+\item{xTs}{xts object}
+
+\item{base}{choose -1 (or less) to look into the future}
+
+\item{lag}{observations backwards}
 }
 \description{
 relative change
@@ -20,7 +24,7 @@ RC(xTs1)
            [,1] [,2]
 1970-01-01   NA   NA
 1970-01-02   -2    2
-1970-01-03    0    2
+1970-01-03   -1    2 # sign(-2)*(-4 - (-2))/-2 == -1
 
 }
 }

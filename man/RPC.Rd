@@ -7,8 +7,14 @@
 RPC(xTs, base = 0, lag = 1, ...)
 }
 \arguments{
-\item{base}{choose -1 to look into the future}
+\item{xTs}{xts object}
+
+\item{base}{choose -1 (or less) to look into the future}
+
+\item{lag}{observations backwards}
 }
 \description{
 most useful for tracking: velocity, acceleration, and jerk
+To get accelleration and jerk use with
+diffXts and differences = 1 and 2 respectively.
 }
