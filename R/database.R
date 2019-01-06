@@ -2636,8 +2636,17 @@ initEnv();on.exit({uninitEnv()})
 #' # save all of the .getSymbols Symbols and the source.envir Symbols
 #' saveSymbols(trg = "pg", source.envir = source.envir)
 #'
+#' # maybe appropriate for Yahoo data
+#' # same placeNewRecords = "TruncateTable" (default)
+#' saveSymbols(trg = "pg", source.envir = source.envir,
+#'   placeNewRecords = "TruncateTable")
+#'
 #' unrate <- getSymbols("UNRATE", src = "FRED", auto.assign =  F)
 #' saveSymbols(trg = "pg", source.envir = list2env(list(UNRATE = unrate)))
+#'
+#' # maybe appropriate for FRED data
+#' saveSymbols(trg = "pg", source.envir = list2env(list(UNRATE = unrate)),
+#'   placeNewRecords = "AddOnlyNew")
 #'
 #' unrate.db <- getSymbols("UNRATE", src = "pg", auto.assign =  F)
 #' unrate.db <- getSymbols(Symbols = "UNRATE", src = "pg", auto.assign = F)
