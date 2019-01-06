@@ -31,9 +31,36 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+#' determine the column names of a data.frame's key columns
+#'
+#' friendly function with dfToCREATETable
+#' This convenience function guesses the column names of the
+#' table's PRIMARY KEY columns
+#'
+#' @param df data.frame sent to function dfToCREATETable
+#' @param keys if passed NULL or 1 then the first column is returned.
+#' if passed a numeric vector then those column by ordinal position are chosen.
+#' if passed "NONE" then a zero length character vector is returned.
+#' if passed a character vector then those are the primary key column.
+#' names themselves
+#' @return character vector of column names that make up the PRIMARY KEY
+#' @export
+dfGetPKEYNames <- function(df, keys) {
 
+  # this does work
+  # Re: how to find primary key field name?
+  # https://www.postgresql.org/message-id/4E94DB9F.7090607@gmail.com
+  # however,  (currently), I am sticking to the "keys" (passed parameter) "NULL is 1" logic
 
+  if(is.null(keys)) keys <- 1
+  if(keys == "NONE") return(vector(mode = "character"))
+  if(length(keys) && length(colnames(df))) {
+    if(  is.numeric(keys)) return(colnames(df)[keys])
+    if(is.character(keys)) return(keys)
+  }
+  return(vector(mode = "character"))
 
+}
 
 
 
@@ -42,6 +69,8 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' also register its meta-data
 #' (Note: if the meta-data table(Symbols) does not exist, then it will be created)
+#'
+#' friendly function with dfGetPKEYNames
 #'
 #'# # create automatically by function: dfToCREATETable
 #'
@@ -632,6 +661,8 @@ initEnv();on.exit({uninitEnv()})
   # xts OTHER supported index date/time classes
   colClasses[colClasses %in% c("chron", "yearmon", "yearqtr", "timeDate")] <- "TIMESTAMP WITH TIMEZONE"
   # NOTE: to represent a non-simple R class in a PostgreSQL datatype, one may need TWO [or more] columns
+  #       PostgreSQL may need a 'non-simple' datatype (from CREATE TYPE)
+  #       R/PostgreSQL may need datatype mappers
   #       FUTURE WORK?
 
   return(colClasses)
@@ -694,6 +725,10 @@ initEnv();on.exit({uninitEnv()})
 
 #' insert into a database table 'new' data
 #'
+#' The keys parameter determine distinct records.
+#' Only 'new' records area added.
+#' (See pgUpdate to add information to current(already existing) records)
+#'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
 #' @param keys trgt remote server side vector of strings of table
@@ -733,23 +768,24 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' }
 #' @importFrom data.table data.table rbindlist
+#' @importFrom zoo as.Date
 #' @importFrom DBI dbWriteTable
 #' @export
 pgInsert <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  if(is.null(trgt)) stop("pgUpdate trgt can not be null")
-  if(is.null(keys)) stop("pgUpdate keys can not be null")
+  if(is.null(trgt)) stop("pgInsert trgt can not be null")
+  if(is.null(keys)) stop("pgInsert keys can not be null")
   #
   # MAYBE later I want SPECIFY a schname in
   # some other WAY (similar to what I have in other programs)
-  if(is.null(schname)) stop("pgUpdate schname can not be null")
+  if(is.null(schname)) stop("pgInsert schname can not be null")
   #
-  if(is.null(df)) stop("pgUpdate df can not be null")
+  if(is.null(df)) stop("pgInsert df can not be null")
 
   if(NROW(df) == 0) {
-     message("pgUpdate df has zero(0) rows.  Nothing is to do . . . ")
+     message("pgInsert df has zero(0) rows.  Nothing is to do . . . ")
      return(invisible())
   }
 
@@ -759,14 +795,16 @@ initEnv();on.exit({uninitEnv()})
   # IntentionFor == "INSERT" (best to limit data by varHint and valHint)
   # IntentionFor == "INSERT" (SELECT keys FROM )
     # limit local key columns to only just Server DB existing columns
-  oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor = "INSERT")
+  oldKeyData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor = "INSERT")
   # garantee order of the Server DB columns
-  oldData <- oldData[, customSorting(colnames(oldData), serverDBColumns, sortVectorExcess = FALSE), with=FALSE]
+  oldKeyData <- oldKeyData[, customSorting(colnames(oldKeyData), serverDBColumns, sortVectorExcess = FALSE), with=FALSE]
 
   newData <- data.table::data.table(df[, , drop = FALSE], key=keys)
   # fill in missing columns on the R client side that exist on the Server DB
   SchemaTableColumnTypes <- pgSchemaTableColumnTypes(con, schname = schname, tblname = trgt)
   SchemaTableColumnTypesSplitted <- split(SchemaTableColumnTypes, f = seq_len(NROW(SchemaTableColumnTypes)))
+
+  # Maybe dbWriteTable does not need these
   for(Column in SchemaTableColumnTypesSplitted) {
     if(!Column[["column_name"]] %in% colnames(newData)) {
       newColData <- rep(NA_integer_, NROW(newData))
@@ -776,18 +814,21 @@ initEnv();on.exit({uninitEnv()})
         , "float8" = as.numeric(newColData)
         , "bool"   = as.logical(newColData)
         , "numeric" = as.numeric(newColData)
-        , "timestamp" = as.as.POSIXct(newColData, tz = "UTC")
+        , "date"    = zoo::as.Date(newColData)
+        , "timestamp" = as.as.POSIXct(newColData, tz = "UTC", origin = "1970-01-01")
         ) -> newColData
       newData[[Column[["column_name"]]]] <- newColData
     }
   }
 
+  browser()
   # Reorder the newData columns to match the order on the Server DB
   newData <- newData[, customSorting(colnames(newData), serverDBColumns, sortVectorExcess = FALSE), with=FALSE]
 
   # just select key columns
   newKeyData <- newData[, keys, with=FALSE]
-  newKeyoldData <- rbindlist(list(newKeyData, oldData))
+  # correct, newKeyData is upper table data, see below, the clever programming: seq_len(NROW
+  newKeyoldData <- rbindlist(list(newKeyData, oldKeyData))
   # choose rows with never duplicates
   NewDataIndex <- !duplicated(newKeyoldData) & !duplicated(newKeyoldData, fromLast = TRUE)
 
@@ -2561,7 +2602,13 @@ initEnv();on.exit({uninitEnv()})
 #' @param field.names names existing in starting columns
 #' @param db.fields character vector indicating
 #' names of fields to insert
-#' @param keys passed to dfToCREATETable.  See ? dfToCREATETable
+#' @param keys passed to dfToCREATETable and dfGetPKEYNames
+#' @param placeNewRecords "AddOnlyNew" (default).
+#' Append 'new' records determined by 'new' inbound key values
+#' to the table via pgInsert ("AddOnlyNew").
+#' TRUNCATE TABLE the table contents ("TruncateTable").
+#' @param varHint if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert
+#' @param valHint if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert
 #' @param user username(default "Symbols") to access database
 #' @param password password(default "Symbols") to access database
 #' @param dbname database name (default "Symbols")
@@ -2595,13 +2642,15 @@ initEnv();on.exit({uninitEnv()})
 saveSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, source.envir = NULL,
   field.names = c('Open','High','Low','Close','Volume','Adjusted'),
   db.fields=c('o','h','l','c','v','a'),
-  keys = NULL,
+  keys = NULL, placeNewRecords = NULL, varHint = NULL, valHint = NULL,
   user=NULL,password=NULL,dbname=NULL,schname=NULL,host='localhost',port=5432,
   options=NULL, forceISOdate = TRUE,
   ...)  {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("saveSymbols.PostgreSQL")
+
+  if(is.null(placeNewRecords)) placeNewRecords <- "AddOnlyNew"
 
   schnamePassed <- schname
   SymbolsPassed <- Symbols
@@ -2637,6 +2686,7 @@ initEnv();on.exit({uninitEnv()})
 
   db.Symbols <- pgListSchemaTables(con, schname)
   db.Symbols <- db.Symbols[!db.Symbols %in% "Symbols"]
+  newCREATEdTables <- vector(mode = "character")
 
   # ORIGINAL quantmod-ism FOLLOWS ... [ ] could be cleaned up
 
@@ -2667,6 +2717,7 @@ initEnv();on.exit({uninitEnv()})
       # create NEW CREATE TABLE statements"
       # column names
       dfToCREATETable(df = df, con = con, Symbol = each.symbol, schname = schname, keys = keys)
+      newCREATEdTables <- c(newCREATEdTables, each.symbol)
 
       new.db.symbol <- c(new.db.symbol, each.symbol)
       tempList <- list(); tempList[[each.symbol]] <- df
@@ -2691,23 +2742,58 @@ initEnv();on.exit({uninitEnv()})
     # Goal
     # exist in  R       'Date', 'Open','High','Low','Close','Volume','Adjusted'( along with FRED columns )
     # translate from those
-    # to DB: 'date', 'o','h','l','c','v','a' ( along with FRED columns "as is")
+    # to DB:            'date', 'o','h','l','c','v','a' ( along with FRED columns "as is")
 
     # custom sorting
     db.fields    <- customSorting( colnames(df), InitOrder = db.fields, CI = TRUE)
     colnames(df) <- db.fields
 
+    if(schname != "") {
+      dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".")
+    } else {
+      dotSchemaQuoted <- ""
+    }
+
     browser()
-    if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
-    DBI::dbExecute(con, stringr::str_c("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
+    if(placeNewRecords == "TruncateTable") {
+      DBI::dbExecute(con, stringr::str_c("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
 
-    DBI::dbWriteTable(con, each.symbol, df, append = T, row.names = F)
-    # if  each.symbol includes schema name + ".",
-    # then dbWriteTable will return TRUE, but it will LIE
+      DBI::dbWriteTable(con, c(schname ,each.symbol), df, append = T, row.names = F)
+      # if  each.symbol includes schema name + ".",
+      # then dbWriteTable will return TRUE, but it will LIE
 
-    # pgAdmin3 LTS (BigSQL) mentioned that I should do
-    DBI::dbExecute(con, stringr::str_c("VACUUM (VERBOSE, ANALYZE) ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
+      # pgAdmin3 LTS (BigSQL) mentioned that I should do
+      DBI::dbExecute(con, stringr::str_c("VACUUM (VERBOSE, ANALYZE) ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
+    }
+    if(placeNewRecords == "AddOnlyNew") {
 
+      # see ?PrimaryKeyCols on how NULL 'keys' is interpreted
+      PrimaryKeyCols <- dfGetPKEYNames(df = df, keys = keys)
+
+      # Note, this 'append' heavily assumes that the
+      # columns names are the same
+      # and may be
+      # column names ORDER are the same (UNVERIFIED)
+      #   see RPostgreSQL::dbWriteTable C code, caroline::dbWriteTable2
+      # and
+      # column types are the samme
+      # I have not (yet) handled that cases
+      # in such that any of the above "assumptions" differ
+      #
+      # NOTE: pgInsert calls DBI::dbWriteTable that appends data
+      #
+      pgInsert(con, trgt = each.symbol, keys = PrimaryKeyCols, schname = schname, df = df, varHint = varHint, valHint = valHint)
+      if(each.symbol %in% newCREATEdTables) {
+      # assume a MASS amount of data has been uploaded
+      # (this is typically the case if a tables has been newly created)
+
+      # pgAdmin3 LTS (BigSQL) mentioned that I should do
+      DBI::dbExecute(con, stringr::str_c("VACUUM (VERBOSE, ANALYZE) ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
+      }
+
+    }
+
+    browser()
     updated <- NULL
     if("updated" %in% names(attributes(xTs))) {
       # OLD: "to_timestamp(", DBI::dbQuoteString(con, as.character(Sys.time())), " ,'YYYY-MM-DD HH24:MI:SS')"
@@ -2745,6 +2831,8 @@ initEnv();on.exit({uninitEnv()})
     }
 
   }
+  # SHOULD I HAVE THIS HERE?  I DO NOT ANYWHERE ELSE
+  # [ ] REMOVE ME
   DBI::dbDisconnect(con)
   invisible()
 

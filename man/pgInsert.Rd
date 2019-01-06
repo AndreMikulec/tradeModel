@@ -37,7 +37,9 @@ what to insert DO NOT EXISTS on the Server DB
 Here, only the keys are checked for 'no duplicates'}
 }
 \description{
-insert into a database table 'new' data
+The keys parameter determine distinct records.
+Only 'new' records area added.
+(See pgUpdate to add information to current(already existing) records)
 }
 \examples{
 \dontrun{

@@ -7,6 +7,7 @@
 saveSymbols.pg(Symbols = NULL, con = NULL, source.envir = NULL,
   field.names = c("Open", "High", "Low", "Close", "Volume", "Adjusted"),
   db.fields = c("o", "h", "l", "c", "v", "a"), keys = NULL,
+  placeNewRecords = NULL, varHint = NULL, valHint = NULL,
   user = NULL, password = NULL, dbname = NULL, schname = NULL,
   host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)

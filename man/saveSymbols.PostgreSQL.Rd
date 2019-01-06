@@ -7,7 +7,8 @@
 saveSymbols.PostgreSQL(Symbols = NULL, con = NULL,
   source.envir = NULL, field.names = c("Open", "High", "Low", "Close",
   "Volume", "Adjusted"), db.fields = c("o", "h", "l", "c", "v", "a"),
-  keys = NULL, user = NULL, password = NULL, dbname = NULL,
+  keys = NULL, placeNewRecords = NULL, varHint = NULL,
+  valHint = NULL, user = NULL, password = NULL, dbname = NULL,
   schname = NULL, host = "localhost", port = 5432, options = NULL,
   forceISOdate = TRUE, ...)
 }
@@ -19,7 +20,16 @@ saveSymbols.PostgreSQL(Symbols = NULL, con = NULL,
 \item{db.fields}{character vector indicating
 names of fields to insert}
 
-\item{keys}{passed to dfToCREATETable.  See ? dfToCREATETable}
+\item{keys}{passed to dfToCREATETable and dfGetPKEYNames}
+
+\item{placeNewRecords}{"AddOnlyNew" (default).
+Append 'new' records determined by 'new' inbound key values
+to the table via pgInsert ("AddOnlyNew").
+TRUNCATE TABLE the table contents ("TruncateTable").}
+
+\item{varHint}{if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert}
+
+\item{valHint}{if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert}
 
 \item{user}{username(default "Symbols") to access database}
 

@@ -33,6 +33,8 @@ also register its meta-data
 (Note: if the meta-data table(Symbols) does not exist, then it will be created)
 }
 \details{
+friendly function with dfGetPKEYNames
+
 # # create automatically by function: dfToCREATETable
 
 # CREATE TABLE "Symbols"

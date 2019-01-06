@@ -2730,8 +2730,6 @@ ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
   message("Inspect the last know contents of the local (calling) environment")
   message("using:    ls.str(eE) or str(as.list(eE))")
 
-  browser()
-
   invisible()
 }
 

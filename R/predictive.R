@@ -56,7 +56,7 @@ xtsize <- function(dfo) {
 #' inside and exts environment
 #'
 #' unstable structure to debug inside: holds for 2 seconds then bounces out
-#' within.xts IS TOO VOLITILE: CAN NOT browser()/rstudio debug inside: SOMETHING IS NOT RIGHT
+#' within.xts IS TOO VOLITILE: CAN NOT browser/rstudio debug inside: SOMETHING IS NOT RIGHT
 #'
 #' @export
 within.xts <- function (data, expr, ...) {
