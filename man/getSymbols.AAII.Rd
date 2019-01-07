@@ -53,7 +53,6 @@ The delivery time is during Friday (UNVERIFIED)
 \examples{
 \dontrun{
 
-getSymbols("SENTIMENT", src = "AAII")
 # common usage
 if(!exists("BullBearSpread")) getSymbols("BullBearSpread", src = "AAII")
 
@@ -69,8 +68,7 @@ getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII")
 getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII", force = TRUE)
 
 # all columns in one xts object
-
-#' getSymbols("AAIIsentiment", src = "AAII")
+getSymbols("AAIIsentiment", src = "AAII")
 
 }
 }

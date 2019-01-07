@@ -13,5 +13,5 @@ addUMCSentimentEomData(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add University of Michigan: Consumer Sentiment
+NOT USED ANYWHERE
 }

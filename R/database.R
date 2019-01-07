@@ -265,7 +265,7 @@ initEnv();on.exit({uninitEnv()})
         sQuote('password'),sQuote('dbname'),
         ") is not set"))
   }
-  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),user=user,password=password,dbname=dbname,
+  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100),user=user,password=password,dbname=dbname,
                                      host=host,port=port,options=options,forceISOdate=forceISOdate)
 
   if(schname != "") {
@@ -559,7 +559,7 @@ siQuote <- function(x) {
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
 #'
-#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
 #' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'
@@ -691,7 +691,7 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'
-#'  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#'  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
 #'  DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'  pgAddColumnType(con, trgt = "mtcars", schname = "public", df = data.frame(rnk = 0L))
 #'
@@ -758,7 +758,7 @@ initEnv();on.exit({uninitEnv()})
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
 #'
-#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
 #' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'
@@ -883,7 +883,7 @@ initEnv();on.exit({uninitEnv()})
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
 #'
-#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
 #' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'
@@ -1046,7 +1046,7 @@ initEnv();on.exit({uninitEnv()})
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
 #'
-#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
 #' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 #' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 #'
@@ -1184,7 +1184,7 @@ initEnv();on.exit({uninitEnv()})
     # but authose chose to have each statement prepared (so update statements may be slow )
     if(prepare.query) {
       if(inherits(con, "PostgreSQLConnection")) {
-        con2 <- try( {DBI::dbConnect(RPostgres::Postgres(),
+        con2 <- try( {DBI::dbConnect(RPostgres::Postgres(max.con = 100),
           user     = pgCurrentUser(con)[[1]],
           dbname   = pgCurrentDB(con)[[1]],
           port     = pgCurrentPort(con)[[1]],
@@ -1444,7 +1444,6 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #' @examples
 #' \dontrun{
 #'
-#' getSymbols("SENTIMENT", src = "AAII")
 #' # common usage
 #' if(!exists("BullBearSpread")) getSymbols("BullBearSpread", src = "AAII")
 #'
@@ -1460,8 +1459,7 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #' getSymbols(c("Bullish", "Neutral", "Bearish"), src = "AAII", force = TRUE)
 #'
 #' # all columns in one xts object
-#'
-#' #' getSymbols("AAIIsentiment", src = "AAII")
+#' getSymbols("AAIIsentiment", src = "AAII")
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
@@ -1630,7 +1628,7 @@ initEnv(); on.exit({uninitEnv()})
         if(Symbols[[i]] != "AAIIsentiment") {
            if (verbose)
              cat("selecting ", Symbols[[i]], ".....\n\n")
-          fri <- fr[, Symbols[[i]]]
+          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(Symbols[[i]])]]
         }
 
         fri <- quantmod___convert.time.series(fr = fri, return.class = return.class)

@@ -24,7 +24,7 @@ by ALTER TABLE <trgt> ADD ( column ) called each per new column.
 \examples{
 \dontrun{
 
- con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+ con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
  DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
  pgAddColumnType(con, trgt = "mtcars", schname = "public", df = data.frame(rnk = 0L))
 

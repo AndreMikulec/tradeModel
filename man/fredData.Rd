@@ -8,6 +8,15 @@ fredData(Symbol = NULL, New = NULL, NewMaxAge = NULL)
 }
 \arguments{
 \item{Symbol}{FRED symbol as a string}
+
+\item{New}{TRUE(default) of the Symbol get the data and store the data
+through the method of getNewSymbols (TRUE).  Otherwise,
+get the data and store the through the method of getNewSymbols (FALSE).}
+
+\item{NewMaxAge}{default("4 hours"), if New = TRUE, then this
+is the timeout period of the stored data. After NewMaxAge, the
+the data will be re-queried from the St. Louis FRED.
+of the data}
 }
 \value{
 xts object of results

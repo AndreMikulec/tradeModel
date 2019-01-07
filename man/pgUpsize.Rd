@@ -46,7 +46,7 @@ SuBmtcars <- mtcars[c(1,5),1:2]
 oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 oldData[1,2] <- NA; oldData[2,3] <- NA
 
-con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(), user = "postgres")
+con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
 DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
 DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 

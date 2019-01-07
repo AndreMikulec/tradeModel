@@ -342,6 +342,13 @@ initEnv();on.exit({uninitEnv()})
 #' get data from the St. Louis FRED
 #'
 #' @param Symbol FRED symbol as a string
+#' @param New TRUE(default) of the Symbol get the data and store the data
+#' through the method of getNewSymbols (TRUE).  Otherwise,
+#' get the data and store the through the method of getNewSymbols (FALSE).
+#' @param NewMaxAge default("4 hours"), if New = TRUE, then this
+#' is the timeout period of the stored data. After NewMaxAge, the
+#' the data will be re-queried from the St. Louis FRED.
+#' of the data
 #' @return xts object of results
 #' @examples
 #' \dontrun{
@@ -359,7 +366,11 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL) {
   if(is.null(Symbol)) stop("No fredData was requested")
 
   if(is.null(New)) New <- TRUE
-  if(New) NewMaxAge <- "4 hours"
+  if(New) {
+    if(is.null(NewMaxAge)) {
+    NewMaxAge <- "4 hours"
+    } # else NewMaxAge <- NewMaxAge
+  }
 
   message(stringr::str_c("Begin fredData - "), Symbol)
 
@@ -1657,49 +1668,178 @@ initEnv();on.exit({uninitEnv()})
 
 #' University of Michigan: Consumer Sentiment
 #'
-#' From FRED (historical) and briefing.com (recent)
+#' From FRED (historical) and briefing.com (recent) University of
+#' Michigan: Consumer Sentiment voting results data
 #'
+#' @param Symbols  a character vector specifying the names of each symbol to be loaded
+#' Possible Symbols are the following:
+#' "UMichSentiment" and "UMCSENT". This currently the same data.
+#' @param env where to create objects. (.GlobalEnv)
+#' @param return.class desired class of returned object.
+#' Can be xts, zoo, data.frame, or xts (default)
+#' @param force FALSE(default) re-download data from FRED(historical)
+#' and the University of Michigan (current/last_known) ( See the examples. )
+#' The hidden variable ".UMichSentiment_path2file" located in the
+#' environment of parameter env is the last known location of the "html" file.
+#' Generally, using this parameter "force = TRUE"
+#' is NOT necessary: the hidden variables are persistent through the
+#' entire R session.  Also, send parameter "verbose = TRUE" to see
+#' the *path2file location.
+#' @param ... additional parameters
+#' @return A call to getSymbols.AAII will load into the specified
+#' environment one object for each \code{Symbol} specified,
+#' with class defined by \code{return.class}.
+#' @author Jeffrey A. Ryan
+#' @author Andre Mikulec (adapted original code to work with AAII sentiment data)
+#'
+#' @references
 #' Recent data is from
 #' Univ. of Michigan Consumer Sentiment - Prelim:
 #' \cite{Univ. of Michigan Consumer Sentiment - Prelim \url{https://www.briefing.com/investor/calendars/economic/releases/mich.htm}}
 #'
+#' @references
 #' Original data is from here:
 #' \cite{surveys of consumers UNIVERSITY OF MICHIGAN \url{https://data.sca.isr.umich.edu/tables.php}}
 #'
+#' @references
 #' Historical data is from here.
 #' At the request of the source, the data is delayed by 1 month:
 #' \cite{University of Michigan: Consumer Sentiment \url{https://fred.stlouisfed.org/series/UMCSENT}}
 #'
 #' \cite{University of Michigan: Consumer Sentiment raw data \url{https://fred.stlouisfed.org/data/UMCSENT.txt}}
+#' @seealso
+#' \code{\link{getSymbols}}
+#' \code{\link{setSymbolLookup}}
+#' @keywords data
+#' @examples
+#' \dontrun{
 #'
-#' @return xts object
+#' # common usage
+#' if(!exists("UMCSENT")) getSymbols("UMCSENT", src = "UMich")
+#'
+#' getSymbols(c("UMCSENT"), src = "UMich")
+#'
+#' # force requery of data from the UMich site
+#' # will collect one new FRED (historical obs) data and one new html (latest obs) file
+#' getSymbols(c("UMCSENT"), src = "UMich", force = TRUE)
+#'
+#' # all columns in one xts object
+#' getSymbols("UMichSentiment", src = "UMich")
+#'
+#' }
 #' @importFrom tryCatchLog tryCatchLog
-#  ## @importFrom htmltab htmltab # Namespace dependencies not required: ??? ##
-#' @importFrom DescTools Year
+#' @importFrom htmltab htmltab
 #' @importFrom zoo as.Date
 #' @importFrom stringr str_c
 #' @export
-UMCSentimentData <- function() {
+getSymbols.UMich <- function(Symbols, env, return.class = "xts", ...) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
-  rs <- fredData(Symbol = "UMCSENT")
+    importDefaults("getSymbols.UMich")
+    this.env <- environment()
+    for (var in names(list(...))) {
+        assign(var, list(...)[[var]], this.env)
+    }
+    if (!hasArg("verbose"))
+        verbose <- FALSE
+    if (!hasArg("auto.assign"))
+        auto.assign <- TRUE
 
-  rt <- htmltab::htmltab(  # google chrome ( DEC 2018 )
-          doc = "https://www.briefing.com/investor/calendars/economic/releases/mich.htm"
-        , which = '//*[@id="InPlayEqContent"]/div[4]/div[1]/table'
-        , rm_nodata_cols = F)
+    if(!exists("force", envir = this.env, inherits = FALSE))
+        force = FALSE
 
-  rt <- rt[rt$Category == "Sentiment",][!colnames(rt) %in% "Category"] %>% unlist
-  NowYear <-  DescTools::Year(Sys.Date())
-  dataRecent  <- as.numeric(rt)
-  indexRecent <- zoo::as.Date(stringr::str_c("01-", names(rt), "-", NowYear), format = "%d-%b-%Y")
-  rt <- xts(dataRecent, indexRecent); colnames(rt) <- "UMCSENT"
-  # splice
-  rst <- rbind(rs,rt)
-  # remove the first(earliest) duplicate index
-  rst <- rst[!duplicated(index(rst), fromLast = TRUE),]
-  rst
+    # begin non-html area
+
+    if(force) {
+      rs <- fredData(Symbol = "UMCSENT", New = TRUE, NewMaxAge = "0 secs")
+     if (verbose)
+         cat("done.\n\n")
+    } else {
+      rs <- fredData(Symbol = "UMCSENT")
+     if (verbose)
+         cat("done.\n\n")
+    }
+
+    # end non-html area
+
+    # begin html area
+
+    if(exists(".UMichSentiment_path2file", envir = env, inherits = FALSE)) {
+      assign("tmppage", get(".UMichSentiment_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    } else {
+      tmppage <- NULL
+    }
+    if( !is.null(tmppage) &&
+        !is.na(file.info(tmppage)$mtime) &&
+        !force
+    ) {
+    } else {
+
+        # possible clean-up
+        oldtmppage <- tmppage
+        if(!is.null(oldtmppage) && !is.na(file.info(oldtmppage)$mtime)) on.exit(unlink(oldtmppage))
+
+        UMICH.URL <- "https://www.briefing.com/investor/calendars/economic/releases/mich.htm"
+        tmppage <- tempfile(fileext = ".html") # ( JAN 2019 )
+        #
+        # do not remove the 'tmppage' file
+        # In this R session, keep the file around and available for the next query [if any]
+        # the site https://www.briefing.com/investor/calendars/economic/releases/mich.htm is NOT engineered
+        # to handle MANY data queries, NOR denial of service attacks
+
+        if (verbose)
+            cat("downloading ", "UMichSentiment", ".....\n\n")
+        quantmod___try.download.file(UMICH.URL, destfile = tmppage, quiet = !verbose, mode = "wb", ...)
+        assign(".UMichSentiment_path2file", tmppage, envir = env, inherits = FALSE)
+
+    }
+    if (verbose)
+        cat("reading disk file ", tmppage, ".....\n\n")
+
+    rt <- htmltab::htmltab(  # google chrome ( DEC 2018 )
+            doc = tmppage
+          , which = '//*[@id="InPlayEqContent"]/div[4]/div[1]/table'
+          , rm_nodata_cols = F)
+
+    rt <- rt[rt$Category == "Sentiment",][!colnames(rt) %in% "Category"] %>% unlist
+    NowYear <-  DescTools::Year(Sys.Date())
+    dataRecent  <- as.numeric(rt)
+    # FRED historical UMCSENT dates are the "first of the month"
+    # that datum means "about that entire month"
+    indexRecent <- zoo::as.Date(stringr::str_c("01-", names(rt), "-", NowYear), format = "%d-%b-%Y")
+    rt <- xts(dataRecent, indexRecent); colnames(rt) <- "UMCSENT"
+
+    # end html area
+
+    # prepare to splice (nothing to do)
+
+    # splice
+
+    rst <- rbind(rs,rt)
+    # remove the first(earliest) duplicate index (if any)
+    rst <- rst[!duplicated(index(rst), fromLast = TRUE),]
+    fr <- rst
+    fri <- fr # pass-throught on "UMichSentiment"
+
+    # decompose [if any] into [many] Symbol(s), then return
+
+    for (i in 1:length(Symbols)) {
+
+        # User only wants an individual column
+        if(Symbols[[i]] != "UMichSentiment") {
+           if (verbose)
+             cat("selecting ", Symbols[[i]], ".....\n\n")
+          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(Symbols[[i]])]]
+        }
+
+        fri <- quantmod___convert.time.series(fr = fri, return.class = return.class)
+        if (auto.assign)
+            assign(Symbols[[i]], fri, env)
+    }
+    if (auto.assign)
+        return(Symbols)
+    return(fri)
 
 })}
 
@@ -1717,7 +1857,7 @@ initEnv();on.exit({uninitEnv()})
 
   # index adjust
   # last known University of Michigan: Consumer Sentiment : when I recieved it
-  UMCSentimentData() %>%
+  getSymbols("UMCSENT", src = "UMich", auto.assign = FALSE)  %>%
     eomIndex %>%
       trimLeadingNAGaps
 
@@ -1757,6 +1897,8 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' add University of Michigan: Consumer Sentiment
+#'
+#' NOT USED ANYWHERE
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
