@@ -43,11 +43,11 @@ NOT USED ANYWHERE
 # common usage
 if(!exists("CAPE")) getSymbols("CAPE", src = "YaleU")
 
-getSymbols(c("CAPE", "Dividend", "Earnings"), src = "YaleU")
+getSymbols(c("CAPE", "Dividends", "Earnings"), src = "YaleU")
 
 # force requery of data from the Yale University site
 # will collect one new xls (historical obs) file
-getSymbols(c("CAPE", "Dividend", "Earnings"), src = "YaleU", force = TRUE)
+getSymbols(c("CAPE", "Dividends", "Earnings"), src = "YaleU", force = TRUE)
 
 # all columns in one xts object
 getSymbols("YaleUstockMarketData", src = "YaleU")

@@ -1833,6 +1833,227 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
+#' bonds
+#'
+#' US Corporate Bond Issuance
+#' Bonds Outstanding
+#'   (Upper Right Corner)
+#'   DOWNLOAD: JPG|CSV|XLS ( automation: need phantom js ) **HERE**
+#'     XLS: "Issuance" tab ( has data through the previous month)
+#' # XLS bottom ( SEE DEC 31 2018: EXACT SAME AS THE ARTICLE )
+#'          Year	M	 Municipal 	 Treasury 	 Mortgage-Related 	 Corporate Debt 	 Federal Agency Securities 	 Asset-Backed 	 Total
+#' YTD '17
+#' YTD '18
+#' % Change
+#'
+#' https://www.sifma.org/wp-content/uploads/2017/08/Corporate-US-Corporate-Issuance-SIFMA.xls
+#' US Corporate Bond Issuance
+#' https://www.sifma.org/resources/research/us-corporate-bond-issuance/
+#' Securities Industry and Financial Markets Association
+#' SIFMA
+#' https://www.sifma.org/
+#'
+#' referred by Jeff Cox
+#' AND
+#' Christopher Whalen
+#' twitter handle: rcwhalen
+#'
+#' When the Bid Goes to Zero |
+#' https://goo.gl/2tUeJp  |
+#' https://twitter.com/rcwhalen/status/1072619534819971072
+#' AND
+#' When the Bid Goes to Zero
+#' December 11, 2018
+#' By: R. Christopher Whalen
+#' https://www.theinstitutionalriskanalyst.com/single-post/2018/12/11/When-the-Bid-Goes-to-Zero
+#'
+#' @param Symbols  a character vector specifying the names of each symbol to be loaded
+#' Possible Symbols are the following:
+#' "SimfaBondMarketData" (means get all of the columns);
+#' otherwise, get specific columns;
+#' TO BE NAMED LATER
+#' @param env where to create objects. (.GlobalEnv)
+#' @param return.class desired class of returned object.
+#' Can be xts, zoo, data.frame, or xts (default)
+#' @param force FALSE(default) re-download data from Simfa ( See the examples. )
+#' The hidden variable ".SimfaBondMarketData_path2file" located in the
+#' environment of parameter env is the last known location of the "xls" file.
+#' Generally, using this parameter "force = TRUE"
+#' is NOT necessary: the hidden variables are persistent through the
+#' entire R session.  Also, send parameter "verbose = TRUE" to see
+#' the *path2file location.
+#' @param ... additional parameters
+#' @return A call to getSymbols.Simfa will load into the specified
+#' environment one object for each \code{Symbol} specified,
+#' with class defined by \code{return.class}.
+#' @author Jeffrey A. Ryan
+#' @author Andre Mikulec (adapted original code to work with Simfa Bond market data)
+#' @references
+#' \cite{US Corporate Bond Issuance \url{https://www.sifma.org/resources/research/us-corporate-bond-issuance/}}
+#' @references
+#' \cite{R. Christopher Whalen - When the Bid Goes to Zero \url{https://www.theinstitutionalriskanalyst.com/single-post/2018/12/11/When-the-Bid-Goes-to-Zero}}
+#' @seealso
+#' \code{\link{getSymbols}}
+#' \code{\link{setSymbolLookup}}
+#' @keywords data
+#' @examples
+#' \dontrun{
+#'
+#' # common usage
+#' if(!exists("NCInvGrd")) getSymbols("NCInvGr", src = "Simfa")
+#'
+#' getSymbols(c("NCInvGrd", "NCHighYld"), src = "Simfa")
+#'
+#' # force requery of data from the Simfa site
+#' # will collect one new xls (historical obs) file
+#' getSymbols(c("NCInvGrd", "NCHighYld"), src = "Simfa", force = TRUE)
+#'
+#' # all columns in one xts object
+#' getSymbols("SimfaBondMarketData", src = "Simfa")
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo as.Date
+#' @importFrom plyr llply
+#' @importFrom htmltab htmltab
+#' @importFrom stringr str_replace str_c
+#' @importFrom readxl read_xls
+#' @importFrom zoo na.trim
+#' @importFrom Hmisc yearDays
+#' @export
+getSymbols.Simfa <- function(Symbols, env, return.class = "xts", ...) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+    importDefaults("getSymbols.Simfa")
+    this.env <- environment()
+    for (var in names(list(...))) {
+        assign(var, list(...)[[var]], this.env)
+    }
+    if (!hasArg("verbose"))
+        verbose <- FALSE
+    if (!hasArg("auto.assign"))
+        auto.assign <- TRUE
+
+    if(!exists("force", envir = this.env, inherits = FALSE))
+        force = FALSE
+
+    # begin xls area
+
+    if(exists(".SimfaBondMarketData_path2file", envir = env, inherits = FALSE)) {
+      assign("tmp", get(".SimfaBondMarketData_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    } else {
+      tmp <- NULL
+    }
+    if( !is.null(tmp) &&
+        !is.na(file.info(tmp)$mtime) &&
+        !force
+    ) {
+    } else {
+
+        # possible clean-up
+        oldtmp <- tmp
+        if(!is.null(oldtmp) && !is.na(file.info(oldtmp)$mtime)) on.exit(unlink(oldtmp))
+
+        Simfa.URL <- "https://www.sifma.org/wp-content/uploads/2017/08/Corporate-US-Corporate-Issuance-SIFMA.xls"
+        tmp <- tempfile(fileext = ".xls") # ( JAN 2019 )
+        #
+        # do not remove the 'tmp' file
+        # In this R session, keep the file around and available for the next query [if any]
+        # the site https://www.sifma.org/resources/research/us-corporate-bond-issuance/ is NOT engineered
+        # to handle MANY data queries, NOR denial of service attacks
+
+        if (verbose)
+            cat("downloading ", "SimfaBondMarketData", ".....\n\n")
+        quantmod___try.download.file(Simfa.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
+        assign(".SimfaBondMarketData_path2file", tmp, envir = env, inherits = FALSE)
+
+    }
+    if (verbose)
+        cat("reading disk file ", tmp, ".....\n\n")
+
+    # Reports somewhere in the time range of the middle (15th,16th, or 17th)
+    # of the current month
+    # Dates <- seq.Date(from = zoo::as.Date("1871-01-01"), to = Sys.Date(), by = "1 month")
+
+    # Last verified: JAN 2019
+    col_names = c("TimeDate", "NCInvGrd", "NCHighYld", "NCTotal", "E_empty","NCCFixedRt", "NCCFloatRt", "NCNCFixedRt", "NCNCFloatRt", "J_Empty", "Convertible", "L_Empty", "BondTotal")
+
+    browser()
+
+    # data.frame
+    fr <- suppressWarnings(readxl::read_xls(path = tmp, sheet = "Issuance",
+           col_names = col_names,
+           col_types = c("text", rep("numeric",12)), skip = 7L
+                               )) # n_max = ???
+
+    # optimistic: but the last record
+    # (current month 'not yet reported') may be all NAs
+    fr <- zoo::na.trim( fr, sides = "right", is.na = "all")
+
+    # LEFT_OFF
+    bookmark <- 1
+
+    # FRED historical ... dates are the "first of the month"
+    # that datum means "about that entire month"
+    # need the Date
+    fr[["Date"]] %>% round(2) %>% { . * 100 } %>%
+      as.integer %>% as.character %>% { stringr::str_c(., "01") } %>%
+        { zoo::as.Date(., format = "%Y%m%d") } -> fr[["Date"]]
+
+    # Date Fraction of Yale (DateFY)
+    DateFYYear          <- trunc(fr[["DateFY"]],0)
+    DateFYYearFraction  <- fr[["DateFY"]] - DateFYYear
+    #
+    DateFYYearFirstDate <- zoo::as.Date(stringr::str_c(DateFYYear, "-01-01"))
+    IntegerDateFYYearFirstDate <- as.integer(DateFYYearFirstDate)
+    #
+    DateFYNumbDaysInYear <- Hmisc::yearDays( DateFYYearFirstDate )
+    #
+    fr[["DateFY"]] <- IntegerDateFYYearFirstDate + DateFYNumbDaysInYear * DateFYYearFraction
+    # Stored as the number of days since the UNIX Epoch(UTC time).
+    # To get the date, do this.
+    # zoo::as.Date(DateFY) # all 15th, 16th, or 17th of the month
+
+    if (verbose)
+        cat("done.\n\n")
+    fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
+              src = "Simfa", updated = Sys.time())
+    fri <- fr
+    rs <- fri
+
+    # end xls area
+
+    # prepare to splice ( nothing to do )
+
+    # splice ( nothing to do )
+
+    rst <- rs
+    fr <- rst
+    fri <- fr # pass-throught on "SimfaBondMarketData"
+
+    # decompose [if any] into [many] Symbol(s), then return
+
+    for (i in 1:length(Symbols)) {
+
+        # User only wants an individual column
+        if(Symbols[[i]] != "SimfaBondMarketData") {
+           if (verbose)
+             cat("selecting ", Symbols[[i]], ".....\n\n")
+          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(Symbols[[i]])]]
+        }
+
+        fri <- quantmod___convert.time.series(fr = fri, return.class = return.class)
+        if (auto.assign)
+            assign(Symbols[[i]], fri, env)
+    }
+    if (auto.assign)
+        return(Symbols)
+    return(fri)
+
+})}
+
+
 
 
 #' quantmod getSymbols with source.envir
