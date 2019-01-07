@@ -1643,6 +1643,196 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
+#' stock market data from Yale University
+#'
+#' NOT USED ANYWHERE
+#'
+#' @param Symbols  a character vector specifying the names of each symbol to be loaded
+#' Possible Symbols are the following:
+#' "YaleUStockMarketData" (means get all of the columns);
+#' otherwise, get specific columns;
+#' "SP500Price", "Dividends", "Earnings",
+#' "CPIAUCNSY" (Consumer Price Index for All Urban Consumers: All Items (of Yale)),
+#  "DateFY" (Date Fraction of Yale), "GS10Y" (Long Interest Rate of Yale),
+#  "RealPrice", "RealDividends", "RealEarnings", "CAPE"
+#' @param env where to create objects. (.GlobalEnv)
+#' @param return.class desired class of returned object.
+#' Can be xts, zoo, data.frame, or xts (default)
+#' @param force FALSE(default) re-download data from YaleU ( See the examples. )
+#' The hidden variable ".YaleUstockMarketData_path2file" located in the
+#' environment of parameter env is the last known location of the "xls" file.
+#' Generally, using this parameter "force = TRUE"
+#' is NOT necessary: the hidden variables are persistent through the
+#' entire R session.  Also, send parameter "verbose = TRUE" to see
+#' the *path2file location.
+#' @param ... additional parameters
+#' @return A call to getSymbols.YaleU will load into the specified
+#' environment one object for each \code{Symbol} specified,
+#' with class defined by \code{return.class}.
+#' @author Jeffrey A. Ryan
+#' @author Andre Mikulec (adapted original code to work with Yale University stock market data)
+#' @references
+#' \cite{ONLINE DATA ROBERT SHILLER \url{http://www.econ.yale.edu/~shiller/data.htm}}
+#' @references
+#' \cite{Home Page of Robert J. Shiller - Yale University \url{http://www.econ.yale.edu/~shiller/}}
+#' @seealso
+#' \code{\link{getSymbols}}
+#' \code{\link{setSymbolLookup}}
+#' @keywords data
+#' @examples
+#' \dontrun{
+#'
+#' # common usage
+#' if(!exists("CAPE")) getSymbols("CAPE", src = "YaleU")
+#'
+#' getSymbols(c("CAPE", "Dividends", "Earnings"), src = "YaleU")
+#'
+#' # force requery of data from the Yale University site
+#' # will collect one new xls (historical obs) file
+#' getSymbols(c("CAPE", "Dividends", "Earnings"), src = "YaleU", force = TRUE)
+#'
+#' # all columns in one xts object
+#' getSymbols("YaleUstockMarketData", src = "YaleU")
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo as.Date
+#' @importFrom plyr llply
+#' @importFrom htmltab htmltab
+#' @importFrom stringr str_replace str_c
+#' @importFrom readxl read_xls
+#' @importFrom zoo na.trim
+#' @importFrom Hmisc yearDays
+#' @export
+getSymbols.YaleU <- function(Symbols, env, return.class = "xts", ...) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+    importDefaults("getSymbols.YaleU")
+    this.env <- environment()
+    for (var in names(list(...))) {
+        assign(var, list(...)[[var]], this.env)
+    }
+    if (!hasArg("verbose"))
+        verbose <- FALSE
+    if (!hasArg("auto.assign"))
+        auto.assign <- TRUE
+
+    if(!exists("force", envir = this.env, inherits = FALSE))
+        force = FALSE
+
+    # begin xls area
+
+    if(exists(".YaleUstockMarketData_path2file", envir = env, inherits = FALSE)) {
+      assign("tmp", get(".YaleUstockMarketData_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    } else {
+      tmp <- NULL
+    }
+    if( !is.null(tmp) &&
+        !is.na(file.info(tmp)$mtime) &&
+        !force
+    ) {
+    } else {
+
+        # possible clean-up
+        oldtmp <- tmp
+        if(!is.null(oldtmp) && !is.na(file.info(oldtmp)$mtime)) on.exit(unlink(oldtmp))
+
+        YALEU.URL <- "http://www.econ.yale.edu/~shiller/data/ie_data.xls"
+        tmp <- tempfile(fileext = ".xls") # ( JAN 2019 )
+        #
+        # do not remove the 'tmp' file
+        # In this R session, keep the file around and available for the next query [if any]
+        # the site http://www.econ.yale.edu/~shiller/data/ie_data.xls is NOT engineered
+        # to handle MANY data queries, NOR denial of service attacks
+
+        if (verbose)
+            cat("downloading ", "YaleUstockMarketData", ".....\n\n")
+        quantmod___try.download.file(YALEU.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
+        assign(".YaleUstockMarketData_path2file", tmp, envir = env, inherits = FALSE)
+
+    }
+    if (verbose)
+        cat("reading disk file ", tmp, ".....\n\n")
+
+    # Reports somewhere in the time range of the middle (15th,16th, or 17th)
+    # of the current month
+    Dates <- seq.Date(from = zoo::as.Date("1871-01-01"), to = Sys.Date(), by = "1 month")
+
+    # Last verified: JAN 2019
+    col_names = c("Date", "SP500Price", "Dividends", "Earnings", "CPIAUCNSY", "DateFY", "GS10Y", "RealPrice", "RealDividends", "RealEarnings", "CAPE" )
+
+    # data.frame
+    fr <- suppressWarnings(readxl::read_xls(path = tmp, sheet = "Data",
+           col_names = col_names,
+           col_types = c("numeric", rep("numeric",10)), skip = 8L,
+           n_max = length(Dates)))
+
+    # optimistic: but the last record
+    # (current month 'not yet reported') may be all NAs
+    fr <- zoo::na.trim( fr, sides = "right", is.na = "all")
+
+    # FRED historical ... dates are the "first of the month"
+    # that datum means "about that entire month"
+    # need the Date
+    fr[["Date"]] %>% round(2) %>% { . * 100 } %>%
+      as.integer %>% as.character %>% { stringr::str_c(., "01") } %>%
+        { zoo::as.Date(., format = "%Y%m%d") } -> fr[["Date"]]
+
+    # Date Fraction of Yale (DateFY)
+    DateFYYear          <- trunc(fr[["DateFY"]],0)
+    DateFYYearFraction  <- fr[["DateFY"]] - DateFYYear
+    #
+    DateFYYearFirstDate <- zoo::as.Date(stringr::str_c(DateFYYear, "-01-01"))
+    IntegerDateFYYearFirstDate <- as.integer(DateFYYearFirstDate)
+    #
+    DateFYNumbDaysInYear <- Hmisc::yearDays( DateFYYearFirstDate )
+    #
+    fr[["DateFY"]] <- IntegerDateFYYearFirstDate + DateFYNumbDaysInYear * DateFYYearFraction
+    # Stored as the number of days since the UNIX Epoch(UTC time).
+    # To get the date, do this.
+    # zoo::as.Date(DateFY) # all 15th, 16th, or 17th of the month
+
+    if (verbose)
+        cat("done.\n\n")
+    fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
+              src = "YaleU", updated = Sys.time())
+    fri <- fr
+    rs <- fri
+
+    # end xls area
+
+    # prepare to splice ( nothing to do )
+
+    # splice ( nothing to do )
+
+    rst <- rs
+    fr <- rst
+    fri <- fr # pass-throught on "YaleUstockMarketData"
+
+    # decompose [if any] into [many] Symbol(s), then return
+
+    for (i in 1:length(Symbols)) {
+
+        # User only wants an individual column
+        if(Symbols[[i]] != "YaleUstockMarketData") {
+           if (verbose)
+             cat("selecting ", Symbols[[i]], ".....\n\n")
+          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(Symbols[[i]])]]
+        }
+
+        fri <- quantmod___convert.time.series(fr = fri, return.class = return.class)
+        if (auto.assign)
+            assign(Symbols[[i]], fri, env)
+    }
+    if (auto.assign)
+        return(Symbols)
+    return(fri)
+
+})}
+
+
+
 
 
 #' quantmod getSymbols with source.envir
