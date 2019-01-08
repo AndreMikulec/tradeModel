@@ -34,10 +34,11 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
-US Corporate Bond Issuance
-Bonds Outstanding
+Click on \[Explore\]
+US Bond Market Issuance and Outstanding
   (Upper Right Corner)
-  DOWNLOAD: JPG|CSV|XLS ( automation: need phantom js ) **HERE**
+  DOWNLOAD: JPG|CSV|XLS ( automation: need phantom js ) \*\*HERE\*\*
+  https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
     XLS: "Issuance" tab ( has data through the previous month)
 # XLS bottom ( SEE DEC 31 2018: EXACT SAME AS THE ARTICLE )
          Year	M	 Municipal 	 Treasury 	 Mortgage-Related 	 Corporate Debt 	 Federal Agency Securities 	 Asset-Backed 	 Total
@@ -46,12 +47,25 @@ YTD '18
 % Change
 }
 \details{
+# place 1 FUTURE_IN_DEV: bonds by "distributor"
+US Bond Market Issuance and Outstanding
+https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
+
+https://www.sifma.org/resources/research/bond-chart/
+upper right hand corner, click on "download xls"
+click on "explore"
+SIFMA
+https://www.sifma.org/
+
+# place 2 CURRENT_IN_DEV: bonds by "coupon/convertible"
 https://www.sifma.org/wp-content/uploads/2017/08/Corporate-US-Corporate-Issuance-SIFMA.xls
 US Corporate Bond Issuance
 https://www.sifma.org/resources/research/us-corporate-bond-issuance/
 Securities Industry and Financial Markets Association
 SIFMA
 https://www.sifma.org/
+
+
 
 referred by Jeff Cox
 AND
