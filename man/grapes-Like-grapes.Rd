@@ -15,7 +15,7 @@ x \%Like\% pattern
 logical
 }
 \description{
-convenience function calling stringr::str_detect
+Stricter. NA values are returned as FALSE
 }
 \examples{
 \dontrun{

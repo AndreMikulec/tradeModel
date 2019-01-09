@@ -1833,6 +1833,29 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
+#' remove rows with all NA vaues
+#'
+#' MOVE ME
+#' complete.cases does not work on tibbles!
+#' Function is written in DataCombine style
+#'
+#' @param x data.frame
+#' @param Var columns determining complete cases
+#' @return df with rows of all-NA removed
+#' @importFrom plyr llply
+#' @export
+RemoveEmptyRows <- function(x, Var = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  #
+  if(is.null(Var)) Var <- colnames(x)
+  x <- x[!Reduce(`&`, plyr::llply(x[, Var, drop = FALSE], function(x2) { is.na(unlist(x2)) } )),,drop = FALSE]
+  x
+
+})}
+
+
 #' Simfa bond and equity information
 #'
 #' # 1
@@ -1962,11 +1985,16 @@ initEnv(); on.exit({uninitEnv()})
 #' @importFrom zoo as.Date
 #' @importFrom plyr llply
 #' @importFrom htmltab htmltab
-#' @importFrom stringr str_replace str_c
+#' @importFrom stringr str_replace str_c str_pad
 #' @importFrom readxl read_xls
 #' @importFrom zoo na.trim
 #' @importFrom DescTools LastDayOfMonth
 #' @importFrom DescTools DoCall
+#' @importFrom DataCombine FillDown
+#' @importFrom hutils if_else
+#' @importFrom DataCombine FillDown
+#' @importFrom DataCombine MoveFront
+#' @importFrom DataCombine VarDrop
 # # importFrom Hmisc yearDays
 #' @export
 getSymbols.Simfa <- function(Symbols, env, return.class = "xts", ...) {
@@ -1985,6 +2013,100 @@ initEnv(); on.exit({uninitEnv()})
 
     if(!exists("force", envir = this.env, inherits = FALSE))
         force = FALSE
+
+    # begin xls area
+
+    if(exists(".SimfaUSBondsOutStanding_path2file", envir = env, inherits = FALSE)) {
+      assign("tmp", get(".SimfaUSBondsOutStanding_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    } else {
+      tmp <- NULL
+    }
+    if( !is.null(tmp) &&
+        !is.na(file.info(tmp)$mtime) &&
+        !force
+    ) {
+    } else {
+
+        # possible clean-up
+        oldtmp <- tmp
+        if(!is.null(oldtmp) && !is.na(file.info(oldtmp)$mtime)) on.exit(unlink(oldtmp))
+
+        Simfa.URL <- "https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls"
+        tmp <- tempfile(fileext = ".xls") # ( JAN 2019 )
+        #
+        # do not remove the 'tmp' file
+        # In this R session, keep the file around and available for the next query [if any]
+        # the site https://www.sifma.org is NOT engineered
+        # to handle MANY data queries, NOR denial of service attacks
+
+        if (verbose)
+            cat("downloading ", ".SimfaUSBondsOutStanding_path2file", ".....\n\n")
+        quantmod___try.download.file(Simfa.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
+        assign(".SimfaUSBondsOutStanding_path2file", tmp, envir = env, inherits = FALSE)
+
+    }
+    if (verbose)
+        cat("reading disk file ", tmp, ".....\n\n")
+
+    # Last verified: JAN 2019
+    col_names <- c("Year", "Month", "MunicipalDebt", "TreasuryDebt", "MortgageDebt", "CorporateDebt", "FederalDebt", "AssetBackedDebt", "TotalDebt")
+
+    # data.frame
+    fr <- suppressWarnings(readxl::read_xls(path = tmp, sheet = "Issuance",
+          col_names = col_names,
+          col_types = c("text", "text", rep("numeric",7)), skip = 4L
+                           )) # n_max = ???
+
+    # remove end blank lines
+    fr <- zoo::na.trim( fr, sides = "right", is.na = "all")
+    # remove middle blank lines
+    fr <- RemoveEmptyRows(fr)
+    # fr <- fr[!(is.na(fr[["Year"]]) & !is.na(fr[["Month"]])), , drop = FALSE]
+    # remove elements starting with these elements
+    fr <- fr[!fr[["Year"]] %Like% "^YTD|Change",,drop = FALSE]
+    # copy down elements
+    fr <- DataCombine::FillDown(fr, Var = "Year")
+
+    # create the dateindex
+    # "Q" becomes the last month of the quarter
+    within(fr, { hutils::if_else(Month == "Q1", "3", Month) -> Month;
+                 hutils::if_else(Month == "Q2", "6", Month) -> Month;
+                 hutils::if_else(Month == "Q3", "9", Month) -> Month;
+                 hutils::if_else(Month == "Q4","12", Month) -> Month
+    } ) -> fr
+    fr[["Month"]][is.na(fr[["Month"]])] <- "12"
+    # first of the month
+    fr[["TimeDate"]] <- stringr::str_c(fr[["Year"]], "-",
+        stringr::str_pad(fr[["Month"]], width = 2, side = "left", pad = "0"), "-01") %>%
+          zoo::as.Date()
+    # cleanup
+    fr <- DataCombine::MoveFront(fr, Var = "TimeDate")
+    fr <- DataCombine::VarDrop(fr, Var = c("Year","Month"))
+
+    # FRED historical ... dates are the "first of the month"
+    # that datum means "about that entire month"
+    # need the Date
+
+    if (verbose)
+        cat("done.\n\n")
+    fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
+              src = "Simfa", updated = Sys.time())
+    # (prep for interpolation)
+    # fill in missing first of the month dates
+    fr <- To.Monthly(fr, indexAt = "lastof", OHLC = FALSE)
+    # see Shiller
+    # Uses stats::approx
+    # (only useful because I want some false-ish historical data)
+    fr <- zoo::na.approx(fr)
+    # St. Louis FRED pattern of the 1st of the month repesents the "entire" month
+    fr <- To.Monthly(fr, indexAt = "firstof", OHLC = FALSE)
+
+    fri <- fr
+    rs <- fri
+
+    rs1 <- fri1 <- rs
+
+    # end xls area
 
     # begin xls area
 
@@ -2130,12 +2252,14 @@ initEnv(); on.exit({uninitEnv()})
 
     fri <- fr
     rs <- fri
+    rs2 <- fri2 <- rs
 
     # end xls area
 
     # prepare to splice ( nothing to do )
 
-    # splice ( nothing to do )
+    # splice
+    rs <- merge(rs1,rs2)
 
     rst <- rs
     fr <- rst

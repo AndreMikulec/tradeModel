@@ -228,6 +228,8 @@ initEnv();on.exit({uninitEnv()})
 
 #' convenience function calling stringr::str_detect
 #'
+#' Stricter. NA values are returned as FALSE
+#'
 #' @param x string
 #' @param pattern ICU regular expression pattern
 #' @return logical
@@ -243,11 +245,13 @@ tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
     if (is.factor(x)) {
-        as.integer(x) %in% stringr::str_detect(string = levels(x), pattern = pattern)
+        Res <- as.integer(x) %in% stringr::str_detect(string = levels(x), pattern = pattern)
     }
     else {
-        stringr::str_detect(string = x, pattern = pattern)
+        Res <- stringr::str_detect(string = x, pattern = pattern)
     }
+    Res[is.na(Res)] <- FALSE
+    Res
 
 })}
 
