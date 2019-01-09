@@ -110,7 +110,68 @@ initEnv();on.exit({uninitEnv()})
   }
   invisible()
 
-  })}
+})}
+
+
+
+#' Convert time series data to an monthly OHLC series
+#'
+#' Wrapper around xts::to.monthly
+#' Months between the first date and the last
+#' date will have and entry filled in.
+#' It will get the "firstof" or "lastof"
+#' months between dates as the same in the call.
+#'
+#' @param x ? xts::to.monthly and the index(x) class must
+#' have an S3 method for "seq(by = "months")".
+#' Classes "Date" and POSIXt are provided  S3 methods in package "base".
+#' @param indexAt See ? xts::to.monthly
+#' @param drop.time See ? xts::to.monthly
+#' @param name See ? xts::to.monthly
+#' @param fillMissing TRUE(default). If indexAt is one of "firstof"
+#' or "lastof", then fill in missing month dates, if any.
+#' Otherwise FALSE, just pass throught to xts::to.monthly
+#' @param ... dots See. ? xts::to.monthly
+#' @return See. ? xts::to.monthly
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom xts to.monthly
+#' @importFrom DescTools LastDayOfMonth
+#' @examples
+#' \dontrun{
+#' x <- xts(c(1,140), zoo::as.Date(c(0,139)))
+#' To.Monthly(x, OHLC = FALSE, indexAt = "firstof")
+#'}
+#' @export
+To.Monthly <- function(x,indexAt='yearmon',drop.time=TRUE,name, fillMissing = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  fillMissing <- if(is.null(fillMissing)) { TRUE } else { FALSE }
+
+  monthly <- xts::to.monthly(x = x,indexAt=indexAt,drop.time=drop.time,name=name,...)
+  if(fillMissing && (NROW(monthly) > 1)) {
+    if(indexAt %in% c("firstof", "lastof", "yearmon")) {
+
+    From <- head(index(monthly),1); DescTools::Day(From) <- 1
+    To   <- tail(index(monthly),1); DescTools::Day(To)   <- 1
+                     # S3 dispatch
+    intermediates <- seq(from = From, to = To, by = "months")
+
+    }
+    # further
+    if(indexAt == "lastof") {
+       intermediates <- DescTools::LastDayOfMonth(intermediates)
+    }
+    if(indexAt == "yearmon") {
+       intermediates <- zoo::as.yearmon(intermediates)
+    }
+    newDates <- setDiff(c(intermediates, index(monthly)),index(monthly))
+    monthly <- merge(monthly, xts(, newDates))
+  }
+  monthly
+
+})}
+
 
 
 #' number of variables
@@ -161,6 +222,32 @@ initEnv();on.exit({uninitEnv()})
     res <- 0L
   }
   return(res)
+
+})}
+
+
+#' convenience function calling stringr::str_detect
+#'
+#' @param x string
+#' @param pattern ICU regular expression pattern
+#' @return logical
+#' @examples
+#' \dontrun{
+#'  "1234" %Like% "^\\d{4}$"
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_detect
+#' @export
+`%Like%` <- function(x, pattern) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+    if (is.factor(x)) {
+        as.integer(x) %in% stringr::str_detect(string = levels(x), pattern = pattern)
+    }
+    else {
+        stringr::str_detect(string = x, pattern = pattern)
+    }
 
 })}
 
@@ -725,6 +812,11 @@ liquifyDF <- function(x
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  # probably can be redone using someone's [melt]/[d]cast,
+  #   tidyr:: . . .(redone better)
+  # see (along with reshape2):
+  #   QuantTools::lmerge and MY(ANDRE) lmerge2 (startout generalization)
+
   xOrig <- x
 
   if(NROW(x) == 0) { message("liquifyDF found zero rows"); return(data.frame()) }
@@ -983,8 +1075,8 @@ initEnv();on.exit({uninitEnv()})
   # would/should always be/been true
   # else I may/have/never ever made it his far
   if(tryXtsSuccess) {
-    reclass(xTsResult, xTsOrig)
-  } -> xTsResult
+    xTsResult <- reclass(xTsResult, xTsOrig)
+  }
 
   NewName <- "rollApply"
   if(!is.null(AltName)) NewName <- AltName
@@ -1045,6 +1137,64 @@ multitable___mouter <- function(x, ...){
 pasteDot <- function(..., sep = ".", collapse = NULL) {
   paste(..., sep = sep, collapse = collapse)
 }
+
+
+#' choose local minima (or maxima)
+#'
+#' Lags an xts column into a 2nd+ columns.
+#' Chooses the lowest(or highest) value rowwise
+#'
+#' Meant for removing noise from a monthly financial time series.
+#' If the goal is a pessimisic (buy "puts") solution
+#' then an optimal choice may be (lag = 0:1, take = "min")
+#'
+#' @param xTs xts object
+#' @param base choose -1 (or less) to look into the future
+#' @param lag 0:1(default) periods to lag over: this(0) and previous(1)
+#' @param take "min"(default).  Other option is "max". Finally,
+#' the user can pass in a custom function "Fun."  If Fun is passed
+#' then "take" is ignored.
+#' @param Fun custom user passed function
+#' @param ... dots passed to Fun
+
+#' @examples
+#' \dontrun{
+#'
+#' x <- xts(0:2, zoo::as.Date(0:2))
+#' OneOf(x)
+#'           [,1]
+#' 1970-01-01   NA
+#' 1970-01-02    0
+#' 1970-01-03    1
+#'
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom matrixStats rowMins
+#' @importFrom matrixStats rowMaxs
+#' @importFrom DescTools DoCall
+#' @export
+OneOf <-function(xTs, base = 0, lag = 0:1, take = "min" , Fun = NULL, ...) {
+tryCatchLog::tryCatchLog({
+# initEnv(); on.exit({uninitEnv()})
+
+   Dots <- list(...)
+   if(length(take) > 1) stop("OneOf parameter take has too many choices")
+
+   xTsOrig     <- initXts(xTs)
+   CoreDataOrig <- coredata(lag.xts(xTs, base + lag))
+
+   if(take == "min")
+     CoreDataNew <- matrixStats::rowMins(CoreDataOrig)
+   if(take == "max")
+     CoreDataNew <- matrixStats::rowMaxs(CoreDataOrig)
+   if(!take %in% c("min","max")) {
+     if(mode(Fun) == "function") Fun = match.fun(Fun)
+     CoreDataNew <- DescTools::DoCall(Fun, c(list(), list(CoreDataOrig), Dots))
+   }
+   reclass(CoreDataNew, xTsOrig)
+
+})}
+
 
 
 #' lag an xts object

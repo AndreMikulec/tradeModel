@@ -1833,8 +1833,21 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
-#' bonds
+#' Simfa bond and equity information
 #'
+#' # 1
+#' most valuable information
+#' tab "Issuance" columns "Corporate Debt", "Total"
+#' US Bond Market Issuance and Outstanding
+#' https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
+#' https://www.sifma.org/resources/research/us-bond-market-issuance-and-outstanding/
+#' https://www.sifma.org/resources/research/bond-chart/
+#' upper right hand corner, click on "download xls"
+#' click on "explore"
+#' SIFMA
+#' https://www.sifma.org/
+#'
+#' same
 #' Click on \[Explore\]
 #' US Bond Market Issuance and Outstanding
 #'   (Upper Right Corner)
@@ -1847,27 +1860,44 @@ initEnv(); on.exit({uninitEnv()})
 #' YTD '18
 #' % Change
 #'
-#'
-#' # place 1 FUTURE_IN_DEV: bonds by "distributor"
-#' US Bond Market Issuance and Outstanding
-#' https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
-#'
-#' https://www.sifma.org/resources/research/bond-chart/
-#' upper right hand corner, click on "download xls"
-#' click on "explore"
-#' SIFMA
-#' https://www.sifma.org/
-#'
-#' # place 2 CURRENT_IN_DEV: bonds by "coupon/convertible"
+#' # 2 (HAVE)
+#' most valuable information
+#' tab "Average Maturity" column "Years" (Symbol is "BondsAveMaturity")
 #' https://www.sifma.org/wp-content/uploads/2017/08/Corporate-US-Corporate-Issuance-SIFMA.xls
 #' US Corporate Bond Issuance
 #' https://www.sifma.org/resources/research/us-corporate-bond-issuance/
 #' Securities Industry and Financial Markets Association
 #' SIFMA
 #' https://www.sifma.org/
+#' #
+#' Note only the monthly dates for the current year and the previous
+#' year are available.  The remaining data is year-end-data.
+#' The dates intermediate dates are filled in using
+#' xts::to.monthly() and seq()
+#' The monthly dates are interpolated using zoo::na.approx
+#' that is stats::approx. (In R Code that is "approx1").
 #'
+#' # 3
+#' most valuable information
+#' tab "US Bond Market" column "Corporate Debt"
+#' US Bond Market Trading Volume
+#' https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-trading-volume-sifma.xls
+#' https://www.sifma.org/resources/research/us-bond-market-trading-volume/
 #'
+#' # 4
+#' US Equity Issuance and Trading Volumes
+#' most valuable information
+#' tab "Underwriting" column "TOTAL EQUITY"
+#' https://www.sifma.org/wp-content/uploads/2017/06/cm-us-equity-sifma1.xls
+#' https://www.sifma.org/resources/research/us-equity-stats/
 #'
+#' main pages ( html list of all excel spreadsheets )
+#' https://www.sifma.org/resources/archive/research/statistics/
+#' # a.k.a.
+#' https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=0&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+#' next two pages
+#' https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=1&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+#' https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=2&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
 #'
 #' referred by Jeff Cox
 #' AND
@@ -1885,9 +1915,9 @@ initEnv(); on.exit({uninitEnv()})
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' Possible Symbols are the following:
-#' "SimfaBondMarketData" (means get all of the columns);
+#' "SimfaUSCorporate" (means get all of the columns);
 #' otherwise, get specific columns;
-#' TO BE NAMED LATER
+#' BondsAveMaturity"
 #' @param env where to create objects. (.GlobalEnv)
 #' @param return.class desired class of returned object.
 #' Can be xts, zoo, data.frame, or xts (default)
@@ -1916,16 +1946,16 @@ initEnv(); on.exit({uninitEnv()})
 #' \dontrun{
 #'
 #' # common usage
-#' if(!exists("NCInvGrd")) getSymbols("NCInvGr", src = "Simfa")
+#' if(!exists("BondsAveMaturity")) getSymbols("BondsAveMaturity", src = "Simfa")
 #'
-#' getSymbols(c("NCInvGrd", "NCHighYld"), src = "Simfa")
+#' getSymbols(c("BondsAveMaturity"), src = "Simfa")
 #'
 #' # force requery of data from the Simfa site
 #' # will collect one new xls (historical obs) file
-#' getSymbols(c("NCInvGrd", "NCHighYld"), src = "Simfa", force = TRUE)
+#' getSymbols(c("BondsAveMaturity"), src = "Simfa", force = TRUE)
 #'
 #' # all columns in one xts object
-#' getSymbols("SimfaBondMarketData", src = "Simfa")
+#' getSymbols("SimfaUSCorporate", src = "Simfa")
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
@@ -1935,7 +1965,9 @@ initEnv(); on.exit({uninitEnv()})
 #' @importFrom stringr str_replace str_c
 #' @importFrom readxl read_xls
 #' @importFrom zoo na.trim
-#' @importFrom Hmisc yearDays
+#' @importFrom DescTools LastDayOfMonth
+#' @importFrom DescTools DoCall
+# # importFrom Hmisc yearDays
 #' @export
 getSymbols.Simfa <- function(Symbols, env, return.class = "xts", ...) {
 tryCatchLog::tryCatchLog({
@@ -1956,8 +1988,8 @@ initEnv(); on.exit({uninitEnv()})
 
     # begin xls area
 
-    if(exists(".SimfaBondMarketData_path2file", envir = env, inherits = FALSE)) {
-      assign("tmp", get(".SimfaBondMarketData_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    if(exists(".SimfaUSCorporateBondIssuance_path2file", envir = env, inherits = FALSE)) {
+      assign("tmp", get(".SimfaUSCorporateBondIssuance_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
     } else {
       tmp <- NULL
     }
@@ -1976,13 +2008,13 @@ initEnv(); on.exit({uninitEnv()})
         #
         # do not remove the 'tmp' file
         # In this R session, keep the file around and available for the next query [if any]
-        # the site https://www.sifma.org/resources/research/us-corporate-bond-issuance/ is NOT engineered
+        # the site https://www.sifma.org is NOT engineered
         # to handle MANY data queries, NOR denial of service attacks
 
         if (verbose)
-            cat("downloading ", "SimfaBondMarketData", ".....\n\n")
+            cat("downloading ", "SimfaUSCorporateBondIssuance_path2file", ".....\n\n")
         quantmod___try.download.file(Simfa.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
-        assign(".SimfaBondMarketData_path2file", tmp, envir = env, inherits = FALSE)
+        assign(".SimfaUSCorporateBondIssuance_path2file_path2file", tmp, envir = env, inherits = FALSE)
 
     }
     if (verbose)
@@ -1993,48 +2025,109 @@ initEnv(); on.exit({uninitEnv()})
     # Dates <- seq.Date(from = zoo::as.Date("1871-01-01"), to = Sys.Date(), by = "1 month")
 
     # Last verified: JAN 2019
-    col_names = c("TimeDate", "NCInvGrd", "NCHighYld", "NCTotal", "E_empty","NCCFixedRt", "NCCFloatRt", "NCNCFixedRt", "NCNCFloatRt", "J_Empty", "Convertible", "L_Empty", "BondTotal")
-
-    browser()
+    ### col_names = c("TimeDate", "NCInvGrd", "NCHighYld", "NCTotal", "E_empty","NCCFixedRt", "NCCFloatRt", "NCNCFixedRt", "NCNCFloatRt", "J_Empty", "Convertible", "L_Empty", "BondTotal")
+    col_names = c("TimeDate", "BondsAveMaturity")
 
     # data.frame
-    fr <- suppressWarnings(readxl::read_xls(path = tmp, sheet = "Issuance",
-           col_names = col_names,
-           col_types = c("text", rep("numeric",12)), skip = 7L
-                               )) # n_max = ???
+    ### fr <- suppressWarnings(readxl::read_xls(path = tmp, sheet = "Issuance",
+    ###       col_names = col_names,
+    ###       col_types = c("text", rep("numeric",12)), skip = 7L
+    ###                        )) # n_max = ???
+
+    # data.frame
+    fr <- suppressWarnings(readxl::read_xls(path = tmp, sheet = "Average Maturity",
+          col_names = col_names,
+          col_types = c("text", rep("numeric",1)), skip = 5L
+                           )) # n_max = ???
 
     # optimistic: but the last record
     # (current month 'not yet reported') may be all NAs
     fr <- zoo::na.trim( fr, sides = "right", is.na = "all")
 
-    # LEFT_OFF
-    bookmark <- 1
+    # remove fully empty rows (should be a function)
+    fr <- fr[!Reduce(`&`, plyr::llply(fr, function(x) { is.na(unlist(x)) } )),,drop = FALSE]
+
+    LoneYearElementIndexes <- which(is.na(fr[[2]]))
+    # range of years or year-months
+    Splitted <- split(fr, findInterval(seq_len(NROW(fr)), LoneYearElementIndexes , left.open = FALSE))
+
+    # convert column TimeDate to YYYY-Mon-01
+    plyr::llply(Splitted, function(x) {
+
+      TimeDate <- x[["TimeDate"]]
+
+      # first element is always a year
+      ThisYear <- TimeDate[1]
+
+      # second element
+      if(!is.na(TimeDate[2])) {
+        # if the second element is not a year then it must be a month
+        if(!TimeDate[2] %Like% "^\\d{4}$") {
+          # convert Mon to YYYY-Mon-01
+          NotYearElementIndexes <- 2:length(TimeDate)
+          TimeDate[NotYearElementIndexes] <-
+           stringr::str_c( ThisYear, "-", TimeDate[NotYearElementIndexes], "-01") %>%
+             # for correct interpolation
+             { DescTools::LastDayOfMonth(zoo::as.Date(., format = "%Y-%b-%d")) } %>% as.character
+            # Year-alone element is no longer needed
+            x <- x[-1, , drop = FALSE]
+            TimeDate <- TimeDate[-1]
+            x[["TimeDate"]] <- TimeDate
+        } else { # second element ( and all col elements are years )
+          x[["TimeDate"]] <- stringr::str_c(TimeDate, "-Dec-31") %>%
+            { zoo::as.Date(., format = "%Y-%b-%d") }  %>% as.character # for correct interpolation
+          # The next set contains the Month to Month
+          # chop off the last value (it is already covered by the next set's month to month)
+          x <- x[-NROW(x), , drop = FALSE]
+        }
+      } else {
+        # just this lone-element is a year
+        x[["TimeDate"]] <- stringr::str_c(TimeDate, "-Dec-31") %>%  # for correct interpolation
+         { zoo::as.Date(., format = "%Y-%b-%d") } %>% as.character
+      }
+
+      x
+
+    }) -> ListOfDFs
+    DescTools::DoCall(rbind,ListOfDFs) -> fr
+    fr[["TimeDate"]] <- zoo::as.Date(fr[["TimeDate"]])
 
     # FRED historical ... dates are the "first of the month"
     # that datum means "about that entire month"
     # need the Date
-    fr[["Date"]] %>% round(2) %>% { . * 100 } %>%
-      as.integer %>% as.character %>% { stringr::str_c(., "01") } %>%
-        { zoo::as.Date(., format = "%Y%m%d") } -> fr[["Date"]]
 
-    # Date Fraction of Yale (DateFY)
-    DateFYYear          <- trunc(fr[["DateFY"]],0)
-    DateFYYearFraction  <- fr[["DateFY"]] - DateFYYear
+    # fr[["Date"]] %>% round(2) %>% { . * 100 } %>%
+    #   as.integer %>% as.character %>% { stringr::str_c(., "01") } %>%
+    #     { zoo::as.Date(., format = "%Y%m%d") } -> fr[["Date"]]
     #
-    DateFYYearFirstDate <- zoo::as.Date(stringr::str_c(DateFYYear, "-01-01"))
-    IntegerDateFYYearFirstDate <- as.integer(DateFYYearFirstDate)
-    #
-    DateFYNumbDaysInYear <- Hmisc::yearDays( DateFYYearFirstDate )
-    #
-    fr[["DateFY"]] <- IntegerDateFYYearFirstDate + DateFYNumbDaysInYear * DateFYYearFraction
-    # Stored as the number of days since the UNIX Epoch(UTC time).
-    # To get the date, do this.
-    # zoo::as.Date(DateFY) # all 15th, 16th, or 17th of the month
+    # # Date Fraction of Yale (DateFY)
+    # DateFYYear          <- trunc(fr[["DateFY"]],0)
+    # DateFYYearFraction  <- fr[["DateFY"]] - DateFYYear
+    # #
+    # DateFYYearFirstDate <- zoo::as.Date(stringr::str_c(DateFYYear, "-01-01"))
+    # IntegerDateFYYearFirstDate <- as.integer(DateFYYearFirstDate)
+    # #
+    # DateFYNumbDaysInYear <- Hmisc::yearDays( DateFYYearFirstDate )
+    # #
+    # fr[["DateFY"]] <- IntegerDateFYYearFirstDate + DateFYNumbDaysInYear * DateFYYearFraction
+    # # Stored as the number of days since the UNIX Epoch(UTC time).
+    # # To get the date, do this.
+    # # zoo::as.Date(DateFY) # all 15th, 16th, or 17th of the month
 
     if (verbose)
         cat("done.\n\n")
     fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
               src = "Simfa", updated = Sys.time())
+    # (prep for interpolation)
+    # fill in missing first of the month dates
+    fr <- To.Monthly(fr, indexAt = "lastof", OHLC = FALSE)
+    # see Shiller
+    # Uses stats::approx
+    # (only useful because I want some false-ish historical data)
+    fr <- zoo::na.approx(fr)
+    # St. Louis FRED pattern of the 1st of the month repesents the "entire" month
+    fr <- To.Monthly(fr, indexAt = "firstof", OHLC = FALSE)
+
     fri <- fr
     rs <- fri
 
@@ -2053,7 +2146,7 @@ initEnv(); on.exit({uninitEnv()})
     for (i in 1:length(Symbols)) {
 
         # User only wants an individual column
-        if(Symbols[[i]] != "SimfaBondMarketData") {
+        if(Symbols[[i]] != "SimfaUSCorporate") {
            if (verbose)
              cat("selecting ", Symbols[[i]], ".....\n\n")
           fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(Symbols[[i]])]]

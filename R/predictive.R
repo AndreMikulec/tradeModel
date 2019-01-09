@@ -1,5 +1,29 @@
 
 
+#' setdiff any dimension-less  object
+#'
+#' Unlike base::setdiff does not do "as.vector",
+#' therefore vector classes are not lost
+#' ( e.g. Date and POSIXt).
+#'
+#' To compare, it uses (same as setdiff.default) match
+#'
+#' @param x vector
+#' @param y vector of elements to subtract off from x
+#' @return vector from x, elements of y have been subtracted
+#' from x
+#' @export
+setDiff <- function (x, y) {
+
+  if(!is.null(dim(x)) || !is.null(dim(y)))
+    stop("setDiff needs dimension-less x and y")
+
+  unique(if (length(x) || length(y))
+      x[match(x, y, 0L) == 0L]
+  else x)
+}
+
+
 
 #' safely make a xts into a df and safely make df into an xts
 #'
@@ -113,6 +137,8 @@ ifelse.xts    <- function(test, yes, no) {
   return(res)
 
 }
+
+
 
 
 #' difference of two xTs objects

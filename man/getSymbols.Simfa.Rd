@@ -2,16 +2,16 @@
 % Please edit documentation in R/database.R
 \name{getSymbols.Simfa}
 \alias{getSymbols.Simfa}
-\title{bonds}
+\title{Simfa bond and equity information}
 \usage{
 getSymbols.Simfa(Symbols, env, return.class = "xts", ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded
 Possible Symbols are the following:
-"SimfaBondMarketData" (means get all of the columns);
+"SimfaUSCorporate" (means get all of the columns);
 otherwise, get specific columns;
-TO BE NAMED LATER}
+BondsAveMaturity"}
 
 \item{env}{where to create objects. (.GlobalEnv)}
 
@@ -34,6 +34,20 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
+# 1
+most valuable information
+tab "Issuance" columns "Corporate Debt", "Total"
+US Bond Market Issuance and Outstanding
+https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
+https://www.sifma.org/resources/research/us-bond-market-issuance-and-outstanding/
+https://www.sifma.org/resources/research/bond-chart/
+upper right hand corner, click on "download xls"
+click on "explore"
+SIFMA
+https://www.sifma.org/
+}
+\details{
+same
 Click on \[Explore\]
 US Bond Market Issuance and Outstanding
   (Upper Right Corner)
@@ -45,27 +59,45 @@ US Bond Market Issuance and Outstanding
 YTD '17
 YTD '18
 % Change
-}
-\details{
-# place 1 FUTURE_IN_DEV: bonds by "distributor"
-US Bond Market Issuance and Outstanding
-https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
 
-https://www.sifma.org/resources/research/bond-chart/
-upper right hand corner, click on "download xls"
-click on "explore"
-SIFMA
-https://www.sifma.org/
-
-# place 2 CURRENT_IN_DEV: bonds by "coupon/convertible"
+# 2 (HAVE)
+most valuable information
+tab "Average Maturity" column "Years" (Symbol is "BondsAveMaturity")
 https://www.sifma.org/wp-content/uploads/2017/08/Corporate-US-Corporate-Issuance-SIFMA.xls
 US Corporate Bond Issuance
 https://www.sifma.org/resources/research/us-corporate-bond-issuance/
 Securities Industry and Financial Markets Association
 SIFMA
 https://www.sifma.org/
+#
+Note only the monthly dates for the current year and the previous
+year are available.  The remaining data is year-end-data.
+The dates intermediate dates are filled in using
+xts::to.monthly() and seq()
+The monthly dates are interpolated using zoo::na.approx
+that is stats::approx. (In R Code that is "approx1").
 
+# 3
+most valuable information
+tab "US Bond Market" column "Corporate Debt"
+US Bond Market Trading Volume
+https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-trading-volume-sifma.xls
+https://www.sifma.org/resources/research/us-bond-market-trading-volume/
 
+# 4
+US Equity Issuance and Trading Volumes
+most valuable information
+tab "Underwriting" column "TOTAL EQUITY"
+https://www.sifma.org/wp-content/uploads/2017/06/cm-us-equity-sifma1.xls
+https://www.sifma.org/resources/research/us-equity-stats/
+
+main pages ( html list of all excel spreadsheets )
+https://www.sifma.org/resources/archive/research/statistics/
+# a.k.a.
+https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=0&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+next two pages
+https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=1&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=2&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
 
 referred by Jeff Cox
 AND
@@ -85,16 +117,16 @@ https://www.theinstitutionalriskanalyst.com/single-post/2018/12/11/When-the-Bid-
 \dontrun{
 
 # common usage
-if(!exists("NCInvGrd")) getSymbols("NCInvGr", src = "Simfa")
+if(!exists("BondsAveMaturity")) getSymbols("BondsAveMaturity", src = "Simfa")
 
-getSymbols(c("NCInvGrd", "NCHighYld"), src = "Simfa")
+getSymbols(c("BondsAveMaturity"), src = "Simfa")
 
 # force requery of data from the Simfa site
 # will collect one new xls (historical obs) file
-getSymbols(c("NCInvGrd", "NCHighYld"), src = "Simfa", force = TRUE)
+getSymbols(c("BondsAveMaturity"), src = "Simfa", force = TRUE)
 
 # all columns in one xts object
-getSymbols("SimfaBondMarketData", src = "Simfa")
+getSymbols("SimfaUSCorporate", src = "Simfa")
 
 }
 }
