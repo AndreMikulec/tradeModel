@@ -1833,6 +1833,84 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
+#' detect columns(Var) where the values are not-NA but
+#' the rest of the columns are NA everywhere else
+#'
+#' Function is written in DataCombine style
+#'
+#' @param x data.frame
+#' @param Var columns determining complete cases.
+#' Can be column names or positions
+#' @return df with rows of all-NA removed
+#' @importFrom plyr llply
+#' @export
+DetectOnlyNonEmptyVarsInRows <- function(x, Var = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  if(is.null(Var)) Var <- colnames(x)
+
+  # non-NA in Var
+  xVar <-  DetectFullRows(x, Var = Var)
+  # NA in Var
+  if(is.numeric(Var))  NotVar <- -Var
+  if(!is.numeric(Var)) NotVar <- !colnames(x) %in% Var # TRUE/FALSE
+  xNotVar <- DetectEmptyRows(x, Var = NotVar)
+
+  x <- xVar & xNotVar
+  x
+
+})}
+
+
+
+#' detect rows with all non-NA vaues
+#'
+#' MOVE ME
+#' complete.cases does not work on tibbles!
+#' Function is written in DataCombine style
+#'
+#' @param x data.frame
+#' @param Var columns determining complete cases
+#' Can be column names or positions
+#' @return df with rows of all-NA removed
+#' @importFrom plyr llply
+#' @export
+DetectFullRows <- function(x, Var = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  if(is.null(Var)) Var <- colnames(x)
+  x <- Reduce(`&`, plyr::llply(x[, Var, drop = FALSE], function(x2) { !is.na(unlist(x2)) } ))
+  x
+
+})}
+
+
+
+#' detect rows with all NA vaues
+#'
+#' MOVE ME
+#' complete.cases does not work on tibbles!
+#' Function is written in DataCombine style
+#'
+#' @param x data.frame
+#' @param Var columns determining complete cases
+#' Can be column names or positions
+#' @return df with rows of all-NA removed
+#' @importFrom plyr llply
+#' @export
+DetectEmptyRows <- function(x, Var = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  if(is.null(Var)) Var <- colnames(x)
+  x <- Reduce(`&`, plyr::llply(x[, Var, drop = FALSE], function(x2) { is.na(unlist(x2)) } ))
+  x
+
+})}
+
+
 #' remove rows with all NA vaues
 #'
 #' MOVE ME
@@ -1841,6 +1919,7 @@ initEnv(); on.exit({uninitEnv()})
 #'
 #' @param x data.frame
 #' @param Var columns determining complete cases
+#' Can be column names or positions
 #' @return df with rows of all-NA removed
 #' @importFrom plyr llply
 #' @export
@@ -1848,9 +1927,9 @@ RemoveEmptyRows <- function(x, Var = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
-  #
   if(is.null(Var)) Var <- colnames(x)
-  x <- x[!Reduce(`&`, plyr::llply(x[, Var, drop = FALSE], function(x2) { is.na(unlist(x2)) } )),,drop = FALSE]
+  # rows to keep
+  x <- x[!DetectEmptyRows(x, Var = Var),,drop = FALSE]
   x
 
 })}
@@ -1858,7 +1937,7 @@ initEnv(); on.exit({uninitEnv()})
 
 #' Simfa bond and equity information
 #'
-#' # 1
+#' # 1 (HAVE)
 #' most valuable information
 #' tab "Issuance" columns "Corporate Debt", "Total"
 #' US Bond Market Issuance and Outstanding
@@ -1971,11 +2050,11 @@ initEnv(); on.exit({uninitEnv()})
 #' # common usage
 #' if(!exists("BondsAveMaturity")) getSymbols("BondsAveMaturity", src = "Simfa")
 #'
-#' getSymbols(c("BondsAveMaturity"), src = "Simfa")
+#' getSymbols(c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol"), src = "Simfa")
 #'
 #' # force requery of data from the Simfa site
 #' # will collect one new xls (historical obs) file
-#' getSymbols(c("BondsAveMaturity"), src = "Simfa", force = TRUE)
+#' getSymbols(c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol"), src = "Simfa", force = TRUE)
 #'
 #' # all columns in one xts object
 #' getSymbols("SimfaUSCorporate", src = "Simfa")
@@ -2169,7 +2248,11 @@ initEnv(); on.exit({uninitEnv()})
     # remove fully empty rows (should be a function)
     fr <- fr[!Reduce(`&`, plyr::llply(fr, function(x) { is.na(unlist(x)) } )),,drop = FALSE]
 
-    LoneYearElementIndexes <- which(is.na(fr[[2]]))
+    # Year headers
+    # LoneYearElementIndexes <- which(is.na(fr[[2]]))
+    LoneYearElementIndexes <- which(DetectOnlyNonEmptyVarsInRows(fr, Var = "TimeDate"), TRUE)
+    LoneYearElementIndexes <- LoneYearElementIndexes[fr[["TimeDate"]][LoneYearElementIndexes + 1] == "Jan"]
+
     # range of years or year-months
     Splitted <- split(fr, findInterval(seq_len(NROW(fr)), LoneYearElementIndexes , left.open = FALSE))
 
@@ -2206,6 +2289,8 @@ initEnv(); on.exit({uninitEnv()})
         # just this lone-element is a year
         x[["TimeDate"]] <- stringr::str_c(TimeDate, "-Dec-31") %>%  # for correct interpolation
          { zoo::as.Date(., format = "%Y-%b-%d") } %>% as.character
+        # chop off the last value (it is already covered by the next set's month to month)
+        x <- x[0,,drop = FALSE]
       }
 
       x
@@ -2256,10 +2341,153 @@ initEnv(); on.exit({uninitEnv()})
 
     # end xls area
 
+
+    # begin xls area
+
+    if(exists(".SimfaUSCorporateBondTradeVolume_path2file", envir = env, inherits = FALSE)) {
+      assign("tmp", get(".SimfaUSCorporateBondTradeVolume_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+    } else {
+      tmp <- NULL
+    }
+    if( !is.null(tmp) &&
+        !is.na(file.info(tmp)$mtime) &&
+        !force
+    ) {
+    } else {
+
+        # possible clean-up
+        oldtmp <- tmp
+        if(!is.null(oldtmp) && !is.na(file.info(oldtmp)$mtime)) on.exit(unlink(oldtmp))
+
+        Simfa.URL <- "https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-trading-volume-sifma.xls"
+        tmp <- tempfile(fileext = ".xls") # ( JAN 2019 )
+        #
+        # do not remove the 'tmp' file
+        # In this R session, keep the file around and available for the next query [if any]
+        # the site https://www.sifma.org is NOT engineered
+        # to handle MANY data queries, NOR denial of service attacks
+
+        if (verbose)
+            cat("downloading ", "SimfaUSCorporateBondIssuance_path2file", ".....\n\n")
+        quantmod___try.download.file(Simfa.URL, destfile = tmp, quiet = !verbose, mode = "wb", ...)
+        assign(".SimfaUSCorporateBondIssuance_path2file_path2file", tmp, envir = env, inherits = FALSE)
+
+    }
+    if (verbose)
+        cat("reading disk file ", tmp, ".....\n\n")
+
+    # Last verified: JAN 2019
+    col_names = c("TimeDate",  "MunicipalTradeVol", "TreasureTradeVol",
+                               "AgencyMBSTradeVol", "NonAgencyMBSTradeVol",
+                               "ABSTradeVol",       "CorporateDebtTradeVol",
+                               "FederalTradeVol")
+
+
+    fr <- suppressWarnings(readxl::read_xls(path = tmp, sheet = "US Bond Market",
+          col_names = col_names,
+          col_types = c("text", rep("numeric",7)), skip = 5L
+                           )) # n_max = ???
+
+    # I am only interested
+    fr <- fr[, c("TimeDate", "CorporateDebtTradeVol"), drop = FALSE]
+
+    # optimistic: but the last record
+    # (current month 'not yet reported') may be all NAs
+    fr <- zoo::na.trim( fr, sides = "right", is.na = "all")
+
+    # remove elements starting with these elements
+    fr <- fr[!fr[["TimeDate"]] %Like% "^YTD|Change",,drop = FALSE]
+
+    # last empty line detected
+    PositionBeforeYearSummaries <- tail(which(DetectEmptyRows(fr)),1)
+    # from here to the end
+    RowsToRemove <- seq(PositionBeforeYearSummaries + 1, NROW(fr), by = 1)
+    fr <- fr[-RowsToRemove,,drop = FALSE]
+
+    # remove fully empty rows
+    fr <- RemoveEmptyRows(fr)
+
+    # Year headers
+    # LoneYearElementIndexes <- which(is.na(fr[[2]]))
+    LoneYearElementIndexes <- which(DetectOnlyNonEmptyVarsInRows(fr, Var = "TimeDate"), TRUE)
+    LoneYearElementIndexes <- LoneYearElementIndexes[fr[["TimeDate"]][LoneYearElementIndexes + 1] == "Jan"]
+
+    # range of years or year-months
+    Splitted <- split(fr, findInterval(seq_len(NROW(fr)), LoneYearElementIndexes , left.open = FALSE))
+
+    # convert column TimeDate to YYYY-Mon-01
+    plyr::llply(Splitted, function(x) {
+
+      TimeDate <- x[["TimeDate"]]
+
+      # first element is always a year
+      ThisYear <- TimeDate[1]
+
+      # second element
+      if(!is.na(TimeDate[2])) {
+        # if the second element is not a year then it must be a month
+        if(!TimeDate[2] %Like% "^\\d{4}$") {
+          # convert Mon to YYYY-Mon-01
+          NotYearElementIndexes <- 2:length(TimeDate)
+          TimeDate[NotYearElementIndexes] <-
+           stringr::str_c( ThisYear, "-", TimeDate[NotYearElementIndexes], "-01") %>%
+             # for correct interpolation
+             { DescTools::LastDayOfMonth(zoo::as.Date(., format = "%Y-%b-%d")) } %>% as.character
+            # Year-alone element is no longer needed
+            x <- x[-1, , drop = FALSE]
+            TimeDate <- TimeDate[-1]
+            x[["TimeDate"]] <- TimeDate
+        } else { # second element ( and all col elements are years )
+          x[["TimeDate"]] <- stringr::str_c(TimeDate, "-Dec-31") %>%
+            { zoo::as.Date(., format = "%Y-%b-%d") }  %>% as.character # for correct interpolation
+          # The next set contains the Month to Month
+          # chop off the last value (it is already covered by the next set's month to month)
+          x <- x[-NROW(x), , drop = FALSE]
+          # chop off the next to last value (it is already covered by the next set's month to month)
+          x <- x[-NROW(x), , drop = FALSE]
+        }
+      } else {
+        # just this lone-element is a year
+        x[["TimeDate"]] <- stringr::str_c(TimeDate, "-Dec-31") %>%  # for correct interpolation
+           { zoo::as.Date(., format = "%Y-%b-%d") } %>% as.character
+        # chop off the last value (it is already covered by the next set's month to month)
+        x <- x[0,,drop = FALSE]
+      }
+
+      x
+
+    }) -> ListOfDFs
+    DescTools::DoCall(rbind,ListOfDFs) -> fr
+    fr[["TimeDate"]] <- zoo::as.Date(fr[["TimeDate"]])
+
+    # FRED historical ... dates are the "first of the month"
+    # that datum means "about that entire month"
+    # need the Date
+
+    if (verbose)
+        cat("done.\n\n")
+    fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
+              src = "Simfa", updated = Sys.time())
+    # (prep for interpolation)
+    # fill in missing first of the month dates
+    fr <- To.Monthly(fr, indexAt = "lastof", OHLC = FALSE)
+    # see Shiller
+    # Uses stats::approx
+    # (only useful because I want some false-ish historical data)
+    fr <- zoo::na.approx(fr)
+    # St. Louis FRED pattern of the 1st of the month repesents the "entire" month
+    fr <- To.Monthly(fr, indexAt = "firstof", OHLC = FALSE)
+
+    fri <- fr
+    rs <- fri
+    rs3 <- fri3 <- rs
+
+    # end xls area
+
     # prepare to splice ( nothing to do )
 
     # splice
-    rs <- merge(rs1,rs2)
+    rs <- merge(rs1,rs2,rs3)
 
     rst <- rs
     fr <- rst

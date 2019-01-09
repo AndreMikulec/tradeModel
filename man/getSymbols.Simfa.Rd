@@ -34,7 +34,7 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
-# 1
+# 1 (HAVE)
 most valuable information
 tab "Issuance" columns "Corporate Debt", "Total"
 US Bond Market Issuance and Outstanding
@@ -119,11 +119,11 @@ https://www.theinstitutionalriskanalyst.com/single-post/2018/12/11/When-the-Bid-
 # common usage
 if(!exists("BondsAveMaturity")) getSymbols("BondsAveMaturity", src = "Simfa")
 
-getSymbols(c("BondsAveMaturity"), src = "Simfa")
+getSymbols(c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol"), src = "Simfa")
 
 # force requery of data from the Simfa site
 # will collect one new xls (historical obs) file
-getSymbols(c("BondsAveMaturity"), src = "Simfa", force = TRUE)
+getSymbols(c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol"), src = "Simfa", force = TRUE)
 
 # all columns in one xts object
 getSymbols("SimfaUSCorporate", src = "Simfa")
