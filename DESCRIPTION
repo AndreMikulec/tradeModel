@@ -32,6 +32,7 @@ Imports:
     data.table,
     plyr,
     dplyr,
+    hutils,
     tidyselect,
     tidyr,
     readxl,

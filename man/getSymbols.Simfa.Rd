@@ -34,9 +34,17 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
+Note only the monthly dates for the current year and the previous
+year are available.  The remaining data is year-end-data.
+The dates intermediate dates are filled in using
+xts::to.monthly() and seq()
+The monthly dates are interpolated using zoo::na.approx
+that is stats::approx. (In R Code that is "approx1").
+}
+\details{
 # 1 (HAVE)
 most valuable information
-tab "Issuance" columns "Corporate Debt", "Total"
+tab "Issuance" column "Corporate Debt" (Symbol is "CorporateDebt")
 US Bond Market Issuance and Outstanding
 https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
 https://www.sifma.org/resources/research/us-bond-market-issuance-and-outstanding/
@@ -45,8 +53,7 @@ upper right hand corner, click on "download xls"
 click on "explore"
 SIFMA
 https://www.sifma.org/
-}
-\details{
+
 same
 Click on \[Explore\]
 US Bond Market Issuance and Outstanding
@@ -70,21 +77,15 @@ Securities Industry and Financial Markets Association
 SIFMA
 https://www.sifma.org/
 #
-Note only the monthly dates for the current year and the previous
-year are available.  The remaining data is year-end-data.
-The dates intermediate dates are filled in using
-xts::to.monthly() and seq()
-The monthly dates are interpolated using zoo::na.approx
-that is stats::approx. (In R Code that is "approx1").
 
-# 3
+# 3 (HAVE)
 most valuable information
-tab "US Bond Market" column "Corporate Debt"
+tab "US Bond Market" column "Corporate Debt" (Symbol is "CorporateDebtTradeVol")
 US Bond Market Trading Volume
 https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-trading-volume-sifma.xls
 https://www.sifma.org/resources/research/us-bond-market-trading-volume/
 
-# 4
+# 4 (DO NOT HAVE - PROBLEM - CAN NOT READ THE DATETIME COLUMN)
 US Equity Issuance and Trading Volumes
 most valuable information
 tab "Underwriting" column "TOTAL EQUITY"
@@ -119,14 +120,17 @@ https://www.theinstitutionalriskanalyst.com/single-post/2018/12/11/When-the-Bid-
 # common usage
 if(!exists("BondsAveMaturity")) getSymbols("BondsAveMaturity", src = "Simfa")
 
-getSymbols(c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol"), src = "Simfa")
+getSymbols(c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol"),
+  src = "Simfa")
 
 # force requery of data from the Simfa site
 # will collect one new xls (historical obs) file
-getSymbols(c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol"), src = "Simfa", force = TRUE)
+getSymbols(c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol"),
+  src = "Simfa", force = TRUE)
 
 # all columns in one xts object
 getSymbols("SimfaUSCorporate", src = "Simfa")
+SimfaUSCorporate[, c("CorporateDebt","BondsAveMaturity", "CorporateDebtTradeVol")]
 
 }
 }
