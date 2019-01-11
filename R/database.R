@@ -1393,6 +1393,321 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 
 
 
+#' Survey of Professional Forecasters data from the Philadelphia FED
+#'
+#' # WORK IN PROGRESS
+#' # WORK IN PROGRESS
+#'
+#' # Popular start page
+#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files
+#'
+#' # all of the data (1968 to the present) in five(5) excel files
+#' Individual Forecasts for the Survey of Professional Forecasters
+#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data/individual-forecasts
+#'
+#' # Some, compare and constrasts may be
+#' 'forcasters'(prediction) w.s. FRED (acutally what happened
+#'
+#' # unemployment
+#'
+#' Civilian Unemployment Rate (UNEMP)
+#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/unemp
+#'
+#' Civilian Unemployment Rate (UNRATE)
+#' https://fred.stlouisfed.org/series/UNRATE/
+#'
+#' # prices ( e.g. inflation )
+#'
+#' Price Index for Gross National Product/Gross Domestic Product (PGDP)
+#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/pgdp
+#'
+#' Gross National Product (chain-type price index) (A001RV1Q225SBEA)
+#' https://fred.stlouisfed.org/series/A001RV1Q225SBEA
+#'
+#' # gross domestic product
+#'
+#' Nominal Gross National Product/Gross Domestic Product (NGDP)
+#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/ngdp
+#'
+#' Gross Domestic Product (GDP)
+#' https://fred.stlouisfed.org/series/GDP
+#'
+#' # Corporate Profits
+#'
+#' Corporate Profits After Tax (CPROF)
+#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/cprof
+#'
+#' Corporate Profits After Tax (without IVA and CCAdj) (CP)
+#' https://fred.stlouisfed.org/series/CP
+#'
+#' NOTE: (for simplicity) xts time index is the middle data of the calendar quarter
+#'
+#' NOT USED ANYWHERE
+#'
+#' @param Symbols  a character vector specifying the names of each symbol to be loaded
+#' To get all of the data use: "USFedPhilForecastingData".  Possible individual
+#' Symbols are listed in the links on the Forcasters' main page
+#' that reads (see below) ... (1) Historical Data Files for the Survey
+#' of Professional Forecasters (2) Documentation: PDF Provides information on
+#' all variables, transformations, and files in the survey.
+#' E.g. "UNEMP2". Symbols will be returned
+#' as (xts) data with names as excelcolumn+Fun"
+#' E.g. "UNEMP2.mean"
+#' @param env where to create objects. (.GlobalEnv)
+#' @param return.class desired class of returned object.
+#' Can be xts, zoo, data.frame, or xts (default)
+#' @param SurveyDecades "All"(default). Vector of options include the following
+#' "1970s", "1980s", "1990s", "2000s", and "2010s".
+#' Multiple options can be chosen and  sent in a character
+#' vector. e.g. c("2000s", "2010s")
+#' @param DataPath "./USFedPhilForecastersData"(default). New/old location of the
+#' new/old downloaded xls files from the Philadelphia Fed's site. Windows
+#' users can also enter this path using instead two back slashes.
+#' Abolute paths can also be used.
+#' @param MaxAge "4 hours"(default) is longest age allowed, such that the retrieving the
+#' the MOST RECENTLY PUBLISHED FORECASTERS EXCEL FILE from  the local fileystem
+#' will be allowed to be done. If the MaxAge is exceeded then,
+#' the most recent excel file is refreshed anew from the Philadelphia Fed site.
+#' The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"
+#' @param Fun mean with na.rm = TRUE (default) Aggregate function to
+#' apply to the period data. This becomes the symbol Suffix. E.g. "mean" will
+#' produce the suffix "MEAN"
+#' @param na.rm TRUE(default) pased to Fun. If Fun does not have na.rm parameter
+#' or Fun does not have dots ... parameter then na.rm is not passed
+#' @param force FALSE(default) re-download data from USFedPhil ( See the examples. )
+#' Generally, using this parameter "force = TRUE"
+#' is NOT necessary: after MaxAge has been exceeded and if a query needs the
+#' MOST RECENTLY PUBLISHED FORECASTERS EXCEL FILE then this file will be downloaded anew.
+#' @param ... additional parameters
+#' @return A call to getSymbols.USFedPhil will load into the specified
+#' environment one object for each \code{Symbol} specified,
+#' with class defined by \code{return.class}.
+#' @author Jeffrey A. Ryan
+#' @author Andre Mikulec (adapted original code to work with the
+#' US Federal Researve Bank of Philadelphia's Survey of Professional Forecasters)
+#' @references
+#' \cite{Historical Data Files for the Survey of Professional Forecasters \url{https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files}}
+#' @references
+#' \cite{Documentation: PDF Provides information on all variables, transformations, and files in the survey. \url{https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-documentation.pdf?la=en}}
+#' @references
+#' \cite{Survey of Professional Forecasters \url{https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters}}
+#' @references
+#' \cite{Federal Researve Bank of Philadelphia \url{https://www.philadelphiafed.org/}}
+#' @seealso
+#' \code{\link{getSymbols}}
+#' \code{\link{setSymbolLookup}}
+#' @keywords data
+#' @examples
+#' \dontrun{
+#'
+#' # common usage
+#' if(!exists("UNEMP2.mean")) getSymbols("UNEMP2", src = "USFedPhil")
+#'
+#' getSymbols(c("UNEMP2", "PGDP", "NGDP", "CPROF"), src = "USFedPhil")
+#'
+#' # standard deviation
+#' getSymbols("UNEMP2", src = "USFedPhil", Fun = sd)
+#'
+#' # just recent data
+#' getSymbols("UNEMP2", src = "USFedPhil", SurveyDecades = "2010s")
+#'
+#' # force requery of data from the Philladelphia site
+#' # will collect new xls file(s)
+#' getSymbols("UNEMP2", src = "USFedPhil", force = TRUE)
+#'
+#' # all columns in one VERY WIDE xts object
+#' getSymbols("USFedPhilForecastingData", src = "USFedPhil")
+#'
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo as.Date as.yearqtr
+#' @importFrom stringr  str_c str_remove
+#' @importFrom readxl read_xls excel_sheets
+#' @importFrom data.table data.table rbindlist
+#' @importFrom RQuantLib adjust
+#' @importFrom DataCombine MoveFront VarDrop
+#' @export
+getSymbols.USFedPhil <- function(Symbols, env, return.class = "xts",
+           SurveyDecades = "All",
+           DataPath = "./USFedPhilForecastersData", MaxAge = NULL,
+           Fun = mean, na.rm = TRUE, ...) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+    importDefaults("getSymbols.USFedPhil")
+    this.env <- environment()
+    for (var in names(list(...))) {
+        assign(var, list(...)[[var]], this.env)
+    }
+    if (!hasArg("verbose"))
+        verbose <- FALSE
+    if (!hasArg("auto.assign"))
+        auto.assign <- TRUE
+
+    Dots <- list(...)
+
+    # SurveyDecades
+    AllSurveyDecades <- c("1970s", "1980s", "1990s", "2000s", "2010s")
+    if(is.null(SurveyDecades) || "SurveyDecades" == "All")
+      SurveyDecades <-  AllSurveyDecades
+    if(any(!SurveyDecades %in% c("All", AllSurveyDecades)))
+      stop("getSymbols.USFedPhil can not find SurveyDecades member")
+
+    # DataPath
+    if(is.null(DataPath)) DataPath <- "./USFedPhilForecastersData"
+    DataPath <- normalizePath(path = DataPath, winslash = "/", mustWork = TRUE)
+
+    if(is.null(MaxAge)) MaxAge <- "4 hours"
+    MaxAgeValueUnits <- strsplit(MaxAge, " ")[[1]]
+    MaxAgeValue <- as.integer(MaxAgeValueUnits[1])
+    MaxAgeUnits <- MaxAgeValueUnits[2]
+
+    # Fun
+    Fun <- if(is.null(Fun)) { mean } else { match.fun(Fun) }
+    FunString <- as.character(substitute(Fun))
+
+    # na.rm
+    # should instead, just ignore "unused"
+    # just TRUE/FALSE whether I ever set na.rm
+    setNArm <- FALSE
+    if("na.rm" %in% names(formals(Fun)) && na.rm == TRUE) {
+      na.rm <- TRUE; setNArm <- TRUE
+    }
+    if( "..." %in% names(formals(Fun)) && na.rm == TRUE && !setNArm) {
+      na.rm <- TRUE; setNArm <- TRUE
+    }
+    if(!setNArm) {
+      na.rm <- FALSE; setNArm <- TRUE
+    }
+
+    # force
+    if(!exists("force", envir = this.env, inherits = FALSE))
+        force = FALSE
+
+    if(!is.null(DataPath) && !is.na(DataPath)) stop("getSymbols.USFedPhil needs a DataPath")
+    if(!dir.exists(DataPath)) dir.create(DataPath)
+    # read ? dir.exists
+    if(!dir.exists(DataPath)) stop("getSymbols.USFedPhil directory not created or created with an underminable name")
+
+    USFedPhil.URL <- "https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data"
+
+
+    AllSurveyDecadesIndex     <- seq_along(AllSurveyDecades)
+    # needed to determine the universally highest index
+    MaxAllSurveyDecadesIndex  <- max(AllSurveyDecadesIndex)
+
+    SurveyDecadesIndex        <- match(SurveyDecades, AllSurveyDecades)
+    DestFiles <- list()
+    for(FileIndex in SurveyDecadesIndex) {
+
+      # begin xls area
+
+      # do not remove the 'destfile' files
+      # keep the directory around and available for the next query [if any]
+      # the site https://www.philadelphiafed.org/ is NOT engineered
+      # to handle MANY data queries, NOR denial of service attacks
+
+      File <-  stringr::str_c("micro", FileIndex, ".xlsx")
+      destfile <- stringr::str_c(DataPath, "/", File)
+
+      if((FileIndex  < MaxAllSurveyDecadesIndex) && file.exists(File) && !force) next
+
+      # limited use variables
+      if(FileIndex == MaxAllSurveyDecadesIndex) {
+        updated <- file.info(destfile)$mtime
+        AgeTestTooOld <- as.difftime(MaxAgeValue,  units = MaxAgeUnits) <  difftime(Sys.time(), updated)
+      }
+      if((FileIndex == MaxAllSurveyDecadesIndex) && !AgeTestTooOld && !force) next
+
+      USFedPhil.URL.file <- stringr::str_c(USFedPhil.URL, "/", File, "?la=en")
+      if (verbose)
+          cat("downloading ", destfile, ".....\n\n")
+      quantmod___try.download.file(USFedPhil.URL.file, destfile = destfile, quiet = !verbose, mode = "wb", ...)
+
+      Sheets <- readxl::excel_sheets(destfile)
+      if(!"USFedPhilForecastingData" %in% Symbols) {
+        Sheets <- Sheets[Sheets %in% stringr::str_remove(Symbols, "[A-Z1-9]$")]
+      }
+
+      DestFileSheets <- list()
+      for(Sheet in Sheets) {
+        # data.frame
+        fr <- suppressWarnings(readxl::read_xls(path = destfile, sheet = Sheet,
+               col_names = col_names,
+               col_types = "numeric",
+               n_max = length(Dates)))
+        DestFileSheets <- c(list(), DestFileSheets, list(fr))
+      }
+      # industry of forecaster. (not important)
+      fr <- DataCombine::VarDrop(fr, Var = "INDUSTRY")
+      fr <- data.table::data.table(fr, key = c("YEAR","QUARTER","ID"))
+      DestFiles <- c(list(), DestFiles, DestFileSheets)
+
+    }
+    if (verbose)
+        cat("reading disk directory ", tmp, ".....\n\n")
+
+    DT <- data.table(DestFiles, fill= TRUE) %>%
+    DT[["TimeDate"]] <-
+      stringr::str_c(DT[["YEAR"]]," ", DT[["QUARTER"]]) %>%
+        { zoo::as.Date(zoo::as.yearqtr(., format ="%Y %q"),frac = 0.5) } %>%
+          { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) }
+    DT <- DataCombine::MoveFront(DT, Var = "TimeDate" )
+    DT <- DataCombine::VarDrop(DT, Var = c("YEAR","QUARTER"))
+
+    # SHOULD MOVE OUT OF HERE
+    applyAggregateDT <- function(x, Fun, ...) {
+      Fun <- match.call(Fun)
+      setDT(x, key = c("TimeDate"))
+      # mutithreaded so no "parallel" (no plyr::llply)
+      x[, lapply(.SD, FUN = Fun, ...), by="TimeDate", .SDcols = !"ID"]
+      x
+    }
+    DT <- DataCombine::VarDrop(DT, Var = c("TimeDate"))
+    DT <- DescTools::DoCall(applyAggregateDT, list(x = DT, Fun = Fun, Dots, na.rm = na.rm))
+    colnames(DT) <- stringr::str_c(colnames(DT), ".", FunString)
+    fr <- DT
+
+    if (verbose)
+        cat("done.\n\n")
+    fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
+              src = "USFedPhil", updated = Sys.time())
+    fri <- fr
+    rs <- fri
+
+    # end xls area
+
+    # prepare to splice ( nothing to do )
+
+    # splice ( nothing to do )
+
+    rst <- rs
+    fr <- rst
+    fri <- fr # pass-throught on !"USFedPhilForecastingData"
+
+    # decompose [if any] into [many] Symbol(s), then return
+
+    for (i in 1:length(Symbols)) {
+
+        # User only wants an individual column
+        if(Symbols[[i]] != !"USFedPhilForecastingData") {
+           if (verbose)
+             cat("selecting ", Symbols[[i]], ".....\n\n")
+          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(Symbols[[i]])]]
+        }
+
+        fri <- quantmod___convert.time.series(fr = fri, return.class = return.class)
+        if (auto.assign)
+            assign(Symbols[[i]], fri, env)
+    }
+    if (auto.assign)
+        return(Symbols)
+    return(fri)
+
+})}
+
+
+
 #' American Association of Individual Investors (AAII) weekly sentiment survey
 #'
 #' @description

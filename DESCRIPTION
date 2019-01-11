@@ -41,6 +41,7 @@ Imports:
     seplyr,
     rlist,
     purrr,
+    RQuantLib,
     Hmisc, 
     DescTools,
     DataCombine,
