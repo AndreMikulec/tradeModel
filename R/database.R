@@ -1395,6 +1395,8 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 
 #' Philadelphia Fed Survey of Professinal Forecasters Release Dates
 #'
+#' About the date/time index . . .
+#'
 #' Deadline and Release Dates for the Survey of Professional Forecasters
 #' True deadline and news release dates for surveys prior to 1990:Q2 are not known.
 #'
@@ -1424,15 +1426,15 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #' \cite{Survey of Professinal Forecasters Release Dates \url{https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en}}
 #' @examples
 #' \dontrun{
-#' ForcastersReleaseDates()
-#' ForcastersReleaseDates(force = TRUE)
+#' ForecastersReleaseDates()
+#' ForecastersReleaseDates(force = TRUE)
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_replace_all str_detect str_c
 #' @importFrom DataCombine FillDown VarDrop MoveFront
 #' @importFrom zoo as.Date as.yearmon
 #' @export
-ForcastersReleaseDates <- function(env = parent.frame(), MaxAge = NULL, ...) {
+ForecastersReleaseDates <- function(env = parent.frame(), MaxAge = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
@@ -1515,8 +1517,46 @@ initEnv(); on.exit({uninitEnv()})
 
 #' Survey of Professional Forecasters data from the Philadelphia FED
 #'
-#' # WORK IN PROGRESS
-#' # WORK IN PROGRESS
+#' About the data . . .
+#'
+#' File Structure: Column Header Nomenclature and Forecast Horizons
+#'
+#' “1” to “6” (quarterly forecasts) or
+#' “A” and “B” (annual-average forecasts)
+#'
+#' The number “1” represents the “forecast” for the quarter prior to the quarter in
+#' which the survey is conducted. The forecasters know the values of the variables for this
+#' quarter at the time they submit their projections. . . . The forecasters are permitted
+#' to forecast a revision
+#'
+#' The number “2” represents the forecast for the current quarter, defined as
+#' the quarter in which the survey is conducted. The numbers “3” through “6”
+#' represent the forecasts for the four quarters after the current quarter.
+#' The letters “A” and “B” represent annual average forecasts
+#' for the current year (the year in which the survey is conducted) and
+#' the following year.
+#'
+#' About the date/time index . . .
+#'
+#' Deadline and Release Dates for the Survey of Professional Forecasters
+#'
+#' release dates
+#' https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en
+#'
+#' True deadline and news release dates for surveys prior to 1990:Q2 are not known.
+#'
+#' NOTE: about "not known" (see below), for simplicity
+#' xts time index of these "not known" periods is the middle date of the calendar quarter
+#'
+#' *The 1990Q2 survey was not taken in real time, because the Philadelphia Fed
+#' had not yet taken over the survey. Forecasters were asked to provide dated
+#' forecasts from May 1990.
+#'
+#' **The 1996Q1 survey was delayed because of the federal government shutdown,
+#' which in turn delayed the release of government statistical data.
+#'
+#' ***The 2013Q4 survey was delayed because of the federal government shutdown,
+#' which in turn delayed the release of government statistical data.
 #'
 #' # Popular start page
 #' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files
@@ -1526,7 +1566,7 @@ initEnv(); on.exit({uninitEnv()})
 #' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data/individual-forecasts
 #'
 #' # Some, compare and constrasts may be
-#' 'forcasters'(prediction) w.s. FRED (acutally what happened
+#' 'forcasters'(prediction) w.s. FRED (acutally what happened)
 #'
 #' # unemployment
 #'
@@ -1559,12 +1599,7 @@ initEnv(); on.exit({uninitEnv()})
 #'
 #' Corporate Profits After Tax (without IVA and CCAdj) (CP)
 #' https://fred.stlouisfed.org/series/CP
-#'
-#' NOTE: (for simplicity) xts time index is the middle data of the calendar quarter
-#'
-#' release dates UNIMPLEMENTED
-#' https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en
-#'
+#'#'
 #' NOT USED ANYWHERE
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
@@ -1594,20 +1629,21 @@ initEnv(); on.exit({uninitEnv()})
 #' The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"
 #' @param Fun mean with na.rm = TRUE (default) Aggregate function to
 #' apply to the period data. This becomes the symbol Suffix. E.g. "mean" will
-#' produce the suffix "MEAN"
-#' @param na.rm TRUE(default) pased to Fun. If Fun does not have na.rm parameter
-#' or Fun does not have dots ... parameter then na.rm is not passed
+#' produce the suffix "mean"
 #' @param force FALSE(default) re-download data from USFedPhil ( See the examples. )
 #' Generally, using this parameter "force = TRUE"
 #' is NOT necessary: after MaxAge has been exceeded and if a query needs the
 #' MOST RECENTLY PUBLISHED FORECASTERS EXCEL FILE then this file will be downloaded anew.
-#' @param ... additional parameters
+#' @param ... additional parameters pased to Fun. Also dots are passed to
+#' quantmod___try.download.file
 #' @return A call to getSymbols.USFedPhil will load into the specified
 #' environment one object for each \code{Symbol} specified,
 #' with class defined by \code{return.class}.
 #' @author Jeffrey A. Ryan
 #' @author Andre Mikulec (adapted original code to work with the
 #' US Federal Researve Bank of Philadelphia's Survey of Professional Forecasters)
+#' @references
+#' \cite{Survey of Professinal Forecasters Release Dates \url{https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en}}
 #' @references
 #' \cite{Historical Data Files for the Survey of Professional Forecasters \url{https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files}}
 #' @references
@@ -1627,9 +1663,10 @@ initEnv(); on.exit({uninitEnv()})
 #' if(!exists("UNEMP2.mean")) getSymbols("UNEMP2", src = "USFedPhil")
 #'
 #' getSymbols(c("UNEMP2", "PGDP", "NGDP", "CPROF"), src = "USFedPhil")
+#' getSymbols(c("RR1_TBILL_PCE_3","RR3_TBILL_PCE_3"), src = "USFedPhil", Fun = mean, na.rm = TRUE)
 #'
 #' # standard deviation
-#' getSymbols("UNEMP2", src = "USFedPhil", Fun = sd)
+#' getSymbols("UNEMP2", src = "USFedPhil", Fun = sd, na.rm = TRUE)
 #'
 #' # just recent data
 #' getSymbols("UNEMP2", src = "USFedPhil", SurveyDecades = "2010s")
@@ -1649,11 +1686,12 @@ initEnv(); on.exit({uninitEnv()})
 #' @importFrom data.table data.table rbindlist
 #' @importFrom RQuantLib adjust
 #' @importFrom DataCombine MoveFront VarDrop
+#' @importFrom plyr join
 #' @export
 getSymbols.USFedPhil <- function(Symbols, env, return.class = "xts",
            SurveyDecades = "All",
            DataPath = "./USFedPhilForecastersData", MaxAge = NULL,
-           Fun = mean, na.rm = TRUE, ...) {
+           Fun = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
@@ -1671,13 +1709,16 @@ initEnv(); on.exit({uninitEnv()})
 
     # SurveyDecades
     AllSurveyDecades <- c("1970s", "1980s", "1990s", "2000s", "2010s")
-    if(is.null(SurveyDecades) || "SurveyDecades" == "All")
+    if(is.null(SurveyDecades) || SurveyDecades == "All")
       SurveyDecades <-  AllSurveyDecades
     if(any(!SurveyDecades %in% c("All", AllSurveyDecades)))
       stop("getSymbols.USFedPhil can not find SurveyDecades member")
 
     # DataPath
     if(is.null(DataPath)) DataPath <- "./USFedPhilForecastersData"
+    if(!dir.exists(DataPath)) dir.create(DataPath)
+    # read ? dir.exists
+    if(!dir.exists(DataPath)) stop("getSymbols.USFedPhil directory not created or created without a determinable name")
     DataPath <- normalizePath(path = DataPath, winslash = "/", mustWork = TRUE)
 
     if(is.null(MaxAge)) MaxAge <- "4 hours"
@@ -1686,34 +1727,29 @@ initEnv(); on.exit({uninitEnv()})
     MaxAgeUnits <- MaxAgeValueUnits[2]
 
     # Fun
-    Fun <- if(is.null(Fun)) { mean } else { match.fun(Fun) }
-    FunString <- as.character(substitute(Fun))
+    # FunString <- as.character(substitute(Fun))
+    # FunString <- if(is.null(Fun)) { "mean" } else {  as.character(substitute(Fun)) }
+    # Fun <- if(is.null(Fun)) { mean } else { match.fun(Fun) }
 
-    # na.rm
-    # should instead, just ignore "unused"
-    # just TRUE/FALSE whether I ever set na.rm
-    setNArm <- FALSE
-    if("na.rm" %in% names(formals(Fun)) && na.rm == TRUE) {
-      na.rm <- TRUE; setNArm <- TRUE
-    }
-    if( "..." %in% names(formals(Fun)) && na.rm == TRUE && !setNArm) {
-      na.rm <- TRUE; setNArm <- TRUE
-    }
-    if(!setNArm) {
-      na.rm <- FALSE; setNArm <- TRUE
-    }
+    # # na.rm
+    # # should instead, just ignore "unused"
+    # # just TRUE/FALSE whether I ever set na.rm
+    # setNArm <- FALSE
+    # if("na.rm" %in% names(formals(Fun)) && na.rm == TRUE) {
+    #   na.rm <- TRUE; setNArm <- TRUE
+    # }
+    # if( "..." %in% names(formals(Fun)) && na.rm == TRUE && !setNArm) {
+    #   na.rm <- TRUE; setNArm <- TRUE
+    # }
+    # if(!setNArm) {
+    #   na.rm <- FALSE; setNArm <- TRUE
+    # }
 
     # force
     if(!exists("force", envir = this.env, inherits = FALSE))
         force = FALSE
 
-    if(!is.null(DataPath) && !is.na(DataPath)) stop("getSymbols.USFedPhil needs a DataPath")
-    if(!dir.exists(DataPath)) dir.create(DataPath)
-    # read ? dir.exists
-    if(!dir.exists(DataPath)) stop("getSymbols.USFedPhil directory not created or created with an underminable name")
-
     USFedPhil.URL <- "https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data"
-
 
     AllSurveyDecadesIndex     <- seq_along(AllSurveyDecades)
     # needed to determine the universally highest index
@@ -1721,8 +1757,9 @@ initEnv(); on.exit({uninitEnv()})
 
     SurveyDecadesIndex        <- match(SurveyDecades, AllSurveyDecades)
     DestFiles <- list()
-    for(FileIndex in SurveyDecadesIndex) {
 
+    for(FileIndex in SurveyDecadesIndex) {
+    FileExists <- FALSE
       # begin xls area
 
       # do not remove the 'destfile' files
@@ -1730,65 +1767,141 @@ initEnv(); on.exit({uninitEnv()})
       # the site https://www.philadelphiafed.org/ is NOT engineered
       # to handle MANY data queries, NOR denial of service attacks
 
-      File <-  stringr::str_c("micro", FileIndex, ".xlsx")
-      destfile <- stringr::str_c(DataPath, "/", File)
+      # pairs of files
+      File  <-  stringr::str_c("micro", FileIndex, ".xlsx")
+      destfile  <- stringr::str_c(DataPath, "/", File)
 
-      if((FileIndex  < MaxAllSurveyDecadesIndex) && file.exists(File) && !force) next
+      # work in pairs
+      if((FileIndex  < MaxAllSurveyDecadesIndex) && file.exists(destfile) && !force) FileExists <- TRUE
 
       # limited use variables
+      # last(youngest) .xlsx file should be refreshed often
       if(FileIndex == MaxAllSurveyDecadesIndex) {
-        updated <- file.info(destfile)$mtime # is.na - if the file does not exist
-        AgeTestTooOld <- as.difftime(MaxAgeValue,  units = MaxAgeUnits) <  difftime(Sys.time(), updated)
+        if(file.exists(destfile)) {
+          updated <- file.info(destfile)$mtime # is.na - if the file does not exist
+          AgeTestTooOld <- as.difftime(MaxAgeValue,  units = MaxAgeUnits) <  difftime(Sys.time(), updated)
+          # wierd logic: if the file is "not too old" then I ALSO will say that the file EXISTS
+          if(!AgeTestTooOld && !force) FileExists <- TRUE
+        }
       }
-      if((FileIndex == MaxAllSurveyDecadesIndex) && !AgeTestTooOld && !force) next
 
-      USFedPhil.URL.file <- stringr::str_c(USFedPhil.URL, "/", File, "?la=en")
-      if (verbose)
-          cat("downloading ", destfile, ".....\n\n")
-      quantmod___try.download.file(USFedPhil.URL.file, destfile = destfile, quiet = !verbose, mode = "wb", ...)
+      if(!FileExists) {
+        USFedPhil.URL.file <- stringr::str_c(USFedPhil.URL, "/", File, "?la=en")
+        if (verbose)
+            cat("downloading ", destfile, ".....\n\n")
+        quantmod___try.download.file(USFedPhil.URL.file, destfile = destfile, quiet = !verbose, mode = "wb", ...)
+
+      }
 
       Sheets <- readxl::excel_sheets(destfile)
       if(!"USFedPhilForecastingData" %in% Symbols) {
-        Sheets <- Sheets[Sheets %in% stringr::str_remove(Symbols, "[A-Z1-9]$")]
+        # selection by "obscurity"
+        Sheets1 <- Sheets[Sheets %in% stringr::str_remove(Symbols, "[A-Z1-9]$")]
+        # _# sheets (on the far right of the Excel file)
+        Sheets2 <- Sheets[Sheets %in% stringr::str_remove(Symbols, "_[A-Z1-9]$")]
+        Sheets  <- union(Sheets1, Sheets2)
       }
 
-      DestFileSheets <- list()
+      DestFileSheets <- data.frame()
       for(Sheet in Sheets) {
         # data.frame
-        fr <- suppressWarnings(readxl::read_xls(path = destfile, sheet = Sheet,
-               col_names = col_names,
-               col_types = "numeric",
-               n_max = length(Dates)))
-        DestFileSheets <- c(list(), DestFileSheets, list(fr))
+        fr <- suppressWarnings(readxl::read_xlsx(path = destfile, sheet = Sheet,
+               col_names = TRUE,
+               col_types = "numeric")
+        )
+        # only the Symbols(columns of interest)
+        fr <- fr[, c( c("YEAR", "QUARTER", "ID", "INDUSTRY"), colnames(fr)[colnames(fr) %in% Symbols]), drop = F]
+        # industry of forecaster. (not important)
+        fr <- DataCombine::VarDrop(fr, Var = "INDUSTRY")
+
+        if(!NCOL(DestFileSheets)) {
+          DestFileSheets <- fr
+        } else {
+          DestFileSheets <- plyr::join(DestFileSheets, fr, by = c("YEAR", "QUARTER", "ID"), type = "full")
+        }
+
       }
-      # industry of forecaster. (not important)
-      fr <- DataCombine::VarDrop(fr, Var = "INDUSTRY")
-      fr <- data.table::data.table(fr, key = c("YEAR","QUARTER","ID"))
-      DestFiles <- c(list(), DestFiles, DestFileSheets)
+      DestFileSheets <- data.table::data.table(DestFileSheets, key = c("YEAR","QUARTER","ID"))
+      TheseSheets <- list()
+      TheseSheets[[stringr::str_c("File_", FileIndex)]] <- DestFileSheets
+      DestFiles <- c(list(), DestFiles, TheseSheets)
 
     }
     if (verbose)
         cat("reading disk directory ", tmp, ".....\n\n")
 
-    DT <- data.table(DestFiles, fill= TRUE) %>%
-    DT[["TimeDate"]] <-
-      stringr::str_c(DT[["YEAR"]]," ", DT[["QUARTER"]]) %>%
+    # non-atomic "[[a]] <- b" assignments do not work on data.table
+    # DataCombine::VarDrop does not work on data.table
+    Res <- data.table::rbindlist(DestFiles, fill= TRUE) %>%
+      as.data.frame
+
+    browser()
+    # index
+    ## TimeDateIndex <- data.frame()
+    ## TimeDateIndex[["YearQtr"]] <-  stringr::str_c(Res[["YEAR"]]," ", Res[["QUARTER"]]) %>%
+    ## { zoo::as.yearqtr(., format ="%Y %q") }
+
+    # all dates - just estimate everything
+    ## TimeDateIndex[["ReleaseDate"]] <- TimeDateIndex[["YearQtr"]] %>%
+    ##   { zoo::as.Date(.,frac = 0.5) } %>%
+    ##    { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) } # next availabe business day
+
+    Res[["TimeDate"]] <-
+      stringr::str_c(Res[["YEAR"]]," ", Res[["QUARTER"]]) %>%
         { zoo::as.Date(zoo::as.yearqtr(., format ="%Y %q"),frac = 0.5) } %>%
           { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) }
-    DT <- DataCombine::MoveFront(DT, Var = "TimeDate" )
-    DT <- DataCombine::VarDrop(DT, Var = c("YEAR","QUARTER"))
 
+    browser()
+    ## Res[["TimeDate"]] <- TimeDateIndex[["ReleaseDate"]]
+
+    Res <- DataCombine::MoveFront(Res, Var = "TimeDate" )
+    # ommiting "ID" (and "YEAR" AND "QUARTER")
+    # The situation would be entertaining to find
+    # the best forcaster(by "ID") of them all of "all time"
+    if(!"USFedPhilForecastingData" %in% Symbols) {
+      Res <- Res[, c("TimeDate", Symbols), drop = FALSE]
+    } else { # "USFedPhilForecastingData"
+      Res <- DataCombine::VarDrop(Res, Var = c("YEAR","QUARTER","ID"))
+    }
+    DT <- data.table::data.table(Res)
     # SHOULD MOVE OUT OF HERE
     applyAggregateDT <- function(x, Fun, ...) {
-      Fun <- match.call(Fun)
+    tryCatchLog::tryCatchLog({
+    initEnv(); on.exit({uninitEnv()})
+
+      if(!is.null(Fun) && is.null(Dots[["FunStr"]])) {
+         # I am not allowed to call this TWICE
+         FunStr <- as.character(substitute(Fun))
+         Fun    <- match.fun(Fun)
+      }
+      if(exists("FunStr", envir = environment(), inherits = FALSE)) {
+        FunStr <- FunStr
+      } else {
+        FunStr <- Dots[["FunStr"]]
+      }
       setDT(x, key = c("TimeDate"))
-      # mutithreaded so no "parallel" (no plyr::llply)
-      x[, lapply(.SD, FUN = Fun, ...), by="TimeDate", .SDcols = !"ID"]
+      # mutithreaded
+      x <- x[, plyr::llply(.SD, .fun = Fun, ...), by="TimeDate"]
       x
+    })}
+    # either called   directly getSymbols.USFedPhil(Fun = mean)
+    # or     called indirectly getSymbols() called without "Fun = ??"
+    #                       or wrong argument e.g. getSymbols(.fun = XX)
+    if(!is.null(Fun) && is.null(Dots[["FunStr"]])) {
+       # I am not allowed to call this TWICE
+       FunStr <- as.character(substitute(Fun))
+       Fun    <- match.fun(Fun)
     }
-    DT <- DataCombine::VarDrop(DT, Var = c("TimeDate"))
-    DT <- DescTools::DoCall(applyAggregateDT, list(x = DT, Fun = Fun, Dots, na.rm = na.rm))
-    colnames(DT) <- stringr::str_c(colnames(DT), ".", FunString)
+    if(exists("FunStr", envir = environment(), inherits = FALSE)) {
+      FunStr <- FunStr
+    } else {
+      FunStr <- Dots[["FunStr"]]
+    }
+
+    # as.character(substitute(Fun)) == "Fun"
+    # (inside of the function) called by DoCall
+    DT <- DescTools::DoCall("applyAggregateDT", c(list(), x = list(DT), Fun = Fun, FunStr = FunStr, Dots))
+    colnames(DT) <- stringr::str_c(colnames(DT), ".", FunStr)
     fr <- DT
 
     if (verbose)
@@ -1809,14 +1922,13 @@ initEnv(); on.exit({uninitEnv()})
     fri <- fr # pass-throught on !"USFedPhilForecastingData"
 
     # decompose [if any] into [many] Symbol(s), then return
-
     for (i in 1:length(Symbols)) {
 
         # User only wants an individual column
-        if(Symbols[[i]] != !"USFedPhilForecastingData") {
+        if(Symbols[[i]] != "USFedPhilForecastingData") {
            if (verbose)
              cat("selecting ", Symbols[[i]], ".....\n\n")
-          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(Symbols[[i]])]]
+          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(stringr::str_c(Symbols[[i]],".", FunStr))]]
         }
 
         fri <- quantmod___convert.time.series(fr = fri, return.class = return.class)
@@ -3085,7 +3197,7 @@ initEnv(); on.exit({uninitEnv()})
 getSymbols <- function (Symbols = NULL, env = parent.frame(), reload.Symbols = FALSE,
     verbose = FALSE, warnings = TRUE, src = "yahoo", symbol.lookup = TRUE,
     auto.assign = getOption("getSymbols.auto.assign", TRUE), source.envir = NULL, # BEGIN/END NEW CODE
-    ...)                                                                        {
+    Fun = NULL, ...)                                                                        {
     if (getOption("getSymbols.warning4.0", TRUE)) {
         message(sQuote("getSymbols"), " currently uses auto.assign=TRUE by default, but will\n",
             "use auto.assign=FALSE in 0.5-0. You will still be able to use\n",
@@ -3169,11 +3281,22 @@ initEnv();on.exit({uninitEnv()})
             }
             symbols.returned <- character()
             if(length(current.symbols)){
+              FunStr <- NULL
+              Dots <- list(...)
+              if(!is.null(Fun) && is.null(Dots[["FunStr"]])) {
+                FunStr <- as.character(substitute(Fun))
+                Fun <- match.fun(Fun)
+              }
+              if(exists("FunStr", envir = environment(), inherits = FALSE)) {
+                FunStr <- FunStr
+              } else {
+                FunStr <- Dots[["FunStr"]]
+              }
             # END NEW CODE
               symbols.returned <- do.call(paste("getSymbols.",
                   symbol.source, sep = ""), list(Symbols = current.symbols,
                   env = env, verbose = verbose, warnings = warnings,
-                  auto.assign = auto.assign, ...))
+                  auto.assign = auto.assign, Fun = Fun, FunStr = FunStr, ...)) # NEW CODE , Fun = Fun, FunStr = FunStr
             # BEGIN NEW CODE
             }
             if(exists("symbols.returned.from.envir") && length(symbols.returned.from.envir)) {

@@ -6,7 +6,7 @@
 \usage{
 getSymbols.USFedPhil(Symbols, env, return.class = "xts",
   SurveyDecades = "All", DataPath = "./USFedPhilForecastersData",
-  MaxAge = NULL, Fun = mean, na.rm = TRUE, ...)
+  MaxAge = NULL, Fun = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded
@@ -42,12 +42,10 @@ The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"}
 
 \item{Fun}{mean with na.rm = TRUE (default) Aggregate function to
 apply to the period data. This becomes the symbol Suffix. E.g. "mean" will
-produce the suffix "MEAN"}
+produce the suffix "mean"}
 
-\item{na.rm}{TRUE(default) pased to Fun. If Fun does not have na.rm parameter
-or Fun does not have dots ... parameter then na.rm is not passed}
-
-\item{...}{additional parameters}
+\item{...}{additional parameters pased to Fun. Also dots are passed to
+quantmod___try.download.file}
 
 \item{force}{FALSE(default) re-download data from USFedPhil ( See the examples. )
 Generally, using this parameter "force = TRUE"
@@ -60,10 +58,48 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
-# WORK IN PROGRESS
-# WORK IN PROGRESS
+About the data . . .
 }
 \details{
+File Structure: Column Header Nomenclature and Forecast Horizons
+
+“1” to “6” (quarterly forecasts) or
+“A” and “B” (annual-average forecasts)
+
+The number “1” represents the “forecast” for the quarter prior to the quarter in
+which the survey is conducted. The forecasters know the values of the variables for this
+quarter at the time they submit their projections. . . . The forecasters are permitted
+to forecast a revision
+
+The number “2” represents the forecast for the current quarter, defined as
+the quarter in which the survey is conducted. The numbers “3” through “6”
+represent the forecasts for the four quarters after the current quarter.
+The letters “A” and “B” represent annual average forecasts
+for the current year (the year in which the survey is conducted) and
+the following year.
+
+About the date/time index . . .
+
+Deadline and Release Dates for the Survey of Professional Forecasters
+
+release dates
+https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en
+
+True deadline and news release dates for surveys prior to 1990:Q2 are not known.
+
+NOTE: about "not known" (see below), for simplicity
+xts time index of these "not known" periods is the middle date of the calendar quarter
+
+*The 1990Q2 survey was not taken in real time, because the Philadelphia Fed
+had not yet taken over the survey. Forecasters were asked to provide dated
+forecasts from May 1990.
+
+**The 1996Q1 survey was delayed because of the federal government shutdown,
+which in turn delayed the release of government statistical data.
+
+***The 2013Q4 survey was delayed because of the federal government shutdown,
+which in turn delayed the release of government statistical data.
+
 # Popular start page
 https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files
 
@@ -72,7 +108,7 @@ Individual Forecasts for the Survey of Professional Forecasters
 https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data/individual-forecasts
 
 # Some, compare and constrasts may be
-'forcasters'(prediction) w.s. FRED (acutally what happened
+'forcasters'(prediction) w.s. FRED (acutally what happened)
 
 # unemployment
 
@@ -105,12 +141,7 @@ https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-pro
 
 Corporate Profits After Tax (without IVA and CCAdj) (CP)
 https://fred.stlouisfed.org/series/CP
-
-NOTE: (for simplicity) xts time index is the middle data of the calendar quarter
-
-release dates UNIMPLEMENTED
-https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en
-
+#'
 NOT USED ANYWHERE
 }
 \examples{
@@ -120,9 +151,10 @@ NOT USED ANYWHERE
 if(!exists("UNEMP2.mean")) getSymbols("UNEMP2", src = "USFedPhil")
 
 getSymbols(c("UNEMP2", "PGDP", "NGDP", "CPROF"), src = "USFedPhil")
+getSymbols(c("RR1_TBILL_PCE_3","RR3_TBILL_PCE_3"), src = "USFedPhil", Fun = mean, na.rm = TRUE)
 
 # standard deviation
-getSymbols("UNEMP2", src = "USFedPhil", Fun = sd)
+getSymbols("UNEMP2", src = "USFedPhil", Fun = sd, na.rm = TRUE)
 
 # just recent data
 getSymbols("UNEMP2", src = "USFedPhil", SurveyDecades = "2010s")
@@ -137,6 +169,8 @@ getSymbols("USFedPhilForecastingData", src = "USFedPhil")
 }
 }
 \references{
+\cite{Survey of Professinal Forecasters Release Dates \url{https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en}}
+
 \cite{Historical Data Files for the Survey of Professional Forecasters \url{https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files}}
 
 \cite{Documentation: PDF Provides information on all variables, transformations, and files in the survey. \url{https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-documentation.pdf?la=en}}
