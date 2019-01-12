@@ -1393,6 +1393,126 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 
 
 
+#' Philadelphia Fed Survey of Professinal Forecasters Release Dates
+#'
+#' Deadline and Release Dates for the Survey of Professional Forecasters
+#' True deadline and news release dates for surveys prior to 1990:Q2 are not known.
+#'
+#' *The 1990Q2 survey was not taken in real time, because the Philadelphia Fed
+#' had not yet taken over the survey. Forecasters were asked to provide dated
+#' forecasts from May 1990.
+#'
+#' **The 1996Q1 survey was delayed because of the federal government shutdown,
+#' which in turn delayed the release of government statistical data.
+#'
+#' ***The 2013Q4 survey was delayed because of the federal government shutdown,
+#' which in turn delayed the release of government statistical data.
+#'
+#' @param env where to create objects. (.GlobalEnv)
+#' @param MaxAge "4 hours"(default) is longest age allowed, such that the retrieving the
+#' the MOST RECENTLY PUBLISHED FORECASTERS RELEASE DATES FILE from  the local fileystem
+#' will be allowed to be done. If the MaxAge is exceeded then,
+#' the most recent release dates file is refreshed anew from the Philadelphia Fed site.
+#' The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"
+#' @param force FALSE(default) re-download data from the Philadelphia Fed ( See the examples. )
+#' Generally, using this parameter "force = TRUE"
+#' is NOT necessary: after MaxAge has been exceeded and if a query needs the
+#' MOST RECENTLY PUBLISHED FORECASTERS RELEASE DATES FILE then this file will be downloaded anew.
+#' @param ... dots passed to quantmod___try.download.file
+#' @return data.frame of YearQtr (yearqtr) TrueDeadlineDate (Date) ReleaseDate (Date)
+#' @references
+#' \cite{Survey of Professinal Forecasters Release Dates \url{https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en}}
+#' @examples
+#' \dontrun{
+#' ForcastersReleaseDates()
+#' ForcastersReleaseDates(force = TRUE)
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_replace_all str_detect str_c
+#' @importFrom DataCombine FillDown VarDrop MoveFront
+#' @importFrom zoo as.Date as.yearmon
+#' @export
+ForcastersReleaseDates <- function(env = parent.frame(), MaxAge = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  this.env <- environment()
+  for (var in names(list(...))) {
+      assign(var, list(...)[[var]], this.env)
+  }
+
+  if(!hasArg("verbose"))
+    verbose <- FALSE
+
+  if(is.null(MaxAge)) MaxAge <- "4 hours"
+  MaxAgeValueUnits <- strsplit(MaxAge, " ")[[1]]
+  MaxAgeValue <- as.integer(MaxAgeValueUnits[1])
+  MaxAgeUnits <- MaxAgeValueUnits[2]
+
+  # force
+  if(!exists("force", envir = this.env, inherits = FALSE))
+      force = FALSE
+
+  # maybe get from temp
+  if(exists(".ForcastersReleaseDates_path2file", envir = env, inherits = FALSE) & !force) {
+      assign("destfile", get(".ForcastersReleaseDates_path2file", envir = env, inherits = FALSE), envir = this.env, inherits = FALSE)
+      if(file.exists(destfile)) {
+        updated <- file.info(destfile)$mtime # is.na - if the file does not exist
+        AgeTestTooOld <- as.difftime(MaxAgeValue,  units = MaxAgeUnits) <  difftime(Sys.time(), updated)
+        if(!AgeTestTooOld) ReleaseDates <- readRDS(destfile)
+          return(ReleaseDates)
+      }
+  }
+
+  # get
+  url <- "https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en"
+  tmp <- tempfile()
+  quantmod___try.download.file(url, destfile = tmp, quiet = !verbose, mode = "wb", ...)
+  RawData <- readLines(tmp)
+
+  # do not remove the 'tmp' file
+  # In this R session, keep the file around and available for the next query [if any]
+  # the site https://www.philadelphiafed.org is NOT engineered
+  # to handle MANY data queries, NOR denial of service attacks
+
+  # format
+  GoneAsk    <- stringr::str_replace_all(RawData, "\\*", " ")
+  GoneTabs   <- stringr::str_replace_all(GoneAsk, "\t", "    ")
+  GoneExcess <- GoneTabs[stringr::str_detect(GoneTabs, "^\\d{4} Q\\d|^     Q\\d")]
+  ReadyRead <- stringr::str_replace_all(GoneExcess, "^    ", "0000")
+
+  # extract
+  read.table(textConnection(ReadyRead)
+             , col.names  = c("Year"     ,"Quarter"  ,"TrueDeadlineDate","ReleaseDate")
+             , colClasses = c("character","character","character"         , "character")
+             , fill = TRUE # unequal length rows
+             , stringsAsFactors = FALSE
+  ) -> ReleaseDates
+
+  # prepare for yearqtr
+  ReleaseDates[ReleaseDates[["Year"]] == "0000", "Year"] <- NA_character_
+  ReleaseDates <- DataCombine::FillDown(ReleaseDates, Var = "Year")
+
+  # yearqtr
+  ReleaseDates[["YearQtr"]] <- zoo::as.yearqtr(stringr::str_c( ReleaseDates[["Year"]], " ", ReleaseDates[["Quarter"]]), format = "%Y Q%q")
+  ReleaseDates <- DataCombine::VarDrop(ReleaseDates, Var = c("Year","Quarter"))
+  ReleaseDates <- DataCombine::MoveFront(ReleaseDates, Var = "YearQtr")
+
+  # Dates
+  ReleaseDates[["TrueDeadlineDate"]] <- zoo::as.Date(ReleaseDates[["TrueDeadlineDate"]], format = "%m/%d/%y")
+  ReleaseDates[["ReleaseDate"]] <- zoo::as.Date(ReleaseDates[["ReleaseDate"]], format = "%m/%d/%y")
+
+  # persistent
+  destfile <- stringr::str_c(tempdir(),"/","ForcastersReleaseDates.rds")
+  saveRDS(ReleaseDates, file = destfile)
+  assign(".ForcastersReleaseDates_path2file", destfile, envir = env, inherits = FALSE)
+
+  ReleaseDates
+
+})}
+
+
+
 #' Survey of Professional Forecasters data from the Philadelphia FED
 #'
 #' # WORK IN PROGRESS
@@ -1441,6 +1561,9 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
 #' https://fred.stlouisfed.org/series/CP
 #'
 #' NOTE: (for simplicity) xts time index is the middle data of the calendar quarter
+#'
+#' release dates UNIMPLEMENTED
+#' https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en
 #'
 #' NOT USED ANYWHERE
 #'
@@ -1614,7 +1737,7 @@ initEnv(); on.exit({uninitEnv()})
 
       # limited use variables
       if(FileIndex == MaxAllSurveyDecadesIndex) {
-        updated <- file.info(destfile)$mtime
+        updated <- file.info(destfile)$mtime # is.na - if the file does not exist
         AgeTestTooOld <- as.difftime(MaxAgeValue,  units = MaxAgeUnits) <  difftime(Sys.time(), updated)
       }
       if((FileIndex == MaxAllSurveyDecadesIndex) && !AgeTestTooOld && !force) next
@@ -1809,7 +1932,7 @@ initEnv(); on.exit({uninitEnv()})
       tmp <- NULL
     }
     if( !is.null(tmp) &&
-        !is.na(file.info(tmp)$mtime) &&
+        !is.na(file.info(tmp)$mtime) && # is.na - if the file does not exist
         !force
     ) {
     } else {
@@ -1868,7 +1991,7 @@ initEnv(); on.exit({uninitEnv()})
       tmppage <- NULL
     }
     if( !is.null(tmppage) &&
-        !is.na(file.info(tmppage)$mtime) &&
+        !is.na(file.info(tmppage)$mtime) && # is.na - if the file does not exist
         !force
     ) {
     } else {
@@ -2044,7 +2167,7 @@ initEnv(); on.exit({uninitEnv()})
       tmp <- NULL
     }
     if( !is.null(tmp) &&
-        !is.na(file.info(tmp)$mtime) &&
+        !is.na(file.info(tmp)$mtime) && # is.na - if the file does not exist
         !force
     ) {
     } else {
@@ -2420,7 +2543,7 @@ initEnv(); on.exit({uninitEnv()})
       tmp <- NULL
     }
     if( !is.null(tmp) &&
-        !is.na(file.info(tmp)$mtime) &&
+        !is.na(file.info(tmp)$mtime) && # is.na - if the file does not exist
         !force
     ) {
     } else {
@@ -2514,7 +2637,7 @@ initEnv(); on.exit({uninitEnv()})
       tmp <- NULL
     }
     if( !is.null(tmp) &&
-        !is.na(file.info(tmp)$mtime) &&
+        !is.na(file.info(tmp)$mtime) && # is.na - if the file does not exist
         !force
     ) {
     } else {
@@ -2664,7 +2787,7 @@ initEnv(); on.exit({uninitEnv()})
       tmp <- NULL
     }
     if( !is.null(tmp) &&
-        !is.na(file.info(tmp)$mtime) &&
+        !is.na(file.info(tmp)$mtime) && # is.na - if the file does not exist
         !force
     ) {
     } else {
@@ -2805,7 +2928,7 @@ initEnv(); on.exit({uninitEnv()})
     #   tmp <- NULL
     # }
     # if( !is.null(tmp) &&
-    #     !is.na(file.info(tmp)$mtime) &&
+    #     !is.na(file.info(tmp)$mtime) && # is.na - if the file does not exist
     #     !force
     # ) {
     # } else {

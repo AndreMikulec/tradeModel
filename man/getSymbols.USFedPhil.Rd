@@ -108,6 +108,9 @@ https://fred.stlouisfed.org/series/CP
 
 NOTE: (for simplicity) xts time index is the middle data of the calendar quarter
 
+release dates UNIMPLEMENTED
+https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en
+
 NOT USED ANYWHERE
 }
 \examples{

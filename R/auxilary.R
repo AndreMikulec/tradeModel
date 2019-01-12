@@ -1925,7 +1925,7 @@ initEnv(); on.exit({uninitEnv()})
       tmppage <- NULL
     }
     if( !is.null(tmppage) &&
-        !is.na(file.info(tmppage)$mtime) &&
+        !is.na(file.info(tmppage)$mtime) && # is.na - if the file does not exist
         !force
     ) {
     } else {
