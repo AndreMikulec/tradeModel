@@ -45,9 +45,9 @@ Initial creation of .fst files uses about 15 seconds of time per file (5 file).
 Afterwards, queries are lightning fast.
 Otherwiase FALSE, use "Excel Only"  Queries are slower (mostly because of the heavier disk I/O)}
 
-\item{Fun}{mean with na.rm = TRUE (default) Aggregate function to
+\item{Fun}{mean(default) with na.rm = TRUE(default) Aggregate function to
 apply to the period data. This becomes the symbol Suffix. E.g. "mean" will
-produce the suffix "mean"}
+produce the suffix "mean".}
 
 \item{...}{additional parameters pased to Fun. Also dots are passed to
 quantmod___try.download.file}
