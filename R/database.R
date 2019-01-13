@@ -1325,23 +1325,39 @@ pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentT
 
 
 
-#' custom sort a vector
+#' custom sorting a vector
+#'
+#' @rdname customSorting
+#' @export
+customSorting <- function(x, ...) UseMethod("customSorting")
+
+#' custom sorting a vector
+#'
+#' @rdname customSorting
+#' @export
+customSorting.default <- function(x, ...) stop("No customSorting S3 method found")
+
+#' custom sorting a vector
 #'
 #' excess Vector elements are appended to the end ( sort or not sort, CI sort or CS sort )
 #' other elements found in InitOrder that are 'not found in Vector' are ignored
 #'
-#' @param Vector vector to be sorted
+#' @param x vector  to be sorted
 #' @param InitOrder starting custom sorting ( without the excess )
-#' @param CI FALSE(default) whether or not Vector excess columns that are
+#' @param CI FALSE(default) whether or not Vector excess items that are
 #' not found in InitOrder  are sorted 'not case insensitive'(TRUE) or
-#' ncase sensitive'(FALSE)
-#' @param sortVectorExcess TRUE(default) weather or not Vector excess columns
+#' ncase sensitive'(FALSE).  Sorting is done by "lower()"
+#' @param sortVectorExcess TRUE(default) whether or not Vector excess columns
 #' are attempted to be sorted (TRUE) or not attempted to be sorted (FALSE)
-#' @return vector Vector sorted by InitOrder
+#' @param chopVectorExcess FALSE(default) whether or not excess (x) elements
+#' not found in InitOrder are removed
+#' @param ... dots passed
+#' @return vector sorted by InitOrder
 #' @references
 #' \cite{Custom Sorting in R \url{https://stackoverflow.com/questions/23995285/custom-sorting-in-r}}
 #' @references
 #' \cite{Case insensitive sort of vector of string in R \url{https://stackoverflow.com/questions/29890303/case-insensitive-sort-of-vector-of-string-in-r}}
+#' @rdname customSorting
 #' @examples
 #' \dontrun{
 #'
@@ -1354,6 +1370,10 @@ pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentT
 #' [1] "D" "B" "C" "E" "A"
 #'
 #' # excess(Vector)  "G", "F"
+#'
+#' # customSorting(c("G", "D","B","C", "F"), c("E","B","C","D","A"))
+#' [1]"B" "C" "D" "F" "G"
+#'
 #' customSorting(c("G", "D","B","C", "F"), c("E","B","C","D","A"), sortVectorExcess = FALSE)
 #' [1] "B" "C" "D" "G" "F"
 #'
@@ -1361,12 +1381,20 @@ pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentT
 #' customSorting(c("E","B","C","D","A"), c("F", "D","B","C"), sortVectorExcess = FALSE)
 #' [1] "D" "B" "C" "E" "A"
 #'
+#' customSorting(c(7,4,2,3,6), c(5,2,3,4,1))
+#' [1] 2 3 4 6 7
+#'
 #' }
 #' @export
-customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE) {
+customSorting.character <- function(x, InitOrder, CI = FALSE, sortVectorExcess = TRUE, chopVectorExcess = FALSE, ...) {
 
+  Vector <- x
+  # will reduce to vector
+  Vector <- as.vector(Vector)
+  InitOrder <- as.vector(InitOrder)
   # custom sorting
   VectorLevels <- InitOrder
+  # will reduce to vector
   VectorExcess <- setdiff(Vector, VectorLevels)
   if(CI == FALSE) {
     if(sortVectorExcess) {
@@ -1387,7 +1415,108 @@ customSorting <- function(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE
   VectorFactor <- factor(Vector, levels = VectorExcessCaseDeterminedLevels)
   Vector <- Vector[order(VectorFactor)]
   Vector <- as.vector(Vector)
+  if(chopVectorExcess)
+    Vector <- Vector[!Vector %in% VectorExcessCaseDetermined]
   Vector
+
+}
+#' custom sorting a vector
+#'
+#' @rdname customSorting
+#' @export
+customSorting.numeric <- customSorting.character
+
+#' custom sorting a vector
+#'
+#' @rdname customSorting
+#' @examples
+#' \dontrun{
+#' # Date examples
+#'
+#' customSorting(zoo::as.Date(6:3), zoo::as.Date(1:4))
+#' [1] "1970-01-04" "1970-01-05" "1970-01-06" "1970-01-07"
+#'
+#' customSorting(zoo::as.Date(6:3), zoo::as.Date(1:4), sortVectorExcess = FALSE)
+#' [1] "1970-01-04" "1970-01-05" "1970-01-07" "1970-01-06"
+#'
+#' customSorting(zoo::as.Date(6:3), zoo::as.Date(1:4), sortVectorExcess = FALSE, chopVectorExcess = TRUE)
+#' [1] "1970-01-04" "1970-01-05"
+#' }
+#' @importFrom zoo as.Date
+#' @export
+customSorting.Date <- function(x, InitOrder, ...) {
+
+  x <- as.numeric(x)
+  InitOrder <- as.numeric(InitOrder)
+  x <- customSorting(x, InitOrder = InitOrder, ...)
+  zoo::as.Date(x, ...)
+}
+
+#' custom sorting a vector
+#'
+#' @rdname customSorting
+#' @importFrom zoo yearmon
+#' @export
+customSorting.yearmon <- function(x, InitOrder, ...) {
+
+  x <- as.numeric(x)
+  InitOrder <- as.numeric(InitOrder)
+  x <- customSorting(x, InitOrder = InitOrder, ...)
+  zoo::as.yearmon(x, ...)
+}
+
+#' custom sorting a vector
+#'
+#' @rdname customSorting
+#' @importFrom zoo yearqtr
+#' @export
+customSorting.yearqtr <- function(x, InitOrder, ...) {
+
+  x <- as.numeric(x)
+  InitOrder <- as.numeric(InitOrder)
+  x <- customSorting(x, InitOrder = InitOrder, ...)
+  zoo::as.yearqtr(x, ...)
+}
+
+#' custom sorting a vector
+#'
+#' @rdname customSorting
+#' @export
+customSorting.POSIXct <- function(x, InitOrder, ...) {
+
+  x <- as.numeric(x)
+  InitOrder <- as.numeric(InitOrder)
+  x <- customSorting(x, InitOrder = InitOrder, ...)
+  as.POSIXct(x, origin = "1970-01-01", ...)
+
+}
+
+#' custom sorting a vector
+#'
+#' @rdname customSorting
+#' @importFrom chron as.chron
+#' @export
+customSorting.chron <- function(x, InitOrder, ...) {
+
+  xA <- attributes(x)
+  attributes(x) <- NULL
+  x <- as.numeric(x)
+  InitOrder <- as.numeric(InitOrder)
+  x <- customSorting(x, InitOrder = InitOrder, ...)
+  attributes(x) <- xA
+  x
+}
+
+#' custom sorting a vector
+#'
+#' class 'timeSeries' does not have a customSorting implementation
+#'
+#' @rdname customSorting
+#' @importFrom timeSeries as.timeSeries
+#' @export
+customSorting.timeSeries <- function(x, InitOrder, ...) {
+
+  stop("timeSeries does not have a customSorting implementation")
 
 }
 
@@ -1568,6 +1697,96 @@ initEnv(); on.exit({uninitEnv()})
   # May want to change back from plyr::llaply to lapply
   x <- x[, plyr::llply(.SD, .fun = Fun, ...), by = By]
   x
+})}
+
+
+#' Recodes values in a vector.
+#'
+#' WORK IN PROGRESS
+#'
+#' Adapted from blockmodeling::recode.
+#' Originally enhanced to be intermediary coding item
+#' in the processes assignment of xts index time classes from one
+#' class to another. If the oldcode and newcode classes
+#' are not compatiable (see below)
+#' then results are returned as elements in a a list.
+#'
+#' @param x vector or list of R objects
+#' @param oldcode vector or list of old codes
+#' @param newcode vector or list of new codes
+#' @param Strict FALSE(default) Method too choose the check compatibility.
+#' if oldcode and newcode are not [exactly] the same class.
+#' Assume that if newcode and newcode inherit any of the other's classes
+#' then the two classes are compatatible. Results will be attempted
+#' to be returned as a vector.
+#' Strict(TRUE) both oldcode and newcode must have the exact same class.
+#' Results will be attempted to be returned as a vector.
+#' Otherwise, the results will be attempted be returned as a list.
+#' :NOTE: if not all the 'x' elements are attemped to be recoded then the
+#' returned list may be composed of elements of different classes.
+#' @examples
+#' \dontrun{
+#'}
+#' @importFrom plyr llply
+#' @export
+ReCodify <- function (x, oldcode = sort(unique(x)), newcode, Strict = FALSE) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  if(length(oldcode) != length(newcode))
+    stop("The number of old and new codes do not match")
+  # pass through
+  if(!length(oldcode)) return(x)
+
+   # list with element of mixed classes
+   # Note: R does NOT have sublist "list[i]" comparison methods
+   # but elements could be compared with list[[i]] == list[[j]]
+   # Coding could be cumberson: runtime could be long: check
+   # each element for eaches class membership (however, this could/can be done.)
+
+  if(is.list(oldcode)) {
+     # peek
+     OldClass <- class(oldcode[[1]])
+     oldcode <-  do.call(c, oldcode)
+     if(OldClass != class(oldcode)) stop("oldcode that is list can not have mixed class members")
+   }
+  if(is.list(newcode)) {
+     # peek
+     NewClass <- class(newcode[[1]])
+     newcode <-  do.call(c, newcode)
+     if(NewClass != class(newcode)) stop("newcode that is list can not have mixed class members")
+   }
+
+  classCompat <- vector(mode = "logical")
+  if(class(oldcode) != class(newcode)) {
+
+    # inherit from any class membership
+    if(!Strict){
+      if( any(do.call(c, plyr::llply(class(oldcode), function(x) { inherits(newcode, x) }))) |
+          any(do.call(c, plyr::llply(class(newcode), function(x) { inherits(oldcode, x) })))
+      ) {
+        classCompat <- TRUE
+      } else {
+        classCompat <- FALSE
+      }
+    }
+    if(Strict) {
+      if(class(oldcode) != class(newcode)) {
+        classCompat <- FALSE
+      }
+    }
+  } else {
+    classCompat <- TRUE
+  }
+
+  if(!classCompat)
+    newx <- as.list(newx)
+
+  newx <- x
+  for (i in seq_along(oldcode)) {
+    newx[do.call(c,x) == oldcode[i]] <- newcode[i]
+  }
+  return(newx)
 })}
 
 
@@ -2265,7 +2484,7 @@ initEnv(); on.exit({uninitEnv()})
 
     # rt coredata(c)
     rtc <- cbind(coredata(rt), rsc)
-    rtc <- rtc[,customSorting(Vector = colnames(rtc), InitOrder = colnames(rs)), drop = FALSE]
+    rtc <- rtc[,customSorting(colnames(rtc), InitOrder = colnames(rs)), drop = FALSE]
     rt <- xts(rtc, index(rt))
 
     # splice

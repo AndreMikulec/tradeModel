@@ -2,28 +2,64 @@
 % Please edit documentation in R/database.R
 \name{customSorting}
 \alias{customSorting}
-\title{custom sort a vector}
+\alias{customSorting.default}
+\alias{customSorting.character}
+\alias{customSorting.numeric}
+\alias{customSorting.Date}
+\alias{customSorting.yearmon}
+\alias{customSorting.yearqtr}
+\alias{customSorting.POSIXct}
+\alias{customSorting.chron}
+\alias{customSorting.timeSeries}
+\title{custom sorting a vector}
 \usage{
-customSorting(Vector, InitOrder, CI = FALSE, sortVectorExcess = TRUE)
+customSorting(x, ...)
+
+\method{customSorting}{default}(x, ...)
+
+\method{customSorting}{character}(x, InitOrder, CI = FALSE,
+  sortVectorExcess = TRUE, chopVectorExcess = FALSE, ...)
+
+\method{customSorting}{numeric}(x, InitOrder, CI = FALSE,
+  sortVectorExcess = TRUE, chopVectorExcess = FALSE, ...)
+
+\method{customSorting}{Date}(x, InitOrder, ...)
+
+\method{customSorting}{yearmon}(x, InitOrder, ...)
+
+\method{customSorting}{yearqtr}(x, InitOrder, ...)
+
+\method{customSorting}{POSIXct}(x, InitOrder, ...)
+
+\method{customSorting}{chron}(x, InitOrder, ...)
+
+\method{customSorting}{timeSeries}(x, InitOrder, ...)
 }
 \arguments{
-\item{Vector}{vector to be sorted}
+\item{x}{vector  to be sorted}
+
+\item{...}{dots passed}
 
 \item{InitOrder}{starting custom sorting ( without the excess )}
 
-\item{CI}{FALSE(default) whether or not Vector excess columns that are
+\item{CI}{FALSE(default) whether or not Vector excess items that are
 not found in InitOrder  are sorted 'not case insensitive'(TRUE) or
-ncase sensitive'(FALSE)}
+ncase sensitive'(FALSE).  Sorting is done by "lower()"}
 
-\item{sortVectorExcess}{TRUE(default) weather or not Vector excess columns
+\item{sortVectorExcess}{TRUE(default) whether or not Vector excess columns
 are attempted to be sorted (TRUE) or not attempted to be sorted (FALSE)}
+
+\item{chopVectorExcess}{FALSE(default) whether or not excess (x) elements
+not found in InitOrder are removed}
 }
 \value{
-vector Vector sorted by InitOrder
+vector sorted by InitOrder
 }
 \description{
 excess Vector elements are appended to the end ( sort or not sort, CI sort or CS sort )
 other elements found in InitOrder that are 'not found in Vector' are ignored
+
+class 'timeSeries' does not have a customSorting implementation
 }
 \examples{
 \dontrun{
@@ -37,6 +73,10 @@ customSorting(c("E","B","C","D","A"), c("D","B","C"), sortVectorExcess = FALSE)
 [1] "D" "B" "C" "E" "A"
 
 # excess(Vector)  "G", "F"
+
+# customSorting(c("G", "D","B","C", "F"), c("E","B","C","D","A"))
+[1]"B" "C" "D" "F" "G"
+
 customSorting(c("G", "D","B","C", "F"), c("E","B","C","D","A"), sortVectorExcess = FALSE)
 [1] "B" "C" "D" "G" "F"
 
@@ -44,6 +84,21 @@ customSorting(c("G", "D","B","C", "F"), c("E","B","C","D","A"), sortVectorExcess
 customSorting(c("E","B","C","D","A"), c("F", "D","B","C"), sortVectorExcess = FALSE)
 [1] "D" "B" "C" "E" "A"
 
+customSorting(c(7,4,2,3,6), c(5,2,3,4,1))
+[1] 2 3 4 6 7
+
+}
+\dontrun{
+# Date examples
+
+customSorting(zoo::as.Date(6:3), zoo::as.Date(1:4))
+[1] "1970-01-04" "1970-01-05" "1970-01-06" "1970-01-07"
+
+customSorting(zoo::as.Date(6:3), zoo::as.Date(1:4), sortVectorExcess = FALSE)
+[1] "1970-01-04" "1970-01-05" "1970-01-07" "1970-01-06"
+
+customSorting(zoo::as.Date(6:3), zoo::as.Date(1:4), sortVectorExcess = FALSE, chopVectorExcess = TRUE)
+[1] "1970-01-04" "1970-01-05"
 }
 }
 \references{

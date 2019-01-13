@@ -14,6 +14,8 @@
 #' from x
 #' @export
 setDiff <- function (x, y) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
   if(!is.null(dim(x)) || !is.null(dim(y)))
     stop("setDiff needs dimension-less x and y")
@@ -21,7 +23,7 @@ setDiff <- function (x, y) {
   unique(if (length(x) || length(y))
       x[match(x, y, 0L) == 0L]
   else x)
-}
+})}
 
 
 
