@@ -1922,26 +1922,24 @@ initEnv(); on.exit({uninitEnv()})
     }
     DT <- data.table::data.table(Res)
     # SHOULD MOVE OUT OF HERE
-    applyAggregateDT <- function(x, Fun = NULL, ...) {
+    applyAggregateDT <- function(x, Fun, By, ...) {
     tryCatchLog::tryCatchLog({
     initEnv(); on.exit({uninitEnv()})
 
+      Dots <- list(...)
       if(!is.null(Fun) && is.null(Dots[["FunStr"]])) {
          # I am not allowed to call this TWICE
          FunStr <- as.character(substitute(Fun))
          Fun    <- match.fun(Fun)
       }
-      if(exists("FunStr", envir = environment(), inherits = FALSE)) {
-        FunStr <- FunStr
-      } else {
+      if(!is.null(Dots[["FunStr"]]) && !exists("FunStr", envir = environment(), inherits = FALSE))
         FunStr <- Dots[["FunStr"]]
-      }
 
       setDT(x, key = c("TimeDate"))
       # mutithreaded data.table
       # I do not understand what is going on
       # May want to change back from plyr::llaply to lapply
-      x <- x[, plyr::llply(.SD, .fun = Fun, ...), by="TimeDate"]
+      x <- x[, plyr::llply(.SD, .fun = Fun, ...), by = By] # "TimeDate"
       x
     })}
     # either called   directly getSymbols.USFedPhil(Fun = mean)
@@ -1952,24 +1950,21 @@ initEnv(); on.exit({uninitEnv()})
        FunStr <- as.character(substitute(Fun))
        Fun    <- match.fun(Fun)
     }
-    if(exists("FunStr", envir = environment(), inherits = FALSE)) {
-      FunStr <- FunStr
-    } else {
+    if(!is.null(Dots[["FunStr"]]) && !exists("FunStr", envir = environment(), inherits = FALSE))
       FunStr <- Dots[["FunStr"]]
-    }
+
     # if the value has not bee sent
     if(is.null(Fun)) {
        Fun = mean
+       FunStr = "mean"
        if(is.null(Dots[["is.na"]])) {
          Dots <- c(list(),Dots, na.rm = TRUE)
        }
     }
-    if(!exists("FunStr", envir = environment(), inherits = FALSE))
-      FunStr = "mean"
 
     # as.character(substitute(Fun)) == "Fun"
     # (inside of the function) called by DoCall
-    DT <- DescTools::DoCall("applyAggregateDT", c(list(), x = list(DT), Fun = Fun, FunStr = FunStr, Dots))
+    DT <- DescTools::DoCall("applyAggregateDT", c(list(), x = list(DT), Fun = Fun, By = "TimeDate", FunStr = FunStr, Dots))
     # from aggregate(Fun), some aggregates remove, NaN
     DF <- as.data.frame(plyr::llply(DT,function(x) { x[is.nan(x)] <- NA; x }), stringsAsFactors = FALSE)
     colnames(DF) <- stringr::str_c(colnames(DF), ".", FunStr)
@@ -3455,16 +3450,13 @@ initEnv();on.exit({uninitEnv()})
                 FunStr <- as.character(substitute(Fun))
                 Fun <- match.fun(Fun)
               }
-              if(exists("FunStr", envir = environment(), inherits = FALSE)) {
-                FunStr <- FunStr
-              } else {
-                FunStr <- Dots[["FunStr"]]
-              }
+            if(!is.null(Dots[["FunStr"]]) && !exists("FunStr", envir = environment(), inherits = FALSE))
+              FunStr <- Dots[["FunStr"]]
             # END NEW CODE
-              symbols.returned <- do.call(paste("getSymbols.",
-                  symbol.source, sep = ""), list(Symbols = current.symbols,
-                  env = env, verbose = verbose, warnings = warnings,
-                  auto.assign = auto.assign, Fun = Fun, FunStr = FunStr, ...)) # NEW CODE , Fun = Fun, FunStr = FunStr
+            symbols.returned <- do.call(paste("getSymbols.",
+                symbol.source, sep = ""), list(Symbols = current.symbols,
+                env = env, verbose = verbose, warnings = warnings,
+                auto.assign = auto.assign, Fun = Fun, FunStr = FunStr, ...)) # NEW CODE , Fun = Fun, FunStr = FunStr
             # BEGIN NEW CODE
             }
             if(exists("symbols.returned.from.envir") && length(symbols.returned.from.envir)) {
