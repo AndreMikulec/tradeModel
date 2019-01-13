@@ -1833,8 +1833,12 @@ initEnv(); on.exit({uninitEnv()})
           DestFile2Meta <- fst::fst.metadata(path = destfile2)
 
           # only the Symbols(columns of interest)
-          ColumnsToRead <- DestFile2Meta[["columnNames"]][DestFile2Meta[["columnNames"]] %in% Symbols]
-          DestFileSheets <- fst::read.fst(path = destfile2, columns = c(c("YEAR", "QUARTER", "ID", "INDUSTRY"), ColumnsToRead))
+          if(!"USFedPhilForecastingData" %in% Symbols) {
+            ColumnsToRead <- DestFile2Meta[["columnNames"]][DestFile2Meta[["columnNames"]] %in% Symbols]
+            DestFileSheets <- fst::read.fst(path = destfile2, columns = c(c("YEAR", "QUARTER", "ID", "INDUSTRY"), ColumnsToRead))
+          } else {
+            DestFileSheets <- fst::read.fst(path = destfile2)
+          }
           # industry of forecaster. (not important)
           DestFileSheets <- DataCombine::VarDrop(DestFileSheets, Var = "INDUSTRY")
 
@@ -1864,7 +1868,7 @@ initEnv(); on.exit({uninitEnv()})
           if(!NCOL(DestFileSheets)) {
             DestFileSheets <- fr
           } else {
-            # data.table group STILL has not made data.table:::merge.data.table public(export)ed
+            # data.table group STILL has not made data.table:::merge.data.table public (export)ed
             DestFileSheets <- plyr::join(DestFileSheets, fr, by = c("YEAR", "QUARTER", "ID"), type = "full")
           }
 
@@ -1935,7 +1939,7 @@ initEnv(); on.exit({uninitEnv()})
       if(!is.null(Dots[["FunStr"]]) && !exists("FunStr", envir = environment(), inherits = FALSE))
         FunStr <- Dots[["FunStr"]]
 
-      setDT(x, key = c("TimeDate"))
+      setDT(x, key = By)
       # mutithreaded data.table
       # I do not understand what is going on
       # May want to change back from plyr::llaply to lapply
