@@ -84,9 +84,10 @@ customSorting(c("G", "D","B","C", "F"), c("E","B","C","D","A"), sortVectorExcess
 customSorting(c("E","B","C","D","A"), c("F", "D","B","C"), sortVectorExcess = FALSE)
 [1] "D" "B" "C" "E" "A"
 
+}
+\dontrun{
 customSorting(c(7,4,2,3,6), c(5,2,3,4,1))
 [1] 2 3 4 6 7
-
 }
 \dontrun{
 # Date examples

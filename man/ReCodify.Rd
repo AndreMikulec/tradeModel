@@ -9,9 +9,9 @@ ReCodify(x, oldcode = sort(unique(x)), newcode, Strict = FALSE)
 \arguments{
 \item{x}{vector or list of R objects}
 
-\item{oldcode}{vector or list of old codes}
+\item{oldcode}{vector or list of old codes. Will be made into a vector.}
 
-\item{newcode}{vector or list of new codes}
+\item{newcode}{vector or list of new codes  Will be made into a vector.}
 
 \item{Strict}{FALSE(default) Method too choose the check compatibility.
 if oldcode and newcode are not [exactly] the same class.
@@ -25,7 +25,8 @@ Otherwise, the results will be attempted be returned as a list.
 returned list may be composed of elements of different classes.}
 }
 \description{
-WORK IN PROGRESS
+100% UNTESTED AND 100% UNTRIED
+(NOTE) INSIDE OF THE PROGRAM I DO NOT NEED TO DO THE LOOP
 }
 \details{
 Adapted from blockmodeling::recode.

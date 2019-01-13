@@ -1381,9 +1381,6 @@ customSorting.default <- function(x, ...) stop("No customSorting S3 method found
 #' customSorting(c("E","B","C","D","A"), c("F", "D","B","C"), sortVectorExcess = FALSE)
 #' [1] "D" "B" "C" "E" "A"
 #'
-#' customSorting(c(7,4,2,3,6), c(5,2,3,4,1))
-#' [1] 2 3 4 6 7
-#'
 #' }
 #' @export
 customSorting.character <- function(x, InitOrder, CI = FALSE, sortVectorExcess = TRUE, chopVectorExcess = FALSE, ...) {
@@ -1423,6 +1420,11 @@ customSorting.character <- function(x, InitOrder, CI = FALSE, sortVectorExcess =
 #' custom sorting a vector
 #'
 #' @rdname customSorting
+#' @examples
+#' \dontrun{
+#' customSorting(c(7,4,2,3,6), c(5,2,3,4,1))
+#' [1] 2 3 4 6 7
+#' }
 #' @export
 customSorting.numeric <- customSorting.character
 
@@ -1702,7 +1704,7 @@ initEnv(); on.exit({uninitEnv()})
 
 #' Recodes values in a vector.
 #'
-#' WORK IN PROGRESS
+#' 100% UNTESTED AND 100% UNTRIED
 #'
 #' Adapted from blockmodeling::recode.
 #' Originally enhanced to be intermediary coding item
@@ -1712,8 +1714,8 @@ initEnv(); on.exit({uninitEnv()})
 #' then results are returned as elements in a a list.
 #'
 #' @param x vector or list of R objects
-#' @param oldcode vector or list of old codes
-#' @param newcode vector or list of new codes
+#' @param oldcode vector or list of old codes. Will be made into a vector.
+#' @param newcode vector or list of new codes  Will be made into a vector.
 #' @param Strict FALSE(default) Method too choose the check compatibility.
 #' if oldcode and newcode are not [exactly] the same class.
 #' Assume that if newcode and newcode inherit any of the other's classes
@@ -1780,7 +1782,7 @@ initEnv(); on.exit({uninitEnv()})
   }
 
   if(!classCompat)
-    newx <- as.list(newx)
+     x <- as.list(x)
 
   newx <- x
   for (i in seq_along(oldcode)) {
@@ -2184,12 +2186,33 @@ initEnv(); on.exit({uninitEnv()})
     ##   { zoo::as.Date(.,frac = 0.5) } %>%
     ##    { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) } # next availabe business day
 
-    Res[["TimeDate"]] <-
-      stringr::str_c(Res[["YEAR"]]," ", Res[["QUARTER"]]) %>%
-        { zoo::as.Date(zoo::as.yearqtr(., format ="%Y %q"),frac = 0.5) } %>%
-          { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) }
+    # Res[["TimeDate"]] <-
+    #   stringr::str_c(Res[["YEAR"]]," ", Res[["QUARTER"]]) %>%
+    #     { zoo::as.Date(zoo::as.yearqtr(., format ="%Y %q"),frac = 0.5) } %>%
+    #       { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) }
 
     ## Res[["TimeDate"]] <- TimeDateIndex[["ReleaseDate"]]
+
+    # update index
+    ReleaseDates <- ForecastersReleaseDates()
+
+    TimeDateYearQtr  <-
+      stringr::str_c(Res[["YEAR"]]," ", Res[["QUARTER"]]) %>%
+        { zoo::as.yearqtr(., format ="%Y %q") }
+
+    # approximated dates
+    TimeDateDateDate <- TimeDateYearQtr %>%
+      { zoo::as.Date(.,frac = 0.5) } %>%
+        { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) }
+
+    # override with correct dates
+    # see # blockmodeling::recode
+    for(i in seq_along(ReleaseDates[["YearQtr"]])) {
+      TimeDateDateDate[TimeDateYearQtr ==  ReleaseDates[["YearQtr"]][i]] <- ReleaseDates[["ReleaseDate"]][i]
+    }
+    Res[["TimeDate"]] <- TimeDateDateDate
+    browser()
+
 
     Res <- DataCombine::MoveFront(Res, Var = "TimeDate" )
     # ommiting "ID" (and "YEAR" AND "QUARTER")
