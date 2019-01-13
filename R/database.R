@@ -1515,6 +1515,63 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
+#' apply data.table aggregator on subsets of rows
+#'
+#' @param x data.table to rung the aggrcation
+#' @param Fun (default none: required) function to pass
+#' @param By column to aggregate upon
+#' @param ... dots passed to data.table aggregator
+#' and to to Fun.  Also, FunStr may be passed a flag to signal
+#' not to run match.call(Fun). match.call is only
+#' ever allowed to run once on Fun. (R language)
+#' Also, DescTools::DoCall only returns
+#' as.character(substitute(Fun)) == "Fun"
+#' @return data.table of aggregates
+#' @references
+#' \cite{period.apply on xts object takes about 50x longer than running it on it's core data and recasting. #278 \url{https://github.com/joshuaulrich/xts/issues/278}}
+#' @references
+#' \cite{[R-Forge #5754] GForce functions and row- + col-wise operations on .SD #523 \url{https://github.com/Rdatatable/data.table/issues/523}}
+#' @examples
+#' \dontrun{
+#' MyFun <- function(x, Fun, By, ...) {
+#'
+#'   FunStr <- as.character(substitute(Fun))
+#'   Fun    <- match.fun(Fun)
+#'   Dots <- list(...)
+#'   DescTools::DoCall(applyAggregateDT, c(list(), list(x), Fun = Fun, FunStr = FunStr, By = By, Dots))
+#'
+#' }
+#' MyFun(as.data.table(mtcars[,c("cyl", "mpg", "disp")]), Fun = mean, By = "cyl", na.rm = TRUE)
+#'
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @import data.table
+#' @importFrom data.table setDT
+#' @importFrom plyr llply
+#' @export
+applyAggregateDT <- function(x, Fun, By, ...) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+  Dots <- list(...)
+  if(!is.null(Fun) && is.null(Dots[["FunStr"]])) {
+     # I am not allowed to call this TWICE
+     FunStr <- as.character(substitute(Fun))
+     Fun    <- match.fun(Fun)
+  }
+  if(!is.null(Dots[["FunStr"]]) && !exists("FunStr", envir = environment(), inherits = FALSE))
+    FunStr <- Dots[["FunStr"]]
+
+  data.table::setDT(x, key = By)
+  # mutithreaded data.table
+  # I do not understand what is going on
+  # May want to change back from plyr::llaply to lapply
+  x <- x[, plyr::llply(.SD, .fun = Fun, ...), by = By]
+  x
+})}
+
+
+
 #' Survey of Professional Forecasters data from the Philadelphia FED
 #'
 #' About the data . . .
@@ -1925,27 +1982,7 @@ initEnv(); on.exit({uninitEnv()})
       Res <- DataCombine::VarDrop(Res, Var = c("YEAR","QUARTER","ID"))
     }
     DT <- data.table::data.table(Res)
-    # SHOULD MOVE OUT OF HERE
-    applyAggregateDT <- function(x, Fun, By, ...) {
-    tryCatchLog::tryCatchLog({
-    initEnv(); on.exit({uninitEnv()})
 
-      Dots <- list(...)
-      if(!is.null(Fun) && is.null(Dots[["FunStr"]])) {
-         # I am not allowed to call this TWICE
-         FunStr <- as.character(substitute(Fun))
-         Fun    <- match.fun(Fun)
-      }
-      if(!is.null(Dots[["FunStr"]]) && !exists("FunStr", envir = environment(), inherits = FALSE))
-        FunStr <- Dots[["FunStr"]]
-
-      setDT(x, key = By)
-      # mutithreaded data.table
-      # I do not understand what is going on
-      # May want to change back from plyr::llaply to lapply
-      x <- x[, plyr::llply(.SD, .fun = Fun, ...), by = By] # "TimeDate"
-      x
-    })}
     # either called   directly getSymbols.USFedPhil(Fun = mean)
     # or     called indirectly getSymbols() called without "Fun = ??"
     #                       or wrong argument e.g. getSymbols(.fun = XX)
