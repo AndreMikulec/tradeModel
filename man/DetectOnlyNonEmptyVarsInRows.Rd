@@ -2,20 +2,53 @@
 % Please edit documentation in R/database.R
 \name{DetectOnlyNonEmptyVarsInRows}
 \alias{DetectOnlyNonEmptyVarsInRows}
-\title{detect columns(Var) where the values are not-NA but
-the rest of the columns are NA everywhere else}
+\title{detect rows with columns of non-NA vaues
+and other columns of non-NA values}
 \usage{
-DetectOnlyNonEmptyVarsInRows(x, Var = NULL)
+DetectOnlyNonEmptyVarsInRows(x, Var = NULL, Ele = NULL, EleO = NULL)
 }
 \arguments{
 \item{x}{data.frame}
 
 \item{Var}{columns determining complete cases.
 Can be column names or positions}
+
+\item{Ele}{"All"(default), of elements in Var, the test results
+Other option is "Any"}
+
+\item{EleO}{"All"(default), of elements in 'other than Var', the test results
+Other option is "Any"}
 }
 \value{
 df with rows of all-NA removed
 }
 \description{
+detect columns(Var) where the values are
+not-NA (determined by Ele) but
+the rest of the columns are
+NA everywhere else (determined by EleO)
+}
+\details{
+[ ] Fix?
+NOTE: originally a domain-specific solution
+API however is inconsitent about the
+other Detect*Rows functions
+
 Function is written in DataCombine style
+}
+\examples{
+\dontrun{
+res <- data.frame(A = c(1,NA,NA,NA,5,6), B = c(11,12,NA,NA,15,NA), C = c(101,102,103,NA,NA,NA))
+res
+   A  B   C
+1  1 11 101
+2 NA 12 102
+3 NA NA 103
+4 NA NA  NA
+5  5 15  NA
+6  6 NA  NA
+
+DetectOnlyNonEmptyVarsInRows(res, Var = c("A","B"))
+[1] FALSE FALSE FALSE FALSE  TRUE FALSE
+}
 }

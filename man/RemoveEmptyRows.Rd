@@ -2,21 +2,45 @@
 % Please edit documentation in R/database.R
 \name{RemoveEmptyRows}
 \alias{RemoveEmptyRows}
-\title{remove rows with all NA vaues}
+\title{remove rows with NA vaues}
 \usage{
-RemoveEmptyRows(x, Var = NULL)
+RemoveEmptyRows(x, Var = NULL, Ele = NULL)
 }
 \arguments{
 \item{x}{data.frame}
 
 \item{Var}{columns determining complete cases
-Can be column names or positions}
+Can be column names or positions
+Var is the determiner of empty rows.
+Other columns are ignored}
+
+\item{Ele}{"All"(default), of elements in Var, the test results
+Other option is "Any"}
 }
 \value{
 df with rows of all-NA removed
 }
 \description{
-MOVE ME
 complete.cases does not work on tibbles!
 Function is written in DataCombine style
+}
+\examples{
+\dontrun{
+data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103))
+   A  B   C
+1  1 11 101
+2 NA 12 102
+3 NA NA 103
+
+RemoveEmptyRows(data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103)),
+  Var = c("A","B"))
+   A  B   C
+1  1 11 101
+2 NA 12 102
+
+RemoveEmptyRows(data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103)),
+   Var = c("A","B"), Ele = "Any")
+A  B   C
+1 1 11 101
+}
 }

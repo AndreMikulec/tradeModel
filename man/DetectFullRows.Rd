@@ -2,21 +2,38 @@
 % Please edit documentation in R/database.R
 \name{DetectFullRows}
 \alias{DetectFullRows}
-\title{detect rows with all non-NA vaues}
+\title{detect rows with non-NA vaues}
 \usage{
-DetectFullRows(x, Var = NULL)
+DetectFullRows(x, Var = NULL, Ele = NULL)
 }
 \arguments{
 \item{x}{data.frame}
 
 \item{Var}{columns determining complete cases
-Can be column names or positions}
+Can be column names or positions
+Var is the determiner of full rows.
+Other columns are ignored}
+
+\item{Ele}{"All"(default), of elements in Var, the test results
+Other option is "Any"}
 }
 \value{
 df with rows of all-NA removed
 }
 \description{
-MOVE ME
 complete.cases does not work on tibbles!
 Function is written in DataCombine style
+}
+\examples{
+\dontrun{
+data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103))
+   A  B   C
+1  1 11 101
+2 NA 12 102
+3 NA NA 103
+
+DetectFullRows(data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103)),
+  Var = c("A","B"))
+[1]  TRUE FALSE FALSE
+}
 }

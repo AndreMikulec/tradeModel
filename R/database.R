@@ -1627,9 +1627,13 @@ initEnv(); on.exit({uninitEnv()})
 #' will be allowed to be done. If the MaxAge is exceeded then,
 #' the most recent excel file is refreshed anew from the Philadelphia Fed site.
 #' The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"
-#' @param Fun mean with na.rm = TRUE (default) Aggregate function to
+#' @param UseFST TRUE(default) use the "Excel + FST" files (from R package fst).
+#' Initial creation of .fst files uses about 15 seconds of time per file (5 file).
+#' Afterwards, queries are lightning fast.
+#' Otherwiase FALSE, use "Excel Only"  Queries are slower (mostly because of the heavier disk I/O)
+#' @param Fun mean(default) with na.rm = TRUE(default) Aggregate function to
 #' apply to the period data. This becomes the symbol Suffix. E.g. "mean" will
-#' produce the suffix "mean"
+#' produce the suffix "mean".
 #' @param force FALSE(default) re-download data from USFedPhil ( See the examples. )
 #' Generally, using this parameter "force = TRUE"
 #' is NOT necessary: after MaxAge has been exceeded and if a query needs the
@@ -1683,6 +1687,7 @@ initEnv(); on.exit({uninitEnv()})
 #' @importFrom zoo as.Date as.yearqtr
 #' @importFrom stringr  str_c str_remove
 #' @importFrom readxl read_xls excel_sheets
+#' @importFrom fst write.fst read.fst fst.metadata
 #' @importFrom data.table data.table rbindlist
 #' @importFrom RQuantLib adjust
 #' @importFrom DataCombine MoveFront VarDrop
@@ -1690,7 +1695,7 @@ initEnv(); on.exit({uninitEnv()})
 #' @export
 getSymbols.USFedPhil <- function(Symbols, env, return.class = "xts",
            SurveyDecades = "All",
-           DataPath = "./USFedPhilForecastersData", MaxAge = NULL,
+           DataPath = "./USFedPhilForecastersData", MaxAge = NULL, UseFST = TRUE,
            Fun = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
@@ -1726,25 +1731,6 @@ initEnv(); on.exit({uninitEnv()})
     MaxAgeValue <- as.integer(MaxAgeValueUnits[1])
     MaxAgeUnits <- MaxAgeValueUnits[2]
 
-    # Fun
-    # FunString <- as.character(substitute(Fun))
-    # FunString <- if(is.null(Fun)) { "mean" } else {  as.character(substitute(Fun)) }
-    # Fun <- if(is.null(Fun)) { mean } else { match.fun(Fun) }
-
-    # # na.rm
-    # # should instead, just ignore "unused"
-    # # just TRUE/FALSE whether I ever set na.rm
-    # setNArm <- FALSE
-    # if("na.rm" %in% names(formals(Fun)) && na.rm == TRUE) {
-    #   na.rm <- TRUE; setNArm <- TRUE
-    # }
-    # if( "..." %in% names(formals(Fun)) && na.rm == TRUE && !setNArm) {
-    #   na.rm <- TRUE; setNArm <- TRUE
-    # }
-    # if(!setNArm) {
-    #   na.rm <- FALSE; setNArm <- TRUE
-    # }
-
     # force
     if(!exists("force", envir = this.env, inherits = FALSE))
         force = FALSE
@@ -1769,7 +1755,9 @@ initEnv(); on.exit({uninitEnv()})
 
       # pairs of files
       File  <-  stringr::str_c("micro", FileIndex, ".xlsx")
+      File2 <-  stringr::str_c("micro", FileIndex, ".fst")
       destfile  <- stringr::str_c(DataPath, "/", File)
+      destfile2 <- stringr::str_c(DataPath, "/", File2)
 
       # work in pairs
       if((FileIndex  < MaxAllSurveyDecadesIndex) && file.exists(destfile) && !force) FileExists <- TRUE
@@ -1789,11 +1777,49 @@ initEnv(); on.exit({uninitEnv()})
         USFedPhil.URL.file <- stringr::str_c(USFedPhil.URL, "/", File, "?la=en")
         if (verbose)
             cat("downloading ", destfile, ".....\n\n")
+        message(stringr::str_c("getSymbols.USFedPhil Begin xlsx file download: ", destfile))
         quantmod___try.download.file(USFedPhil.URL.file, destfile = destfile, quiet = !verbose, mode = "wb", ...)
+        message(stringr::str_c("getSymbols.USFedPhil End   xlsx file download: ", destfile))
 
       }
 
-      Sheets <- readxl::excel_sheets(destfile)
+      # destfile2(fst) does not exist or destfile2(fst) is older than destfile(xls)
+      if(( file.exists(destfile) && (   !file.exists(destfile2) ||
+                                      (  file.exists(destfile2) && (file.info(destfile2)$mtime < file.info(destfile)$mtime) )
+                                    )) && UseFST
+      ) {
+
+        Sheets <- readxl::excel_sheets(destfile)
+
+        DestFileSheets <- data.frame()
+        message(stringr::str_c("getSymbols.USFedPhil Begin fst file creation: ", destfile2))
+        for(Sheet in Sheets) {
+          # data.frame
+          fr <- suppressWarnings(readxl::read_xlsx(path = destfile, sheet = Sheet,
+                 col_names = TRUE,
+                 col_types = "numeric")
+          )
+
+          if(!NCOL(DestFileSheets)) {
+            DestFileSheets <- fr
+          } else {
+            # outer
+            DestFileSheets <- plyr::join(DestFileSheets, fr, by = c("YEAR", "QUARTER", "ID", "INDUSTRY"), type = "full")
+            # outer join cases where
+            # forecaster("ID") that changed industry ("INDUSTRY")
+            # "INDUSTRY is commonly NA
+            DestFileSheets <- RemoveEmptyRows(DestFileSheets, Var = c("YEAR", "QUARTER", "ID"), Ele = "Any")
+          }
+
+
+        }
+        message(stringr::str_c("getSymbols.USFedPhil End   fst file creation: ", destfile2))
+        fst::write.fst(DestFileSheets, path = destfile2, compress = 0)
+
+      }
+
+      if(!exists("Sheets", envir = environment(), inherits = FALSE))
+        Sheets <- readxl::excel_sheets(destfile)
       if(!"USFedPhilForecastingData" %in% Symbols) {
         # selection by "obscurity"
         Sheets1 <- Sheets[Sheets %in% stringr::str_remove(Symbols, "[A-Z1-9]$")]
@@ -1802,25 +1828,49 @@ initEnv(); on.exit({uninitEnv()})
         Sheets  <- union(Sheets1, Sheets2)
       }
 
-      DestFileSheets <- data.frame()
-      for(Sheet in Sheets) {
-        # data.frame
-        fr <- suppressWarnings(readxl::read_xlsx(path = destfile, sheet = Sheet,
-               col_names = TRUE,
-               col_types = "numeric")
-        )
-        # only the Symbols(columns of interest)
-        fr <- fr[, c( c("YEAR", "QUARTER", "ID", "INDUSTRY"), colnames(fr)[colnames(fr) %in% Symbols]), drop = F]
-        # industry of forecaster. (not important)
-        fr <- DataCombine::VarDrop(fr, Var = "INDUSTRY")
+      if((file.exists(destfile2)) && UseFST) {
 
-        if(!NCOL(DestFileSheets)) {
-          DestFileSheets <- fr
-        } else {
-          DestFileSheets <- plyr::join(DestFileSheets, fr, by = c("YEAR", "QUARTER", "ID"), type = "full")
+          DestFile2Meta <- fst::fst.metadata(path = destfile2)
+
+          # only the Symbols(columns of interest)
+          ColumnsToRead <- DestFile2Meta[["columnNames"]][DestFile2Meta[["columnNames"]] %in% Symbols]
+          DestFileSheets <- fst::read.fst(path = destfile2, columns = c(c("YEAR", "QUARTER", "ID", "INDUSTRY"), ColumnsToRead))
+          # industry of forecaster. (not important)
+          DestFileSheets <- DataCombine::VarDrop(DestFileSheets, Var = "INDUSTRY")
+
+      } else {  # UseFST == FALSE # excel read (should NOT HAVE made it this far )
+        DestFileSheets <- data.frame()
+        for(Sheet in Sheets) {
+          # data.frame
+          fr <- suppressWarnings(readxl::read_xlsx(path = destfile, sheet = Sheet,
+                 col_names = TRUE,
+                 col_types = "numeric")
+          )
+          # # FROM the source web sit, excel sheets are filled with these #N/A (appear as NA in R)
+          # #   #N/A is the error value that means "no value is available."
+          #     Use NA to mark empty cells. By entering #N/A in cells where you are missing information,
+          #     you can avoid the problem of unintentionally including empty cells in your calculations.
+          # # NA function
+          # # Excel for Office 365 Excel for Office 365 for Mac Excel 2019 Excel 2016 More...
+          # # JAN 2019
+          # # https://support.office.com/en-us/article/na-function-5469c2d1-a90c-4fb5-9bbc-64bd9bb6b47c
+          # avoid R math NaN results
+
+          # only the Symbols(columns of interest)
+          fr <- fr[, c( c("YEAR", "QUARTER", "ID", "INDUSTRY"), colnames(fr)[colnames(fr) %in% Symbols]), drop = F]
+          # industry of forecaster. (not important)
+          fr <- DataCombine::VarDrop(fr, Var = "INDUSTRY")
+
+          if(!NCOL(DestFileSheets)) {
+            DestFileSheets <- fr
+          } else {
+            # data.table group STILL has not made data.table:::merge.data.table public(export)ed
+            DestFileSheets <- plyr::join(DestFileSheets, fr, by = c("YEAR", "QUARTER", "ID"), type = "full")
+          }
+
         }
-
       }
+
       DestFileSheets <- data.table::data.table(DestFileSheets, key = c("YEAR","QUARTER","ID"))
       TheseSheets <- list()
       TheseSheets[[stringr::str_c("File_", FileIndex)]] <- DestFileSheets
@@ -1835,8 +1885,16 @@ initEnv(); on.exit({uninitEnv()})
     Res <- data.table::rbindlist(DestFiles, fill= TRUE) %>%
       as.data.frame
 
-    browser()
     # index
+
+    # [ ] NEED to recode THESE
+    # > frd <- ForecastersReleaseDates()
+    # > str(frd)
+    # 'data.frame':	115 obs. of  3 variables:
+    #  $ YearQtr         : 'yearqtr' num  1990 Q2 1990 Q3 1990 Q4 1991 Q1 ...
+    #  $ TrueDeadlineDate: Date, format: "1990-08-23" "1990-08-23" "1990-11-22" "1991-02-16" ...
+    #  $ ReleaseDate     : Date, format: "1990-08-31" "1990-08-31" "1990-11-28" "1991-02-21" ...
+
     ## TimeDateIndex <- data.frame()
     ## TimeDateIndex[["YearQtr"]] <-  stringr::str_c(Res[["YEAR"]]," ", Res[["QUARTER"]]) %>%
     ## { zoo::as.yearqtr(., format ="%Y %q") }
@@ -1851,7 +1909,6 @@ initEnv(); on.exit({uninitEnv()})
         { zoo::as.Date(zoo::as.yearqtr(., format ="%Y %q"),frac = 0.5) } %>%
           { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) }
 
-    browser()
     ## Res[["TimeDate"]] <- TimeDateIndex[["ReleaseDate"]]
 
     Res <- DataCombine::MoveFront(Res, Var = "TimeDate" )
@@ -1865,7 +1922,7 @@ initEnv(); on.exit({uninitEnv()})
     }
     DT <- data.table::data.table(Res)
     # SHOULD MOVE OUT OF HERE
-    applyAggregateDT <- function(x, Fun, ...) {
+    applyAggregateDT <- function(x, Fun = NULL, ...) {
     tryCatchLog::tryCatchLog({
     initEnv(); on.exit({uninitEnv()})
 
@@ -1879,8 +1936,11 @@ initEnv(); on.exit({uninitEnv()})
       } else {
         FunStr <- Dots[["FunStr"]]
       }
+
       setDT(x, key = c("TimeDate"))
-      # mutithreaded
+      # mutithreaded data.table
+      # I do not understand what is going on
+      # May want to change back from plyr::llaply to lapply
       x <- x[, plyr::llply(.SD, .fun = Fun, ...), by="TimeDate"]
       x
     })}
@@ -1897,12 +1957,23 @@ initEnv(); on.exit({uninitEnv()})
     } else {
       FunStr <- Dots[["FunStr"]]
     }
+    # if the value has not bee sent
+    if(is.null(Fun)) {
+       Fun = mean
+       if(is.null(Dots[["is.na"]])) {
+         Dots <- c(list(),Dots, na.rm = TRUE)
+       }
+    }
+    if(!exists("FunStr", envir = environment(), inherits = FALSE))
+      FunStr = "mean"
 
     # as.character(substitute(Fun)) == "Fun"
     # (inside of the function) called by DoCall
     DT <- DescTools::DoCall("applyAggregateDT", c(list(), x = list(DT), Fun = Fun, FunStr = FunStr, Dots))
-    colnames(DT) <- stringr::str_c(colnames(DT), ".", FunStr)
-    fr <- DT
+    # from aggregate(Fun), some aggregates remove, NaN
+    DF <- as.data.frame(plyr::llply(DT,function(x) { x[is.nan(x)] <- NA; x }), stringsAsFactors = FALSE)
+    colnames(DF) <- stringr::str_c(colnames(DF), ".", FunStr)
+    fr <- DF
 
     if (verbose)
         cat("done.\n\n")
@@ -2382,30 +2453,62 @@ initEnv(); on.exit({uninitEnv()})
 })}
 
 
-
-#' detect columns(Var) where the values are not-NA but
-#' the rest of the columns are NA everywhere else
+#' detect rows with columns of non-NA vaues
+#' and other columns of non-NA values
+#'
+#' detect columns(Var) where the values are
+#' not-NA (determined by Ele) but
+#' the rest of the columns are
+#' NA everywhere else (determined by EleO)
+#'
+#' [ ] Fix?
+#' NOTE: originally a domain-specific solution
+#' API however is inconsitent about the
+#' other Detect*Rows functions
 #'
 #' Function is written in DataCombine style
 #'
 #' @param x data.frame
 #' @param Var columns determining complete cases.
 #' Can be column names or positions
+#' @param Ele "All"(default), of elements in Var, the test results
+#' Other option is "Any"
+#' @param EleO "All"(default), of elements in 'other than Var', the test results
+#' Other option is "Any"
 #' @return df with rows of all-NA removed
+#' @examples
+#' \dontrun{
+#' res <- data.frame(A = c(1,NA,NA,NA,5,6), B = c(11,12,NA,NA,15,NA), C = c(101,102,103,NA,NA,NA))
+#' res
+#'    A  B   C
+#' 1  1 11 101
+#' 2 NA 12 102
+#' 3 NA NA 103
+#' 4 NA NA  NA
+#' 5  5 15  NA
+#' 6  6 NA  NA
+#'
+#' DetectOnlyNonEmptyVarsInRows(res, Var = c("A","B"))
+#' [1] FALSE FALSE FALSE FALSE  TRUE FALSE
+#' }
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @export
-DetectOnlyNonEmptyVarsInRows <- function(x, Var = NULL) {
+DetectOnlyNonEmptyVarsInRows <- function(x, Var = NULL, Ele = NULL, EleO = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
   if(is.null(Var)) Var <- colnames(x)
+  if(is.null(Ele)) Ele  <- "All"
+  if(is.null(Ele)) EleO <- "All"
 
   # non-NA in Var
-  xVar <-  DetectFullRows(x, Var = Var)
+  xVar <-  DetectFullRows(x, Var = Var, Ele = Ele)
   # NA in Var
-  if(is.numeric(Var))  NotVar <- -Var
-  if(!is.numeric(Var)) NotVar <- !colnames(x) %in% Var # TRUE/FALSE
-  xNotVar <- DetectEmptyRows(x, Var = NotVar)
+  if(is.numeric(Var))   NotVar <- -Var
+  if(is.character(Var)) NotVar <- !colnames(x) %in% Var # TRUE/FALSE
+  if(is.logical(Var))   NotVar <- !Var
+  xNotVar <- DetectEmptyRows(x, Var = NotVar, Ele = EleO)
 
   x <- xVar & xNotVar
   x
@@ -2414,72 +2517,137 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
-#' detect rows with all non-NA vaues
+#' detect rows with non-NA vaues
 #'
-#' MOVE ME
 #' complete.cases does not work on tibbles!
 #' Function is written in DataCombine style
 #'
 #' @param x data.frame
 #' @param Var columns determining complete cases
 #' Can be column names or positions
+#' Var is the determiner of full rows.
+#' Other columns are ignored
+#' @param Ele "All"(default), of elements in Var, the test results
+#' Other option is "Any"
 #' @return df with rows of all-NA removed
+#' @examples
+#' \dontrun{
+#' data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103))
+#'    A  B   C
+#' 1  1 11 101
+#' 2 NA 12 102
+#' 3 NA NA 103
+#'
+#' DetectFullRows(data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103)),
+#'   Var = c("A","B"))
+#' [1]  TRUE FALSE FALSE
+#' }
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @export
-DetectFullRows <- function(x, Var = NULL) {
+DetectFullRows <- function(x, Var = NULL, Ele = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
   if(is.null(Var)) Var <- colnames(x)
-  x <- Reduce(`&`, plyr::llply(x[, Var, drop = FALSE], function(x2) { !is.na(unlist(x2)) } ))
+  if(is.null(Ele)) Ele <- "All"
+  if(Ele == "All") Test <- `&`
+  if(Ele == "Any") Test <- `|`
+
+  x <- Reduce(Test, plyr::llply(x[, Var, drop = FALSE], function(x2) { !is.na(unlist(x2)) } ))
   x
 
 })}
 
 
 
-#' detect rows with all NA vaues
+#' detect rows with NA vaues
 #'
-#' MOVE ME
 #' complete.cases does not work on tibbles!
 #' Function is written in DataCombine style
 #'
 #' @param x data.frame
 #' @param Var columns determining complete cases
 #' Can be column names or positions
+#' Var is the determiner of empty rows.
+#' Other columns are ignored
+#' @param Ele "All"(default), of elements in Var, the test results
+#' Other option is "Any"
+#' @examples
+#' \dontrun{
+#' data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103))
+#'    A  B   C
+#' 1  1 11 101
+#' 2 NA 12 102
+#' 3 NA NA 103
+#'
+#' DetectEmptyRows(data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103)),
+#'   Var = c("A","B"))
+#' [1] FALSE FALSE  TRUE
+#' }
 #' @return df with rows of all-NA removed
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @export
-DetectEmptyRows <- function(x, Var = NULL) {
+DetectEmptyRows <- function(x, Var = NULL, Ele = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
   if(is.null(Var)) Var <- colnames(x)
-  x <- Reduce(`&`, plyr::llply(x[, Var, drop = FALSE], function(x2) { is.na(unlist(x2)) } ))
+  if(is.null(Ele)) Ele <- "All"
+  if(Ele == "All") Test <- `&`
+  if(Ele == "Any") Test <- `|`
+
+  x <- Reduce(Test, plyr::llply(x[, Var, drop = FALSE], function(x2) { is.na(unlist(x2)) } ))
   x
 
 })}
 
 
-#' remove rows with all NA vaues
+#' remove rows with NA vaues
 #'
-#' MOVE ME
 #' complete.cases does not work on tibbles!
 #' Function is written in DataCombine style
 #'
 #' @param x data.frame
 #' @param Var columns determining complete cases
 #' Can be column names or positions
+#' Var is the determiner of empty rows.
+#' Other columns are ignored
+#' @param Ele "All"(default), of elements in Var, the test results
+#' Other option is "Any"
+#' @examples
+#' \dontrun{
+#' data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103))
+#'    A  B   C
+#' 1  1 11 101
+#' 2 NA 12 102
+#' 3 NA NA 103
+#'
+#' RemoveEmptyRows(data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103)),
+#'   Var = c("A","B"))
+#'    A  B   C
+#' 1  1 11 101
+#' 2 NA 12 102
+#'
+#' RemoveEmptyRows(data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103)),
+#'    Var = c("A","B"), Ele = "Any")
+#' A  B   C
+#' 1 1 11 101
+#' }
 #' @return df with rows of all-NA removed
+#' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @export
-RemoveEmptyRows <- function(x, Var = NULL) {
+RemoveEmptyRows <- function(x, Var = NULL, Ele = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
   if(is.null(Var)) Var <- colnames(x)
+  if(is.null(Ele)) Ele <- "All"
+
   # rows to keep
-  x <- x[!DetectEmptyRows(x, Var = Var),,drop = FALSE]
+  x <- x[!DetectEmptyRows(x, Var = Var, Ele = Ele),,drop = FALSE]
   x
 
 })}

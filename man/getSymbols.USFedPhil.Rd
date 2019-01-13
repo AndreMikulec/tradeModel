@@ -6,7 +6,7 @@
 \usage{
 getSymbols.USFedPhil(Symbols, env, return.class = "xts",
   SurveyDecades = "All", DataPath = "./USFedPhilForecastersData",
-  MaxAge = NULL, Fun = NULL, ...)
+  MaxAge = NULL, UseFST = TRUE, Fun = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded
@@ -39,6 +39,11 @@ the MOST RECENTLY PUBLISHED FORECASTERS EXCEL FILE from  the local fileystem
 will be allowed to be done. If the MaxAge is exceeded then,
 the most recent excel file is refreshed anew from the Philadelphia Fed site.
 The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"}
+
+\item{UseFST}{TRUE(default) use the "Excel + FST" files (from R package fst).
+Initial creation of .fst files uses about 15 seconds of time per file (5 file).
+Afterwards, queries are lightning fast.
+Otherwiase FALSE, use "Excel Only"  Queries are slower (mostly because of the heavier disk I/O)}
 
 \item{Fun}{mean with na.rm = TRUE (default) Aggregate function to
 apply to the period data. This becomes the symbol Suffix. E.g. "mean" will
