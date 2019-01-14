@@ -1704,7 +1704,7 @@ initEnv(); on.exit({uninitEnv()})
 
 #' Recodes values in a vector.
 #'
-#' 100% UNTESTED AND 100% UNTRIED
+#' R LANGUAGE INTERNAL CRASHING (I JUST GET NAs)
 #'
 #' Adapted from blockmodeling::recode.
 #' Originally enhanced to be intermediary coding item
@@ -1713,15 +1713,26 @@ initEnv(); on.exit({uninitEnv()})
 #' are not compatiable (see below)
 #' then results are returned as elements in a a list.
 #'
-#' @param x vector or list of R objects
+#' @param x vector or list
 #' @param oldcode vector or list of old codes. Will be made into a vector.
+#' @param new2oldcode intermediary vector or list belonging to the realm
+#' of newcode but CAN be compared against/to values in oldcode.
+#' Will be made into a vector.
 #' @param newcode vector or list of new codes  Will be made into a vector.
-#' @param Strict FALSE(default) Method too choose the check compatibility.
-#' if oldcode and newcode are not [exactly] the same class.
-#' Assume that if newcode and newcode inherit any of the other's classes
+#'  Will be made into a vector.
+#' @param ComepareStrict FALSE(default) Method too choose the check compatibility.
+#' if oldcode and new2oldcode are not [exactly] the same class.
+#' Assume that if oldcode and new2oldcode inherit any of the other's classes
+#' then the two classes are compatatible. Otherwise, a warning will be
+#' returned to the user.
+#' Strict(TRUE) both oldcode and new2oldcode must have the exact same class.
+#' Otherwise, a warning will be returned to the user.
+#' @param AssnStrict FALSE(default) Method too choose the check compatibility.
+#' if x and newcode are not [exactly] the same class.
+#' Assume that if x and newcode inherit any of the other's classes
 #' then the two classes are compatatible. Results will be attempted
 #' to be returned as a vector.
-#' Strict(TRUE) both oldcode and newcode must have the exact same class.
+#' Strict(TRUE) both x and newcode must have the exact same class.
 #' Results will be attempted to be returned as a vector.
 #' Otherwise, the results will be attempted be returned as a list.
 #' :NOTE: if not all the 'x' elements are attemped to be recoded then the
@@ -1731,62 +1742,112 @@ initEnv(); on.exit({uninitEnv()})
 #'}
 #' @importFrom plyr llply
 #' @export
-ReCodify <- function (x, oldcode = sort(unique(x)), newcode, Strict = FALSE) {
+ReCode <- function (x, oldcode = sort(unique(x)), new2oldcode = NULL, newcode, ComepareStrict = FALSE, AssnStrict = FALSE) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
-  if(length(oldcode) != length(newcode))
+  if(is.null(new2oldcode) && (length(oldcode) != length(newcode)))
     stop("The number of old and new codes do not match")
   # pass through
-  if(!length(oldcode)) return(x)
-
+  if(!length(oldcode)) {
+    message("Recode: oldcode has no data, so nothing to do.")
+    return(x)
+  }
    # list with element of mixed classes
    # Note: R does NOT have sublist "list[i]" comparison methods
    # but elements could be compared with list[[i]] == list[[j]]
    # Coding could be cumberson: runtime could be long: check
    # each element for eaches class membership (however, this could/can be done.)
 
+  browser()
+
   if(is.list(oldcode)) {
      # peek
      OldClass <- class(oldcode[[1]])
      oldcode <-  do.call(c, oldcode)
      if(OldClass != class(oldcode)) stop("oldcode that is list can not have mixed class members")
-   }
-  if(is.list(newcode)) {
-     # peek
-     NewClass <- class(newcode[[1]])
-     newcode <-  do.call(c, newcode)
-     if(NewClass != class(newcode)) stop("newcode that is list can not have mixed class members")
-   }
-
-  classCompat <- vector(mode = "logical")
-  if(class(oldcode) != class(newcode)) {
-
-    # inherit from any class membership
-    if(!Strict){
-      if( any(do.call(c, plyr::llply(class(oldcode), function(x) { inherits(newcode, x) }))) |
-          any(do.call(c, plyr::llply(class(newcode), function(x) { inherits(oldcode, x) })))
-      ) {
-        classCompat <- TRUE
-      } else {
-        classCompat <- FALSE
-      }
-    }
-    if(Strict) {
-      if(class(oldcode) != class(newcode)) {
-        classCompat <- FALSE
-      }
-    }
-  } else {
-    classCompat <- TRUE
   }
 
-  if(!classCompat)
+  ComepareStrictCompat  <- vector(mode = "logical")
+  if(!is.null(new2oldcode)) {
+
+    if(is.list(new2oldcode)) {
+      # peek
+      New2OldClass    <- class(new2oldcode[[1]])
+      new2oldcode     <- do.call(c, new2oldcode)
+    } else {
+      New2OldClass    <- class(new2oldcode)
+    }
+    if(New2OldClass != class(new2oldcode)) stop("new2oldcode that is list can not have mixed class members")
+    # is comparison allowed? ( a "better" check is "is there and Ops Method?" )
+    if(!ComepareStrict) {
+      if(
+         any(do.call(c, plyr::llply(class(new2oldcode), function(x2) { inherits(oldcode, x2) }))) |
+         any(do.call(c, plyr::llply(class(oldcode), function(x2)    { inherits(new2oldcode, x2) })))
+       ) {
+         ComepareStrictCompat <- TRUE
+       } else {
+         ComepareStrictCompat <- FALSE
+         warning("new2oldcode and oldcode must inhertit from one of the classes frome each other")
+       }
+    }
+    if(ComepareStrict) {
+      if(class(new2oldcod) != class(oldcode)) {
+        ComepareStrictCompat <- FALSE
+        warning("new2oldcode and oldcode must have the same class")
+      } else {
+        ComepareStrictCompat <- TRUE
+      }
+    }
+  }
+  if(is.list(newcode)) {
+    # peek
+    NewClass <- class(newcode[[1]])
+    newcode <-  do.call(c, newcode)
+    if(NewClass != class(newcode)) stop("newcode that is list can not have mixed class members")
+  }
+
+  # the assignment to a vector
+  AssnclassCompat <- vector(mode = "logical")
+
+  # is assignment allowed?
+  # inherit from any class membership
+  if(!AssnStrict){
+    if(
+        any(do.call(c, plyr::llply(class(x), function(x2)       { inherits(newcode, x2) }))) |
+        any(do.call(c, plyr::llply(class(newcode), function(x2) { inherits(x, x2) })))
+    ) {
+      AssnclassCompat <- TRUE
+    } else {
+      AssnclassCompat <- FALSE
+    }
+  }
+  if(AssnStrict) {
+    if(class(x) != class(newcode)) {
+      AssnclassCompat <- FALSE
+    } else {
+      AssnclassCompat <- TRUE
+    }
+  }
+
+  # can not assign to a vector (so instead assign to a list)
+  if(!AssnclassCompat)
      x <- as.list(x)
 
+   if(!is.null(new2oldcode)) {
+    y <- new2oldcode
+  }  else {
+    y <- x
+  }
+
+  browser()
   newx <- x
-  for (i in seq_along(oldcode)) {
-    newx[do.call(c,x) == oldcode[i]] <- newcode[i]
+  if(is.list(y)) y <- do.call(c,y)
+  #    y and newcode have the same numbers and are the source
+  # newx and oldcode have the same numbers and are the target
+  # R LANAGUAGE INTERNAL CRASHING: I JUST GET ALL "NA"s
+  for (i in seq_along(newx)) {
+    newx[oldcode[i] == y] <- newcode[i]
   }
   return(newx)
 })}
@@ -2169,29 +2230,12 @@ initEnv(); on.exit({uninitEnv()})
 
     # index
 
-    # [ ] NEED to recode THESE
     # > frd <- ForecastersReleaseDates()
     # > str(frd)
     # 'data.frame':	115 obs. of  3 variables:
     #  $ YearQtr         : 'yearqtr' num  1990 Q2 1990 Q3 1990 Q4 1991 Q1 ...
     #  $ TrueDeadlineDate: Date, format: "1990-08-23" "1990-08-23" "1990-11-22" "1991-02-16" ...
     #  $ ReleaseDate     : Date, format: "1990-08-31" "1990-08-31" "1990-11-28" "1991-02-21" ...
-
-    ## TimeDateIndex <- data.frame()
-    ## TimeDateIndex[["YearQtr"]] <-  stringr::str_c(Res[["YEAR"]]," ", Res[["QUARTER"]]) %>%
-    ## { zoo::as.yearqtr(., format ="%Y %q") }
-
-    # all dates - just estimate everything
-    ## TimeDateIndex[["ReleaseDate"]] <- TimeDateIndex[["YearQtr"]] %>%
-    ##   { zoo::as.Date(.,frac = 0.5) } %>%
-    ##    { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) } # next availabe business day
-
-    # Res[["TimeDate"]] <-
-    #   stringr::str_c(Res[["YEAR"]]," ", Res[["QUARTER"]]) %>%
-    #     { zoo::as.Date(zoo::as.yearqtr(., format ="%Y %q"),frac = 0.5) } %>%
-    #       { RQuantLib::adjust("UnitedStates/GovernmentBond", ., 1) }
-
-    ## Res[["TimeDate"]] <- TimeDateIndex[["ReleaseDate"]]
 
     # update index
     ReleaseDates <- ForecastersReleaseDates()
@@ -2207,12 +2251,14 @@ initEnv(); on.exit({uninitEnv()})
 
     # override with correct dates
     # see # blockmodeling::recode
-    for(i in seq_along(ReleaseDates[["YearQtr"]])) {
-      TimeDateDateDate[TimeDateYearQtr ==  ReleaseDates[["YearQtr"]][i]] <- ReleaseDates[["ReleaseDate"]][i]
-    }
-    Res[["TimeDate"]] <- TimeDateDateDate
     browser()
+    NewTimeDateDateDate <- TimeDateDateDate
+    for(i in seq_along(NewTimeDateDateDate)) {
+      NewTimeDateDateDate[TimeDateYearQtr ==  ReleaseDates[["YearQtr"]][i]] <- ReleaseDates[["ReleaseDate"]][i]
+     }
+     TimeDateDateDate <- NewTimeDateDateDate
 
+    Res[["TimeDate"]] <- TimeDateDateDate
 
     Res <- DataCombine::MoveFront(Res, Var = "TimeDate" )
     # ommiting "ID" (and "YEAR" AND "QUARTER")
