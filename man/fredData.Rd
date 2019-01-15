@@ -4,7 +4,7 @@
 \alias{fredData}
 \title{get data from the St. Louis FRED}
 \usage{
-fredData(Symbol = NULL, New = NULL, NewMaxAge = NULL)
+fredData(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...)
 }
 \arguments{
 \item{Symbol}{FRED symbol as a string}
@@ -17,6 +17,8 @@ get the data and store the through the method of getNewSymbols (FALSE).}
 is the timeout period of the stored data. After NewMaxAge, the
 the data will be re-queried from the St. Louis FRED.
 of the data}
+
+\item{...}{dots passed}
 }
 \value{
 xts object of results
@@ -30,5 +32,29 @@ EXAMPLE
 # > head(fredData("GDP"),1)
 #                           gdp
 # 1947-01-01 243.16399999999999
+
+Get all of the records from the "cache" or "pg"
+If the cache and pg is older than 4 hours then
+the data will be acquired anew from the source
+and loaded into the "pg" and the "cache" and returned
+to the user
+
+default New == TRUE (default)
+means use the function get\\*New\\*Symbols
+checks the xts "updated" attribute
+  checks (1)cache then (2)pg if data is older than NewMaxAge = "4 hours"
+  checks "cache": manually check cache by ls(all.names = TRUE)
+  checks "pg": manually check database by using: SELECT * FROM "Symbols"."Symbols"
+then will get the new data from the "cache" or "pg"
+
+fredData(Symbol = "UNRATE")
+
+Add just only new records now!
+
+1. remove cache data: rm(.UNRATE) (if there)
+2. remove some (few) bottom records from the database table "Symbols"."UNRATE"
+Get records from the remote origin and just insert only-new (few) records
+
+
 }
 }

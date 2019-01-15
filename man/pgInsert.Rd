@@ -5,7 +5,7 @@
 \title{insert into a database table 'new' data}
 \usage{
 pgInsert(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
-  varHint = NULL, valHint = NULL)
+  varHint = NULL, valHint = NULL, ...)
 }
 \arguments{
 \item{con}{DBI connection PostgreSQL}
@@ -29,17 +29,22 @@ e.g. varHint = "dateindex", valHint = "17000"
 or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'").
 Position matches one to one with valHint.}
 
-\item{oldData}{previously collected limited server DB data used to
-restrict what is updated/inserted.  If not provide by the user then
-the oldData will be (re)generated from df.
-Here oldData is used to CHECK that the key columns that I
-what to insert DO NOT EXISTS on the Server DB
-Here, only the keys are checked for 'no duplicates'}
+\item{valHint}{see above: varHint}
+
+\item{...}{dots passed currently not used}
 }
 \description{
 The keys parameter determine distinct records.
 Only 'new' records area added.
 (See pgUpdate to add information to current(already existing) records)
+}
+\details{
+In internal feature
+oldData previously collected limited server DB data used to
+restrict what is inserted.
+In oldData of data: server data and df data that is common by primary keys
+is eliminatated from the attempted insert.
+The keys are checked for 'no duplicates'
 }
 \examples{
 \dontrun{

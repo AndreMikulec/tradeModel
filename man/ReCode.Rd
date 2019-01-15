@@ -39,8 +39,7 @@ Otherwise, the results will be attempted be returned as a list.
 returned list may be composed of elements of different classes.}
 }
 \description{
-100% UNTESTED AND 100% UNTRIED
-SO FAR DOES NOT WORK
+R LANGUAGE INTERNAL CRASHING (I JUST GET NAs)
 }
 \details{
 Adapted from blockmodeling::recode.

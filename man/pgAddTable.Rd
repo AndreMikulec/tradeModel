@@ -4,7 +4,7 @@
 \alias{pgAddTable}
 \title{add a table to a database}
 \usage{
-pgAddTable(con, trgt = NULL, keys = c("rn"), schname, df = NULL)
+pgAddTable(con, trgt = NULL, keys = c("rn"), schname, df = NULL, ...)
 }
 \arguments{
 \item{con}{DBI database connection}
@@ -16,6 +16,8 @@ keys can not be zero length. keys can not be null.}
 \item{schname}{schema name}
 
 \item{df}{data.frame (with column names)}
+
+\item{...}{dots passed to dfToCREATETable}
 
 \item{Symbol}{new table name. E.g Could be a company TICKER or a FRED column.}
 }

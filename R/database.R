@@ -582,8 +582,11 @@ pgUpsize <- function(con, trgt = NULL, keys = NULL, schname = NULL, df = NULL, v
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  Dots <- list(...)
+  if(is.null(Dots[["SymbolsTable"]])) SymbolsTable <- FALSE
+
   # if the schema.table does not exist then add it.
-  pgAddTable(con, trgt = trgt, keys = keys, schname = schname, df = df)
+  pgAddTable(con, trgt = trgt, keys = keys, schname = schname, df = df, SymbolsTable = SymbolsTable)
   # of any columns that exist in df but do not exist on the Server DB,
   # add those new columns to the Server DB
   pgAddColumnType(con, trgt = trgt, schname = schname, df = df)
@@ -600,20 +603,21 @@ initEnv();on.exit({uninitEnv()})
 
 #' add a table to a database
 #'
-#' @param df data.frame (with column names)
 #' @param con DBI database connection
 #' @param Symbol new table name. E.g Could be a company TICKER or a FRED column.
-#' @param schname schema name
 #' @param keys trgt remote server side vector of strings of table
 #' column names that make up a unique id for the row.
 #' keys can not be zero length. keys can not be null.
+#' @param schname schema name
+#' @param df data.frame (with column names)
+#' @param ... dots passed to dfToCREATETable
 #' @export
-pgAddTable <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL) {
+pgAddTable <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   if(!DBI::dbExistsTable(con, c(schname, trgt))) {
-    dfToCREATETable(df, con, Symbol = trgt, schname = schname, keys = keys, SymbolsTable = FALSE)
+    dfToCREATETable(df, con, Symbol = trgt, schname = schname, keys = keys, ...)
   } else {
     message("pgAddTable skipping table.  It is already there")
   }
@@ -729,6 +733,13 @@ initEnv();on.exit({uninitEnv()})
 #' Only 'new' records area added.
 #' (See pgUpdate to add information to current(already existing) records)
 #'
+#' In internal feature
+#' oldData previously collected limited server DB data used to
+#' restrict what is inserted.
+#' In oldData of data: server data and df data that is common by primary keys
+#' is eliminatated from the attempted insert.
+#' The keys are checked for 'no duplicates'
+#'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
 #' @param keys trgt remote server side vector of strings of table
@@ -744,12 +755,8 @@ initEnv();on.exit({uninitEnv()})
 #' e.g. varHint = "dateindex", valHint = "17000"
 #' or e.g. varHint = c("dateindex", "ticker"), valHint = c("17000","'AAPL'").
 #' Position matches one to one with valHint.
-#' @param oldData previously collected limited server DB data used to
-#' restrict what is updated/inserted.  If not provide by the user then
-#' the oldData will be (re)generated from df.
-#' Here oldData is used to CHECK that the key columns that I
-#' what to insert DO NOT EXISTS on the Server DB
-#' Here, only the keys are checked for 'no duplicates'
+#' @param valHint see above: varHint
+#' @param ... dots passed currently not used
 #' @examples
 #' \dontrun{
 #'
@@ -769,9 +776,10 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @importFrom data.table data.table rbindlist
 #' @importFrom zoo as.Date
+#' @importFrom stringr str_c
 #' @importFrom DBI dbWriteTable
 #' @export
-pgInsert <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL) {
+pgInsert <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -818,7 +826,7 @@ initEnv();on.exit({uninitEnv()})
         , "timestamp" = as.as.POSIXct(newColData, tz = "UTC", origin = "1970-01-01")
         ) -> newColData
       newData[[Column[["column_name"]]]] <- newColData
-    }
+    }                                      # CURRENLTLY NOT USED ANYWHERE
   }
 
   # Reorder the newData columns to match the order on the Server DB
@@ -828,11 +836,19 @@ initEnv();on.exit({uninitEnv()})
   newKeyData <- newData[, keys, with=FALSE]
   # correct, newKeyData is upper table data, see below, the clever programming: seq_len(NROW
   newKeyoldData <- rbindlist(list(newKeyData, oldKeyData))
-  # choose rows with never duplicates
+  # choose rows with never duplicates           choose rows with never duplicates
+  # choose rows with never duplicates  ******** choose rows with never duplicates
+  # choose rows with never duplicates           choose rows with never duplicates
   NewDataIndex <- !duplicated(newKeyoldData) & !duplicated(newKeyoldData, fromLast = TRUE)
 
-  # append up to the Server DB
-  DBI::dbWriteTable(con, c(schname, trgt),newData[NewDataIndex[seq_len(NROW(newKeyData))], ], row.names = FALSE, overwrite = FALSE, append = TRUE)
+  FinalNewData <- newData[NewDataIndex[seq_len(NROW(newKeyData))], , drop = FALSE]
+
+  if(NROW(FinalNewData)){
+    # append record(s) up to the Server DB
+    DBI::dbWriteTable(con, c(schname, trgt), FinalNewData, row.names = FALSE, overwrite = FALSE, append = TRUE)
+  } else {
+    message(stringr::str_c("pgInsert could not find records to write to ", schname, ".", trgt))
+  }
   return(invisible())
 
 })}
@@ -858,7 +874,10 @@ initEnv();on.exit({uninitEnv()})
 #' @param trgt remote server side string database table name of old data
 #' @param keys trgt remote server side vector of strings of table
 #' column names that make up a unique id for the row.
-#' keys can not be zero length. keys can not be null.
+#' Currently, if keys != NULL and IntentionFor = "INSERT", then just the 'key' columns are returned.
+#' If keys == NULL and IntentionFor == "INSERT" then all of the columns are returned
+#' If IntentionFor == "UPDATE" then this parameter is ignored. (All of the columns are returned)
+#' returned,
 #' @param schname schema name
 #' @param df local client side data.frame of limited data
 #' that determines what data is to be returned from the Server DB
@@ -878,7 +897,7 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'
-#' # setup
+#' # teardown and setup
 #' SuBmtcars <- mtcars[c(1,5),1:2]
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
@@ -889,8 +908,16 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 #' newData[2,2] <- NA; newData[1,3] <- NA
+#' # end of teardown and setup
 #'
+#' # default(IntentionFor == "UPDATE")
 #' oldData <- pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
+#'
+#' # repeat teardown and setup
+#' oldData <- pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData, varHint = "rn", valHint = "'Hornet Sportabout'")
+#'
+#' # repeat teardown and setup
+#' oldData <- pgOldData(con, trgt = "mtcars", keys = NULL   , schname = "public", df = newData, IntentionFor = "INSERT")
 #'
 #' DBI::dbDisconnect(con)
 #'
@@ -907,7 +934,8 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   if(is.null(trgt)) stop("pgOldData trgt can not be null")
-  if(is.null(keys)) stop("pgOldData keys can not be null")
+  # NOW ALLOWED "keys = NULL" call "pgOldData" with caution
+  # if(is.null(keys)) stop("pgOldData keys can not be null")
   #
   # MAYBE later I want SPECIFY a schname in
   # some other WAY (similar to what I have in other programs)
@@ -932,6 +960,9 @@ initEnv();on.exit({uninitEnv()})
     newData <- newData[ , colnames(newData)[colnames(newData) %in% serverDBColumns], with = FALSE]
     warning("pgOldData found in df column(s) that do not exist on the Server DB.\nThose df column(s) have been removed.")
   }
+
+  if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
+  schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
 
   SelectWhereExactlies <- vector(mode = "character")
 
@@ -969,13 +1000,6 @@ initEnv();on.exit({uninitEnv()})
     SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, varHint), " = ", valHint, collapse = " AND "), ")", collapse = "")
     SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
   }
-  # combine subsetting
-  if(length(SelectWhereExactlies)) {
-    SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " AND "), collapse = "")
-  }
-
-  if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
-  schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
 
   # actually go to the Server DB then collect and bring down that server data to local R
   #  do not bring back too many columns
@@ -983,11 +1007,18 @@ initEnv();on.exit({uninitEnv()})
     ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
   }
   if(IntentionFor == "INSERT") {
-    if(length(keys)){
+    if(length(keys))
       ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, keys), collapse = ", ")
-    } else {
-      ColnamesAndCommas <- "'t'"
+    if(!length(keys)){
+      ColnamesAndCommas <- stringr::str_c(DBI::dbQuoteIdentifier(con, colnames(newData)), collapse = ", ")
+      SelectWhereExactlies <- c( SelectWhereExactlies, " (1 = 0) ")
+                              # no rows but I do get column names
     }
+  }
+
+  # combine subsetting
+  if(length(SelectWhereExactlies)) {
+    SelectWhereExactlies <- stringr::str_c(" WHERE " , stringr::str_c(SelectWhereExactlies, collapse = " AND "), collapse = "")
   }
 
   SQLSelection <- stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies)
@@ -4253,8 +4284,7 @@ initEnv();on.exit({uninitEnv()})
       # therfore get it from the source "src"
       xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
       verbose = verbose, warnings = warnings, src = src, symbol.lookup = symbol.lookup,
-      auto.assign = FALSE, source.envir = source.envir,
-      ...)
+      auto.assign = FALSE, source.envir = source.envir, ...)
 
       # index(sequence) of (current(last) and) previous nextsrc values in 'reverse order' (SEE BELOW)
       nextrcSeqtoBeUpdated <- match(nextsrc_forward, nextsrc, 0) %>%
@@ -4267,8 +4297,7 @@ initEnv();on.exit({uninitEnv()})
       # therfore get it from the source "src"
       xTs <- getSymbols(Symbols = Symbols[[i]], env = env, reload.Symbols = reload.Symbols,
       verbose = verbose, warnings = warnings, src = nextsrc_forward, symbol.lookup = symbol.lookup,
-      auto.assign = FALSE, source.envir = source.envir,
-      ...)
+      auto.assign = FALSE, source.envir = source.envir, ...)
 
       # index(sequence) of the previous nextsrc values in 'reverse order' (SEE BELOW)
       nextrcSeqtoBeUpdated <- match(nextsrc_forward, nextsrc, 0) %>%
@@ -4749,7 +4778,10 @@ initEnv();on.exit({uninitEnv()})
 
       # create NEW CREATE TABLE statements"
       # column names
-      dfToCREATETable(df = df, con = con, Symbol = each.symbol, schname = schname, keys = keys)
+      #
+      # dfToCREATETable(df = df, con = con, Symbol = each.symbol, schname = schname, keys = keys)
+      pgAddTable(con, trgt = each.symbol, keys = keys, schname = schname, df = df)
+      #
       newCREATEdTables <- c(newCREATEdTables, each.symbol)
 
       new.db.symbol <- c(new.db.symbol, each.symbol)
@@ -4814,7 +4846,7 @@ initEnv();on.exit({uninitEnv()})
       #
       # NOTE: pgInsert calls DBI::dbWriteTable that appends data
       #
-      pgInsert(con, trgt = each.symbol, keys = PrimaryKeyCols, schname = schname, df = df, varHint = varHint, valHint = valHint)
+      pgInsert(con, trgt = each.symbol, keys = PrimaryKeyCols, schname = schname, df = df, varHint = varHint, valHint = valHint, ...)
       if(each.symbol %in% newCREATEdTables) {
       # assume a MASS amount of data has been uploaded
       # (this is typically the case if a tables has been newly created)

@@ -14,7 +14,10 @@ pgOldData(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
 
 \item{keys}{trgt remote server side vector of strings of table
 column names that make up a unique id for the row.
-keys can not be zero length. keys can not be null.}
+Currently, if keys != NULL and IntentionFor = "INSERT", then just the 'key' columns are returned.
+If keys == NULL and IntentionFor == "INSERT" then all of the columns are returned
+If IntentionFor == "UPDATE" then this parameter is ignored. (All of the columns are returned)
+returned,}
 
 \item{schname}{schema name}
 
@@ -54,7 +57,7 @@ columns from db to be new columns on the Server DB
 \examples{
 \dontrun{
 
-# setup
+# teardown and setup
 SuBmtcars <- mtcars[c(1,5),1:2]
 oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 oldData[1,2] <- NA; oldData[2,3] <- NA
@@ -65,8 +68,16 @@ DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
 
 newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 newData[2,2] <- NA; newData[1,3] <- NA
+# end of teardown and setup
 
+# default(IntentionFor == "UPDATE")
 oldData <- pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
+
+# repeat teardown and setup
+oldData <- pgOldData(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData, varHint = "rn", valHint = "'Hornet Sportabout'")
+
+# repeat teardown and setup
+oldData <- pgOldData(con, trgt = "mtcars", keys = NULL   , schname = "public", df = newData, IntentionFor = "INSERT")
 
 DBI::dbDisconnect(con)
 
