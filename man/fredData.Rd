@@ -49,12 +49,29 @@ then will get the new data from the "cache" or "pg"
 
 fredData(Symbol = "UNRATE")
 
-Add just only new records now!
+# full test
+# 1. remove cache data: rm(.UNRATE) (if there)
+# 2. drop database table "Symbols"."UNRATE"
+# 3. remove corresponding record from "Symbols"."Symbols"
+# 4. fredData(Symbol = "UNRATE")
 
-1. remove cache data: rm(.UNRATE) (if there)
-2. remove some (few) bottom records from the database table "Symbols"."UNRATE"
-Get records from the remote origin and just insert only-new (few) records
+# partial tests
 
+2.1 remove some (few) bottom records from the
+database table "Symbols"."UNRATE"
+just insert only-new (few) records
+# placeNewRecords == "AddOnlyNew" (default)
+
+fredData(Symbol = "UNRATE", NewMaxAge = "1 secs")
+
+# or
+
+# 2.2
+# placeNewRecords =="TruncateTable"
+
+fredData(Symbol = "UNRATE", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
+
+# "AddNewUpdateOld"
 
 }
 }

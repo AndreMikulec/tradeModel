@@ -582,6 +582,8 @@ pgUpsize <- function(con, trgt = NULL, keys = NULL, schname = NULL, df = NULL, v
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+
   Dots <- list(...)
   if(is.null(Dots[["SymbolsTable"]])) SymbolsTable <- FALSE
 
@@ -615,6 +617,8 @@ initEnv();on.exit({uninitEnv()})
 pgAddTable <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
 
   if(!DBI::dbExistsTable(con, c(schname, trgt))) {
     dfToCREATETable(df, con, Symbol = trgt, schname = schname, keys = keys, ...)
@@ -783,6 +787,8 @@ pgInsert <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHi
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+
   if(is.null(trgt)) stop("pgInsert trgt can not be null")
   if(is.null(keys)) stop("pgInsert keys can not be null")
   #
@@ -797,22 +803,51 @@ initEnv();on.exit({uninitEnv()})
      return(invisible())
   }
 
-  # Server DB column names
-  serverDBColumns <-  pgListSchemaTableColumns(con, schname = schname, tblname = trgt)
-
   # IntentionFor == "INSERT" (best to limit data by varHint and valHint)
   # IntentionFor == "INSERT" (SELECT keys FROM )
     # limit local key columns to only just Server DB existing columns
   oldKeyData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor = "INSERT")
-  # garantee order of the Server DB columns
-  oldKeyData <- oldKeyData[, customSorting(colnames(oldKeyData), serverDBColumns, sortVectorExcess = FALSE), with=FALSE]
+
+  ## BEGINNING OF PGINSERT/PGUPDATE
+  # Server DB column names
+  serverDBColumns <-  pgListSchemaTableColumns(con, schname = schname, tblname = trgt)
+
+  # Note, this 'appends' heavily assumes that the
+  # columns datatypes are the same (or compatiable) (UNCHECKED)
+
+  # column names ORDER are the same (CHECKED)
+  # RPostgreSQL::dbWriteTable C code, caroline::dbWriteTable2
+
+  # garantee order of the df columns
+  # from the original Server DB columns or oldKeyData
+  # AND
+  # chopVectorExcess = TRUE
+  ColsAloneINoldKeyData <- setdiff(colnames(oldKeyData), serverDBColumns)
+  if(length(ColsAloneINoldKeyData)) {
+     warning("pgInsert found ColsAloneINoldKeyData that do not exist in the server\n")
+     warning(stringr::str_c("  Will not trying to put them into the database here: ", ColsAloneINoldKeyData, "\n"))
+  }                          # order garantee                                                             # not too many columns
+  oldKeyData <- oldKeyData[, customSorting(colnames(oldKeyData), serverDBColumns, sortVectorExcess = FALSE, chopVectorExcess = TRUE), with=FALSE]
 
   newData <- data.table::data.table(df[, , drop = FALSE], key=keys)
+  ## END OF PGINSERT/PGUPDATE
+  ColsAloneINnewData <- setdiff(colnames(newData), serverDBColumns)
+  if(length(ColsAloneINnewData)) {
+     warning("pgInsert found ColsAloneINnewData that do not exist in the server\n")
+     warning(stringr::str_c("  Will not trying to put them into the database here: ", ColsAloneINnewData, "\n"))
+  }                          # order garantee                                                             # not too many columns
+  newData <- newData[, customSorting(colnames(newData), serverDBColumns, sortVectorExcess = FALSE, chopVectorExcess = TRUE), with=FALSE]
+
+
   # fill in missing columns on the R client side that exist on the Server DB
   SchemaTableColumnTypes <- pgSchemaTableColumnTypes(con, schname = schname, tblname = trgt)
   SchemaTableColumnTypesSplitted <- split(SchemaTableColumnTypes, f = seq_len(NROW(SchemaTableColumnTypes)))
 
   # Maybe dbWriteTable does not need these
+
+  # like package caroline::dbWriteTable2, if column exist in the Server DB
+  # and and not in the df, then add an empty column to the
+  # df of the correct Server DB colum datatype.
   for(Column in SchemaTableColumnTypesSplitted) {
     if(!Column[["column_name"]] %in% colnames(newData)) {
       newColData <- rep(NA_integer_, NROW(newData))
@@ -829,19 +864,21 @@ initEnv();on.exit({uninitEnv()})
     }                                      # CURRENLTLY NOT USED ANYWHERE
   }
 
+
   # Reorder the newData columns to match the order on the Server DB
   newData <- newData[, customSorting(colnames(newData), serverDBColumns, sortVectorExcess = FALSE), with=FALSE]
 
   # just select key columns
   newKeyData <- newData[, keys, with=FALSE]
   # correct, newKeyData is upper table data, see below, the clever programming: seq_len(NROW
-  newKeyoldData <- rbindlist(list(newKeyData, oldKeyData))
+  newKeyoldData <- data.table::rbindlist(list(newKeyData, oldKeyData))
   # choose rows with never duplicates           choose rows with never duplicates
   # choose rows with never duplicates  ******** choose rows with never duplicates
   # choose rows with never duplicates           choose rows with never duplicates
   NewDataIndex <- !duplicated(newKeyoldData) & !duplicated(newKeyoldData, fromLast = TRUE)
 
-  FinalNewData <- newData[NewDataIndex[seq_len(NROW(newKeyData))], , drop = FALSE]
+  NewDataIndex <- NewDataIndex[seq_len(NROW(newKeyData))]
+  FinalNewData <- newData[NewDataIndex, ]
 
   if(NROW(FinalNewData)){
     # append record(s) up to the Server DB
@@ -933,6 +970,8 @@ pgOldData <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varH
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+
   if(is.null(trgt)) stop("pgOldData trgt can not be null")
   # NOW ALLOWED "keys = NULL" call "pgOldData" with caution
   # if(is.null(keys)) stop("pgOldData keys can not be null")
@@ -982,9 +1021,9 @@ initEnv();on.exit({uninitEnv()})
     if(!exists("Splitted", envir = environment(), inherits = FALSE))
       Splitted <- list()
     for(spl in Splitted) {
-      keyvals <-  unlist(spl)
+      keyvals <- do.call(c, spl)
       if(length(keyvals)) {
-        keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
+        keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, as.character(keyvals))
         SelectWhereExactly <- stringr::str_c("(", stringr::str_c(DBI::dbQuoteIdentifier(con, keys), " = ", keyvals, collapse = " AND "), ")", collapse = "")
         SelectWhereExactlies <- c(SelectWhereExactlies, SelectWhereExactly)
       }
@@ -1023,7 +1062,7 @@ initEnv();on.exit({uninitEnv()})
 
   SQLSelection <- stringr::str_c("SELECT ", ColnamesAndCommas, " FROM ", schemaTrgtTableQuoted, SelectWhereExactlies)
   oldServerData <- DBI::dbGetQuery(con, SQLSelection)
-  message(SQLSelection)
+  ### BIG SQL STATEMENT ### message(SQLSelection)
   oldServerData <- data.table::data.table(oldServerData, key=keys)
   oldServerData
 
@@ -1072,7 +1111,7 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'
-#' # setup
+#' # begin teardown and setup
 #' SuBmtcars <- mtcars[c(1,5),1:2]
 #' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 #' oldData[1,2] <- NA; oldData[2,3] <- NA
@@ -1085,9 +1124,30 @@ initEnv();on.exit({uninitEnv()})
 #' newData[2,2] <- NA; newData[1,3] <- NA
 #'
 #' # not "prepare.query"
+#' # end teardown and setup
 #'
 #' # this
 #' pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
+#'
+#' # begin teardown and setup
+#' SuBmtcars <- mtcars[c(1,5),c(1:2,8)]
+#' oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key=c("rn","vs"))
+#' oldData[1,2] <- NA; oldData[2,3] <- NA
+#'
+#' con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
+#' DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
+#' DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
+#'
+#' newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key=c("rn","vs"))
+#' newData[2,2] <- NA; newData[1,3] <- NA
+#'
+#' # not "prepare.query"
+#' # end teardown and setup
+#'
+#' # this
+#' pgUpdate(con, trgt = "mtcars", keys = c("rn","vs"), schname = "public", df = newData)
+#'
+#'
 #'
 #' # xor
 #' # "prepare.query"
@@ -1112,6 +1172,8 @@ initEnv();on.exit({uninitEnv()})
 pgUpdate <- function(con, trgt = NULL, keys = c("rn"), schname, df = NULL, varHint = NULL, valHint = NULL, AppendConditions = NULL, ... ) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
 
   Dots <- list(...)
 
@@ -1138,6 +1200,39 @@ initEnv();on.exit({uninitEnv()})
   }
 
   oldData <- pgOldData(con, trgt = trgt, keys = keys, schname = schname, df = df, varHint = varHint, valHint = valHint, IntentionFor = "UPDATE")
+
+
+  ## BEGINNING OF PGINSERT/PGUPDATE
+  # Server DB column names
+  serverDBColumns <-  pgListSchemaTableColumns(con, schname = schname, tblname = trgt)
+
+  # Note, this 'appends' heavily assumes that the
+  # columns datatypes are the same (or compatiable) (UNCHECKED)
+
+  # column names ORDER are the same (CHECKED)
+  # RPostgreSQL::dbWriteTable C code, caroline::dbWriteTable2
+
+  # garantee order of the df columns
+  # from the original Server DB columns or oldData
+  # AND
+  # chopVectorExcess = TRUE
+  ColsAloneINoldData <- setdiff(colnames(oldData), serverDBColumns)
+  if(length(ColsAloneINoldData)) {
+    warning("pgUpdate found ColsAloneINoldData that do not exist in the server\n")
+    warning(stringr::str_c("  Will not trying to put them into the database here: ", ColsAloneINoldData, "\n"))
+  }                          # order garantee                                                             # not too many columns
+  oldData <- oldData[, customSorting(colnames(oldData), serverDBColumns, sortVectorExcess = FALSE, chopVectorExcess = TRUE), with=FALSE]
+
+  newData <- data.table::data.table(df[, , drop = FALSE], key=keys)
+  ## END OF PGINSERT/PGUPDATE
+  ColsAloneINnewData <- setdiff(colnames(newData), serverDBColumns)
+  if(length(ColsAloneINnewData)) {
+     warning("pgUpdate found ColsAloneINnewData that do not exist in the server\n")
+     warning(stringr::str_c("  Will not trying to put them into the database here: ", ColsAloneINnewData, "\n"))
+  }                          # order garantee                                                             # not too many columns
+  newData <- newData[, customSorting(colnames(newData), serverDBColumns, sortVectorExcess = FALSE, chopVectorExcess = TRUE), with=FALSE]
+
+
 
   if(schname != "") { dotSchemaQuoted <- stringr::str_c(DBI::dbQuoteIdentifier(con, schname), ".") } else { dotSchemaQuoted <- "" }
   schemaTrgtTableQuoted <-  stringr::str_c(dotSchemaQuoted, DBI::dbQuoteIdentifier(con, trgt))
@@ -1189,16 +1284,16 @@ initEnv();on.exit({uninitEnv()})
           (any(AppendConditions %in% "LnaRvalue") && (  is.na(spl[[LValue]]) && !is.na(spl[[RValue]]) )) ||
           # always append (ideal for small data that rarely changes (and may be hard to track) )
           # both sides values do not matter. Always append
-          (any(AppendConditions %in% "Always"))
+          (any(AppendConditions %in% "Always")) # NOTE: FORGOT TO WRITE CODE: is.na(x) -> NULL
       ) {
         UpDateSet   <- stringr::str_c(DBI::dbQuoteIdentifier(con, nm), " = ", "val.", DBI::dbQuoteIdentifier(con, nm), " ")
         UpDateSetColl <- c(UpDateSetColl,UpDateSet)
       }
     }
     if(length(UpDateSetColl)) {
-      keyvals <- unlist(plyr::llply(keys, function(x) { spl[[x]] }))
-      names(keyvals) <- keys # names not used
-      keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, keyvals)
+      keyvals <- do.call(c,plyr::llply(keys, function(x) { spl[[x]] })) # POSTGRESQL LIBERAL LETS US SELECT 'X' integer.
+      names(keyvals) <- keys # names not used  # SHOULD BE A LIST BECAUSE OF TWO DATATYPES
+      keyvals <- if(!is.numeric(keyvals)) DBI::dbQuoteString(con, as.character(keyvals))
       UpDateWhereExactly <- stringr::str_c(stringr::str_c("trg.", DBI::dbQuoteIdentifier(con, keys)), " = ", keyvals, collapse = " AND ")
       UpdateFromWhere <- stringr::str_c(" FROM ", UpDateFrom, " WHERE ", UpDateWhere, " AND ", UpDateWhereExactly)
       UpDateSets <- stringr::str_c(UpDateSetColl, collapse = ", ")
@@ -1206,9 +1301,10 @@ initEnv();on.exit({uninitEnv()})
       UpDateStmts <- c(UpDateStmts, UpDateStmt)
     }
   }
+
   if(length(UpDateStmts)) {
 
-    colClasses <- pgDFColClasses(newData[, , drop = FALSE])
+    colClasses <- pgDFColClasses(newData)
 
     # would prefer less disk I/O so I would prefer to create a TEMPORARY table
     # R package Postgre can do that in dbWriteTable
@@ -1265,7 +1361,7 @@ initEnv();on.exit({uninitEnv()})
     DBI::dbWriteTable(con, writetempTable, newData[, c(keys, MatchingColsRoots), with=FALSE] , row.names = FALSE, overwrite = FALSE, append = TRUE, temporary = TRUE)
 
     DBI::dbBegin(con)
-    message(stringr::str_c(stringr::str_split(stringr::str_c(UpDateStmts, collapse = ""), ";\\s+")[[1]], ";\n"))
+    ### BIG UPDATE SQL HERE ### message(stringr::str_c(stringr::str_split(stringr::str_c(UpDateStmts, collapse = ""), ";\\s+")[[1]], ";\n"))
     # RPostgre PqConnection class connection SUCKS (What are they thinking?)
     # Error in result_create(conn@ptr, statement) :
     # Failed to prepare query: ERROR:  cannot insert multiple commands into a prepared statement
@@ -1790,8 +1886,6 @@ initEnv(); on.exit({uninitEnv()})
    # Coding could be cumberson: runtime could be long: check
    # each element for eaches class membership (however, this could/can be done.)
 
-  browser()
-
   if(is.list(oldcode)) {
      # peek
      OldClass <- class(oldcode[[1]])
@@ -1871,7 +1965,6 @@ initEnv(); on.exit({uninitEnv()})
     y <- x
   }
 
-  browser()
   newx <- x
   if(is.list(y)) y <- do.call(c,y)
   #    y and newcode have the same numbers and are the source
@@ -4646,10 +4739,11 @@ initEnv();on.exit({uninitEnv()})
 #' @param db.fields character vector indicating
 #' names of fields to insert
 #' @param keys passed to dfToCREATETable and dfGetPKEYNames
-#' @param placeNewRecords "TruncateTable" (default).
-#' TRUNCATE TABLE the table contents ("TruncateTable").
+#' @param placeNewRecords "AddOnlyNew"(default)
 #' Append 'new' records determined by 'new' inbound key values
-#' to the table via pgInsert ("AddOnlyNew").
+#' to the table using pgInsert.
+#' The other choice is "TruncateTable". TRUNCATE TABLE the table contents.
+#' Follow by running "pgInsert"
 #' NOTE, user choice is specific to the nature of the changing source
 #' data.  For example, FRED historical data is typically static: e.g. UNRATE
 #' (but maybe not all historic data in FRED is static.  Therefore, in the
@@ -4710,7 +4804,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   importDefaults("saveSymbols.PostgreSQL")
 
-  if(is.null(placeNewRecords)) placeNewRecords <- "TruncateTable"
+  if(is.null(placeNewRecords)) placeNewRecords <- "AddOnlyNew" # "TruncateTable"
 
   schnamePassed <- schname
   SymbolsPassed <- Symbols
@@ -4759,16 +4853,6 @@ initEnv();on.exit({uninitEnv()})
     # create *new* empty TABLEs
     dfs <- list()
     new.db.symbol <- c()
-    # IMPORTANT!!
-    # NOTE, IF THE STRUCTURE of THE incoming OBJECT is different from the STORED object
-    # E.G.! NEW COLUMNS, DIFFERENT R/POSTGRESQL CLASS OF the index
-    # then MAYBE
-    # dbWriteTable WILL FAIL? and/or
-    # (I HAVE NOT HANDLED THESE 'change' CASES)
-    # NOTE: the INDEX type probably will not change
-    # BUT getting NEW added COLUMNS would be COMMON
-    # so I WOULD (IN THE NEAR FUTURE) have to do:
-    # (1) detect new column name (2) ADD COLUMN
 
     for (each.symbol in  missing.db.symbol) {
 
@@ -4804,6 +4888,20 @@ initEnv();on.exit({uninitEnv()})
     if(is.null(xTs)) { message(paste("Symbol ", each.symbol, " was not found s skipping.")); next }
     df  <- xTs2DBDF(xTs, con, field.names = field.names[-1], db.fields = db.fields[-1])
 
+    # IMPORTANT!!
+    # NOTE, IF THE STRUCTURE of THE incoming OBJECT is different from the STORED object
+    # E.G.! NEW COLUMNS, DIFFERENT R/POSTGRESQL CLASS OF the index
+    # then MAYBE dbWriteTable WILL FAIL? and/or
+    # (I HAVE NOT HANDLED THESE 'change' CASES)
+    # NOTE: the INDEX type probably will not change
+    # BUT getting NEW added COLUMNS would be COMMON
+    # so I WOULD  have to do:
+    # (1) detect new column name (2) ADD COLUMN
+
+    # of any columns that exist in df but do not exist on the Server DB,
+    # add those new columns to the Server DB
+    pgAddColumnType(con, trgt = each.symbol, schname = schname, df = df)
+
     # Goal
     # exist in  R       'Date', 'Open','High','Low','Close','Volume','Adjusted'( along with FRED columns )
     # translate from those
@@ -4819,40 +4917,43 @@ initEnv();on.exit({uninitEnv()})
       dotSchemaQuoted <- ""
     }
 
+    # see ?PrimaryKeyCols on how NULL 'keys' is interpreted
+    PrimaryKeyCols <- dfGetPKEYNames(df = df, keys = keys)
+
     if(placeNewRecords == "TruncateTable") {
+      message("saveSymbols.PostgreSQL is doing TruncateTable")
       DBI::dbExecute(con, stringr::str_c("TRUNCATE TABLE ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
 
-      DBI::dbWriteTable(con, c(schname ,each.symbol), df, append = T, row.names = F)
+      # DBI::dbWriteTable(con, c(schname ,each.symbol), df, append = T, row.names = F)
       # if  each.symbol includes schema name + ".",
       # then dbWriteTable will return TRUE, but it will LIE
+      #
+      # NOTE: pgInsert calls DBI::dbWriteTable that appends data
+      pgInsert(con, trgt = each.symbol, keys = PrimaryKeyCols, schname = schname, df = df, varHint = varHint, valHint = valHint, ...)
 
       # pgAdmin3 LTS (BigSQL) mentioned that I should do
       DBI::dbExecute(con, stringr::str_c("VACUUM (VERBOSE, ANALYZE) ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
     }
-    if(placeNewRecords == "AddOnlyNew") {
+    if((placeNewRecords == "AddOnlyNew") || (placeNewRecords == "AddNewUpdateOld")) {
+      message("saveSymbols.PostgreSQL is doing AddOnlyNew")
 
-      # see ?PrimaryKeyCols on how NULL 'keys' is interpreted
-      PrimaryKeyCols <- dfGetPKEYNames(df = df, keys = keys)
-
-      # Note, this 'append' heavily assumes that the
-      # columns names are the same
-      # and may be
-      # column names ORDER are the same (UNVERIFIED)
-      #   see RPostgreSQL::dbWriteTable C code, caroline::dbWriteTable2
-      # and
-      # column types are the samme
-      # I have not (yet) handled that cases
-      # in such that any of the above "assumptions" differ
-      #
       # NOTE: pgInsert calls DBI::dbWriteTable that appends data
-      #
       pgInsert(con, trgt = each.symbol, keys = PrimaryKeyCols, schname = schname, df = df, varHint = varHint, valHint = valHint, ...)
-      if(each.symbol %in% newCREATEdTables) {
-      # assume a MASS amount of data has been uploaded
-      # (this is typically the case if a tables has been newly created)
 
-      # pgAdmin3 LTS (BigSQL) mentioned that I should do
-      DBI::dbExecute(con, stringr::str_c("VACUUM (VERBOSE, ANALYZE) ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
+      if(placeNewRecords == "AddNewUpdateOld") {
+        message("saveSymbols.PostgreSQL is doing AddNewUpdateOld")
+
+        # current rows that already exist on the server ( uniquely identified by keys )
+        pgUpdate(con, trgt = each.symbol, keys = PrimaryKeyCols, schname = schname, df = df, varHint = varHint, valHint = valHint, ... )
+
+      }
+
+      if(each.symbol %in% newCREATEdTables) {
+        # assume a MASS amount of data has been uploaded
+        # (this is typically the case if a tables has been newly created)
+
+        # pgAdmin3 LTS (BigSQL) mentioned that I should do
+        DBI::dbExecute(con, stringr::str_c("VACUUM (VERBOSE, ANALYZE) ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
       }
 
     }

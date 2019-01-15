@@ -303,7 +303,7 @@ tryCatchLog::tryCatchLog({
   # rlang::eval_bare(action, env = envii)
 
   # options(warn=2L)
-  options(warn=1L) # so, I can use BELOW: options(tryCatchLog.write.error.dump.file = TRUE)
+  options(warn=1L) # 1L # so, I can use BELOW: options(tryCatchLog.write.error.dump.file = TRUE)
   options(width=10000L) # LIMIT # Note: set Rterm(64 bit) as appropriate
   options(digits=if(is.null(init[["digits"]])) { 22L } else {init[["digits"]]})
   options(max.print=99999L)
@@ -465,13 +465,29 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' fredData(Symbol = "UNRATE")
 #'
-#' Add just only new records now!
+#' # full test
+#' # 1. remove cache data: rm(.UNRATE) (if there)
+#' # 2. drop database table "Symbols"."UNRATE"
+#' # 3. remove corresponding record from "Symbols"."Symbols"
+#' # 4. fredData(Symbol = "UNRATE")
 #'
-#' 1. remove cache data: rm(.UNRATE) (if there)
-#' 2. remove some (few) bottom records from the database table "Symbols"."UNRATE"
-#' Get records from the remote origin and just insert only-new (few) records
+#' # partial tests
 #'
-# fredData(Symbol = "UNRATE", NewMaxAge = "1 secs", placeNewRecords = "AddOnlyNew")
+#' 2.1 remove some (few) bottom records from the
+#' database table "Symbols"."UNRATE"
+#' just insert only-new (few) records
+#' # placeNewRecords == "AddOnlyNew" (default)
+#'
+#' fredData(Symbol = "UNRATE", NewMaxAge = "1 secs")
+#'
+#' # or
+#'
+#' # 2.2
+#' # placeNewRecords =="TruncateTable"
+#'
+#' fredData(Symbol = "UNRATE", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
+#'
+#' # "AddNewUpdateOld"
 #'
 #' }
 #' @export
@@ -3419,9 +3435,22 @@ initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
   initVal <- initPorfVal(initVal)
 
+  # calls "Return.portfolio.geometric"
+  # note: the datum of leading returns is never invested
+  # the first record holds the decision of what to do next
+  # then the "what to do next" is read "first", then "next"
+  # the action is done
   portLogRet1 <- portfolioLogReturns(xTs = xTs, initVal = initVal)
 
-  monthlyReturn(exp(cumsum(portLogRet1)) * initVal)
+  # "monthlyReturn(exp(cumsum(portLogRet1)) * initVal)" produces the
+  # same answer as "ret" in return.Portfolio.geometric
+  # and here! I loose the '1st datum of "ret" (becomes zero(0))
+  # so I can skip this ( and note the month1 == 0 messes with the accumulations
+  # producing a small accumulation error)
+  #
+  # monthlyReturn(exp(cumsum(portLogRet1)) * initVal)
+  #
+  portLogRet1
 
 })}
 

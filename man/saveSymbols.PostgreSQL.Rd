@@ -22,10 +22,11 @@ names of fields to insert}
 
 \item{keys}{passed to dfToCREATETable and dfGetPKEYNames}
 
-\item{placeNewRecords}{"TruncateTable" (default).
-TRUNCATE TABLE the table contents ("TruncateTable").
+\item{placeNewRecords}{"AddOnlyNew"(default)
 Append 'new' records determined by 'new' inbound key values
-to the table via pgInsert ("AddOnlyNew").
+to the table using pgInsert.
+The other choice is "TruncateTable". TRUNCATE TABLE the table contents.
+Follow by running "pgInsert"
 NOTE, user choice is specific to the nature of the changing source
 data.  For example, FRED historical data is typically static: e.g. UNRATE
 (but maybe not all historic data in FRED is static.  Therefore, in the

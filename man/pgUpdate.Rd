@@ -57,7 +57,7 @@ rows returned from the server by pgOldData
 \examples{
 \dontrun{
 
-# setup
+# begin teardown and setup
 SuBmtcars <- mtcars[c(1,5),1:2]
 oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 oldData[1,2] <- NA; oldData[2,3] <- NA
@@ -70,9 +70,30 @@ newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key="rn")
 newData[2,2] <- NA; newData[1,3] <- NA
 
 # not "prepare.query"
+# end teardown and setup
 
 # this
 pgUpdate(con, trgt = "mtcars", keys = c("rn"), schname = "public", df = newData)
+
+# begin teardown and setup
+SuBmtcars <- mtcars[c(1,5),c(1:2,8)]
+oldData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key=c("rn","vs"))
+oldData[1,2] <- NA; oldData[2,3] <- NA
+
+con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100), user = "postgres")
+DBI::dbExecute(con, "DROP TABLE IF EXISTS public.mtcars")
+DBI::dbWriteTable(con, "mtcars", oldData, row.names = FALSE)
+
+newData <- data.table::data.table(SuBmtcars, keep.rownames=TRUE, key=c("rn","vs"))
+newData[2,2] <- NA; newData[1,3] <- NA
+
+# not "prepare.query"
+# end teardown and setup
+
+# this
+pgUpdate(con, trgt = "mtcars", keys = c("rn","vs"), schname = "public", df = newData)
+
+
 
 # xor
 # "prepare.query"

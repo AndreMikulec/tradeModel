@@ -67,15 +67,18 @@ UnRateMachinetradeModel <- function() {
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addWillShire5000MachineWts %>%       #
   appendCashWts              %>%       # (excess)
-  # ret
 
   printTail("Exact Schedule of Leading of UnRateMachine returns and decisions") %>%
 
   # (4) apply in action
-  portfolioMonthlyReturns %>%
+  portfolioMonthlyReturns -> ret
+  browser()
 
+  # STRONG FEELING IT NEEDS PAST RETURNS ( AND NOT FUTURE RETURNS )
+  # I NEED TO ASK ABOUT THIS
+  # !!! CALENDAR SOMETIMES DOES NOT WORK!! - NEED FIXING?! - OFF BY 2-3 MONTHS !!!
   # (5) evaluate performance
-  Lagging %>% printCalendar("Lagging UnRateMachine returns")
+  Lagging %>% printCalendar(ret, "Lagging UnRateMachine returns")
 
 })}
 # UnRateMachinetradeModel()
