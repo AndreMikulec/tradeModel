@@ -2375,7 +2375,7 @@ initEnv(); on.exit({uninitEnv()})
 
     # override with correct dates
     # see # blockmodeling::recode
-    browser()
+
     NewTimeDateDateDate <- TimeDateDateDate
     for(i in seq_along(NewTimeDateDateDate)) {
       NewTimeDateDateDate[TimeDateYearQtr ==  ReleaseDates[["YearQtr"]][i]] <- ReleaseDates[["ReleaseDate"]][i]
@@ -2425,7 +2425,7 @@ initEnv(); on.exit({uninitEnv()})
 
     if (verbose)
         cat("done.\n\n")
-    fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
+    fr <- xts(as.matrix(fr[, -1, drop = FALSE]), zoo::as.Date(fr[[1]], origin = "1970-01-01"),
               src = "USFedPhil", updated = Sys.time())
     fri <- fr
     rs <- fri
