@@ -153,9 +153,9 @@ NOT USED ANYWHERE
 \dontrun{
 
 # common usage
-if(!exists("UNEMP2.mean")) getSymbols("UNEMP2", src = "USFedPhil")
+if(!exists("UNEMP2_mean")) getSymbols("UNEMP2", src = "USFedPhil")
 
-getSymbols(c("UNEMP2", "PGDP", "NGDP", "CPROF"), src = "USFedPhil")
+getSymbols(c("UNEMP2", "PGDP2", "NGDP2","CPROF2"), src = "USFedPhil")
 getSymbols(c("RR1_TBILL_PCE_3","RR3_TBILL_PCE_3"), src = "USFedPhil", Fun = mean, na.rm = TRUE)
 
 # standard deviation

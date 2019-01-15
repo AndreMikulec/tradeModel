@@ -2127,9 +2127,9 @@ initEnv(); on.exit({uninitEnv()})
 #' \dontrun{
 #'
 #' # common usage
-#' if(!exists("UNEMP2.mean")) getSymbols("UNEMP2", src = "USFedPhil")
+#' if(!exists("UNEMP2_mean")) getSymbols("UNEMP2", src = "USFedPhil")
 #'
-#' getSymbols(c("UNEMP2", "PGDP", "NGDP", "CPROF"), src = "USFedPhil")
+#' getSymbols(c("UNEMP2", "PGDP2", "NGDP2","CPROF2"), src = "USFedPhil")
 #' getSymbols(c("RR1_TBILL_PCE_3","RR3_TBILL_PCE_3"), src = "USFedPhil", Fun = mean, na.rm = TRUE)
 #'
 #' # standard deviation
@@ -2420,7 +2420,7 @@ initEnv(); on.exit({uninitEnv()})
     DT <- DescTools::DoCall("applyAggregateDT", c(list(), x = list(DT), Fun = Fun, By = "TimeDate", FunStr = FunStr, Dots))
     # from aggregate(Fun), some aggregates remove, NaN
     DF <- as.data.frame(plyr::llply(DT,function(x) { x[is.nan(x)] <- NA; x }), stringsAsFactors = FALSE)
-    colnames(DF) <- stringr::str_c(colnames(DF), ".", FunStr)
+    colnames(DF) <- stringr::str_c(colnames(DF), "_", FunStr)
     fr <- DF
 
     if (verbose)
@@ -2447,7 +2447,7 @@ initEnv(); on.exit({uninitEnv()})
         if(Symbols[[i]] != "USFedPhilForecastingData") {
            if (verbose)
              cat("selecting ", Symbols[[i]], ".....\n\n")
-          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(stringr::str_c(Symbols[[i]],".", FunStr))]]
+          fri <- fr[, colnames(fr)[tolower(colnames(fr)) %in% tolower(stringr::str_c(Symbols[[i]], "_", FunStr))]]
         }
 
         fri <- quantmod___convert.time.series(fr = fri, return.class = return.class)
