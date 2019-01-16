@@ -25,6 +25,8 @@ Imports:
     tis,
     timeSeries,
     zoo,
+    TTR,
+    PerformanceAnalytics,
     DBI,
     RPostgreSQL,
     RPostgres,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{addWillShire5000MachineWts}
 \alias{addWillShire5000MachineWts}
-\title{add Willshire 5000 Index log weights returns using Machine learning (will5000idxlogrets)}
+\title{add Willshire 5000 Index log weights returns using Machine learning (WILL5000INDlogrets)}
 \usage{
 addWillShire5000MachineWts(xTs = NULL)
 }
@@ -13,5 +13,5 @@ addWillShire5000MachineWts(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add Willshire 5000 Index log weights returns using Machine learning (will5000idxlogrets)
+add Willshire 5000 Index log weights returns using Machine learning (WILL5000INDlogrets)
 }

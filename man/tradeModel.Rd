@@ -6,7 +6,7 @@
 \alias{tradeModel-package}
 \title{tradeModel: Quantitive Mathematics and Financial Prediction}
 \description{
-functions
+Currently, this is EXPERIMENTAL and NOT WORKING.
 }
 \section{Safe Data}{
 
@@ -84,3 +84,10 @@ UnRateEyeBalltradeModel
 UnRateMachinetradeModel
 }
 
+\references{
+\cite{How to backtest a strategy in R \url{http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html}}
+
+\cite{AGGREGATE PORTFOLIO CONTRIBUTIONS THROUGH TIME \url{https://tradeblotter.wordpress.com/2014/09/25/aggregate-portfolio-contributions-through-time/}}
+
+functions
+}

@@ -305,7 +305,8 @@ tryCatchLog::tryCatchLog({
   # options(warn=2L)
   options(warn=1L) # 1L # so, I can use BELOW: options(tryCatchLog.write.error.dump.file = TRUE)
   options(width=10000L) # LIMIT # Note: set Rterm(64 bit) as appropriate
-  options(digits=if(is.null(init[["digits"]])) { 22L } else {init[["digits"]]})
+  # options(digits=if(is.null(init[["digits"]])) { 22L } else {init[["digits"]]})
+  options(digits = 5L)
   options(max.print=99999L)
   options(scipen=255L) # Try these = width
 
@@ -414,6 +415,7 @@ tryCatchLog::tryCatchLog({
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom TTR ROC
 #' @importFrom stringr str_c
 logReturns <- function(xTs = NULL)  {
 tryCatchLog::tryCatchLog({
@@ -421,7 +423,10 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  xTsLogRets <- ROC(xTs)             # which(is.na(xTsindLogRets)) # logrithmic
+  # percent change
+  # also could have used: PerformanceAnalytics::Return.calculate()
+  # SEE the references
+  xTsLogRets <- TTR::ROC(xTs)             # which(is.na(xTsindLogRets)) # logrithmic
   xTsLogRets[is.na(xTsLogRets)] <- 0 # usually just the 1st observation
   colnames(xTsLogRets)[1] <- stringr::str_c(colnames(xTsLogRets)[1], "logrets")
 
@@ -587,8 +592,8 @@ initEnv();on.exit({uninitEnv()})
   if(periodicity(xTs)[["scale"]] == "monthly") {
     if(DescTools::Day(head(index(xTs),1)) %in% c(28:31)) {
       refDates <- DescTools::LastDayOfMonth(tail(index(xTs),1) %m+% months( 1 * seq_len(Shift)) )
+      xTs <- merge(xTs, xts(, refDates) )
     }
-    xTs <- merge(xTs, xts(, refDates) )
   }
   xTs %>% { lag(., 1 * Shift) } -> xTs
   if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
@@ -598,6 +603,7 @@ initEnv();on.exit({uninitEnv()})
   }
   xTs
 })}
+
 
 
 
@@ -1582,8 +1588,8 @@ initEnv();on.exit({uninitEnv()})
   if(periodicity(xTs)[["scale"]] == "monthly") {
     if(DescTools::Day(head(index(xTs),1)) %in% c(28:31)) {
       refDates <- DescTools::LastDayOfMonth(head(index(xTs),1) %m+% months(-1 * seq_len(Shift)) )
+      xTs <- merge(xTs, xts(, refDates) )
     }
-    xTs <- merge(xTs, xts(, refDates) )
   }
   xTs %>% { lag(.,-1 * Shift) } -> xTs
   if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
@@ -1593,6 +1599,45 @@ initEnv();on.exit({uninitEnv()})
   }
   xTs
 })}
+
+
+
+#' current
+#'
+#' pads beginning date as necessary
+#'
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_detect
+#' @importFrom stringr str_replace
+#' @importFrom lubridate %m+%
+#' @importFrom DescTools Day
+#' @importFrom DescTools LastDayOfMonth
+Current <- function(xTs = NULL, Shift = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  `%m+%` <- lubridate::`%m+%`
+
+  xTs <- initXts(xTs)
+  if(is.null(Shift)) Shift = 0
+  # compare to quantmod:::Lag.xts
+  if(periodicity(xTs)[["scale"]] == "monthly") {
+    # if(DescTools::Day(head(index(xTs),1)) %in% c(28:31)) {
+    #   # ERROR: CAN NOT BE ZERO(0)
+    #   refDates <- DescTools::LastDayOfMonth(head(index(xTs),1) %m+% months(0 * seq_len(Shift)) )
+    #   xTs <- merge(xTs, xts(, refDates) )
+    # }
+  }
+  xTs %>% { lag(., 0 * Shift) } -> xTs
+  if(stringr::str_detect(colnames(xTs)[1], "currentrets$")) {
+    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "currentrets$", "rets")
+  } else {
+    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "currentrets")
+  }
+  xTs
+})}
+
 
 
 #' NBER timeslices
@@ -2231,6 +2276,24 @@ initEnv();on.exit({uninitEnv()})
 
 })}
 
+#' current cash log returns (CASHlogrets)
+#'
+#' @param xTs xts object (only takes the index)
+#' @return leading xts object
+#' @export
+currentCashLogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+  cashLogReturns(xTs) %>%
+    Current -> xTs
+  xTs
+
+})}
+
+
 
 
 #' add cash log returns (CASHlogrets)
@@ -2238,14 +2301,15 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
-addLeadingCashLogReturns <- function(xTs = NULL) {
+addCurrLeadCashLogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
-
-                         # CASHlogrets
-  combineLogReturns(xTs, leadingCashLogReturns(xTs))
+                                # CASHlogrets
+  xTs <- combineLogReturns(xTs, currentCashLogReturns(xTs))
+  xTs <- combineLogReturns(xTs, leadingCashLogReturns(xTs))
+  xTs
 
 })}
 
@@ -2290,7 +2354,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' get the Wilshare 5000 Index log returns
+#' get the Wilshare 5000 Index leadinglog returns
 #'
 #' @return xts object
 #' @export
@@ -2304,6 +2368,21 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+#' get the Wilshire 5000 Index lagging log returns
+#'
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+currentWilshire5000LogReturns <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  wilshire5000LogReturns() %>% Current
+
+})}
+
+
+
 
 #' add Willshire 5000 Index log returns (WILL5000INDlogrets)
 #'
@@ -2311,14 +2390,16 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-addLeadingWilshire5000LogReturns <- function(xTs = NULL) {
+addCurrLeadWilshire5000LogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
+                                 # WILL5000INDlogrets
+  xTs  <- combineLogReturns(xTs, currentWilshire5000LogReturns())
+  xTs  <- combineLogReturns(xTs, leadingWilshire5000LogReturns())
 
-                         # WILL5000INDlogrets
-  combineLogReturns(xTs, leadingWilshire5000LogReturns())
+  xTs
 
 })}
 
@@ -2369,7 +2450,7 @@ initEnv();on.exit({uninitEnv()})
                         ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
   unrate_wts[is.na(unrate_wts)] <- 1 # 100% allocated
 
-  colnames(unrate_wts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^WILL5000IND.*rets$")], "_wts")
+  colnames(unrate_wts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^WILL5000IND.*currentrets$")], "_wts")
 
   unrate_wts
 
@@ -3192,7 +3273,7 @@ initEnv();on.exit({uninitEnv()})
 
   # excess left over
   Cashwts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[,wtsClms(xTs)], na.rm = TRUE)
-  colnames(Cashwts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^CASH.*rets$")], "_wts")
+  colnames(Cashwts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^CASH.*currentrets$")], "_wts")
 
   Cashwts
 
@@ -3408,10 +3489,12 @@ initEnv();on.exit({uninitEnv()})
   valuexTs <- xTs[,valueClms(xTs)]
 
   wtsxTs   <- xTs[,wtsClms(xTs)]
-  # tomorrow morning: Return.portfolio requirement
-  index(wtsxTs) <- index(wtsxTs) + 1
 
-  xTs <- xTs[complete.cases(xTs)]
+  # Return.portfolio
+  # currently: it makes no difference: I tried both ways
+  # I choose NOT to use it
+  # index(wtsxTs) <- index(wtsxTs) + 1
+
   Return.portfolio(
       R       = valuexTs
     , weights =   wtsxTs
@@ -3470,6 +3553,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object of arithmatic returns
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom PerformanceAnalytics table.CalendarReturns
 #' @importFrom stringr str_c
 printCalendar <- function(xTs = NULL, title = NULL) {
 tryCatchLog::tryCatchLog({
@@ -3478,7 +3562,7 @@ initEnv();on.exit({uninitEnv()})
 
   message(stringr::str_c("calendar of ", title))
   options(digits = 5L)
-  print(table.CalendarReturns(xTs, digits = 1, as.perc = TRUE, geometric = TRUE))
+  print(PerformanceAnalytics::table.CalendarReturns(xTs, digits = 1, as.perc = TRUE, geometric = TRUE))
 
   invisible(xTs)
 

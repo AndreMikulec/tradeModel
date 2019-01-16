@@ -12,30 +12,25 @@ UnRateEyeBalltradeModel <- function() {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
-  # How to backtest a strategy in R
-  # https://www.r-bloggers.com/how-to-backtest-a-strategy-in-r/
-  # http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html
-
   # (1) data 'value' (try to optimize)
-  addLeadingWilshire5000LogReturns() %>%  #
-  addLeadingCashLogReturns %>%          # PROBLEM IN HERE
+  addCurrLeadWilshire5000LogReturns() %>%  #
+  addCurrLeadCashLogReturns %>%            #
 
   # (2) indicator(s)
   addUnRateEomData %>% # unrate
-
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addWillShire5000EyeBallWts %>%   #
 
   appendCashWts              %>%      # (excess)
 
-  printTail("Exact Schedule of Leading of Eye Ball returns and decisions") %>%
+  printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = Inf) %>%
 
   # (4) apply in action
   portfolioMonthlyReturns %>%
 
   # (5) evaluate performance
-  Lagging %>% printCalendar("Lagging Eye Ball returns")
+  printCalendar("UnRateEyeBall Performance Returns")
 
 })}
 # UnRateEyeBalltradeModel()
@@ -54,13 +49,9 @@ UnRateMachinetradeModel <- function() {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
-  # How to backtest a strategy in R
-  # https://www.r-bloggers.com/how-to-backtest-a-strategy-in-r/
-  # http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html
-
   # (1) data 'value' (try to optimize)
-  addLeadingWilshire5000LogReturns() %>%      #
-  addLeadingCashLogReturns           %>%      #
+  addCurrLeadWilshire5000LogReturns() %>%      #
+  addCurrLeadCashLogReturns           %>%      #
 
   # (2) indicator(s)
   addUnRateEomData %>%                 # unrate
@@ -69,16 +60,13 @@ UnRateMachinetradeModel <- function() {
   addWillShire5000MachineWts %>%       #
   appendCashWts              %>%       # (excess)
 
-  printTail("Exact Schedule of Leading of UnRateMachine returns and decisions") %>%
+  printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
 
   # (4) apply in action
   portfolioMonthlyReturns %>%
 
-  # STRONG FEELING IT NEEDS PAST RETURNS ( AND NOT FUTURE RETURNS )
-  # I NEED TO ASK ABOUT THIS
-  # !!! CALENDAR SOMETIMES DOES NOT WORK!! - NEED FIXING?! - OFF BY 2-3 MONTHS !!!
   # (5) evaluate performance
-  Lagging %>% printCalendar("Lagging UnRateMachine returns")
+  printCalendar("UnRateMachine Performance Returns")
 
 })}
 # UnRateMachinetradeModel()

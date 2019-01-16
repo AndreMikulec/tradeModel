@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{cashLogReturns}
 \alias{cashLogReturns}
-\title{cash log returns (cashlogrets)}
+\title{cash log returns (CASHlogrets)}
 \usage{
 cashLogReturns(xTs = NULL)
 }
@@ -13,5 +13,5 @@ cashLogReturns(xTs = NULL)
 xts object with the same index as xTs
 }
 \description{
-cash log returns (cashlogrets)
+cash log returns (CASHlogrets)
 }

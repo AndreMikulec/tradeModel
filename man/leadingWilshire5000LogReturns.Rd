@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{leadingWilshire5000LogReturns}
 \alias{leadingWilshire5000LogReturns}
-\title{get the Wilshare 5000 Index log returns}
+\title{get the Wilshare 5000 Index leadinglog returns}
 \usage{
 leadingWilshire5000LogReturns()
 }
@@ -10,5 +10,5 @@ leadingWilshire5000LogReturns()
 xts object
 }
 \description{
-get the Wilshare 5000 Index log returns
+get the Wilshare 5000 Index leadinglog returns
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{appendCashWts}
 \alias{appendCashWts}
-\title{add cash weights returns (cashlogrets)}
+\title{add cash weights returns (CASHlogrets)}
 \usage{
 appendCashWts(xTs = NULL)
 }
@@ -13,5 +13,5 @@ appendCashWts(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add cash weights returns (cashlogrets)
+add cash weights returns (CASHlogrets)
 }

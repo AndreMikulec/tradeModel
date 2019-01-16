@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{addCashLogReturns}
 \alias{addCashLogReturns}
-\title{add cash log returns (cashlogrets)}
+\title{add cash log returns (CASHlogrets)}
 \usage{
 addCashLogReturns(xTs = NULL)
 }

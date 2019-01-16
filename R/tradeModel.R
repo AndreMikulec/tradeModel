@@ -1,5 +1,11 @@
 #' tradeModel: Quantitive Mathematics and Financial Prediction
 #'
+#' @references
+#' \cite{How to backtest a strategy in R \url{http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html}}
+#'
+#' @references
+#' \cite{AGGREGATE PORTFOLIO CONTRIBUTIONS THROUGH TIME \url{https://tradeblotter.wordpress.com/2014/09/25/aggregate-portfolio-contributions-through-time/}}
+#'
 #' functions
 #'
 #' @section Safe Data:
