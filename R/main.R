@@ -17,16 +17,17 @@ UnRateEyeBalltradeModel <- function() {
   # http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html
 
   # (1) data 'value' (try to optimize)
-  addLeadingWilshire5000LogReturns() %>%      #
-  addLeadingCashLogReturns           %>%      #
+  addLeadingWilshire5000LogReturns() %>%  #
+  addLeadingCashLogReturns %>%          # PROBLEM IN HERE
 
   # (2) indicator(s)
-  addUnRateEomData %>%                 # unrate
+  addUnRateEomData %>% # unrate
+
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addWillShire5000EyeBallWts  %>%      #
-  appendCashWts               %>%      # (excess)
-  # ret
+  addWillShire5000EyeBallWts %>%   #
+
+  appendCashWts              %>%      # (excess)
 
   printTail("Exact Schedule of Leading of Eye Ball returns and decisions") %>%
 
@@ -71,14 +72,13 @@ UnRateMachinetradeModel <- function() {
   printTail("Exact Schedule of Leading of UnRateMachine returns and decisions") %>%
 
   # (4) apply in action
-  portfolioMonthlyReturns -> ret
-  browser()
+  portfolioMonthlyReturns %>%
 
   # STRONG FEELING IT NEEDS PAST RETURNS ( AND NOT FUTURE RETURNS )
   # I NEED TO ASK ABOUT THIS
   # !!! CALENDAR SOMETIMES DOES NOT WORK!! - NEED FIXING?! - OFF BY 2-3 MONTHS !!!
   # (5) evaluate performance
-  Lagging %>% printCalendar(ret, "Lagging UnRateMachine returns")
+  Lagging %>% printCalendar("Lagging UnRateMachine returns")
 
 })}
 # UnRateMachinetradeModel()

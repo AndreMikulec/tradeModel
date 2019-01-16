@@ -505,6 +505,8 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
     } # else NewMaxAge <- NewMaxAge
   }
 
+  if(length(Symbol) > 1) stop ("fredData can only download one symbol at a time.")
+
   message(stringr::str_c("Begin fredData - "), Symbol)
 
   src = "FRED"
@@ -520,8 +522,7 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
   }
   message(stringr::str_c("End   fredData - "), Symbol)
 
-  colnames(xTs)[1] <- tolower(colnames(xTs))
-
+  # colnames(xTs)[1] <- tolower(colnames(xTs))
   xTs
 
 })}
@@ -2172,7 +2173,7 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' cash log returns (cashlogrets)
+#' cash log returns (CASHlogrets)
 #'
 #' @param xTs xts object (only takes the index)
 #' @return xts object with the same index as xTs
@@ -2185,7 +2186,8 @@ initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
   cashLogRets <- xts(rep(0,NROW(xTs)),index(xTs))
-  colnames(cashLogRets)[1] <- "cashlogrets"
+  # must keep HARD coded
+  colnames(cashLogRets)[1] <- "CASHlogrets"
 
   cashLogRets
 
@@ -2193,7 +2195,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add cash log returns (cashlogrets)
+#' add cash log returns (CASHlogrets)
 #'
 #' currently not used anywhere
 #'
@@ -2207,12 +2209,12 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-                         # cashlogrets"
+                         # CASHlogrets
   combineLogReturns(xTs, cashLogReturns(xTs))
 
 })}
 
-#' leading cash log returns (cashlogrets)
+#' leading cash log returns (CASHlogrets)
 #'
 #' @param xTs xts object (only takes the index)
 #' @return leading xts object
@@ -2231,7 +2233,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add cash log returns (cashlogrets)
+#' add cash log returns (CASHlogrets)
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -2242,7 +2244,7 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-                         # cashlogrets"
+                         # CASHlogrets
   combineLogReturns(xTs, leadingCashLogReturns(xTs))
 
 })}
@@ -2258,16 +2260,16 @@ wilshire5000LogReturns <- function() {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  will5000idx <- wilshire5000indEomData()
-  colnames(will5000idx)[1] <- "will5000idx"
+  will5000ind <- wilshire5000indEomData()
+  # colnames(will5000ind)[1] <- "WILL5000IND"
 
-  logReturns(xTs = will5000idx)
+  logReturns(xTs = will5000ind)
 
 })}
 
 
 
-#' add Willshire 5000 Index log returns (will5000idxlogrets)
+#' add Willshire 5000 Index log returns (WILL5000INDlogrets)
 #'
 #' currently not used anywhere
 #'
@@ -2281,7 +2283,7 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-                         # will5000idxlogrets
+                         # WILL5000INDlogrets
   combineLogReturns(xTs, wilshire5000LogReturns())
 
 })}
@@ -2303,7 +2305,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add Willshire 5000 Index log returns (will5000idxlogrets)
+#' add Willshire 5000 Index log returns (WILL5000INDlogrets)
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -2315,7 +2317,7 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-                         # will5000idxlogrets
+                         # WILL5000INDlogrets
   combineLogReturns(xTs, leadingWilshire5000LogReturns())
 
 })}
@@ -2358,7 +2360,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
-  unrate <- xTs[,"unrate"]
+  unrate <- xTs[,"UNRATE"]
   # can't do math on leading NAs
   unrate <- unrate[!is.na(unrate),]
 
@@ -2367,7 +2369,7 @@ initEnv();on.exit({uninitEnv()})
                         ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
   unrate_wts[is.na(unrate_wts)] <- 1 # 100% allocated
 
-  colnames(unrate_wts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^will5000idx.*rets$")], "_wts")
+  colnames(unrate_wts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^WILL5000IND.*rets$")], "_wts")
 
   unrate_wts
 
@@ -2923,10 +2925,10 @@ initEnv();on.exit({uninitEnv()})
 
   logging::loginfo("Begin: willShire5000MachineWts")
 
-  # received xTs( will5000idxlogrets, cashlogrets, unrate )
+  # received xTs( WILL5000INDlogrets, CASHlogrets, UNRATE )
   # merge.xts target, indictors, and predictors into merged xTs
 
-  unrate <- xTs[,"unrate"]
+  unrate <- xTs[,"UNRATE"]
   unrateIndicators <- unrateEyeballIndicators(unrate)
   unrateIndicators <- initXts(unrateIndicators)
 
@@ -3141,7 +3143,7 @@ ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
 
 
 
-#' add Willshire 5000 Index log weights returns using eyeball (will5000idxlogrets)
+#' add Willshire 5000 Index log weights returns using eyeball (WILL5000INDlogrets)
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -3157,7 +3159,7 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' add Willshire 5000 Index log weights returns using Machine learning (will5000idxlogrets)
+#' add Willshire 5000 Index log weights returns using Machine learning (WILL5000INDlogrets)
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -3189,15 +3191,15 @@ initEnv();on.exit({uninitEnv()})
    xTs <- initXts(xTs)
 
   # excess left over
-  cash_wts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[,wtsClms(xTs)], na.rm = TRUE)
-  colnames(cash_wts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^cash.*rets$")], "_wts")
+  Cashwts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[,wtsClms(xTs)], na.rm = TRUE)
+  colnames(Cashwts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^CASH.*rets$")], "_wts")
 
-  cash_wts
+  Cashwts
 
 })}
 
 
-#' add cash weights returns (cashlogrets)
+#' add cash weights returns (CASHlogrets)
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs

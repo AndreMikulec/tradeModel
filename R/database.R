@@ -4577,7 +4577,7 @@ initEnv();on.exit({uninitEnv()})
   # ( because list2env SILENTYLY DELETES symbols of the same name AND in a DIFFERENT case)
   SamexTsGetSymbols <- intersect(tolower(names(xTsGetSymbolsDotgetSymbols)),tolower(names(xTsGetSymbolssource.envir)))
   if(length(SamexTsGetSymbols)) {
-    stop(stringr::str_c("In saveSymbols, duplicate case-insenstive naames found in ", paste0(SamexTsGetSymbols, collapse = ", ")))
+    stop(stringr::str_c("In saveSymbols, duplicate case-insenstive names found in ", paste0(SamexTsGetSymbols, collapse = ", ")))
   }
 
                                        # keep compatible with quantmod::saveSymbols
