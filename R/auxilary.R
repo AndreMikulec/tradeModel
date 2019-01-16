@@ -2395,9 +2395,13 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
+  # order matters
+  # what I am going to predict: the modeller uses the 1st column
+  xTs  <- combineLogReturns(xTs, leadingWilshire5000LogReturns())
+                                 # send to return.Portfolio and the calendar
                                  # WILL5000INDlogrets
   xTs  <- combineLogReturns(xTs, currentWilshire5000LogReturns())
-  xTs  <- combineLogReturns(xTs, leadingWilshire5000LogReturns())
+
 
   xTs
 
