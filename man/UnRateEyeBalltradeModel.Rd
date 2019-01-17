@@ -8,6 +8,10 @@ UnRateEyeBalltradeModel()
 }
 \value{
 xts object of monthly return results
+\describe{
+  \item{One}{First item}
+  \item{Two}{Second item}
+}
 }
 \description{
 Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball

@@ -1978,6 +1978,461 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
+#' date to UNIX
+#'
+#' as quantmod:::.dateToUNIX
+#'
+#' @export
+quantmod___.dateToUNIX <- function (Date) {
+    posixct <- as.POSIXct(as.Date(Date, origin = "1970-01-01"))
+    trunc(as.numeric(posixct))
+}
+
+
+
+#' economic data from the St. Louis FRED
+#'
+#' Alternative to the quantmod::getSymbols.FRED
+#'
+#' The St. Louis FRED's 'data' date and 'published data' data
+#' and 'frequency' of data differs from "yahoo" data
+#' (Yahoo data dates are the same day.).
+#'
+#' This an en extension of quantmod::getSymbols.FRED.
+#' Extra attibutes (e.g. 'publish date': Last_Updated )
+#' are added to the xts object (if returned as an xts object
+#' (recommended) and default).
+#'
+#' Also, an extra xts column SYMBOL_PUBDLY  'publication dalay'
+#' is returned giving the number of days since publication.
+#' These publication dates are estimated
+#' based on the current 'publication date' and data Frequency.
+#' (Some Thought had been put into 'instead querying
+#' ALFRED', but that path choice utimately was not taken.)
+#'
+#' The user may sent 'from' and 'to' dates.
+#'
+#' Throught the 'Edit' parameter, the  user may pass
+#' in data transformation formulas.
+#'
+#' For this apply either of the following must be true.
+#' (1) The foruma query paramter formula(fml)
+#' has just one veriable "a" and then this Edit transformation
+#' is applied across all Symbols sent by the user. Or,
+#' (2), if the number of Symbols is two(2) or greater then
+#' then the number of symbols must equal to the number
+#' of variables in the query paramter e.g. if the Symbols
+#' sent are "WILL5000IND","BAMLC0A4CBBBEY" in
+#' getSymbols(c("WILL5000IND","BAMLC0A4CBBBEY") then the
+#' number of paraters must be two(2) and these are
+#' letters of the aphabet starting with "a" and must be
+#' lowercase. An example is 'fml="a-b"' (Se The Example.
+#'
+#' @param Symbols  a character vector specifying the names of each symbol
+#' @param env where to create objects. (.GlobalEnv)
+#' @param to data start date in format "YYYY-MM-DD"
+#' @param from data end date in format  "YYYY-MM-DD"
+#' @param Edit list of names items or named character vectors of Edit options. (See the example).
+#' @param return.class desired class of returned object.
+#' Can be xts, zoo, data.frame, or xts (default)
+#' @param ... additional parameters
+#' @return A call to getSymbols.YaleU will load into the specified
+#' environment one object for each \code{Symbol} specified,
+#' with class defined by \code{return.class}.
+#' @author Jeffrey A. Ryan
+#' @author Andre Mikulec (adapted original code to work with features)
+#' @references
+#' \cite{The equity premium \url{https://fredblog.stlouisfed.org/2016/07/the-equity-premium/}}
+#' @references
+#' \cite{customize the The equity premium [Edit Graph] \url{https://fred.stlouisfed.org/graph/?g=6LsS}}
+#' @references
+#' \cite{FRED ECONOMIC DATA: FEDERAL RESEARVE BANK OF ST. LOUIS \url{https://fred.stlouisfed.org/}}
+#' @references
+#' \cite{getSymbols('DTWEXB',src='FRED') broken #209 \url{https://github.com/joshuaulrich/quantmod/issues/209}}
+#' @seealso
+#' \code{\link{getSymbols}}
+#' \code{\link{setSymbolLookup}}
+#' @keywords data
+#' @examples
+#' \dontrun{
+#'
+#' # common usage
+#' if(!exists("DGS3MO")) getSymbols("DGS3MO", src = "FRED2")
+#'
+#'# genernal useage
+#' getSymbols(c("DGS3MO", "GDP"), src = "FRED2")
+#'
+#' # rare usage
+#' # get the Equity Premium, see the references
+#' getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
+#'   Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b")  )
+#'
+#' # reading text tables
+#' Text2DF <- function(x) {
+#'     read.csv(textConnection(x),
+#'      sep = ":",
+#'      strip.white = TRUE,
+#'      colClasses = "character") -> x
+#'      x
+#' }
+#'
+#'
+#' # Edit possible query parameters
+#'
+#' Units: transformation
+#' Modify frequency: fq
+#' Aggregation method: fam
+#' Formula: fml
+#' [Final] Units: fgst
+#'
+#' # <Time Series>: id
+#'
+#' # Settable 'per' each individual Time Series
+#' # Settable when two or more Time Series are chosen
+#'
+#' # The first time series is (a).
+#' # The second time series is (b). Etc. . . .
+#' # The final time series the \*result\* of all of the individual
+#' # time series and it is  \*not\* the last time series ( e.g. not "z")
+#'
+#' # Underscores separate each Time Series from each other
+#'
+#' Id <- vector(mode = "character")
+#'
+#' # examples
+#' # &id=WILL5000IND
+#' # &id=WILL5000IND_BAMLC0A4CBBBEY
+#'
+#' Id <- c("WILL5000IND","BAMLC0A4CBBBEY")
+#'
+#'
+#'
+#' # Units: transformation
+#' # Settable 'per' each individual Time Series
+#' # Underscores separate each Time Series from each other
+#'
+#' Units_transformation <-
+#' "
+#'   Code: Description
+#'   lin: Index
+#'   chg: Change, Index
+#'   ch1: Change from Year Ago, Index
+#'   pch: Percent Change
+#'   pc1: Percent Change from Year Ago
+#'   pca: Compounded Annual Rate of Change
+#'   cch: Continuously Compounded Rate of Change
+#'   cca: Continuously Compounded Annual Rate of Change
+#'   nbd: Index (Scale value to 100 for chosen date)
+#' "
+#' Units_transformation <- Text2DF(Units_transformation)
+#'
+#' # examples
+#' # &transformation=lin
+#' # &transformation=cca_pc1
+#'
+#' Units_transformation <- c("cca","pc1")
+#'
+#'
+#'
+#' # Modify frequency: fq
+#' # Settable in the First Time Series
+#' # Settable in the Final Time Series (removed from the First Time Series)
+#' # Note: When "Daily, Close" is chosen,  Aggregation method is not available.
+#'
+#' Modify_frequency_fq <-
+#' "
+#'   Code: Description
+#'   Daily, Close: Daily, Close
+#'   Weekly, Ending Friday: Weekly, Ending Friday
+#'   Weekly, Ending Thursday: Weekly, Ending Thursday
+#'   Weekly, Ending Wednesday: Weekly, Ending Wednesday
+#'   Weekly, Ending Tuesday: Weekly, Ending Tuesday
+#'   Weekly, Ending Monday: Weekly, Ending Monday
+#'   Weekly, Ending Sunday: Weekly, Ending Sunday
+#'   Weekly, Ending Saturday: Weekly, Ending Saturday
+#'   Biweekly, Ending Wednesday: Biweekly, Ending Wednesday
+#'   Biweekly, Ending Monday: Biweekly, Ending Monday
+#'   Monthly: Monthly
+#'   Quarterly: Quarterly
+#'   Semiannual: Semiannual
+#'   Annual: Annual
+#' "
+#' Text2DF(Modify_frequency_fq)
+#'
+#' # example
+#' # &fq=Annual
+#' # &&fq=Daily%2C%20Close
+#'
+#' Modify_frequency_fq <- "Annual"
+#'
+#'
+#'
+#' # Aggregation method: fam
+#' # Settable in the First Time Series
+#' # Settable in the Final Time Series (removed from the First Time Series)
+#'
+#' Aggregation_method_fam <-
+#' "
+#'   Code: Description
+#'   avg: Average
+#'   sum: Sum
+#'   eop: End of Period
+#' "
+#' Aggregation_method_fam <- Text2DF(Aggregation_method_fam)
+#'
+#' # example
+#' # &fam=eop
+#'
+#' Aggregation_method_fam <- "eop"
+#'
+#'
+#'
+#' # Formula: fml
+#'
+#' # Settable in the First Time Series
+#' # Settable in the Final Time Series (removed from the First Time Series)
+#'
+#' Formula_fml <- vector(mode = "character")[1]
+#'
+#' # example
+#' # &fml=a-b
+#'
+#' Formula <- "a-b"
+#'
+#'
+#'
+#' # [Final] Units: fgst
+#'
+#' # Settable in the First Time Series
+#' # Settable in the Final Time Series (removed from the First Time Series)
+#'
+#' Final_Units_fgst <-
+#' "
+#'   lin:
+#'   chg: Change
+#'   ch1: Change from Year Ago
+#'   pch: Percent Change
+#'   pc1: Percent Change from Year Ago
+#'   pca: Compounded Annual Rate of Change
+#'   cch: Continuously Compounded Rate of Change
+#'   cca: Continuously Compounded Annual Rate of Change
+#'   log: Natural Log
+#'   nbd: Index (Scale value to 100 for chosen date)
+#' "
+#' Final_Units_fgst <- Text2DF(Final_Units_fgst)
+#'
+#' # example
+#' # &fgst=log
+#'
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom DescTools DoCall
+#' @importFrom zoo as.Date
+#' @importFrom stringr str_c str_detect
+#' @export
+getSymbols.FRED2 <- function (Symbols, env, from = "1800-01-01", to = Sys.Date(), Edit = NULL,
+                              return.class = "xts", ...) {
+tryCatchLog::tryCatchLog({
+initEnv(); on.exit({uninitEnv()})
+
+    importDefaults("getSymbols.FRED2")
+    this.env <- environment()
+    for (var in names(list(...))) {
+        assign(var, list(...)[[var]], this.env)
+    }
+
+    if (!hasArg("verbose"))
+        verbose <- FALSE
+    if (!hasArg("auto.assign"))
+        auto.assign <- TRUE
+
+    # concat with "&" between
+    pasteAmp <- function(x,y) { stringr::str_c(c(x, y),  collapse = "&") }
+
+    # LEFT_OFF: HOW MUCH AND WHAT TO RUN
+    # ADD:  all.vars(parse(text="a + 3"))
+    # [1] "a"
+
+    if(!is.null(Edit)) {
+
+        # BEGIN KEEP
+
+        # e.g.
+        # Id <- c("WILL5000IND","BAMLC0A4CBBBEY")
+        names(Id)[seq_along(Id)] <- "id"
+
+        # e.g.
+        # Edit <- c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b")
+        names(Edit) <- stringr::str_remove_all(names(Edit),"\\d+$")
+
+        Params <- c(Id,Edit)
+
+        plyr::llply(Params, function(x) {
+            if(is.list(x)) {
+                plyr::llply(x, URLencode, reserved = TRUE)
+            } else {
+                URLencode(x, reserved = TRUE)
+            }
+        }) -> Encoded
+
+        Ele <- vector(mode = "character")
+        for(nm in unique(names(Encoded))){
+            Ele[[nm]] <- stringr::str_c(Encoded[names(Encoded) %in% nm], collapse = "_")
+        }
+        QueryStringExtra <- stringr::str_c(names(ele), "=" ,Ele, collapse = "&")
+        # END KEEP
+
+    }
+
+    default.return.class <- return.class
+
+    default.from <- from
+
+    default.to <- to
+    to <- if (is.null(to)) default.to
+      else to
+
+    FRED2.URL1 <- "https://fred.stlouisfed.org/data/"
+    FRED2.URL2 <- "https://fred.stlouisfed.org/graph/fredgraph.csv?"
+
+    tmp <- tempfile()
+    on.exit(unlink(tmp))
+    for (i in seq_along(Symbols)) {
+
+        return.class <- getSymbolLookup()[[Symbols[[i]]]]$return.class
+        return.class <- ifelse(is.null(return.class), default.return.class, return.class)
+
+        from <- getSymbolLookup()[[Symbols[[i]]]]$from
+        from <- if (is.null(from))
+            default.from
+        else from
+
+        to <- getSymbolLookup()[[Symbols[[i]]]]$to
+        to <- if (is.null(to))
+            default.to
+        else to
+
+        from.posix <- quantmod___.dateToUNIX(from)
+        to.posix   <- quantmod___.dateToUNIX(to)
+
+        if (verbose)
+            cat("downloading ", Symbols[[i]], ".....\n\n")
+
+        # begin metadata
+
+        URL <- stringr::str_c("https://fred.stlouisfed.org/data/", Symbols[[i]], ".txt")
+
+        quantmod___try.download.file(URL, destfile = tmp, quiet = !verbose, ...)
+
+        fres <- readLines(tmp)
+
+        # boundary splitter between header area and data area
+        BoHeaderArea <- 1
+        EoHeaderArea <- match(TRUE, stringr::str_detect(fres, "^DATE.*VALUE$")) - 1L
+        BoDataArea   <- EoHeaderArea + 2L
+        EoDataArea   <- length(fres)
+        HeaderArea <- fres[seq(BoHeaderArea,EoHeaderArea,1)]
+        DataArea   <- fres[seq(BoDataArea,EoDataArea ,1)]
+
+        # separate dates and values
+        DatesAndValues <- strsplit(DataArea, "[[:blank:]]+")
+        #
+        # idea from
+        #
+        # Select first element of nested list
+        # MAR 2017
+        # https://stackoverflow.com/questions/20428742/select-first-element-of-nested-list
+        #
+        DatesAndValues       <- unlist(DatesAndValues)
+        DatesAndValuesLength <- length(DatesAndValues)
+        # every other one
+        Dates  <- DatesAndValues[seq(1,DatesAndValuesLength,2)]
+        Values <- DatesAndValues[seq(2,DatesAndValuesLength,2)]
+        # NOTE: [ ] here add convert to NA
+
+        # read.dcf sometimes does not likes lines with blanks
+        HeaderArea <- HeaderArea[!stringr::str_detect(HeaderArea,"^[[:blank:]]+$|^$")]
+
+        # collect information about the series
+        tcon <- textConnection(stringr::str_c(HeaderArea, collapse = "\n"))
+        # try: keep.white = "Notes"
+
+        # SeriesInfo Xts attributes
+        SeriesInfo <- read.dcf(tcon, keep.white = "Notes")
+        close(tcon)
+
+        # create
+        # not used: fi someone whats here is the rest of the data
+        fr0 <- DescTools::DoCall(xts, c(list(), list(x = as.numeric(Values)),
+                                           list(order.by = zoo::as.Date(Dates), origin = "1970-01-01"),
+                                           list(src = "FRED2"),
+                                           list(updated = Sys.time()),
+                                           as.list(data.frame(SeriesInfo, stringsAsFactors = FALSE))
+                                        )
+        )
+
+        dim(fr0) <- c(NROW(fr0), 1)
+        # colnames(fr) <- as.character(toupper(Symbols[[i]])) # not-toupper
+        fr <- quantmod___convert.time.series(fr0 = fr0, return.class = return.class)
+        Symbols[[i]] <- gsub("\\^", "", Symbols[[i]])
+
+        # end metadata
+
+        # fr <- data
+
+         # begin data
+
+        # see
+        # getSymbols('DTWEXB',src='FRED') broken #209
+        # https://github.com/joshuaulrich/quantmod/issues/209
+        #
+        # example URL
+        # https://fred.stlouisfed.org/graph/fredgraph.csv?cosd=2013-01-05&coed=2018-01-04&id=DGS3MO
+
+        QueryString <-
+            Reduce(pasteAmp(list(
+                stringr::str_c("id=",   Symbols[[i]]),
+                stringr::str_c("cosd=", from.posix),
+                stringr::str_c("coed=", to.posix)
+                )))
+
+        if(exists("QueryStringExtra", envir = this.env, inherits = FALSE))
+             QueryString <- c(QueryString, "&", QueryStringExtra)
+
+        URL <- stringr::str_c(FRED2.URL2, QueryString)
+
+        quantmod___try.download.file(URL, destfile = tmp, quiet = !verbose, ...)
+        fr <- read.csv(tmp, na.string = ".")
+
+        # end data
+
+        if (verbose)
+            cat("done.\n")
+
+        fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[, 1], origin = "1970-01-01"),
+            src = "FRED2", updated = Sys.time())
+        # CURRENT IMPLEMENTATION: ALWAYS IS TRUE
+        if(exists("SeriesInfo", envir = this.env, inherits = FALSE))
+            xtsAttributes(fr) <- SeriesInfo
+            # TODO [ ], 'published_date' periodicy, zoo::as.Date(yearmon/yearqtr),
+            # Rquantlib, get the estimated days since publication
+        dim(fr) <- c(NROW(fr), 1)
+        colnames(fr) <- as.character(toupper(Symbols[[i]]))
+        fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
+        Symbols[[i]] <- gsub("\\^", "", Symbols[[i]]) # not-tolower
+        if (auto.assign)
+            assign(Symbols[[i]], fr, env)
+    }
+    if (auto.assign)
+        return(Symbols)
+    return(fr)
+})}
+
+
+
+
+
 #' Survey of Professional Forecasters data from the Philadelphia FED
 #'
 #' About the data . . .
@@ -2063,7 +2518,6 @@ initEnv(); on.exit({uninitEnv()})
 #' Corporate Profits After Tax (without IVA and CCAdj) (CP)
 #' https://fred.stlouisfed.org/series/CP
 #'#'
-#' NOT USED ANYWHERE
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' To get all of the data use: "USFedPhilForecastingData".  Possible individual

@@ -147,7 +147,6 @@ https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-pro
 Corporate Profits After Tax (without IVA and CCAdj) (CP)
 https://fred.stlouisfed.org/series/CP
 #'
-NOT USED ANYWHERE
 }
 \examples{
 \dontrun{
