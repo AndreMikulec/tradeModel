@@ -5,7 +5,7 @@
 \title{economic data from the St. Louis FRED}
 \usage{
 getSymbols.FRED2(Symbols, env, from = "1800-01-01", to = Sys.Date(),
-  Edit = NULL, return.class = "xts", ...)
+  Edit = NULL, NewName = NULL, return.class = "xts", ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
@@ -16,7 +16,16 @@ getSymbols.FRED2(Symbols, env, from = "1800-01-01", to = Sys.Date(),
 
 \item{to}{data start date in format "YYYY-MM-DD"}
 
-\item{Edit}{list of names items or named character vectors of Edit options. (See the example).}
+\item{Edit}{list of names items or named character vectors of Edit options.
+(See the example).}
+
+\item{NewName}{new name
+if Symbol(s) are sent with an Edit formula
+(so the the return result is is just one Symbol), then both the column name
+and the (if auto.assign = TRUE), variable returned to the environement
+is renamed to be the same as "NewName". If Edit is sent
+and no NewName is provided then the default is "FREDQUERY."
+Ignored otherwise.}
 
 \item{return.class}{desired class of returned object.
 Can be xts, zoo, data.frame, or xts (default)}
@@ -69,16 +78,6 @@ lowercase. An example is 'fml="a-b"' (Se The Example.
 \examples{
 \dontrun{
 
-# common usage
-if(!exists("DGS3MO")) getSymbols("DGS3MO", src = "FRED2")
-
-# genernal useage
-getSymbols(c("DGS3MO", "GDP"), src = "FRED2")
-
-# rare usage
-# get the Equity Premium, see the references
-getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
-  Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b")  )
 
 # reading text tables
 Text2DF <- function(x) {
@@ -237,6 +236,36 @@ Final_Units_fgst <- Text2DF(Final_Units_fgst)
 # example
 # &fgst=log
 
+
+
+# common usage
+if(!exists("DGS3MO")) getSymbols("DGS3MO", src = "FRED2")
+
+# genernal useage
+getSymbols(c("DGS3MO", "GDP"), src = "FRED2")
+
+ getSymbols("DGS3MO", src = "FRED2", NewName = "IGNORED")
+
+ getSymbols(c("DGS3MO", "GDP"), src = "FRED2", NewName = "IGNORED")
+
+# rare usage
+# get the Equity Premium, see the references
+
+getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
+  Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b")  )
+
+ #  Equity Premium new name
+
+getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
+  Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b"),
+  NewName = "EQUITYPREMIUM")
+
+# single series with a transformation
+# year-over-year percent change
+
+getSymbols(c(c("WILL5000IND")), src = "FRED2",
+  Edit = c(transformation = "pc1", fq = "Daily, Close", fml="a"),
+  NewName = "EQUITYYOYPCTCHG")
 
 }
 }

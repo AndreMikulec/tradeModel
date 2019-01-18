@@ -1978,18 +1978,6 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
-#' date to UNIX
-#'
-#' as quantmod:::.dateToUNIX
-#'
-#' @export
-quantmod___.dateToUNIX <- function (Date) {
-    posixct <- as.POSIXct(as.Date(Date, origin = "1970-01-01"))
-    trunc(as.numeric(posixct))
-}
-
-
-
 #' economic data from the St. Louis FRED
 #'
 #' Alternative to the quantmod::getSymbols.FRED
@@ -2032,7 +2020,15 @@ quantmod___.dateToUNIX <- function (Date) {
 #' @param env where to create objects. (.GlobalEnv)
 #' @param to data start date in format "YYYY-MM-DD"
 #' @param from data end date in format  "YYYY-MM-DD"
-#' @param Edit list of names items or named character vectors of Edit options. (See the example).
+#' @param Edit list of names items or named character vectors of Edit options.
+#' (See the example).
+#' @param NewName new name
+#' if Symbol(s) are sent with an Edit formula
+#' (so the the return result is is just one Symbol), then both the column name
+#' and the (if auto.assign = TRUE), variable returned to the environement
+#' is renamed to be the same as "NewName". If Edit is sent
+#' and no NewName is provided then the default is "FREDQUERY."
+#' Ignored otherwise.
 #' @param return.class desired class of returned object.
 #' Can be xts, zoo, data.frame, or xts (default)
 #' @param ... additional parameters
@@ -2056,16 +2052,6 @@ quantmod___.dateToUNIX <- function (Date) {
 #' @examples
 #' \dontrun{
 #'
-#' # common usage
-#' if(!exists("DGS3MO")) getSymbols("DGS3MO", src = "FRED2")
-#'
-#'# genernal useage
-#' getSymbols(c("DGS3MO", "GDP"), src = "FRED2")
-#'
-#' # rare usage
-#' # get the Equity Premium, see the references
-#' getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
-#'   Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b")  )
 #'
 #' # reading text tables
 #' Text2DF <- function(x) {
@@ -2225,13 +2211,45 @@ quantmod___.dateToUNIX <- function (Date) {
 #' # &fgst=log
 #'
 #'
+#'
+#' # common usage
+#' if(!exists("DGS3MO")) getSymbols("DGS3MO", src = "FRED2")
+#'
+#'# genernal useage
+#' getSymbols(c("DGS3MO", "GDP"), src = "FRED2")
+#'
+#'  getSymbols("DGS3MO", src = "FRED2", NewName = "IGNORED")
+#'
+#'  getSymbols(c("DGS3MO", "GDP"), src = "FRED2", NewName = "IGNORED")
+#'
+#' # rare usage
+#' # get the Equity Premium, see the references
+#'
+#' getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
+#'   Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b")  )
+#'
+#'  #  Equity Premium new name
+#'
+#' getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
+#'   Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b"),
+#'   NewName = "EQUITYPREMIUM")
+#'
+#' # single series with a transformation
+#' # year-over-year percent change
+#'
+#' getSymbols(c(c("WILL5000IND")), src = "FRED2",
+#'   Edit = c(transformation = "pc1", fq = "Daily, Close", fml="a"),
+#'   NewName = "EQUITYYOYPCTCHG")
+#'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom rlang parse_expr
 #' @importFrom DescTools DoCall
 #' @importFrom zoo as.Date
 #' @importFrom stringr str_c str_detect
 #' @export
-getSymbols.FRED2 <- function (Symbols, env, from = "1800-01-01", to = Sys.Date(), Edit = NULL,
+getSymbols.FRED2 <- function (Symbols, env, from = "1800-01-01", to = Sys.Date(),
+                              Edit = NULL, NewName = NULL,
                               return.class = "xts", ...) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
@@ -2254,12 +2272,28 @@ initEnv(); on.exit({uninitEnv()})
     # ADD:  all.vars(parse(text="a + 3"))
     # [1] "a"
 
-    if(!is.null(Edit)) {
+    SymbolsCount <- length(Symbols)
+    UniqueFmlExprVars <- vector(mode = "character")
+    EditUsingFredTransforms <- FALSE
+    if(!is.null(Edit) && !is.na(Edit["fml"])) {
+       FmlExprVars <- all.vars(rlang::parse_expr(Edit["fml"]))
+       UniqueFmlExprVars <- unique(FmlExprVars)
+       if((length(Symbols) == 1) &&
+            (length(UniqueFmlExprVars == 1)) &&
+            (UniqueFmlExprVars == "a")
+       )
+             EditUsingFredTransforms <- TRUE
+       if(length(Symbols) == length(UniqueFmlExprVars))
+             EditUsingFredTransforms <- TRUE
+    }
+
+    if(EditUsingFredTransforms) {
 
         # BEGIN KEEP
 
         # e.g.
         # Id <- c("WILL5000IND","BAMLC0A4CBBBEY")
+        Id <- Symbols
         names(Id)[seq_along(Id)] <- "id"
 
         # e.g.
@@ -2280,7 +2314,7 @@ initEnv(); on.exit({uninitEnv()})
         for(nm in unique(names(Encoded))){
             Ele[[nm]] <- stringr::str_c(Encoded[names(Encoded) %in% nm], collapse = "_")
         }
-        QueryStringExtra <- stringr::str_c(names(ele), "=" ,Ele, collapse = "&")
+        QueryStringExtra <- stringr::str_c(names(Ele), "=" ,Ele, collapse = "&")
         # END KEEP
 
     }
@@ -2293,9 +2327,23 @@ initEnv(); on.exit({uninitEnv()})
     to <- if (is.null(to)) default.to
       else to
 
+    # get the meta-data
     FRED2.URL1 <- "https://fred.stlouisfed.org/data/"
+    # get the data
     FRED2.URL2 <- "https://fred.stlouisfed.org/graph/fredgraph.csv?"
 
+    if(EditUsingFredTransforms) {
+        if(length(Symbols) == 1)
+            # because are still going to
+            # https://fred.stlouisfed.org/data/EQUITYYOYPCTCHG.txt
+            # to get the metadata
+            OldSymbol <- Symbols
+        if(!is.null(NewName)) {
+             Symbols <- NewName
+        } else {
+             Symbols <- "FREDQUERY"
+        }
+    }
     tmp <- tempfile()
     on.exit(unlink(tmp))
     for (i in seq_along(Symbols)) {
@@ -2313,75 +2361,93 @@ initEnv(); on.exit({uninitEnv()})
             default.to
         else to
 
-        from.posix <- quantmod___.dateToUNIX(from)
-        to.posix   <- quantmod___.dateToUNIX(to)
+        # if using transforms and more than one series is involved.
+        # then do not bother getting meta-data
+        # (because the meta-data is not be true for both series (as a group))
+        if(!(EditUsingFredTransforms && (1 < length(UniqueFmlExprVars)))) {
 
-        if (verbose)
-            cat("downloading ", Symbols[[i]], ".....\n\n")
+            # begin metadata
 
-        # begin metadata
+            if (verbose)
+                cat("downloading ", Symbols[[i]], ".....\n\n")
 
-        URL <- stringr::str_c("https://fred.stlouisfed.org/data/", Symbols[[i]], ".txt")
+            if(exists("OldSymbol", envir = this.env, inherits = FALSE)) {
+                 # only in the case of using EditUsingFredTransforms
+                 # AND length(Symbols) == 1, then meta-data is still useful
+                 URL <- stringr::str_c(FRED2.URL1, OldSymbol, ".txt")
+             } else {
+                 URL <- stringr::str_c(FRED2.URL1, Symbols[[i]], ".txt")
+             }
 
-        quantmod___try.download.file(URL, destfile = tmp, quiet = !verbose, ...)
+            quantmod___try.download.file(URL, destfile = tmp, quiet = !verbose, ...)
 
-        fres <- readLines(tmp)
+            if (verbose)
+                cat("done.\n")
 
-        # boundary splitter between header area and data area
-        BoHeaderArea <- 1
-        EoHeaderArea <- match(TRUE, stringr::str_detect(fres, "^DATE.*VALUE$")) - 1L
-        BoDataArea   <- EoHeaderArea + 2L
-        EoDataArea   <- length(fres)
-        HeaderArea <- fres[seq(BoHeaderArea,EoHeaderArea,1)]
-        DataArea   <- fres[seq(BoDataArea,EoDataArea ,1)]
+            fres <- readLines(tmp)
 
-        # separate dates and values
-        DatesAndValues <- strsplit(DataArea, "[[:blank:]]+")
-        #
-        # idea from
-        #
-        # Select first element of nested list
-        # MAR 2017
-        # https://stackoverflow.com/questions/20428742/select-first-element-of-nested-list
-        #
-        DatesAndValues       <- unlist(DatesAndValues)
-        DatesAndValuesLength <- length(DatesAndValues)
-        # every other one
-        Dates  <- DatesAndValues[seq(1,DatesAndValuesLength,2)]
-        Values <- DatesAndValues[seq(2,DatesAndValuesLength,2)]
-        # NOTE: [ ] here add convert to NA
+            # boundary splitter between header area and data area
+            BoHeaderArea <- 1
+            EoHeaderArea <- match(TRUE, stringr::str_detect(fres, "^DATE.*VALUE$")) - 1L
+            BoDataArea   <- EoHeaderArea + 2L
+            EoDataArea   <- length(fres)
+            HeaderArea <- fres[seq(BoHeaderArea,EoHeaderArea,1)]
+            DataArea   <- fres[seq(BoDataArea,EoDataArea ,1)]
 
-        # read.dcf sometimes does not likes lines with blanks
-        HeaderArea <- HeaderArea[!stringr::str_detect(HeaderArea,"^[[:blank:]]+$|^$")]
+            # separate dates and values
+            DatesAndValues <- strsplit(DataArea, "[[:blank:]]+")
+            #
+            # idea from
+            #
+            # Select first element of nested list
+            # MAR 2017
+            # https://stackoverflow.com/questions/20428742/select-first-element-of-nested-list
+            #
+            DatesAndValues       <- unlist(DatesAndValues)
+            DatesAndValuesLength <- length(DatesAndValues)
+            # every other one
+            Dates  <- DatesAndValues[seq(1,DatesAndValuesLength,2)]
+            Values <- DatesAndValues[seq(2,DatesAndValuesLength,2)]
+            Values[Values %in% "."] <- NA
 
-        # collect information about the series
-        tcon <- textConnection(stringr::str_c(HeaderArea, collapse = "\n"))
-        # try: keep.white = "Notes"
+            # read.dcf sometimes does not likes lines with blanks
+            HeaderArea <- HeaderArea[!stringr::str_detect(HeaderArea,"^[[:blank:]]+$|^$")]
 
-        # SeriesInfo Xts attributes
-        SeriesInfo <- read.dcf(tcon, keep.white = "Notes")
-        close(tcon)
+            # collect information about the series
+            tcon <- textConnection(stringr::str_c(HeaderArea, collapse = "\n"))
+            # try: keep.white = "Notes"
 
-        # create
-        # not used: fi someone whats here is the rest of the data
-        fr0 <- DescTools::DoCall(xts, c(list(), list(x = as.numeric(Values)),
-                                           list(order.by = zoo::as.Date(Dates), origin = "1970-01-01"),
-                                           list(src = "FRED2"),
-                                           list(updated = Sys.time()),
-                                           as.list(data.frame(SeriesInfo, stringsAsFactors = FALSE))
-                                        )
-        )
+            # SeriesInfo Xts attributes
+            SeriesInfo <- read.dcf(tcon, keep.white = "Notes") %>%
+                as.data.frame(stringsAsFactors = FALSE) %>%
+                    as.list
+            close(tcon)
 
-        dim(fr0) <- c(NROW(fr0), 1)
-        # colnames(fr) <- as.character(toupper(Symbols[[i]])) # not-toupper
-        fr <- quantmod___convert.time.series(fr0 = fr0, return.class = return.class)
-        Symbols[[i]] <- gsub("\\^", "", Symbols[[i]])
+            # end metadata
 
-        # end metadata
+            # BEGIN THROW-AWAY (NOT USING)
+
+            # create
+            # not used: if someone whats here is the rest of the data
+            fr0 <- DescTools::DoCall(xts, c(list(), list(x = as.numeric(Values)),
+                                               list(order.by = zoo::as.Date(Dates), origin = "1970-01-01"),
+                                               list(src = "FRED2"),
+                                               list(updated = Sys.time()),
+                                               SeriesInfo
+                                            )
+            )
+
+            dim(fr0) <- c(NROW(fr0), 1)
+            # colnames(fr) <- as.character(toupper(Symbols[[i]])) # not-toupper
+            fr <- quantmod___convert.time.series(fr0, return.class = return.class)
+            # Symbols[[i]] <- gsub("\\^", "", Symbols[[i]])
+
+            # END THROW-AWAY (NOT USING)
+        }
 
         # fr <- data
 
-         # begin data
+        # begin data
 
         # see
         # getSymbols('DTWEXB',src='FRED') broken #209
@@ -2390,37 +2456,57 @@ initEnv(); on.exit({uninitEnv()})
         # example URL
         # https://fred.stlouisfed.org/graph/fredgraph.csv?cosd=2013-01-05&coed=2018-01-04&id=DGS3MO
 
+        # generate the URL query
+
+        StartEnd <- list(
+            stringr::str_c("cosd=", from),
+            stringr::str_c("coed=", to)
+        )
+
+        if(EditUsingFredTransforms) {
+            # id is already in "QueryStringExtra" below
+            QueryItems <- StartEnd
+        } else {
+            QueryItems <- c(list(), stringr::str_c("id=", Symbols[[i]]), StartEnd)
+        }
+
+        # collapse with an amperstand "&"
         QueryString <-
-            Reduce(pasteAmp(list(
-                stringr::str_c("id=",   Symbols[[i]]),
-                stringr::str_c("cosd=", from.posix),
-                stringr::str_c("coed=", to.posix)
-                )))
+            Reduce(pasteAmp, QueryItems)
 
         if(exists("QueryStringExtra", envir = this.env, inherits = FALSE))
-             QueryString <- c(QueryString, "&", QueryStringExtra)
+            QueryString <- stringr::str_c( QueryStringExtra, "&", QueryString)
 
         URL <- stringr::str_c(FRED2.URL2, QueryString)
+
+        if (verbose)
+            cat("downloading ", Symbols[[i]], ".....\n\n")
 
         quantmod___try.download.file(URL, destfile = tmp, quiet = !verbose, ...)
         fr <- read.csv(tmp, na.string = ".")
 
-        # end data
-
         if (verbose)
             cat("done.\n")
 
+        # end data
         fr <- xts(as.matrix(fr[, -1]), zoo::as.Date(fr[, 1], origin = "1970-01-01"),
             src = "FRED2", updated = Sys.time())
-        # CURRENT IMPLEMENTATION: ALWAYS IS TRUE
+        # "fml" and the number of "fml" symbols > 1 then NOT exist
         if(exists("SeriesInfo", envir = this.env, inherits = FALSE))
             xtsAttributes(fr) <- SeriesInfo
             # TODO [ ], 'published_date' periodicy, zoo::as.Date(yearmon/yearqtr),
             # Rquantlib, get the estimated days since publication
         dim(fr) <- c(NROW(fr), 1)
-        colnames(fr) <- as.character(toupper(Symbols[[i]]))
+
+        if(EditUsingFredTransforms && is.null(NewName)) {
+             NewName <- "FREDQUERY"
+             colnames(fr)[1] <- NewName
+      # } else if(!EditUsingFredTransforms && !is.null(NewName)) {
+      #      colnames(fr)[1] <- NewName
+        } else {
+            colnames(fr)[1] <- as.character(Symbols[[i]]) # not-toupper
+        }
         fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
-        Symbols[[i]] <- gsub("\\^", "", Symbols[[i]]) # not-tolower
         if (auto.assign)
             assign(Symbols[[i]], fr, env)
     }
