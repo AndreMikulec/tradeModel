@@ -33,7 +33,7 @@ Can be xts, zoo, data.frame, or xts (default)}
 \item{...}{additional parameters}
 }
 \value{
-A call to getSymbols.YaleU will load into the specified
+A call to getSymbols.FRED2 will load into the specified
 environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
@@ -41,21 +41,10 @@ with class defined by \code{return.class}.
 Alternative to the quantmod::getSymbols.FRED
 }
 \details{
-The St. Louis FRED's 'data' date and 'published data' data
-and 'frequency' of data differs from "yahoo" data
-(Yahoo data dates are the same day.).
-
 This an en extension of quantmod::getSymbols.FRED.
-Extra attibutes (e.g. 'publish date': Last_Updated )
+Extra attibutes (e.g. Last_Updated )
 are added to the xts object (if returned as an xts object
 (recommended) and default).
-
-Also, an extra xts column SYMBOL_PUBDLY  'publication dalay'
-is returned giving the number of days since publication.
-These publication dates are estimated
-based on the current 'publication date' and data Frequency.
-(Some Thought had been put into 'instead querying
-ALFRED', but that path choice utimately was not taken.)
 
 The user may sent 'from' and 'to' dates.
 
