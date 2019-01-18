@@ -42,7 +42,7 @@ Alternative to the quantmod::getSymbols.FRED
 }
 \details{
 This an en extension of quantmod::getSymbols.FRED.
-Extra attibutes (e.g. Last_Updated )
+Extra attibutes (e.g. Last_Updated, Frequency andothers)
 are added to the xts object (if returned as an xts object
 (recommended) and default).
 

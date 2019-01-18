@@ -1977,15 +1977,137 @@ initEnv(); on.exit({uninitEnv()})
 })}
 
 
+#' number of days since Last Published
+#'
+#' The time between the "Last Updated Date" and the "index" date 'published date'
+#' can be important in "model" building.
+#' This amount of time can impact the quality of
+#' the observations.  Therefore, the "model" building program needs
+#' to know about the number of days since the "Last Updated Date."
+#'
+#' First:
+#' Of the data of Yahoo finance, the "Last Updated Date" and
+#' the index date 'published date' are the same day. quantmod::getSymbols.yahoo
+#' needs only to return the data and index.
+#' The St. Louis FRED's "Last Updated Date" and index date 'published date'
+#' are different days.
+#'
+#' Second: Of the data of Yahoo finance, the Frequency
+#' is "Daily".  The St. Louis FRED's "Frequency" can be"Quarterly"
+#' "Weekly", "Monthly", or "Daily".
+#'
+#' From a timeseries returned by getSymbols.FRED2.
+#' The xts attribute "Last_Updated" is used.
+#'
+#' Used is To.Monthly to convert the series to to a "Month-like" series.
+#' This is typical in makeing long term predictions.
+#'
+#' The xts is returned with an extra column added..
+#'
+#' The author put some thought had been put into 'instead querying
+#' ALFRED', but that path choice utimately was not taken.
+#'
+#' @param x xts object returned by getSymbols.FRED2
+#' @param AsOfToday Sys.Date() (default).
+#' Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
+#' Date of refrence. Reality: today or date of run of the "modelling" program.
+#' @param Last_Updated xts attribute "Last_Updated"(default).
+#' Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD"):
+#' @param Frequency xts attribute "Frequency"(default).
+#' Otherwise; character overrides.
+#' Values can be "Quarterly". Currently, "Monthly" and "Weekly"
+#' are not yet implmented.
+#'( Future testing is needed to do "Monthly" and "Weekly")
+#' @param DayOfWeek Read from the xts attributes(default).
+#' Useful when Frequence == "Weekly". Not yet implemented.
+#' @return xts object with a new column of show the delay since last update.
+#' @examples
+#' \dontrun{
+#'
+#' # "Quarterly" time series on the St. Louis FRED
+#' GDP <- getSymbols("GDP", src = "FRED2", auto.assign = FALSE)
+#' lastUpdatedDate(GDP)
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo as.Date
+#' @importFrom DescTools AddMonths
+#' @importFrom Hmisc truncPOSIXt
+#' @importFrom stringr str_c str_split
+#' @importFrom DataCombine MoveFront
+#' @importFrom DescTools DoCall
+#' @export
+lastUpdatedDate <- function(x, AsOfToday = NULL,
+                            Last_Updated = NULL, Frequency = NULL, DayOfWeek = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(x)
+
+  if(is.null(AsOfToday)) AsOfToday <- Sys.Date()
+
+  if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
+  if(is.null(Last_Updated)) stop("lastUpdatedDate need parameter lastUpdatedDate")
+
+  if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
+  if(is.null(Last_Updated)) stop("lastUpdatedDate need parameter lastUpdatedDate")
+
+  if(is.null(Frequency)) Frequency <- xtsAttributes(xTs)[["Frequency"]]
+  if(is.null(Frequency)) stop("lastUpdatedDate: need parameter Frequency")
+
+  if(Frequency == "Quarterly") {
+     OftenNess <- 3L # months
+  } else {
+    stop("lastUpdatedDate: Frequency other than  \"Quarterly\" is not yet implemented.")
+  }
+
+  AllPossibleLastUpdatedDates <- c(
+    # To be used in "findInterval"
+    # go back just "one more" to try to make sure that an early "Last_Updated" date exists.
+    DescTools::AddMonths(zoo::as.Date(Last_Updated), rev(- OftenNess * c(seq_len(length(index(xTs)) + 1)))),
+    zoo::as.Date(Last_Updated)
+  )
+
+  merge(
+    To.Monthly(xTs, OHLC = FALSE, indexAt = "firstof"),
+    xts( ,
+      seq(from =  DescTools::AddMonths(index(To.Monthly(tail(xTs,1), OHLC = FALSE, indexAt = "firstof")),1),
+                                                  # beginning of this month         # beginning of next month
+          to   = zoo::as.Date(DescTools::AddMonths(Hmisc::truncPOSIXt(zoo::as.Date(AsOfToday), units = "months"),1)),
+          by   = "months")
+     )
+  ) -> Monthlies
+  # end of this current month
+  index(Monthlies) <- index(Monthlies) - 1
+
+  True_Last_Updated <- AllPossibleLastUpdatedDates[findInterval(index(Monthlies), AllPossibleLastUpdatedDates)]
+  # could/should have used RQuantLib::adjust("<CALENDAR>", ., 1)
+  # to get the next business day
+  #
+  # difference
+  DelaySinceLastUpdate <- index(Monthlies) - True_Last_Updated
+
+  # some sort of smart naming choices
+  # first column's characters before
+  # the first underscore (or just the columns characters)
+  NewClm <- stringr::str_c(stringr::str_split(colnames(xTs)[1], "_")[[1]][1], "_DLY")
+  newClmList <- list()
+  newClmList[[NewClm]] <- DelaySinceLastUpdate
+  xTs <- initXts(x)
+  xTs <- DescTools::DoCall(cbind, c(list(),list(Monthlies), newClmList))
+  xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% NewClm])
+  xTs
+
+})}
+
+
 
 #' economic data from the St. Louis FRED
 #'
 #' Alternative to the quantmod::getSymbols.FRED
 #'
-
-#'
 #' This an en extension of quantmod::getSymbols.FRED.
-#' Extra attibutes (e.g. Last_Updated )
+#' Extra attibutes (e.g. Last_Updated, Frequency andothers)
 #' are added to the xts object (if returned as an xts object
 #' (recommended) and default).
 #'
@@ -2498,7 +2620,7 @@ initEnv(); on.exit({uninitEnv()})
         } else {
             colnames(fr)[1] <- as.character(Symbols[[i]]) # not-toupper
         }
-        browser()
+
         fr <- quantmod___convert.time.series(fr = fr, return.class = return.class)
         if (auto.assign)
             assign(Symbols[[i]], fr, env)
