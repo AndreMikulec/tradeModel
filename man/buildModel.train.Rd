@@ -29,6 +29,17 @@ tg <- expand.grid(
 )
 }
 \details{
+cl <- parallel::makeCluster(parallel::detectCores(logical = FALSE)) 
+doParallel::registerDoParallel(cl)
+assign("cl", cl, envir = asNamespace("base")); rm(cl)
+
+# default
+# note: caret::trainControl(. . . , allowParallel = TRUE)
+UnRateMachinetradeModel()
+
+parallel::stopCluster(cl)
+doParallel::stopImplicitCluster()
+
 tc <- caret::trainControl(method = "cv", number = 5)
 
 TODO [ ] : fully WORKED EXAMPLE: combine WITH below

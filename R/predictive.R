@@ -601,6 +601,18 @@ initEnv();on.exit({uninitEnv()})
 #'   subsample        = 1
 #' )
 #'
+#' 
+#' cl <- parallel::makeCluster(parallel::detectCores(logical = FALSE)) 
+#' doParallel::registerDoParallel(cl)
+#' assign("cl", cl, envir = asNamespace("base")); rm(cl)
+#' 
+#' # default
+#' # note: caret::trainControl(. . . , allowParallel = TRUE)
+#' UnRateMachinetradeModel()
+#' 
+#' parallel::stopCluster(cl)
+#' doParallel::stopImplicitCluster()
+#' 
 #' tc <- caret::trainControl(method = "cv", number = 5)
 #'
 #' TODO [ ] : fully WORKED EXAMPLE: combine WITH below
@@ -687,16 +699,17 @@ initEnv();on.exit({uninitEnv()})
     #   nominalTrainWorkflow
     #     info$loop
 
-    cl <- parallel::makeCluster(detectTrueCores())
-    doParallel::registerDoParallel(cl)
-    set.seed(2L)
+    ### ### commented out: if detected in a 'visible' environment e.g. base: see the instructions
+    ### cl <- parallel::makeCluster(detectTrueCores())
+    ### doParallel::registerDoParallel(cl)
+    ### set.seed(2L)
 
     # DescTools::DoCall
     #   Error in model.frame.default(form = <formula> +  invalid type (closure) for variable '(weights)'
     # I do not know why this Error occurs: sometime, I will try to figure this out
     # (so for now, just revert back to "do.call")
     rp <- suppressWarnings(do.call(caret::train, base::append(c(list(), list(quantmod@model.formula),data=list(training.data)), Dots[!names(Dots) %in% "stage"]) ) )
-    parallel::stopCluster(cl)
+    ### parallel::stopCluster(cl)
 
     return(list("fitted"=rp, "inputs"=attr(terms(rp),"term.labels")))
   }
