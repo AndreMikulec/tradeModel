@@ -2011,34 +2011,62 @@ initEnv(); on.exit({uninitEnv()})
 #' @param AsOfToday Sys.Date() (default).
 #' Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
 #' Date of refrence. Reality: today or date of run of the "modelling" program.
+#' @param calcMonthlies TRUE(default) convert x (xts) object to a
+#' monthly (using To.Monthly). before determining  the 'true last updated' dates.
+#' Otherwise, FALSE; means 'x is already a monthly so do not apply To.Monthly.
 #' @param Last_Updated xts attribute "Last_Updated"(default).
-#' Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD"):
-#' @param Frequency xts attribute "Frequency"(default).
+#' Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
+#' @param CalendarAdj "UnitedStates/GovernmentBond"(default).
+#' To prevent 'last adjusted dates' from landing on an
+#' unreasonable weekend, adjust the day forward to the next
+#' US Government working day (e.g St. Louis FRED data).
+#' Otherwise, "any other RQuantLib calender", e.g. "UnitedStates/NYSE".
+#' The choice depends on the past schedule of the data. "NONE' meaning
+#' no adjustment. See "?? RQuantLib::Calendars".
+#' @param FixLastLastTrueUpDated TRUE(default). Of the current
+#' month (determined by AsOfToday), the program calculates the
+#' last day of the month then determines the its "Last Updated Date"
+#' This 'date' may need custom adjustment.  For the hopefully one
+#' Monthies date greater than today, adjust the last updated date,
+#' to be calcualted using AsOfToday instead of the the last day of
+#' the month. This is meant to corrrect the accuracy of the last
+#' observation. This is meant to keep the usefulness of the
+#' quantmod workflow of having the last observation be available to
+#' be used to make a prediction.  Otherwise FALSE; useful
+#' when no no new data is expected to be added between
+#' now(AsOfDate) and month's end.
+#' @param Frequency xts attribute "Frequency"(default) of Last_Updated.
 #' Otherwise; character overrides.
 #' Values can be "Quarterly". Currently, "Monthly" and "Weekly"
 #' are not yet implmented.
 #'( Future testing is needed to do "Monthly" and "Weekly")
 #' @param DayOfWeek Read from the xts attributes(default).
 #' Useful when Frequence == "Weekly". Not yet implemented.
+#' @param mkAsOfToday2LastObs FALSE(default) Sets the hopefully the last
+#' observation's xts index value to be today's date(AsOfToday)
+#' instead of the end of month date. Generally,
+#' mkAsOfToday2LastObs == TRUE is more trouble that it is worth.
 #' @return xts object with a new column of show the delay since last update.
 #' @examples
 #' \dontrun{
 #'
 #' # "Quarterly" time series on the St. Louis FRED
 #' GDP <- getSymbols("GDP", src = "FRED2", auto.assign = FALSE)
-#' lastUpdatedDate(GDP)
+#' GDP_DLY <- lastUpdDate(GDP)
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
-#' @importFrom DescTools AddMonths
+#' @importFrom DescTools AddMonths DoCall
 #' @importFrom Hmisc truncPOSIXt
 #' @importFrom stringr str_c str_split
+#' @importFrom RQuantLib adjust
 #' @importFrom DataCombine MoveFront
-#' @importFrom DescTools DoCall
 #' @export
-lastUpdatedDate <- function(x, AsOfToday = NULL,
-                            Last_Updated = NULL, Frequency = NULL, DayOfWeek = NULL) {
+lastUpdDate <- function(x, AsOfToday = NULL, calcMonthlies = NULL,
+                           Last_Updated = NULL, CalendarAdj = NULL,
+                           FixLastLastTrueUpDated = NULL,
+                           Frequency = NULL, DayOfWeek = NULL, mkAsOfToday2LastObs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -2046,19 +2074,27 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(AsOfToday)) AsOfToday <- Sys.Date()
 
-  if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
-  if(is.null(Last_Updated)) stop("lastUpdatedDate need parameter lastUpdatedDate")
+  if(is.null(calcMonthlies)) { calcMonthlies <- TRUE }
 
   if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
-  if(is.null(Last_Updated)) stop("lastUpdatedDate need parameter lastUpdatedDate")
+  if(is.null(Last_Updated)) stop("lastUpdDate need parameter lastUpdatedDate")
+
+  if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
+  if(is.null(Last_Updated)) stop("lastUpdDate need parameter lastUpdatedDate")
+
+  if(is.null(CalendarAdj)) { CalendarAdj <- "UnitedStates/GovernmentBond" }
+
+  if(is.null(FixLastLastTrueUpDated)) { FixLastLastTrueUpDated <- TRUE }
 
   if(is.null(Frequency)) Frequency <- xtsAttributes(xTs)[["Frequency"]]
-  if(is.null(Frequency)) stop("lastUpdatedDate: need parameter Frequency")
+  if(is.null(Frequency)) stop("lastUpdDate: need parameter Frequency")
+
+  if(is.null(mkAsOfToday2LastObs)) { mkAsOfToday2LastObs <- FALSE }
 
   if(Frequency == "Quarterly") {
      OftenNess <- 3L # months
   } else {
-    stop("lastUpdatedDate: Frequency other than  \"Quarterly\" is not yet implemented.")
+    stop("lastUpdDate: Frequency other than  \"Quarterly\" is not yet implemented.")
   }
 
   AllPossibleLastUpdatedDates <- c(
@@ -2068,33 +2104,66 @@ initEnv();on.exit({uninitEnv()})
     zoo::as.Date(Last_Updated)
   )
 
-  merge(
-    To.Monthly(xTs, OHLC = FALSE, indexAt = "firstof"),
-    xts( ,
-      seq(from =  DescTools::AddMonths(index(To.Monthly(tail(xTs,1), OHLC = FALSE, indexAt = "firstof")),1),
-                                                  # beginning of this month         # beginning of next month
-          to   = zoo::as.Date(DescTools::AddMonths(Hmisc::truncPOSIXt(zoo::as.Date(AsOfToday), units = "months"),1)),
-          by   = "months")
-     )
-  ) -> Monthlies
-  # end of this current month
+  Monthlies <- xTs
+  if(calcMonthlies) {
+    merge(
+      To.Monthly(xTs, OHLC = FALSE, indexAt = "firstof"),
+      xts( ,
+        seq(from =  DescTools::AddMonths(index(To.Monthly(tail(xTs,1), OHLC = FALSE, indexAt = "firstof")),1),
+                                                    # beginning of this month         # beginning of next month
+            to   = zoo::as.Date(DescTools::AddMonths(Hmisc::truncPOSIXt(zoo::as.Date(AsOfToday), units = "months"),1)),
+            by   = "months")
+       )
+    ) -> Monthlies # could be 'new'
+  }
+  # end of a month and end of this current month
   index(Monthlies) <- index(Monthlies) - 1
 
+  # sanity check
+  if(1 < sum(AsOfToday < index(Monthlies))) {
+    warning("lastUpdDate found more than one(1) future Monthly. Be sure you know what you are doing.")
+  }
+
   True_Last_Updated <- AllPossibleLastUpdatedDates[findInterval(index(Monthlies), AllPossibleLastUpdatedDates)]
-  # could/should have used RQuantLib::adjust("<CALENDAR>", ., 1)
-  # to get the next business day
-  #
+  if(CalendarAdj != "NONE") {
+    # to get the next government/business/other day
+    True_Last_Updated <- RQuantLib::adjust(CalendarAdj, True_Last_Updated, 1)
+  }
+
   # difference
   DelaySinceLastUpdate <- index(Monthlies) - True_Last_Updated
+
+  # True_Last_Updated is not correct for
+  # the hopefully one(1) Monthles greater in time
+  # than today(AsOfToday) [ in this month]
+  if(FixLastLastTrueUpDated) {
+    # NOTE: if MULTIPLE MONTHS (1 < sum(AsOfToday < index(Monthlies)))
+    # THEN I WILL have to REPROGRAM in some way.
+    # Currently, the situation is not handled.  Only the above warning() is given.
+    YearMonMonthliesIndexes <- zoo::as.yearmon(index(Monthlies))
+    IndexOfCorrection <-       zoo::as.yearmon(AsOfToday) == YearMonMonthliesIndexes
+    DelaySinceLastUpdate[IndexOfCorrection] <-   # subtract off too-last prediction days
+      DelaySinceLastUpdate[IndexOfCorrection] - (index(Monthlies)[IndexOfCorrection] - AsOfToday)
+  }
+  browser()
+  if(mkAsOfToday2LastObs) {
+    # NOTE: if MULTIPLE MONTHS (1 < sum(AsOfToday < index(Monthlies)))
+    # THEN I WILL have to REPROGRAM in some way.
+    # Currently, the situation is not handled.  Only the above warning() is given.
+    YearMonMonthliesIndexes <- zoo::as.yearmon(index(Monthlies))
+    IndexOfCorrection <-       zoo::as.yearmon(AsOfToday) == YearMonMonthliesIndexes
+    index(Monthlies)[IndexOfCorrection] <- AsOfToday
+  }
 
   # some sort of smart naming choices
   # first column's characters before
   # the first underscore (or just the columns characters)
+  # xTs ONLY USED to get/set column names
   NewClm <- stringr::str_c(stringr::str_split(colnames(xTs)[1], "_")[[1]][1], "_DLY")
   newClmList <- list()
   newClmList[[NewClm]] <- DelaySinceLastUpdate
-  xTs <- initXts(x)
   xTs <- DescTools::DoCall(cbind, c(list(),list(Monthlies), newClmList))
+  # xTs ONLY USED to get/set column names
   xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% NewClm])
   xTs
 
