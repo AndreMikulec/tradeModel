@@ -2066,6 +2066,10 @@ initEnv(); on.exit({uninitEnv()})
 #' PAYEMS <- getSymbols("PAYEMS", src = "FRED2", auto.assign = FALSE)
 #' PAYEMS_DLY <- fancifyXts(PAYEMS)
 #'
+#' # "Weekly" time series on the St. Louis FRED
+#' TREAST <- getSymbols("TREAST", src = "FRED2", auto.assign = FALSE)
+#' TREAST_DLY <- fancifyXts(TREAST)
+#'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
@@ -2110,22 +2114,33 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(mkAsOfToday2LastObs)) { mkAsOfToday2LastObs <- FALSE }
 
-  if(Frequency == "Quarterly") {
-    OftenNess <- 3L # months
-  } else if (Frequency == "Monthly") {
-    OftenNess <- 1L
-  } else {
-      stop("fancifyXts: Frequency other than  \"Quarterly\" and \"Monthly\" is not yet implemented.")
+  if(Frequency == "Quarterly") OftenNess <- 3L # months
+  if(Frequency == "Monthly"  ) OftenNess <- 1L
+
+  if((!Frequency %in% c("Quarterly", "Monthly")) &&
+     (!Frequency %Like% "^Weekly.*$")
+   )stop("fancifyXts: Frequency other than  \"Quarterly\", \"Monthly\", and \"Weekly\" is not yet implemented.")
+
+
+  if(Frequency %in% c("Quarterly", "Monthly")) {
+    AllPossibleLastUpdatedDates <- c(
+      # To be used in "findInterval"
+      # go back just "one more" to try to make sure that an early "Last_Updated" date exists.
+      DescTools::AddMonths(zoo::as.Date(Last_Updated), rev(- OftenNess * c(seq_len(length(index(xTs)) + 1)))),
+      zoo::as.Date(Last_Updated)
+    )
   }
-
+  # NOTE: St. Louis FRED's weeklies
+  if(Frequency %Like% "^Weekly.*$") {
+    AllPossibleLastUpdatedDates <- c(
+      # To be used in "findInterval"
+      # go back just "one more" to try to make sure that an early "Last_Updated" date exists.
+      seq(zoo::as.Date(Last_Updated) - (NROW(xTs) + 5) * 7, to = zoo::as.Date(Last_Updated), by = "weeks")
+      # produces one more 'back in time' observation.
+      # + 5 ( the month distance )
+    )
+  }
   browser()
-  AllPossibleLastUpdatedDates <- c(
-    # To be used in "findInterval"
-    # go back just "one more" to try to make sure that an early "Last_Updated" date exists.
-    DescTools::AddMonths(zoo::as.Date(Last_Updated), rev(- OftenNess * c(seq_len(length(index(xTs)) + 1)))),
-    zoo::as.Date(Last_Updated)
-  )
-
   Monthlies <- xTs
   if(calcMonthlies) {
     merge(
@@ -2211,6 +2226,7 @@ initEnv();on.exit({uninitEnv()})
   # first column's characters before
   # the first underscore (or just the columns characters)
   # xTs ONLY USED to get/set column names
+  # (I MAY WANT TO CHANGE THIS LATER)
   RootNm <- stringr::str_split(colnames(xTs)[1], "_")[[1]][1]
   newClmList <- list()
 
