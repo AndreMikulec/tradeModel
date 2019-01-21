@@ -2035,6 +2035,9 @@ initEnv(); on.exit({uninitEnv()})
 #' be used to make a prediction.  Otherwise FALSE; useful
 #' when no no new data is expected to be added between
 #' now(AsOfDate) and month's end.
+#' @param NaLOCF TRUE(Default). In for examle, "Quarterly" data,
+#' To.Monthy, will create gaps (observation rows with no data).
+#' Fill in the empty observations  with the last(past.known data).
 #' @param Frequency xts attribute "Frequency"(default) of Last_Updated.
 #' Otherwise; character overrides.
 #' Values can be "Quarterly". Currently, "Monthly" and "Weekly"
@@ -2065,7 +2068,7 @@ initEnv(); on.exit({uninitEnv()})
 #' @export
 lastUpdDate <- function(x, AsOfToday = NULL, calcMonthlies = NULL,
                            Last_Updated = NULL, CalendarAdj = NULL,
-                           FixLastLastTrueUpDated = NULL,
+                           FixLastLastTrueUpDated = NULL, NaLOCF = NULL,
                            Frequency = NULL, DayOfWeek = NULL, mkAsOfToday2LastObs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -2082,9 +2085,11 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
   if(is.null(Last_Updated)) stop("lastUpdDate need parameter lastUpdatedDate")
 
-  if(is.null(CalendarAdj)) { CalendarAdj <- "UnitedStates/GovernmentBond" }
+  if(is.null(CalendarAdj)) CalendarAdj <- "UnitedStates/GovernmentBond"
 
-  if(is.null(FixLastLastTrueUpDated)) { FixLastLastTrueUpDated <- TRUE }
+  if(is.null(FixLastLastTrueUpDated)) FixLastLastTrueUpDated <- TRUE
+
+  if(is.null(NaLOCF)) NaLOCF <- TRUE
 
   if(is.null(Frequency)) Frequency <- xtsAttributes(xTs)[["Frequency"]]
   if(is.null(Frequency)) stop("lastUpdDate: need parameter Frequency")
@@ -2133,9 +2138,10 @@ initEnv();on.exit({uninitEnv()})
   # difference
   DelaySinceLastUpdate <- index(Monthlies) - True_Last_Updated
 
-  # True_Last_Updated is not correct for
+  # True_Last_Updated date is NOT CORRECT for
   # the hopefully one(1) Monthles greater in time
-  # than today(AsOfToday) [ in this month]
+  # than today(AsOfToday) [in this month]
+  # I WANT TO PREDICT ON TODAY(AsOfToday)
   if(FixLastLastTrueUpDated) {
     # NOTE: if MULTIPLE MONTHS (1 < sum(AsOfToday < index(Monthlies)))
     # THEN I WILL have to REPROGRAM in some way.
@@ -2145,7 +2151,19 @@ initEnv();on.exit({uninitEnv()})
     DelaySinceLastUpdate[IndexOfCorrection] <-   # subtract off too-last prediction days
       DelaySinceLastUpdate[IndexOfCorrection] - (index(Monthlies)[IndexOfCorrection] - AsOfToday)
   }
-  browser()
+
+  # when the "Last Update" Occurred, pull forward Data values to be in the same observation(month)
+  MonthsOfLastUpdate <- as.yearmon(index(Monthlies)) == as.yearmon(index(Monthlies) - DelaySinceLastUpdate)
+  LatestMonthOfLastUpdateIndex <- max(seq_along(index(Monthlies))[MonthsOfLastUpdate])
+
+  MonthOfDataIndex <- c(!is.na(Monthlies))
+  MonthsToDataShiftForward <- LatestMonthOfLastUpdateIndex - max(seq_len(NROW(Monthlies))[MonthOfDataIndex])
+  Monthlies <- lag.xts(Monthlies, MonthsToDataShiftForward)
+
+  if(NaLOCF) {
+    Monthlies <- na.locf(Monthlies)
+  }
+
   if(mkAsOfToday2LastObs) {
     # NOTE: if MULTIPLE MONTHS (1 < sum(AsOfToday < index(Monthlies)))
     # THEN I WILL have to REPROGRAM in some way.

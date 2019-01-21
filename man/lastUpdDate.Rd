@@ -6,8 +6,8 @@
 \usage{
 lastUpdDate(x, AsOfToday = NULL, calcMonthlies = NULL,
   Last_Updated = NULL, CalendarAdj = NULL,
-  FixLastLastTrueUpDated = NULL, Frequency = NULL, DayOfWeek = NULL,
-  mkAsOfToday2LastObs = NULL)
+  FixLastLastTrueUpDated = NULL, NaLOCF = NULL, Frequency = NULL,
+  DayOfWeek = NULL, mkAsOfToday2LastObs = NULL)
 }
 \arguments{
 \item{x}{xts object returned by getSymbols.FRED2}
@@ -43,6 +43,10 @@ quantmod workflow of having the last observation be available to
 be used to make a prediction.  Otherwise FALSE; useful
 when no no new data is expected to be added between
 now(AsOfDate) and month's end.}
+
+\item{NaLOCF}{TRUE(Default). In for examle, "Quarterly" data,
+To.Monthy, will create gaps (observation rows with no data).
+Fill in the empty observations  with the last(past.known data).}
 
 \item{Frequency}{xts attribute "Frequency"(default) of Last_Updated.
 Otherwise; character overrides.
