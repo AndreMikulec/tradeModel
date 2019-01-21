@@ -2035,9 +2035,13 @@ initEnv(); on.exit({uninitEnv()})
 #' be used to make a prediction.  Otherwise FALSE; useful
 #' when no no new data is expected to be added between
 #' now(AsOfDate) and month's end.
+#' @param NaCol FALSE(Default). In for example, "Quarterly" data,
+#' To.Monthy, will create gaps (observation rows with no data).
+#' Create a new column and fill in the gaps with twos(2) and
+#' the non-gaps with ones(1).
 #' @param NaLOCF TRUE(Default). In for examle, "Quarterly" data,
 #' To.Monthy, will create gaps (observation rows with no data).
-#' Fill in the empty observations  with the last(past.known data).
+#' Fill in the empty observations with the last(past.known data).
 #' @param Frequency xts attribute "Frequency"(default) of Last_Updated.
 #' Otherwise; character overrides.
 #' Values can be "Quarterly". Currently, "Monthly" and "Weekly"
@@ -2055,51 +2059,56 @@ initEnv(); on.exit({uninitEnv()})
 #'
 #' # "Quarterly" time series on the St. Louis FRED
 #' GDP <- getSymbols("GDP", src = "FRED2", auto.assign = FALSE)
-#' GDP_DLY <- lastUpdDate(GDP)
+#' GDP_DLY <- fancifyXts(GDP)
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
 #' @importFrom DescTools AddMonths DoCall
 #' @importFrom Hmisc truncPOSIXt
+#' @importFrom xts lag.xts
 #' @importFrom stringr str_c str_split
 #' @importFrom RQuantLib adjust
 #' @importFrom DataCombine MoveFront
 #' @export
-lastUpdDate <- function(x, AsOfToday = NULL, calcMonthlies = NULL,
-                           Last_Updated = NULL, CalendarAdj = NULL,
-                           FixLastLastTrueUpDated = NULL, NaLOCF = NULL,
-                           Frequency = NULL, DayOfWeek = NULL, mkAsOfToday2LastObs = NULL) {
+fancifyXts <- function(x, AsOfToday = NULL, calcMonthlies = NULL,
+                          Last_Updated = NULL, CalendarAdj = NULL,
+                          FixLastLastTrueUpDated = NULL, NaCol = NULL, NaLOCF = NULL,
+                          Frequency = NULL, DayOfWeek = NULL, mkAsOfToday2LastObs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(x)
+
+  if(NVAR(xTs) > 1) stop("fancifyXts only processes a single column xTs")
 
   if(is.null(AsOfToday)) AsOfToday <- Sys.Date()
 
   if(is.null(calcMonthlies)) { calcMonthlies <- TRUE }
 
   if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
-  if(is.null(Last_Updated)) stop("lastUpdDate need parameter lastUpdatedDate")
+  if(is.null(Last_Updated)) stop("fancifyXts need parameter lastUpdatedDate")
 
   if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
-  if(is.null(Last_Updated)) stop("lastUpdDate need parameter lastUpdatedDate")
+  if(is.null(Last_Updated)) stop("fancifyXts need parameter lastUpdatedDate")
 
   if(is.null(CalendarAdj)) CalendarAdj <- "UnitedStates/GovernmentBond"
 
   if(is.null(FixLastLastTrueUpDated)) FixLastLastTrueUpDated <- TRUE
 
+  if(is.null(NaCol)) NaCol <- FALSE
+
   if(is.null(NaLOCF)) NaLOCF <- TRUE
 
   if(is.null(Frequency)) Frequency <- xtsAttributes(xTs)[["Frequency"]]
-  if(is.null(Frequency)) stop("lastUpdDate: need parameter Frequency")
+  if(is.null(Frequency)) stop("fancifyXts: need parameter Frequency")
 
   if(is.null(mkAsOfToday2LastObs)) { mkAsOfToday2LastObs <- FALSE }
 
   if(Frequency == "Quarterly") {
      OftenNess <- 3L # months
   } else {
-    stop("lastUpdDate: Frequency other than  \"Quarterly\" is not yet implemented.")
+    stop("fancifyXts: Frequency other than  \"Quarterly\" is not yet implemented.")
   }
 
   AllPossibleLastUpdatedDates <- c(
@@ -2124,9 +2133,16 @@ initEnv();on.exit({uninitEnv()})
   # end of a month and end of this current month
   index(Monthlies) <- index(Monthlies) - 1
 
+  browser()
+  if(NaCol) {
+    NaColumnlies <- c(coredata(Monthlies))
+    NaColumnlies[!is.na(Monthlies)] <- 1
+    NaColumnlies[ is.na(Monthlies)] <- 2
+  }
+
   # sanity check
   if(1 < sum(AsOfToday < index(Monthlies))) {
-    warning("lastUpdDate found more than one(1) future Monthly. Be sure you know what you are doing.")
+    warning("fancifyXts found more than one(1) future Monthly. Be sure you know what you are doing.")
   }
 
   True_Last_Updated <- AllPossibleLastUpdatedDates[findInterval(index(Monthlies), AllPossibleLastUpdatedDates)]
@@ -2155,10 +2171,16 @@ initEnv();on.exit({uninitEnv()})
   # when the "Last Update" Occurred, pull forward Data values to be in the same observation(month)
   MonthsOfLastUpdate <- as.yearmon(index(Monthlies)) == as.yearmon(index(Monthlies) - DelaySinceLastUpdate)
   LatestMonthOfLastUpdateIndex <- max(seq_along(index(Monthlies))[MonthsOfLastUpdate])
-
+  #
   MonthOfDataIndex <- c(!is.na(Monthlies))
   MonthsToDataShiftForward <- LatestMonthOfLastUpdateIndex - max(seq_len(NROW(Monthlies))[MonthOfDataIndex])
   Monthlies <- lag.xts(Monthlies, MonthsToDataShiftForward)
+
+  browser()
+  # if also creating this column, then makes sense to 'also' shift forward
+  if(NaCol) {
+    NaColumnlies <- lag.xts(NaColumnlies, MonthsToDataShiftForward)
+  }
 
   if(NaLOCF) {
     Monthlies <- na.locf(Monthlies)
@@ -2177,12 +2199,21 @@ initEnv();on.exit({uninitEnv()})
   # first column's characters before
   # the first underscore (or just the columns characters)
   # xTs ONLY USED to get/set column names
-  NewClm <- stringr::str_c(stringr::str_split(colnames(xTs)[1], "_")[[1]][1], "_DLY")
+  RootNm <- stringr::str_split(colnames(xTs)[1], "_")[[1]][1]
   newClmList <- list()
-  newClmList[[NewClm]] <- DelaySinceLastUpdate
+
+  # doing always (currently)
+  NewDLYClm <- stringr::str_c(RootNm, "_DLY")
+  newClmList[[NewDLYClm]] <- DelaySinceLastUpdate
+  browser()
+  # optional
+  if(NaCol) {
+    NewNAClm <- stringr::str_c(RootNm, "_NA")
+    newClmList[[NewNAClm]] <- NaColumnlies
+  }
   xTs <- DescTools::DoCall(cbind, c(list(),list(Monthlies), newClmList))
   # xTs ONLY USED to get/set column names
-  xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% NewClm])
+  xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% names(newClmList)])
   xTs
 
 })}
