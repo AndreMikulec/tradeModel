@@ -2308,6 +2308,8 @@ initEnv();on.exit({uninitEnv()})
 #' is renamed to be the same as "NewName". If Edit is sent
 #' and no NewName is provided then the default is "FREDQUERY."
 #' Ignored otherwise.
+#' @param transformReqExtraInfo two(2)+ series Edit transform requires
+#' xts attributes of lastest Last_Updated and smalled time interval Frequency
 #' @param return.class desired class of returned object.
 #' Can be xts, zoo, data.frame, or xts (default)
 #' @param ... additional parameters
@@ -2507,6 +2509,11 @@ initEnv();on.exit({uninitEnv()})
 #' getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
 #'   Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b")  )
 #'
+#' # also get the xts attributes of Last_Updated and Frequency
+#' getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
+#'   Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b"),
+#'   transformReqExtraInfo = TRUE)
+#'
 #'  #  Equity Premium new name
 #'
 #' getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
@@ -2528,7 +2535,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom stringr str_c str_detect
 #' @export
 getSymbols.FRED2 <- function (Symbols, env, from = "1800-01-01", to = Sys.Date(),
-                              Edit = NULL, NewName = NULL,
+                              Edit = NULL, NewName = NULL, transformReqExtraInfo = NULL,
                               return.class = "xts", ...) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
@@ -2774,9 +2781,50 @@ initEnv(); on.exit({uninitEnv()})
         # "fml" and the number of "fml" symbols > 1 then NOT exist
         if(exists("SeriesInfo", envir = this.env, inherits = FALSE))
             xtsAttributes(fr) <- SeriesInfo
-            # TODO [ ], 'published_date' periodicy, zoo::as.Date(yearmon/yearqtr),
-            # Rquantlib, get the estimated days since publication
+
         dim(fr) <- c(NROW(fr), 1)
+
+        if(EditUsingFredTransforms && (length(Id) > 1) && transformReqExtraInfo) {
+            # go BACK to the text servers and go get them
+            SeriesIdsXts <- plyr::llply(Id, function(x) { DescTools::DoCall(getSymbols, c(list(), c(x, src = "FRED2", env = env, from = from, to = to,
+                              Edit = NULL, NewName = NULL, transformReqExtraInfo = NULL,
+                              return.class = return.class, auto.assign = FALSE), list(...)[!names(list(...)) %in% "auto.assign"]))})
+            names(SeriesIdsXts) <- Id
+            SeriesIdsXtsAttribFrequency   <- plyr::llply( SeriesIdsXts, function(x) xtsAttributes(x)[["Frequency"]])
+            SeriesIdsXtsAttribLastUpdated <- plyr::llply( SeriesIdsXts, function(x) xtsAttributes(x)[["Last_Updated"]])
+
+            TwoSeriesSymbolLastUpdated <- vector(mode = "character")
+            for(j in SeriesIdsXtsAttribLastUpdated) {
+                ThisSymbolLastUpdated <- stringr::str_c(as.character(as.POSIXct(j)), " UTC")
+                TwoSeriesSymbolLastUpdated <- unique(c(TwoSeriesSymbolLastUpdated, ThisSymbolLastUpdated))
+            }
+            # latest "Last_Updated"
+            TwoSeriesSymbolLastUpdated <- max(TwoSeriesSymbolLastUpdated)
+            xtsAttributes(fr) <- c(list(), xtsAttributes(fr), list(Last_Updated = TwoSeriesSymbolLastUpdated))
+
+            TwoSeriesSymbolFrequency <- vector(mode = "character")
+            DAILYFOUND <- WEEKLYFOUND <- MONTHLYFOUND <- QUARTERLYFOUND <- FALSE
+            for(j in SeriesIdsXtsAttribFrequency) {
+                ThisSymbolFrequency <- j
+                if(ThisSymbolFrequency %Like% "^Daily") {
+                    TwoSeriesSymbolFrequency <- ThisSymbolFrequency
+                    DAILYFOUND <- TRUE
+                  break
+                } else if(ThisSymbolFrequency %Like% "^Weekly" && !DAILYFOUND) {
+                    TwoSeriesSymbolFrequency <- ThisSymbolFrequency
+                    WEEKLYFOUND <- TRUE
+                } else if(ThisSymbolFrequency %Like% "^Monthly" && !WEEKLYFOUND && !DAILYFOUND) {
+                    TwoSeriesSymbolFrequency <- ThisSymbolFrequency
+                    MONTHLYFOUND <- TRUE
+                } else if(ThisSymbolFrequency %Like% "^Quarterly" && !MONTHLYFOUND &&!WEEKLYFOUND && !DAILYFOUND) {
+                    TwoSeriesSymbolFrequency <- ThisSymbolFrequency
+                    QUARTERLYFOUND <- TRUE
+                }
+
+            }
+            xtsAttributes(fr) <- c(list(), xtsAttributes(fr), list(Frequency = TwoSeriesSymbolFrequency))
+
+        }
 
         if(EditUsingFredTransforms && is.null(NewName)) {
              NewName <- "FREDQUERY"

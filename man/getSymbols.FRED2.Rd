@@ -5,7 +5,8 @@
 \title{economic data from the St. Louis FRED}
 \usage{
 getSymbols.FRED2(Symbols, env, from = "1800-01-01", to = Sys.Date(),
-  Edit = NULL, NewName = NULL, return.class = "xts", ...)
+  Edit = NULL, NewName = NULL, transformReqExtraInfo = NULL,
+  return.class = "xts", ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
@@ -26,6 +27,9 @@ and the (if auto.assign = TRUE), variable returned to the environement
 is renamed to be the same as "NewName". If Edit is sent
 and no NewName is provided then the default is "FREDQUERY."
 Ignored otherwise.}
+
+\item{transformReqExtraInfo}{two(2)+ series Edit transform requires
+xts attributes of lastest Last_Updated and smalled time interval Frequency}
 
 \item{return.class}{desired class of returned object.
 Can be xts, zoo, data.frame, or xts (default)}
@@ -242,6 +246,11 @@ getSymbols(c("DGS3MO", "GDP"), src = "FRED2")
 
 getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
   Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b")  )
+
+# also get the xts attributes of Last_Updated and Frequency
+getSymbols(c(c("WILL5000IND","BAMLC0A4CBBBEY")), src = "FRED2",
+  Edit = c(transformation = c("pc1","pch"), fq = "Daily, Close", fml="a-b"),
+  transformReqExtraInfo = TRUE)
 
  #  Equity Premium new name
 

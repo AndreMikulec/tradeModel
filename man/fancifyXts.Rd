@@ -16,7 +16,9 @@ Or neither ( These values can be entered Manually).}
 
 \item{AsOfToday}{Sys.Date() (default).
 Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
-Date of refrence. Reality: today or date of run of the "modelling" program.}
+Date of refrence. Reality: today or date of run of the "modelling" program.
+Note, choosing any earlier date does remove generated "Last Updated Dates"
+However, choosing a later date does not add "Lst Updated Dates"}
 
 \item{calcMonthlies}{TRUE(default) convert x (xts) object to an
 end of month (eom) monthly (using To.Monthly) before
