@@ -1993,8 +1993,8 @@ initEnv(); on.exit({uninitEnv()})
 #' are different days.
 #'
 #' Second: Of the data of Yahoo finance, the Frequency
-#' is "Daily".  The St. Louis FRED's "Frequency" can be"Quarterly"
-#' or "Monthly".
+#' is "Daily".  The St. Louis FRED's "Frequency" can be"Quarterly",
+#' "Monthly", "Weekly", or "Daily"
 #'
 #' From a timeseries returned by getSymbols.FRED2.
 #' The xts attribute "Last_Updated" is used.
@@ -2007,10 +2007,14 @@ initEnv(); on.exit({uninitEnv()})
 #' The author put some thought had been put into 'instead querying
 #' ALFRED', but that path choice utimately was not taken.
 #'
-#' @param x xts object returned by getSymbols.FRED2
+#' @param x xts object returned by getSymbols.FRED2 or
+#' an xts object with an attribute of "Last_Updated" and "Frequency".
+#' Or neither ( These values can be entered Manually).
 #' @param AsOfToday Sys.Date() (default).
 #' Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
 #' Date of refrence. Reality: today or date of run of the "modelling" program.
+#' Note, choosing any earlier date does remove generated "Last Updated Dates"
+#' However, choosing a later date does not add "Lst Updated Dates"
 #' @param calcMonthlies TRUE(default) convert x (xts) object to an
 #' end of month (eom) monthly (using To.Monthly) before
 #' determining  the 'true last updated' dates.
@@ -2045,11 +2049,8 @@ initEnv(); on.exit({uninitEnv()})
 #' Fill in the empty observations with the last(past.known data).
 #' @param Frequency xts attribute "Frequency"(default) of Last_Updated.
 #' Otherwise; character overrides.
-#' Values can be "Quarterly". Currently, "Monthly" and "Weekly"
-#' are not yet implmented.
-#'( Future testing is needed to do "Monthly" and "Weekly")
-#' @param DayOfWeek Read from the xts attributes(default).
-#' Useful when Frequence == "Weekly". Not yet implemented.
+#' Values can be "Quarterly". Currently, "Monthly", "Weekly", and "Daily".
+#' Other Frequencies are not yet implmented.
 #' @param mkAsOfToday2LastObs FALSE(default) Sets the hopefully the last
 #' observation's xts index value to be today's date(AsOfToday)
 #' instead of the end of month date. Generally,
@@ -2070,6 +2071,10 @@ initEnv(); on.exit({uninitEnv()})
 #' TREAST <- getSymbols("TREAST", src = "FRED2", auto.assign = FALSE)
 #' TREAST_DLY <- fancifyXts(TREAST)
 #'
+#' # "Daily" time series on the St. Louis FRED
+#' DGS3MO <- getSymbols("DGS3MO", src = "FRED2", auto.assign = FALSE)
+#' DGS3MO_DLY <- fancifyXts(DGS3MO)
+#'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
@@ -2083,7 +2088,7 @@ initEnv(); on.exit({uninitEnv()})
 fancifyXts <- function(x, AsOfToday = NULL, calcMonthlies = NULL,
                           Last_Updated = NULL, CalendarAdj = NULL,
                           FixLastLastTrueUpDated = NULL, NaCol = NULL, NaLOCF = NULL,
-                          Frequency = NULL, DayOfWeek = NULL, mkAsOfToday2LastObs = NULL) {
+                          Frequency = NULL, mkAsOfToday2LastObs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -2091,7 +2096,7 @@ initEnv();on.exit({uninitEnv()})
 
   if(NVAR(xTs) > 1) stop("fancifyXts only processes a single column xTs")
 
-  if(is.null(AsOfToday)) AsOfToday <- Sys.Date()
+  if(is.null(AsOfToday)) { AsOfToday <- Sys.Date() } else { AsOfToday <- zoo::as.Date(AsOfToday) }
 
   if(is.null(calcMonthlies)) { calcMonthlies <- TRUE }
 
@@ -2117,10 +2122,9 @@ initEnv();on.exit({uninitEnv()})
   if(Frequency == "Quarterly") OftenNess <- 3L # months
   if(Frequency == "Monthly"  ) OftenNess <- 1L
 
-  if((!Frequency %in% c("Quarterly", "Monthly")) &&
+  if((!Frequency %in% c("Quarterly", "Monthly", "Daily")) &&
      (!Frequency %Like% "^Weekly.*$")
-   )stop("fancifyXts: Frequency other than  \"Quarterly\", \"Monthly\", and \"Weekly\" is not yet implemented.")
-
+   )stop("fancifyXts: Frequency other than  \"Quarterly\", \"Monthly\", \"Weekly\"  and \"Daily\" is not yet implemented.")
 
   if(Frequency %in% c("Quarterly", "Monthly")) {
     AllPossibleLastUpdatedDates <- c(
@@ -2130,17 +2134,32 @@ initEnv();on.exit({uninitEnv()})
       zoo::as.Date(Last_Updated)
     )
   }
+
   # NOTE: St. Louis FRED's weeklies
   if(Frequency %Like% "^Weekly.*$") {
     AllPossibleLastUpdatedDates <- c(
       # To be used in "findInterval"
       # go back just "one more" to try to make sure that an early "Last_Updated" date exists.
-      seq(zoo::as.Date(Last_Updated) - (NROW(xTs) + 5) * 7, to = zoo::as.Date(Last_Updated), by = "weeks")
-      # produces one more 'back in time' observation.
+      seq(zoo::as.Date(Last_Updated) - (NROW(xTs) + 5 + 5) * 7, to = zoo::as.Date(Last_Updated), by = "weeks")
+      # produces one more 'back in time' observation.   # 5: extra_month_back
       # + 5 ( the month distance )
     )
   }
-  browser()
+
+  # NOTE: St. Louis FRED's dailies
+  if(Frequency == "Daily") {
+    AllPossibleLastUpdatedDates <- c(
+      # To be used in "findInterval"
+      # go back just "one more" to try to make sure that an early "Last_Updated" date exists.
+      # hack ( generally
+      seq(head(index(xTs),1) - 2 - 31, to = zoo::as.Date(Last_Updated), by = "days")
+      # produces one more 'back in time' observation.
+      # + 1 ( the day distance )   # 31: extra_month_back
+    )
+  }
+  # to not look into the future
+  AllPossibleLastUpdatedDates <- AllPossibleLastUpdatedDates[AllPossibleLastUpdatedDates <= AsOfToday]
+
   Monthlies <- xTs
   if(calcMonthlies) {
     merge(
@@ -2155,8 +2174,9 @@ initEnv();on.exit({uninitEnv()})
   # end of a month and end of this current month
   index(Monthlies) <- index(Monthlies) - 1
   }
+  if(head(index(Monthlies),1) < head(AllPossibleLastUpdatedDates,1))
+    stop("fancifyXts: head(index(Monthlies),1) < head(AllPossibleLastUpdatedDates,1); so findInterval will FAIL(create an index of zero(0)")
 
-  browser()
   if(NaCol) {
     NaColumnlies <- c(coredata(Monthlies))
     NaColumnlies[!is.na(Monthlies)] <- 1
@@ -2168,11 +2188,14 @@ initEnv();on.exit({uninitEnv()})
     warning("fancifyXts found more than one(1) future Monthly. Be sure you know what you are doing.")
   }
 
-  True_Last_Updated <- AllPossibleLastUpdatedDates[findInterval(index(Monthlies), AllPossibleLastUpdatedDates)]
+  # "Daily": left.open = T is important
+  True_Last_Updated <- AllPossibleLastUpdatedDates[findInterval(index(Monthlies), AllPossibleLastUpdatedDates, left.open = T, rightmost.closed =  T)]
   if(CalendarAdj != "NONE") {
     # to get the next government/business/other day
     True_Last_Updated <- RQuantLib::adjust(CalendarAdj, True_Last_Updated, 1)
   }
+  # to not look into the future
+  True_Last_Updated <- True_Last_Updated[True_Last_Updated <= AsOfToday]
 
   # difference
   DelaySinceLastUpdate <- index(Monthlies) - True_Last_Updated
@@ -2191,7 +2214,6 @@ initEnv();on.exit({uninitEnv()})
       DelaySinceLastUpdate[IndexOfCorrection] - (index(Monthlies)[IndexOfCorrection] - AsOfToday)
   }
 
-  browser()
   # developed and debugged with "Quarterly" data
   # also works on "Monthly" data (but seems weird)
   # when the "Last Update" Occurred, pull forward Data values to be in the same observation(month)
@@ -2203,7 +2225,6 @@ initEnv();on.exit({uninitEnv()})
   MonthsToDataShiftForward <- LatestMonthOfLastUpdateIndex - max(seq_len(NROW(Monthlies))[MonthOfDataIndex])
   Monthlies <- lag.xts(Monthlies, MonthsToDataShiftForward)
 
-  browser()
   # if also creating this column, then makes sense to 'also' shift forward
   if(NaCol) {
     NaColumnlies <- lag.xts(NaColumnlies, MonthsToDataShiftForward)
@@ -2233,7 +2254,6 @@ initEnv();on.exit({uninitEnv()})
   # doing always (currently)
   NewDLYClm <- stringr::str_c(RootNm, "_DLY")
   newClmList[[NewDLYClm]] <- DelaySinceLastUpdate
-  browser()
   # optional
   if(NaCol) {
     NewNAClm <- stringr::str_c(RootNm, "_NA")

@@ -7,10 +7,12 @@
 fancifyXts(x, AsOfToday = NULL, calcMonthlies = NULL,
   Last_Updated = NULL, CalendarAdj = NULL,
   FixLastLastTrueUpDated = NULL, NaCol = NULL, NaLOCF = NULL,
-  Frequency = NULL, DayOfWeek = NULL, mkAsOfToday2LastObs = NULL)
+  Frequency = NULL, mkAsOfToday2LastObs = NULL)
 }
 \arguments{
-\item{x}{xts object returned by getSymbols.FRED2}
+\item{x}{xts object returned by getSymbols.FRED2 or
+an xts object with an attribute of "Last_Updated" and "Frequency".
+Or neither ( These values can be entered Manually).}
 
 \item{AsOfToday}{Sys.Date() (default).
 Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
@@ -56,12 +58,8 @@ Fill in the empty observations with the last(past.known data).}
 
 \item{Frequency}{xts attribute "Frequency"(default) of Last_Updated.
 Otherwise; character overrides.
-Values can be "Quarterly". Currently, "Monthly" and "Weekly"
-are not yet implmented.
-( Future testing is needed to do "Monthly" and "Weekly")}
-
-\item{DayOfWeek}{Read from the xts attributes(default).
-Useful when Frequence == "Weekly". Not yet implemented.}
+Values can be "Quarterly". Currently, "Monthly", "Weekly", and "Daily".
+Other Frequencies are not yet implmented.}
 
 \item{mkAsOfToday2LastObs}{FALSE(default) Sets the hopefully the last
 observation's xts index value to be today's date(AsOfToday)
@@ -87,8 +85,8 @@ The St. Louis FRED's "Last Updated Date" and index date 'published date'
 are different days.
 
 Second: Of the data of Yahoo finance, the Frequency
-is "Daily".  The St. Louis FRED's "Frequency" can be"Quarterly"
-or "Monthly".
+is "Daily".  The St. Louis FRED's "Frequency" can be"Quarterly",
+"Monthly", "Weekly", or "Daily"
 
 From a timeseries returned by getSymbols.FRED2.
 The xts attribute "Last_Updated" is used.
@@ -111,6 +109,14 @@ GDP_DLY <- fancifyXts(GDP)
 # "Monthly" time series on the St. Louis FRED
 PAYEMS <- getSymbols("PAYEMS", src = "FRED2", auto.assign = FALSE)
 PAYEMS_DLY <- fancifyXts(PAYEMS)
+
+# "Weekly" time series on the St. Louis FRED
+TREAST <- getSymbols("TREAST", src = "FRED2", auto.assign = FALSE)
+TREAST_DLY <- fancifyXts(TREAST)
+
+# "Daily" time series on the St. Louis FRED
+DGS3MO <- getSymbols("DGS3MO", src = "FRED2", auto.assign = FALSE)
+DGS3MO_DLY <- fancifyXts(DGS3MO)
 
 }
 }
