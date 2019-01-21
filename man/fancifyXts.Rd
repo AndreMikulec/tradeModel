@@ -16,9 +16,10 @@ fancifyXts(x, AsOfToday = NULL, calcMonthlies = NULL,
 Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
 Date of refrence. Reality: today or date of run of the "modelling" program.}
 
-\item{calcMonthlies}{TRUE(default) convert x (xts) object to a
-monthly (using To.Monthly). before determining  the 'true last updated' dates.
-Otherwise, FALSE; means 'x is already a monthly so do not apply To.Monthly.}
+\item{calcMonthlies}{TRUE(default) convert x (xts) object to an
+end of month (eom) monthly (using To.Monthly) before
+determining  the 'true last updated' dates.
+Otherwise, FALSE; means 'x is already an eom monthly so do not apply To.Monthly.}
 
 \item{Last_Updated}{xts attribute "Last_Updated"(default).
 Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")}
@@ -87,7 +88,7 @@ are different days.
 
 Second: Of the data of Yahoo finance, the Frequency
 is "Daily".  The St. Louis FRED's "Frequency" can be"Quarterly"
-"Weekly", "Monthly", or "Daily".
+or "Monthly".
 
 From a timeseries returned by getSymbols.FRED2.
 The xts attribute "Last_Updated" is used.
@@ -106,6 +107,10 @@ ALFRED', but that path choice utimately was not taken.
 # "Quarterly" time series on the St. Louis FRED
 GDP <- getSymbols("GDP", src = "FRED2", auto.assign = FALSE)
 GDP_DLY <- fancifyXts(GDP)
+
+# "Monthly" time series on the St. Louis FRED
+PAYEMS <- getSymbols("PAYEMS", src = "FRED2", auto.assign = FALSE)
+PAYEMS_DLY <- fancifyXts(PAYEMS)
 
 }
 }

@@ -1994,7 +1994,7 @@ initEnv(); on.exit({uninitEnv()})
 #'
 #' Second: Of the data of Yahoo finance, the Frequency
 #' is "Daily".  The St. Louis FRED's "Frequency" can be"Quarterly"
-#' "Weekly", "Monthly", or "Daily".
+#' or "Monthly".
 #'
 #' From a timeseries returned by getSymbols.FRED2.
 #' The xts attribute "Last_Updated" is used.
@@ -2011,9 +2011,10 @@ initEnv(); on.exit({uninitEnv()})
 #' @param AsOfToday Sys.Date() (default).
 #' Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
 #' Date of refrence. Reality: today or date of run of the "modelling" program.
-#' @param calcMonthlies TRUE(default) convert x (xts) object to a
-#' monthly (using To.Monthly). before determining  the 'true last updated' dates.
-#' Otherwise, FALSE; means 'x is already a monthly so do not apply To.Monthly.
+#' @param calcMonthlies TRUE(default) convert x (xts) object to an
+#' end of month (eom) monthly (using To.Monthly) before
+#' determining  the 'true last updated' dates.
+#' Otherwise, FALSE; means 'x is already an eom monthly so do not apply To.Monthly.
 #' @param Last_Updated xts attribute "Last_Updated"(default).
 #' Otherwise overrides; POSIXct, Date or character("YYYY-MM-DD")
 #' @param CalendarAdj "UnitedStates/GovernmentBond"(default).
@@ -2061,6 +2062,10 @@ initEnv(); on.exit({uninitEnv()})
 #' GDP <- getSymbols("GDP", src = "FRED2", auto.assign = FALSE)
 #' GDP_DLY <- fancifyXts(GDP)
 #'
+#' # "Monthly" time series on the St. Louis FRED
+#' PAYEMS <- getSymbols("PAYEMS", src = "FRED2", auto.assign = FALSE)
+#' PAYEMS_DLY <- fancifyXts(PAYEMS)
+#'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo as.Date
@@ -2106,11 +2111,14 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(mkAsOfToday2LastObs)) { mkAsOfToday2LastObs <- FALSE }
 
   if(Frequency == "Quarterly") {
-     OftenNess <- 3L # months
+    OftenNess <- 3L # months
+  } else if (Frequency == "Monthly") {
+    OftenNess <- 1L
   } else {
-    stop("fancifyXts: Frequency other than  \"Quarterly\" is not yet implemented.")
+      stop("fancifyXts: Frequency other than  \"Quarterly\" and \"Monthly\" is not yet implemented.")
   }
 
+  browser()
   AllPossibleLastUpdatedDates <- c(
     # To be used in "findInterval"
     # go back just "one more" to try to make sure that an early "Last_Updated" date exists.
@@ -2129,9 +2137,9 @@ initEnv();on.exit({uninitEnv()})
             by   = "months")
        )
     ) -> Monthlies # could be 'new'
-  }
   # end of a month and end of this current month
   index(Monthlies) <- index(Monthlies) - 1
+  }
 
   browser()
   if(NaCol) {
@@ -2168,9 +2176,13 @@ initEnv();on.exit({uninitEnv()})
       DelaySinceLastUpdate[IndexOfCorrection] - (index(Monthlies)[IndexOfCorrection] - AsOfToday)
   }
 
+  browser()
+  # developed and debugged with "Quarterly" data
+  # also works on "Monthly" data (but seems weird)
   # when the "Last Update" Occurred, pull forward Data values to be in the same observation(month)
   MonthsOfLastUpdate <- as.yearmon(index(Monthlies)) == as.yearmon(index(Monthlies) - DelaySinceLastUpdate)
-  LatestMonthOfLastUpdateIndex <- max(seq_along(index(Monthlies))[MonthsOfLastUpdate])
+  MonthsOfLastUpdateIndex <- seq_along(index(Monthlies))[MonthsOfLastUpdate]
+  LatestMonthOfLastUpdateIndex <- max(MonthsOfLastUpdateIndex)
   #
   MonthOfDataIndex <- c(!is.na(Monthlies))
   MonthsToDataShiftForward <- LatestMonthOfLastUpdateIndex - max(seq_len(NROW(Monthlies))[MonthOfDataIndex])
