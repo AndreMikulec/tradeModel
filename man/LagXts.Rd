@@ -16,5 +16,18 @@ LagXts(xTs, k = 1, na.pad = TRUE, ...)
 \item{...}{dots passed to lag.xts}
 }
 \description{
-does not complain when: k > NROW(xTs)
+does not complain when: any(abs(k) > NROW(xTs))
+}
+\examples{
+\dontrun{
+
+lagXts(xts(1:4, zoo::as.Date(0:3)), k =  c(-5:-3,0:1,3:5))
+
+           lead4 lead3 lag0 lag1 lag3 lag4
+1970-01-01    NA     4    1   NA   NA   NA
+1970-01-02    NA    NA    2    1   NA   NA
+1970-01-03    NA    NA    3    2   NA   NA
+1970-01-04    NA    NA    4    3    1   NA
+
+}
 }

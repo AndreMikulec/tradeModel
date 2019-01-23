@@ -571,39 +571,6 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' lagging
-#'
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-#' @importFrom stringr str_detect
-#' @importFrom stringr str_replace
-#' @importFrom lubridate %m+%
-#' @importFrom DescTools Day
-#' @importFrom DescTools LastDayOfMonth
-Lagging <- function(xTs = NULL, Shift = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  `%m+%` <- lubridate::`%m+%`
-
-  xTs <- initXts(xTs)
-  if(is.null(Shift)) Shift = 1
-  # compare to quantmod:::Lag.xts
-  if(periodicity(xTs)[["scale"]] == "monthly") {
-    if(DescTools::Day(head(index(xTs),1)) %in% c(28:31)) {
-      refDates <- DescTools::LastDayOfMonth(tail(index(xTs),1) %m+% months( 1 * seq_len(Shift)) )
-      xTs <- merge(xTs, xts(, refDates) )
-    }
-  }
-  xTs %>% { lag(., 1 * Shift) } -> xTs
-  if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
-    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "leadingrets$", "rets")
-  } else {
-    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "laggingrets")
-  }
-  xTs
-})}
-
 
 
 
@@ -1250,28 +1217,29 @@ tryCatchLog::tryCatchLog({
 
 
 
-#' lag an xts object
+
+
+#' smallest and largest
 #'
-#' does not complain when: k > NROW(xTs)
+#' Within a range, find the the exteme one-sided observations.
+#' WORK IN PROGRESS
 #'
-#' @param xTs xts object
-#' @param k choose -1 to look into the future
-#' @param na.pad as lag.xts
-#' @param ... dots passed to lag.xts
+#' @param x  xts object
+#' @param br backrange: choose -1:0 (or less) to look into the future
+#' @param n sum of the results of observations found
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom matrixStats rowOrderStats
 #' @export
-LagXts <- function(xTs, k = 1, na.pad = TRUE, ...) {
+extremesXts <- function(x, br = 0:1, n = 1, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  xTs <- x
   xTs <- initXts(xTs)
-  if(k > NROW(xTs)) {
-    coredata(xTs)[] <- NA
-    return(xTs)
-  }
-  lag.xts(x = xTs, k = k, na.pad = na.pad, ...)
 
 })}
+
+
 
 
 #' absolute change
@@ -1419,6 +1387,51 @@ initEnv();on.exit({uninitEnv()})
   AC(xTs, base = base, lag = 1)/LagXts(xTs1, base + lag)
 
 })}
+
+
+
+#' lag an xts object
+#'
+#' does not complain when: any(abs(k) > NROW(xTs))
+#'
+#' @param xTs xts object
+#' @param k choose -1 to look into the future
+#' @param na.pad as lag.xts
+#' @param ... dots passed to lag.xts
+#' @examples
+#' \dontrun{
+#'
+#' lagXts(xts(1:4, zoo::as.Date(0:3)), k =  c(-5:-3,0:1,3:5))
+#'
+#'            lead4 lead3 lag0 lag1 lag3 lag4
+#' 1970-01-01    NA     4    1   NA   NA   NA
+#' 1970-01-02    NA    NA    2    1   NA   NA
+#' 1970-01-03    NA    NA    3    2   NA   NA
+#' 1970-01-04    NA    NA    4    3    1   NA
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @export
+LagXts <- function(xTs, k = 1, na.pad = TRUE, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  if(all(abs(k) > NROW(xTs))) {
+    # do not bother trying
+    coredata(xTs)[] <- NA
+    return(xTs)
+  }
+  # just do the k's within range
+  # CURRENT - I MAY WANT TO CHANGE MY MIND LATER
+  k <- k[abs(k) <= NROW(xTs)]
+  xTs <- lag.xts(x = xTs, k = k, na.pad = na.pad, ...)
+  colnames(xTs)[k < 0] <- stringr::str_c("lead", abs(k[k < 0]))
+  xTs
+
+})}
+
 
 
 #' lag and/or difference and/or use a function(Fun) upon and xts object
@@ -1596,6 +1609,41 @@ initEnv();on.exit({uninitEnv()})
     colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "laggingrets$", "rets")
   } else {
     colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "leadingrets")
+  }
+  xTs
+})}
+
+
+
+#' lagging
+#'
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_detect
+#' @importFrom stringr str_replace
+#' @importFrom lubridate %m+%
+#' @importFrom DescTools Day
+#' @importFrom DescTools LastDayOfMonth
+Lagging <- function(xTs = NULL, Shift = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  `%m+%` <- lubridate::`%m+%`
+
+  xTs <- initXts(xTs)
+  if(is.null(Shift)) Shift = 1
+  # compare to quantmod:::Lag.xts
+  if(periodicity(xTs)[["scale"]] == "monthly") {
+    if(DescTools::Day(head(index(xTs),1)) %in% c(28:31)) {
+      refDates <- DescTools::LastDayOfMonth(tail(index(xTs),1) %m+% months( 1 * seq_len(Shift)) )
+      xTs <- merge(xTs, xts(, refDates) )
+    }
+  }
+  xTs %>% { lag(., 1 * Shift) } -> xTs
+  if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
+    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "leadingrets$", "rets")
+  } else {
+    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "laggingrets")
   }
   xTs
 })}
