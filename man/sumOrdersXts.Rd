@@ -82,7 +82,7 @@ LagXts(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.
 # of the three(3) (future)leading values I want to find two(2) of
 # the three(2) worst months and sum their 'two' values together.
 
-# nt == 2 means n == 1:2 (1st smallest and 2nd smallest)
+# nt == 2 means n == 1:2 (1st lowest and 2nd lowest)
 #
 sumOrdersXts(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)),
   r =  -3:-1, nt = 2)

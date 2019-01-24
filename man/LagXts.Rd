@@ -4,10 +4,10 @@
 \alias{LagXts}
 \title{lag an xts object}
 \usage{
-LagXts(xTs, k = 1, na.pad = TRUE, ...)
+LagXts(x, k = 1, na.pad = TRUE, ...)
 }
 \arguments{
-\item{xTs}{xts object}
+\item{x}{xts object}
 
 \item{k}{choose -1 to look into the future}
 

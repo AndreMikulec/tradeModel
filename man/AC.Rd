@@ -4,15 +4,36 @@
 \alias{AC}
 \title{absolute change}
 \usage{
-AC(xTs, base = 0, lag = 1, ...)
+AC(x, base = 0, lag = 1, ...)
 }
 \arguments{
-\item{xTs}{xts object}
+\item{x}{xts object}
 
 \item{base}{choose -1 (or less) to look into the future}
 
 \item{lag}{observations backwards}
+
+\item{...}{dots passed to LagXts}
 }
 \description{
 absolute change
+}
+\examples{
+\dontrun{
+
+xts(c(1,2,4,8), zoo::as.Date(0:3))
+           [,1]
+1970-01-01    1
+1970-01-02    2
+1970-01-03    4
+1970-01-04    8
+
+AC(xts(c(1,2,4,8), zoo::as.Date(0:3)))
+           <NA>
+1970-01-01   NA
+1970-01-02    1
+1970-01-03    2
+1970-01-04    4
+
+}
 }

@@ -1284,7 +1284,7 @@ tryCatchLog::tryCatchLog({
 #' # of the three(3) (future)leading values I want to find two(2) of
 #' # the three(2) worst months and sum their 'two' values together.
 #'
-#' # nt == 2 means n == 1:2 (1st smallest and 2nd smallest)
+#' # nt == 2 means n == 1:2 (1st lowest and 2nd lowest)
 #' #
 #' sumOrdersXts(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)),
 #'   r =  -3:-1, nt = 2)
@@ -1342,14 +1342,14 @@ initEnv();on.exit({uninitEnv()})
 
   # I Originally, I once had a more complicated technique
   # using spitting, applying, and findInterval (per layer),
-  # but given as small set of discrete
+  # but given a small set of
   # values per row, the situation may be
   # JUST EASIER (and simpler, but maybe not faster?)
   # to just RE-scan, so that is what I am doing.
 
   resList <- list()
   for(ni in n) {
-    # ni = 1 smallest value, ni = 2 second smallect values etc.
+    # ni = 1 lowest value, ni = 2 second lowest value etc.
     res <- matrixStats::rowOrderStats(x, which = ni) # , dim. = c(NROW(x), NVAR(x))
     resList <- c(list(), resList, list(res))
   }
@@ -1377,28 +1377,56 @@ initEnv();on.exit({uninitEnv()})
 
 #' absolute change
 #'
-#' @param xTs xts object
+#' @param x xts object
 #' @param base choose -1 (or less) to look into the future
 #' @param lag observations backwards
+#' @param ... dots passed to LagXts
+#' @examples
+#' \dontrun{
+#'
+#' xts(c(1,2,4,8), zoo::as.Date(0:3))
+#'            [,1]
+#' 1970-01-01    1
+#' 1970-01-02    2
+#' 1970-01-03    4
+#' 1970-01-04    8
+#'
+#' AC(xts(c(1,2,4,8), zoo::as.Date(0:3)))
+#'            <NA>
+#' 1970-01-01   NA
+#' 1970-01-02    1
+#' 1970-01-03    2
+#' 1970-01-04    4
+#'
+#' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @export
-AC <- function(xTs, base = 0, lag = 1, ...) {
+AC <- function(x, base = 0, lag = 1, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  xTs <- x
   xTs <- initXts(xTs)
-  lag.xts(xTs1, base) - lag.xts(xTs1, base + lag)
+  LagXts(xTs, k = base, ...) - LagXts(xTs, k = base + lag, ...)
 
 })}
 
 
 #' relative change
 #'
-#' @param xTs xts object
+#' @param x xts object
 #' @param base choose -1 (or less) to look into the future
 #' @param lag observations backwards
 #' @examples
 #' \dontrun{
+#'
+#' xts(c(1,2,4,8), zoo::as.Date(0:3))
+#'            [,1]
+#' 1970-01-01    1
+#' 1970-01-02    2
+#' 1970-01-03    4
+#' 1970-01-04    8
+#'
 #'
 #' xTs1 <- xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
 #' RC(xTs1)
@@ -1410,10 +1438,11 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @export
-RC <- function(xTs, base = 0, lag = 1, log = FALSE, ...) {
+RC <- function(x, base = 0, lag = 1, log = FALSE, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  xTs <- x
   xTs <- initXts(xTs)
 
   # ? `[`
@@ -1438,7 +1467,7 @@ initEnv();on.exit({uninitEnv()})
   #   A is allowed and will produce an NA in the result.
   #   Unmatched indices as well as the empty string ("") are not allowed and will result in an error.
 
-  NegNegTest <- (LagXts(xTs1, base) < 0) & (LagXts(xTs1, base + lag) < 0)
+  NegNegTest <- (LagXts(xTs1, k = base, ...) < 0) & (LagXts(xTs1, k = base + lag, ...) < 0)
   #
   if(any(coredata(NegNegTest) == TRUE)) {
 
@@ -1449,8 +1478,8 @@ initEnv();on.exit({uninitEnv()})
 
     # regular common case
     NewCoreXts[arrayIndiciesRegular] <-
-                  coredata(LagXts(xTs1, base))[arrayIndiciesRegular]/
-                  coredata(LagXts(xTs1, base + lag))[arrayIndiciesRegular]
+                  coredata(LagXts(xTs1, k = base, ...))[arrayIndiciesRegular]/
+                  coredata(LagXts(xTs1, k = base + lag, ...))[arrayIndiciesRegular]
 
     # neg/neg rare case: (LagXts(xTs1, base) < 0) & (LagXts(xTs1, base + lag) < 0)
     # bad interpretation
@@ -1466,17 +1495,17 @@ initEnv();on.exit({uninitEnv()})
     # [1] -1 # one full proportion less
 
     NewCoreXts[arrayIndiciesNegNeg] <-
-              sign(  coredata(LagXts(xTs1, base + lag))[arrayIndiciesNegNeg] ) *
+              sign(  coredata(LagXts(xTs1, k = base + lag, ...))[arrayIndiciesNegNeg] ) *
                   (
-                       coredata(LagXts(xTs1, base))[arrayIndiciesNegNeg] -
-                     ( coredata(LagXts(xTs1, base + lag))[arrayIndiciesNegNeg] )
+                       coredata(LagXts(xTs1, k = base, ...))[arrayIndiciesNegNeg] -
+                     ( coredata(LagXts(xTs1, k = base + lag, ...))[arrayIndiciesNegNeg] )
                   ) /
-                  coredata(LagXts(xTs1, base + lag))[arrayIndiciesNegNeg]
+                  coredata(LagXts(xTs1, k = base + lag, ...))[arrayIndiciesNegNeg]
 
     coredata(xTs) <- NewCoreXts
 
   } else {
-    xTs <- LagXts(xTs1, base)/LagXts(xTs1, base + lag)
+    xTs <- LagXts(xTs1, k = base, ...)/LagXts(xTs1, k = base + lag, ...)
   }
   if(log) Res <- log(xTs)
   xTs
@@ -1486,38 +1515,40 @@ initEnv();on.exit({uninitEnv()})
 
 #' relative percent change
 #'
-#' most useful for tracking: velocity, acceleration, and jerk
+#' most useful for tracking: velocity, acceleration, (and jerk)
 #' To get accelleration and jerk use with
-#' diffXts and differences = 1 and 2 respectively.
+#' diffXts and differences = 1 and 2 (and 3) respectively.
 #'
-#' @param xTs xts object
+#' @param x xts object
 #' @param base choose -1 (or less) to look into the future
 #' @param lag observations backwards
 #' @importFrom tryCatchLog tryCatchLog
 #' @export
-RPC <- function(xTs, base = 0, lag = 1, ...) {
+RPC <- function(x, base = 0, lag = 1, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  x <- xTs
   xTs <- initXts(xTs)
-  AC(xTs, base = base, lag = 1)/ abs(LagXts(xTs1, base + lag))
+  AC(xTs, base = base, lag = 1, ...)/ abs(LagXts(xTs1, k = base + lag, ...))
 
 })}
 
 
 #' absolute percent change
 #'
-#' @param xTs xts object
+#' @param x xts object
 #' @param base choose -1 (or less) to look into the future
 #' @param lag observations backwards
 #' @importFrom tryCatchLog tryCatchLog
 #' @export
-APC <- function(xTs, base = 0, lag = 1, ...) {
+APC <- function(x, base = 0, lag = 1, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  xTs <- x
   xTs <- initXts(xTs)
-  AC(xTs, base = base, lag = 1)/LagXts(xTs1, base + lag)
+  AC(xTs, base = base, lag = 1, ...)/LagXts(xTs1, k = base + lag, ...)
 
 })}
 
@@ -1525,42 +1556,87 @@ initEnv();on.exit({uninitEnv()})
 
 #' lag an xts object
 #'
-#' does not complain when: any(abs(k) > NROW(xTs))
+#' Does not complain when: any(abs(k) > NROW(xTs)):
+#' zoo_lag can not and will not handle. So k's are eliminated
+#' beforehand
 #'
-#' @param xTs xts object
+#' @param x xts object
 #' @param k choose -1 to look into the future
 #' @param na.pad as lag.xts
 #' @param ... dots passed to lag.xts
 #' @examples
 #' \dontrun{
 #'
-#' lagXts(xts(1:4, zoo::as.Date(0:3)), k =  c(-5:-3,0:1,3:5))
+#' xts(1:4, zoo::as.Date(0:3))
+#'            [,1]
+#' 1970-01-01    1
+#' 1970-01-02    2
+#' 1970-01-03    3
+#' 1970-01-04    4
 #'
-#'            lead4 lead3 lag0 lag1 lag3 lag4
-#' 1970-01-01    NA     4    1   NA   NA   NA
-#' 1970-01-02    NA    NA    2    1   NA   NA
-#' 1970-01-03    NA    NA    3    2   NA   NA
-#' 1970-01-04    NA    NA    4    3    1   NA
+#' LagXts(xts(1:4, zoo::as.Date(0:3)), k =  c(-5:-3,0:1,3:5))
+#'            V1lead.4 V1lead.3 V1lag.0 V1lag.1 V1lag.3 V1lag.4
+#' 1970-01-01       NA        4       1      NA      NA      NA
+#' 1970-01-02       NA       NA       2       1      NA      NA
+#' 1970-01-03       NA       NA       3       2      NA      NA
+#' 1970-01-04       NA       NA       4       3       1      NA
+#'
+#' xts(matrix(1:4,ncol =2), zoo::as.Date(0:1))
+#'            [,1] [,2]
+#' 1970-01-01    1    3
+#' 1970-01-02    2    4
+#'
+#' LagXts(xts(matrix(1:4,ncol =2), zoo::as.Date(0:1)), k =  c(-5:-3,0:1,3:5))
+#'            V1lag.0 V2lag.0 V1lag.1 V2lag.1
+#' 1970-01-01       1       3      NA      NA
+#' 1970-01-02       2       4       1       3
+#'
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 #' @export
-LagXts <- function(xTs, k = 1, na.pad = TRUE, ...) {
+LagXts <- function(x, k = 1, na.pad = TRUE, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  xTs <- x
   xTs <- initXts(xTs)
   if(all(abs(k) > NROW(xTs))) {
     # do not bother trying
     coredata(xTs)[] <- NA
     return(xTs)
   }
-  # just do the k's within range
+  # just do the k's within range (that lag.xts  ACCEPTS to handle)
   # CURRENT - I MAY WANT TO CHANGE MY MIND LATER
-  k <- k[abs(k) <= NROW(xTs)]
-  xTs <- lag.xts(x = xTs, k = k, na.pad = na.pad, ...)
-  colnames(xTs)[k < 0] <- stringr::str_c("lead", abs(k[k < 0]))
+  IsKineligibleFnd <- abs(k) <= NROW(xTs)
+  # CURRENT UNUSED ... if used ... some very very clever interleaving
+  kOther <- k[!IsKineligibleFnd]
+  k      <- k[ IsKineligibleFnd]
+  xTs <- lag.xts(xTs, k = k, na.pad = na.pad, ...)
+
+  AreColNamesNULL <- if(is.null(colnames(x))) { TRUE } else { FALSE }
+  NewColNames <- list()
+  for(ki in k) {
+    kiName <- abs(ki)
+    for(NVARi in seq_len(NVAR(x))){
+      if(AreColNamesNULL) {
+        ColName <- stringr::str_c("V", NVARi)
+      } else {
+        ColName <- stringr::str_c(colnames(x)[NVARi],".")
+      }
+      if(ki < 0) {
+        PostFix <- "lead"
+      } else {
+        PostFix <- "lag"
+      }
+      NewColNamesI <- stringr::str_c(ColName, PostFix, ".", kiName)
+      NewColNames <- c(list(), NewColNames, list(NewColNamesI))
+    }
+
+  }
+  # better names
+  colnames(xTs) <- do.call(c, NewColNames)
   xTs
 
 })}
@@ -1575,7 +1651,12 @@ initEnv();on.exit({uninitEnv()})
 #' @param arithmetic as diff.xts
 #' @param log as diff.xts
 #' @param na.pad as diff.xts
-#' @param Fun differencing function.  Meant to change the xTs in some way. (Default diff[.xts])
+#' @param Fun differencing function.
+#' Meant to change the xTs in some way.
+#' (Default diff (expected: xts::diff.xts))
+#' Should accept or (accept and ignore) the parameters: lag;
+#' for S3 compatibility, differences; for xts compatiblity,
+#' arithmetic, log, and/or na.pad.
 #' @param ... dots passed
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DescTools DoCall
@@ -1601,7 +1682,7 @@ initEnv();on.exit({uninitEnv()})
   if(is.logical(x))
     x <- .xts(matrix(as.integer(x),ncol=NCOL(x)), .index(x), indexClass(x))
 
-  # if the use want's to do differencing
+  # if the use is to want's to do differencing
   if(!is.null(differences) && !is.na(differences) && is.numeric(differences)) {
 
     if(differences > 1) {

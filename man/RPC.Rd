@@ -4,17 +4,17 @@
 \alias{RPC}
 \title{relative percent change}
 \usage{
-RPC(xTs, base = 0, lag = 1, ...)
+RPC(x, base = 0, lag = 1, ...)
 }
 \arguments{
-\item{xTs}{xts object}
+\item{x}{xts object}
 
 \item{base}{choose -1 (or less) to look into the future}
 
 \item{lag}{observations backwards}
 }
 \description{
-most useful for tracking: velocity, acceleration, and jerk
+most useful for tracking: velocity, acceleration, (and jerk)
 To get accelleration and jerk use with
-diffXts and differences = 1 and 2 respectively.
+diffXts and differences = 1 and 2 (and 3) respectively.
 }

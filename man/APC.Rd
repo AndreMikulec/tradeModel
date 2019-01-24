@@ -4,10 +4,10 @@
 \alias{APC}
 \title{absolute percent change}
 \usage{
-APC(xTs, base = 0, lag = 1, ...)
+APC(x, base = 0, lag = 1, ...)
 }
 \arguments{
-\item{xTs}{xts object}
+\item{x}{xts object}
 
 \item{base}{choose -1 (or less) to look into the future}
 

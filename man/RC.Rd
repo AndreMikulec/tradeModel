@@ -4,10 +4,10 @@
 \alias{RC}
 \title{relative change}
 \usage{
-RC(xTs, base = 0, lag = 1, log = FALSE, ...)
+RC(x, base = 0, lag = 1, log = FALSE, ...)
 }
 \arguments{
-\item{xTs}{xts object}
+\item{x}{xts object}
 
 \item{base}{choose -1 (or less) to look into the future}
 
@@ -18,6 +18,14 @@ relative change
 }
 \examples{
 \dontrun{
+
+xts(c(1,2,4,8), zoo::as.Date(0:3))
+           [,1]
+1970-01-01    1
+1970-01-02    2
+1970-01-03    4
+1970-01-04    8
+
 
 xTs1 <- xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
 RC(xTs1)
