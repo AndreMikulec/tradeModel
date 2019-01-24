@@ -25,6 +25,7 @@ Imports:
     tis,
     timeSeries,
     zoo,
+    matrixStats,
     TTR,
     PerformanceAnalytics,
     DBI,

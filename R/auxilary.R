@@ -1219,24 +1219,157 @@ tryCatchLog::tryCatchLog({
 
 
 
-#' smallest and largest
+#' specific orders of n  (smallest/largest) of values within a range
 #'
-#' Within a range, find the the exteme one-sided observations.
-#' WORK IN PROGRESS
+#' Within a range, find the smallest observation
+#' of order (n). n == 1 smallest. n == 2 2nd smallest.
+#'
+#' within range, within a subrange of smallest
+#' observations defined by nt, find the sum
+#' of those small values.
+#'
+#' Expected, to be used as a smoothing
+#' item on past St. Louis FRED data.  Typical use
+#' is to choose the minimal of the previous two(2)
+#' observations before/or/after applying an SMA(x, 3).
+#'
+#' Other, expected be used on future data. Find
+#' the lowest valued two(2) months in the next(future)
+#' six(6) months and add(sum) those values together.
 #'
 #' @param x  xts object
-#' @param br backrange: choose -1:0 (or less) to look into the future
-#' @param n sum of the results of observations found
+#' @param base passed to LagXts.  See ? LagXts.
+#' @param r (back) range: choose -2:-1 (or less) to look into the future.
+#' Passed to LagXts k paramter
+#' @param n the order of the minimum to be found.
+#' n == 1 means smalled value. n == 2 means second smalled
+#' value, etc.
+#' @param View "min"(default): 'n == 1' means look for the lowest value(s).
+#' Otherwise, "max" n == 1 means look for the highest values(s).
+#' Note, to peform "max" math, the coredata is simply muliplied by
+#' negative one(-1) before the code is executed.
+#' After the code is executed the coredata is re-multiplied by
+#' negative one(-1).
+#' @param na.pad passed to LagXts
+#' @param rt alternate way to specify rt == 2 means r == 1:2.
+#' rt == -2 means r == -2:-1.  rt will override r.  This can be
+#' useful when passing to eXplodeXts
+#' @param nt  alternate way to specify nt == 2 means n == 1:2.
+#' nt == -2 means n == 2:1.  nt will override n.  This can be
+#' useful when passing to eXplodeXts.
+#' @param ... dots passed to LagXts
+#' @examples
+#' \dontrun{
+#'
+#' matrix(1:5,ncol = 1, dimnames = list(list(), list("Data")))
+#'
+#'            Data
+#' 1970-01-01    1
+#' 1970-01-02    2
+#' 1970-01-03    3
+#' 1970-01-04    4
+#' 1970-01-05    5
+#'
+#' # futures
+#' LagXts(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)),
+#'   k =  c(-3:-1))
+#'
+#'           lead3 lead2 lead1
+#' 1970-01-01     4     3     2
+#' 1970-01-02     5     4     3
+#' 1970-01-03    NA     5     4
+#' 1970-01-04    NA    NA     5
+#' 1970-01-05    NA    NA    NA
+#'
+#' # of the three(3) (future)leading values I want to find two(2) of
+#' # the three(2) worst months and sum their 'two' values together.
+#'
+#' # nt == 2 means n == 1:2 (1st smallest and 2nd smallest)
+#' #
+#' sumOrdersXts(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)),
+#'   r =  -3:-1, nt = 2)
+#'
+#'           Data_RAGG
+#' 1970-01-01         5 # lead2 + lead1
+#' 1970-01-02         7 # lead2 + lead1
+#'
+#'
+#' # find two(2) of the three(2) best months and
+#' # sum their 'two' values together.
+#' #
+#' # View == "max" # n == 1 means greatest
+#' #
+#' sumOrdersXts(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)),
+#'   r =  -3:-1, View = "max", nt = 2)
+#'
+#'            Data_RAGG
+#' 1970-01-01         7 # lead3 + lead2
+#' 1970-01-02         9 # lead3 + lead2
+#'
+#' }
 #' @importFrom tryCatchLog tryCatchLog
-#' @importFrom matrixStats rowOrderStats
+#' @importFrom stringr str_c
+#' @importFrom matrixStats rowAnyNAs rowOrderStats rowSums2
+#' @importFrom DescTools DoCall
 #' @export
-extremesXts <- function(x, br = 0:1, n = 1, ...) {
+sumOrdersXts <- function(x, base = 0, r = 0:1, n = 1, View = "min", na.pad = TRUE, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  if(!View %in% c("min","max")) stop("sumOrdersXts param View can only be \"min\" xor \"max\"")
+
+  Dots <- list(...)
+  if(!is.null(Dots[["rt"]]))
+    r = sort(sign(Dots[["rt"]]) * seq_len(abs(-Dots[["rt"]])))
+  if(!is.null(Dots[["nt"]]))
+    n = sort(sign(Dots[["nt"]]) * seq_len(abs(-Dots[["nt"]])))
+
+  xOrig <- x
 
   xTs <- x
   xTs <- initXts(xTs)
 
+  # n == 1 now means largest value
+  if(View == "max")
+    coredata(xTs) <- -coredata(xTs)
+
+  # matrixStats::rowOrderStats is not allowed
+  # to have NAs in the rows, here I eliminate rows.
+  xTs <- LagXts(xTs, k = base + r, na.pad = na.pad, ...)
+  x   <- coredata(xTs)
+  FullRowsXtsFnd <- !matrixStats::rowAnyNAs(x)
+  x <- x[FullRowsXtsFnd,]
+
+  # I Originally, I once had a more complicated technique
+  # using spitting, applying, and findInterval (per layer),
+  # but given as small set of discrete
+  # values per row, the situation may be
+  # JUST EASIER (and simpler, but maybe not faster?)
+  # to just RE-scan, so that is what I am doing.
+
+  resList <- list()
+  for(ni in n) {
+    # ni = 1 smallest value, ni = 2 second smallect values etc.
+    res <- matrixStats::rowOrderStats(x, which = ni) # , dim. = c(NROW(x), NVAR(x))
+    resList <- c(list(), resList, list(res))
+  }
+  # matrix again
+  x <- DescTools::DoCall(cbind, c(list(), resList))
+  # e.g. requested about, e.g. n = 1:2, an 'aggregation'
+  if(length(resList) > 1) {
+    # sum across
+    x <- matrixStats::rowSums2(x)
+  }
+  xTs <- xts(x, index(xTs)[FullRowsXtsFnd])
+  if(!is.null(colnames(xOrig))) {
+    colnames(xTs) <- stringr::str_c(colnames(xOrig), "_RAGG")
+  } else {
+    colnames(xTs) <- "RAGG"
+  }
+  # n == 1 at largest value: now return to original values
+  if(View == "max")
+    coredata(xTs) <- -coredata(xTs)
+  xTs
 })}
 
 
