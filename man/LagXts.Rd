@@ -16,18 +16,37 @@ LagXts(x, k = 1, na.pad = TRUE, ...)
 \item{...}{dots passed to lag.xts}
 }
 \description{
-does not complain when: any(abs(k) > NROW(xTs))
+Does not complain when: any(abs(k) > NROW(xTs)):
+zoo_lag can not and will not handle. So k's are eliminated
+beforehand
 }
 \examples{
 \dontrun{
 
-lagXts(xts(1:4, zoo::as.Date(0:3)), k =  c(-5:-3,0:1,3:5))
+xts(1:4, zoo::as.Date(0:3))
+           [,1]
+1970-01-01    1
+1970-01-02    2
+1970-01-03    3
+1970-01-04    4
 
-           lead4 lead3 lag0 lag1 lag3 lag4
-1970-01-01    NA     4    1   NA   NA   NA
-1970-01-02    NA    NA    2    1   NA   NA
-1970-01-03    NA    NA    3    2   NA   NA
-1970-01-04    NA    NA    4    3    1   NA
+LagXts(xts(1:4, zoo::as.Date(0:3)), k =  c(-5:-3,0:1,3:5))
+           V1lead.4 V1lead.3 V1lag.0 V1lag.1 V1lag.3 V1lag.4
+1970-01-01       NA        4       1      NA      NA      NA
+1970-01-02       NA       NA       2       1      NA      NA
+1970-01-03       NA       NA       3       2      NA      NA
+1970-01-04       NA       NA       4       3       1      NA
+
+xts(matrix(1:4,ncol =2), zoo::as.Date(0:1))
+           [,1] [,2]
+1970-01-01    1    3
+1970-01-02    2    4
+
+LagXts(xts(matrix(1:4,ncol =2), zoo::as.Date(0:1)), k =  c(-5:-3,0:1,3:5))
+           V1lag.0 V2lag.0 V1lag.1 V2lag.1
+1970-01-01       1       3      NA      NA
+1970-01-02       2       4       1       3
+
 
 }
 }

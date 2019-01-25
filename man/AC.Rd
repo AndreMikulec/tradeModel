@@ -21,19 +21,15 @@ absolute change
 \examples{
 \dontrun{
 
-xts(c(1,2,4,8), zoo::as.Date(0:3))
-           [,1]
-1970-01-01    1
-1970-01-02    2
-1970-01-03    4
-1970-01-04    8
+matrix(1:4,ncol =2)
+     [,1] [,2]
+[1,]    1    3
+[2,]    2    4
 
-AC(xts(c(1,2,4,8), zoo::as.Date(0:3)))
-           <NA>
-1970-01-01   NA
-1970-01-02    1
-1970-01-03    2
-1970-01-04    4
+AC(xts(matrix(1:4,ncol =2), zoo::as.Date(0:1)), lag = 1:2)
+           V1ac.1 V2ac.1 V1ac.2 V2ac.2
+1970-01-01     NA     NA     NA     NA
+1970-01-02      1      1     NA     NA
 
 }
 }

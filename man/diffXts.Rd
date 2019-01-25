@@ -32,3 +32,64 @@ arithmetic, log, and/or na.pad.}
 \description{
 lag and/or difference and/or use a function(Fun) upon and xts object
 }
+\examples{
+\dontrun{
+
+# based on xts::lag.xts
+
+# case 1
+# arithmetic and not log
+# AC
+
+xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+           [,1] [,2]
+1970-01-01    1    8
+1970-01-02   -2   16
+1970-01-03   -4   32
+
+diffXts(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)), differences = 2, Fun = AC)
+           V1ac.1 V2ac.1
+1970-01-01     NA     NA
+1970-01-02     -3      8
+1970-01-03     -2     16
+
+# case 2
+# arithmetic and log
+# RC with log = TRUE
+
+xts(matrix(abs(c(1,-2,-4,8,16,32)), ncol = 2), zoo::as.Date(0:2))
+           [,1] [,2]
+1970-01-01    1    8
+1970-01-02    2   16
+1970-01-03    4   32
+
+diffXts(xts(matrix(abs(c(1,-2,-4,8,16,32)), ncol = 2), zoo::as.Date(0:2)), differences = 1, Fun = RC, log = TRUE)
+           V1logrc.1 V2logrc.1
+1970-01-01        NA        NA
+1970-01-02   0.69315   0.69315
+1970-01-03   0.69315   0.69315
+
+# case 3
+# not arithmetic
+# RC
+
+xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+           [,1] [,2]
+1970-01-01    1    8
+1970-01-02   -2   16
+1970-01-03   -4   32
+
+diffXts(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)), differences = , Fun = RC)
+           V1rc.1 V2rc.1
+1970-01-01     NA     NA
+1970-01-02     -2      2
+1970-01-03     -1      2
+
+# note: quasi-case (unhandled)
+# absolute 'relative change' ARC?
+# so RC would actually be RRC ('relative relative change')
+#
+# justdo: ARC <- function(x) abs(RC(xTs))
+
+}
+}

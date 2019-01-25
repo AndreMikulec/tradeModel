@@ -14,5 +14,28 @@ APC(x, base = 0, lag = 1, ...)
 \item{lag}{observations backwards}
 }
 \description{
-absolute percent change
+Most useful for calculating velocity
+and acceleration, (and jerk).
+To get accelleration and jerk use with
+diffXts and differences 2 (and 3) respectively.
+}
+\details{
+99% percent of the people in the world should have been using this one.
+}
+\examples{
+\dontrun{
+
+xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+           [,1] [,2]
+1970-01-01    1    8
+1970-01-02   -2   16
+1970-01-03   -4   32
+
+APC(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)))
+           V1apc.1 V2apc.1
+1970-01-01      NA      NA
+1970-01-02      -3       1
+1970-01-03      -1       1
+
+}
 }

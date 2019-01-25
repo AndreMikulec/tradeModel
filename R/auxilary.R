@@ -1374,6 +1374,51 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' annualized an xts object
+#'
+#' Uses the xts index
+#'
+#' @param x xts object of 'percent change'
+#' @return xts object with values multiplied to get annualization
+#' @examples
+#' \dontrun{
+#'
+#' ANN(
+#'   xts(1:3, c(zoo::as.Date("1980-01-31"), zoo::as.Date("1980-02-29"), zoo::as.Date("1980-03-31")))
+#' )
+#'            [,1]
+#' 1980-01-31   12
+#' 1980-02-29   24
+#' 1980-03-31   36
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @export
+ANN <- function(x) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- x
+  xTs <- initXts(xTs)
+
+  Units <- periodicity(xTs)$scale
+
+  if(Units == "quarters") {
+    return(xTs *   4)
+  } else if(Units == "monthly") {
+    return(xTs *  12)
+  } else if(Units == "weekly") {
+    return(xTs *  52)
+  } else if(Units == "daily") {
+    return(xTs * 264) # 22 * 12
+  } else {
+    stop(stringr::str_c("ANN does not know haw to annualize: ", Units))
+  }
+
+})}
+
+
 
 #' absolute change
 #'
@@ -1384,22 +1429,19 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'
-#' xts(c(1,2,4,8), zoo::as.Date(0:3))
-#'            [,1]
-#' 1970-01-01    1
-#' 1970-01-02    2
-#' 1970-01-03    4
-#' 1970-01-04    8
+#' matrix(1:4,ncol =2)
+#'      [,1] [,2]
+#' [1,]    1    3
+#' [2,]    2    4
 #'
-#' AC(xts(c(1,2,4,8), zoo::as.Date(0:3)))
-#'            <NA>
-#' 1970-01-01   NA
-#' 1970-01-02    1
-#' 1970-01-03    2
-#' 1970-01-04    4
+#' AC(xts(matrix(1:4,ncol =2), zoo::as.Date(0:1)), lag = 1:2)
+#'            V1ac.1 V2ac.1 V1ac.2 V2ac.2
+#' 1970-01-01     NA     NA     NA     NA
+#' 1970-01-02      1      1     NA     NA
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_replace
 #' @export
 AC <- function(x, base = 0, lag = 1, ...) {
 tryCatchLog::tryCatchLog({
@@ -1407,9 +1449,13 @@ initEnv();on.exit({uninitEnv()})
 
   xTs <- x
   xTs <- initXts(xTs)
-  LagXts(xTs, k = base, ...) - LagXts(xTs, k = base + lag, ...)
-
+  xTs1 <- LagXts(xTs, k = base + rep(0,length(lag)), ...)
+  xTs2 <- LagXts(xTs, k = base + lag, ...)
+  xTs  <- xTs1 - xTs2
+  colnames(xTs) <- stringr::str_replace(colnames(xTs2), "lag", "ac")
+  xTs
 })}
+
 
 
 #' relative change
@@ -1420,23 +1466,21 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'
-#' xts(c(1,2,4,8), zoo::as.Date(0:3))
-#'            [,1]
-#' 1970-01-01    1
-#' 1970-01-02    2
-#' 1970-01-03    4
-#' 1970-01-04    8
-#'
-#'
-#' xTs1 <- xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
-#' RC(xTs1)
+#' xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
 #'            [,1] [,2]
-#' 1970-01-01   NA   NA
-#' 1970-01-02   -2    2
-#' 1970-01-03   -1    2 # sign(-2)*(-4 - (-2))/-2 == -1
+#' 1970-01-01    1    8
+#' 1970-01-02   -2   16
+#' 1970-01-03   -4   32
+#'
+#' RC(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)))
+#'            V1ac.1 V2ac.1
+#' 1970-01-01     NA     NA
+#' 1970-01-02     -2      2
+#' 1970-01-03     -1      2
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_replace
 #' @export
 RC <- function(x, base = 0, lag = 1, log = FALSE, ...) {
 tryCatchLog::tryCatchLog({
@@ -1444,6 +1488,9 @@ initEnv();on.exit({uninitEnv()})
 
   xTs <- x
   xTs <- initXts(xTs)
+  browser()
+  xTs1 <- LagXts(xTs, k = base + rep(0,length(lag)), ...)
+  xTs2 <- LagXts(xTs, k = base + lag               , ...)
 
   # ? `[`
   #
@@ -1467,8 +1514,12 @@ initEnv();on.exit({uninitEnv()})
   #   A is allowed and will produce an NA in the result.
   #   Unmatched indices as well as the empty string ("") are not allowed and will result in an error.
 
-  NegNegTest <- (LagXts(xTs1, k = base, ...) < 0) & (LagXts(xTs1, k = base + lag, ...) < 0)
-  #
+  NegNegTest <- (LagXts(xTs, k = base + rep(0,length(lag)), ...) < 0) & (LagXts(xTs, k = base + lag, ...) < 0)
+
+  # before any 'any/all' test
+  if(anyNA(NegNegTest))
+    NegNegTest[which(is.na(NegNegTest), arr.ind = TRUE)] <- FALSE
+
   if(any(coredata(NegNegTest) == TRUE)) {
 
     NewCoreXts <- coredata(xTs)
@@ -1478,10 +1529,10 @@ initEnv();on.exit({uninitEnv()})
 
     # regular common case
     NewCoreXts[arrayIndiciesRegular] <-
-                  coredata(LagXts(xTs1, k = base, ...))[arrayIndiciesRegular]/
-                  coredata(LagXts(xTs1, k = base + lag, ...))[arrayIndiciesRegular]
+                  coredata(xTs1)[arrayIndiciesRegular]/
+                  coredata(xTs2)[arrayIndiciesRegular]
 
-    # neg/neg rare case: (LagXts(xTs1, base) < 0) & (LagXts(xTs1, base + lag) < 0)
+    # neg/neg rare case: (LagXts(xTs, base + rep(0,length(lag))) < 0) & (LagXts(xTs, base + lag) < 0)
     # bad interpretation
 
     # make sure one UNDERSTANDs the contexts of
@@ -1493,54 +1544,61 @@ initEnv();on.exit({uninitEnv()})
 
     # > sign(-2)*(-4 - (-2))/-2
     # [1] -1 # one full proportion less
-
     NewCoreXts[arrayIndiciesNegNeg] <-
-              sign(  coredata(LagXts(xTs1, k = base + lag, ...))[arrayIndiciesNegNeg] ) *
+              sign(  coredata(LagXts(xTs, k = base + lag, ...))[arrayIndiciesNegNeg] ) *
                   (
-                       coredata(LagXts(xTs1, k = base, ...))[arrayIndiciesNegNeg] -
-                     ( coredata(LagXts(xTs1, k = base + lag, ...))[arrayIndiciesNegNeg] )
+                       coredata(xTs1)[arrayIndiciesNegNeg] -
+                     ( coredata(xTs2)[arrayIndiciesNegNeg] )
                   ) /
-                  coredata(LagXts(xTs1, k = base + lag, ...))[arrayIndiciesNegNeg]
+                  coredata(xTs2)[arrayIndiciesNegNeg]
 
     coredata(xTs) <- NewCoreXts
 
   } else {
-    xTs <- LagXts(xTs1, k = base, ...)/LagXts(xTs1, k = base + lag, ...)
+    xTs  <- xTs1/xTs2
   }
-  if(log) Res <- log(xTs)
+
+  colnames(xTs) <- stringr::str_replace(colnames(xTs2), "lag", "rc")
+  if(log) {
+    xTs <- log(xTs)
+    colnames(xTs) <- stringr::str_replace(colnames(xTs), "rc", "logrc")
+  }
   xTs
 
 })}
 
 
-#' relative percent change
-#'
-#' most useful for tracking: velocity, acceleration, (and jerk)
-#' To get accelleration and jerk use with
-#' diffXts and differences = 1 and 2 (and 3) respectively.
-#'
-#' @param x xts object
-#' @param base choose -1 (or less) to look into the future
-#' @param lag observations backwards
-#' @importFrom tryCatchLog tryCatchLog
-#' @export
-RPC <- function(x, base = 0, lag = 1, ...) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  x <- xTs
-  xTs <- initXts(xTs)
-  AC(xTs, base = base, lag = 1, ...)/ abs(LagXts(xTs1, k = base + lag, ...))
-
-})}
-
 
 #' absolute percent change
 #'
+#' Most useful for calculating velocity
+#' and acceleration, (and jerk).
+#' To get accelleration and jerk use with
+#' diffXts and differences 2 (and 3) respectively.
+#'
+#' 99% percent of the people in the world should have been using this one.
+#'
 #' @param x xts object
 #' @param base choose -1 (or less) to look into the future
 #' @param lag observations backwards
+#' @examples
+#' \dontrun{
+#'
+#' xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+#'            [,1] [,2]
+#' 1970-01-01    1    8
+#' 1970-01-02   -2   16
+#' 1970-01-03   -4   32
+#'
+#' APC(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)))
+#'            V1apc.1 V2apc.1
+#' 1970-01-01      NA      NA
+#' 1970-01-02      -3       1
+#' 1970-01-03      -1       1
+#'
+#' }
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_replace
 #' @export
 APC <- function(x, base = 0, lag = 1, ...) {
 tryCatchLog::tryCatchLog({
@@ -1548,7 +1606,53 @@ initEnv();on.exit({uninitEnv()})
 
   xTs <- x
   xTs <- initXts(xTs)
-  AC(xTs, base = base, lag = 1, ...)/LagXts(xTs1, k = base + lag, ...)
+  xTs2 <- LagXts(xTs, k = base + lag, ...)
+
+  xTs <- AC(xTs, base = base + rep(0,length(lag)), lag = lag, ...)/ abs(xTs2)
+  colnames(xTs) <- stringr::str_replace(colnames(xTs2), "lag", "apc")
+  xTs
+
+})}
+
+
+
+#' relative percent change
+#'
+#' 99% percent of the people in the world are using this wrong one
+#'
+#' @param x xts object
+#' @param base choose -1 (or less) to look into the future
+#' @param lag observations backwards
+#' @examples
+#' \dontrun{
+#'
+#' xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+#'            [,1] [,2]
+#' 1970-01-01    1    8
+#' 1970-01-02   -2   16
+#' 1970-01-03   -4   32
+#'
+#' RPC(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)))
+#'            V1rpc.1 V2rpc.1
+#' 1970-01-01      NA      NA
+#' 1970-01-02      -3       1
+#' 1970-01-03       1       1
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_replace
+#' @export
+RPC <- function(x, base = 0, lag = 1, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- x
+  xTs <- initXts(xTs)
+  xTs2 <- LagXts(xTs, k = base + lag, ...)
+
+  xTs <- AC(xTs, base = base + rep(0,length(lag)), lag = lag, ...)/xTs2
+  colnames(xTs) <- stringr::str_replace(colnames(xTs2), "lag", "rpc")
+  xTs
 
 })}
 
@@ -1657,6 +1761,66 @@ initEnv();on.exit({uninitEnv()})
 #' Should accept or (accept and ignore) the parameters: lag;
 #' for S3 compatibility, differences; for xts compatiblity,
 #' arithmetic, log, and/or na.pad.
+#' @examples
+#' \dontrun{
+#'
+#' # based on xts::lag.xts
+#'
+#' # case 1
+#' # arithmetic and not log
+#' # AC
+#'
+#' xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+#'            [,1] [,2]
+#' 1970-01-01    1    8
+#' 1970-01-02   -2   16
+#' 1970-01-03   -4   32
+#'
+#' diffXts(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)), differences = 2, Fun = AC)
+#'            V1ac.1 V2ac.1
+#' 1970-01-01     NA     NA
+#' 1970-01-02     -3      8
+#' 1970-01-03     -2     16
+#'
+#' # case 2
+#' # arithmetic and log
+#' # RC with log = TRUE
+#'
+#' xts(matrix(abs(c(1,-2,-4,8,16,32)), ncol = 2), zoo::as.Date(0:2))
+#'            [,1] [,2]
+#' 1970-01-01    1    8
+#' 1970-01-02    2   16
+#' 1970-01-03    4   32
+#'
+#' diffXts(xts(matrix(abs(c(1,-2,-4,8,16,32)), ncol = 2), zoo::as.Date(0:2)), differences = 1, Fun = RC, log = TRUE)
+#'            V1logrc.1 V2logrc.1
+#' 1970-01-01        NA        NA
+#' 1970-01-02   0.69315   0.69315
+#' 1970-01-03   0.69315   0.69315
+#'
+#' # case 3
+#' # not arithmetic
+#' # RC
+#'
+#' xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2))
+#'            [,1] [,2]
+#' 1970-01-01    1    8
+#' 1970-01-02   -2   16
+#' 1970-01-03   -4   32
+#'
+#' diffXts(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)), differences = , Fun = RC)
+#'            V1rc.1 V2rc.1
+#' 1970-01-01     NA     NA
+#' 1970-01-02     -2      2
+#' 1970-01-03     -1      2
+#'
+#' # note: quasi-case (unhandled)
+#' # absolute 'relative change' ARC?
+#' # so RC would actually be RRC ('relative relative change')
+#' #
+#' # justdo: ARC <- function(x) abs(RC(xTs))
+#'
+#' }
 #' @param ... dots passed
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DescTools DoCall
@@ -1682,16 +1846,17 @@ initEnv();on.exit({uninitEnv()})
   if(is.logical(x))
     x <- .xts(matrix(as.integer(x),ncol=NCOL(x)), .index(x), indexClass(x))
 
-  # if the use is to want's to do differencing
+  # if the use is to wants to do some differencing
   if(!is.null(differences) && !is.na(differences) && is.numeric(differences)) {
 
+    # basically just keep iteratively keep running the same function
+    # differences is a 'dumb counter'
     if(differences > 1) {
-      x <- DescTools::DoCall(Fun, c(list(),   lag=lag,   arithmetic=arithmetic, log=log, na.pad=na.pad, Fun = Fun, Dots))
-      diffXts(x, lag=lag, differences=differences - 1,   arithmetic=arithmetic, log=log, na.pad=na.pad, Fun = Fun,   ...)
+      xTs <- DescTools::DoCall(Fun, c(list(), list(x),     lag=lag,   arithmetic=arithmetic, log = log, na.pad = na.pad, Fun = Fun, Dots))
+      diffXts(xTs, lag=lag, differences=differences - 1,              arithmetic=arithmetic, log = log, na.pad = na.pad, Fun = Fun,   ...)
     } else {
-        return(
-          DescTools::DoCall(Fun, c(list(), lag=lag,      arithmetic=arithmetic, log=log, na.pad=na.pad, Fun = Fun, Dots))
-        )
+      xTs <- DescTools::DoCall(Fun,  c(list(), list(x),     lag=lag,   arithmetic=arithmetic, log = log, na.pad = na.pad, Fun = Fun, Dots))
+      return(xTs)
     }
 
   }
