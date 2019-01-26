@@ -2822,8 +2822,6 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
-  # order matters
-  # what I am going to predict: the modeller uses the 1st column
   xTs  <- combineLogReturns(xTs, leadingWilshire5000LogReturns())
                                  # send to return.Portfolio and the calendar
                                  # WILL5000INDlogrets
@@ -3443,9 +3441,16 @@ initEnv();on.exit({uninitEnv()})
   # received xTs( WILL5000INDlogrets, CASHlogrets, UNRATE )
   # merge.xts target, indictors, and predictors into merged xTs
 
-  unrate <- xTs[,"UNRATE"]
-  unrateIndicators <- unrateEyeballIndicators(unrate)
-  unrateIndicators <- initXts(unrateIndicators)
+  ### unrate <- xTs[,"UNRATE"]
+  ### unrateIndicators <- unrateEyeballIndicators(unrate)
+  ### unrateIndicators <- initXts(unrateIndicators)
+
+  willShire5000MachineWtsData <- xTs[ , c(valueLeadingRetsClms(xTs), valuePredictorClms(xTs))]
+
+  if(!"UNRATE"                    %in% colnames(willShire5000MachineWtsData)) stop("willShire5000MachineWts needs UNRATE")
+  if(!"WILL5000INDlogleadingrets" %in% colnames(willShire5000MachineWtsData)) stop("willShire5000MachineWts needs WILL5000INDlogleadingrets")
+
+  unrateIndicators <- unrateEyeballIndicators(willShire5000MachineWtsData[, "UNRATE"])
 
   # all indicators
   Indicators <- unrateIndicators
@@ -3456,8 +3461,9 @@ initEnv();on.exit({uninitEnv()})
   # ordered R environment of Symbols
   Symbols <- xTsCols2SymbolsEnv(xTs)
 
-  # traditionally the first column is the target variable
-  specifyModel(formula = as.formula(stringr::str_c( colnames(xTs)[1], " ~ ", stringr::str_c(colnames(Indicators), collapse = " + ")))
+  # traditionally the first column is the target variable # OLD: colnames(xTs)[1]
+                                                          # no longer match by positions
+  specifyModel(formula = as.formula(stringr::str_c( "WILL5000INDlogleadingrets", " ~ ", stringr::str_c(colnames(Indicators), collapse = " + ")))
             , na.rm = FALSE, source.envir = Symbols) ->
               # remove the last record(NO)
   specifiedUnrateModel
@@ -3753,7 +3759,8 @@ initEnv();on.exit({uninitEnv()})
   message(stringr::str_c("tail of ", title))
   if(is.null(n)) n = 6
   options(digits = 5L)
-  print(tail(xTs, n = n))
+  # print(tail(xTs[, setdiff(safeClms(xTs),  c(wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
+  print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
 
   invisible(xTs)
 
@@ -4028,6 +4035,48 @@ initEnv();on.exit({uninitEnv()})
 })}
 # clms <- c("b_leadingrets","b","a_leadingrets","a", "c", "b_leadingrets_wts", a_leadingrets_wts")
 # stopifnot(valueLeadingRetsClms(clms),  c("a_leadingrets","b_leadingrets"))
+
+
+#' get the CASH columns
+#'
+#' @param xTs xts object
+#' @return column names
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_detect
+CASHClms  <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  xTs  <- initXts(xTs)
+
+  clms <- safeClms(xTs)
+  clms <- sort(clms)
+
+  clms[stringr::str_detect(clms, "^CASH")]
+
+})}
+
+
+
+#' get the un-massaged original 'predictor' columns
+#'
+#' @param xTs xts object
+#' @return column names
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_detect
+valuePredictorClms  <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  xTs  <- initXts(xTs)
+
+  clms <- safeClms(xTs)
+  clms <- sort(clms)
+
+  setdiff(clms, c(wtsCurrentRetsClms(xTs), wtsLeadingRetsClms(xTs), valueCurrentRetsClms(xTs), valueLeadingRetsClms(xTs)))
+
+})}
+
 
 
 
