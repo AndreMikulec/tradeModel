@@ -562,6 +562,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom parallel detectCores
 detectTrueCores <- function() {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -570,7 +571,7 @@ initEnv();on.exit({uninitEnv()})
     out   <- system("wmic cpu get numberofcores", intern=TRUE)
     Cores <- as.integer(sum(as.numeric(gsub("([0-9]+).*", "\\1", grep("[0-9]+[ \t]*", out, value=TRUE)))))
   } else {
-    Cores <- detectCores(logical = FALSE)
+    Cores <- parallel::detectCores(logical = FALSE)
   }
   Cores
 
@@ -601,18 +602,18 @@ initEnv();on.exit({uninitEnv()})
 #'   subsample        = 1
 #' )
 #'
-#' 
-#' cl <- parallel::makeCluster(parallel::detectCores(logical = FALSE)) 
+#'
+#' cl <- parallel::makeCluster(parallel::detectCores(logical = FALSE))
 #' doParallel::registerDoParallel(cl)
 #' assign("cl", cl, envir = asNamespace("base")); rm(cl)
-#' 
+#'
 #' # default
 #' # note: caret::trainControl(. . . , allowParallel = TRUE)
 #' UnRateMachinetradeModel()
-#' 
+#'
 #' parallel::stopCluster(cl)
 #' doParallel::stopImplicitCluster()
-#' 
+#'
 #' tc <- caret::trainControl(method = "cv", number = 5)
 #'
 #' TODO [ ] : fully WORKED EXAMPLE: combine WITH below

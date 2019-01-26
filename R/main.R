@@ -31,10 +31,12 @@ UnRateEyeBalltradeModel <- function() {
   printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = Inf) %>%
 
   # (4) apply in action
-  portfolioMonthlyReturns %>%
+  portfolioMonthlyReturns  -> ret
+
+  # browser()
 
   # (5) evaluate performance
-  printCalendar("UnRateEyeBall Performance Returns")
+  printCalendar(ret, "UnRateEyeBall Performance Returns")
 
 })}
 # UnRateEyeBalltradeModel()
@@ -67,10 +69,12 @@ UnRateMachinetradeModel <- function() {
   printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
 
   # (4) apply in action
-  portfolioMonthlyReturns %>%
+  portfolioMonthlyReturns -> ret
+
+  # browser()
 
   # (5) evaluate performance
-  printCalendar("UnRateMachine Performance Returns")
+  printCalendar(ret, "UnRateMachine Performance Returns")
 
 })}
 # UnRateMachinetradeModel()

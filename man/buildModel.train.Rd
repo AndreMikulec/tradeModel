@@ -29,7 +29,7 @@ tg <- expand.grid(
 )
 }
 \details{
-cl <- parallel::makeCluster(parallel::detectCores(logical = FALSE)) 
+cl <- parallel::makeCluster(parallel::detectCores(logical = FALSE))
 doParallel::registerDoParallel(cl)
 assign("cl", cl, envir = asNamespace("base")); rm(cl)
 

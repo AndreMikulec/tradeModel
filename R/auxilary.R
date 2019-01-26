@@ -2876,13 +2876,16 @@ initEnv();on.exit({uninitEnv()})
   # can't do math on leading NAs
   unrate <- unrate[!is.na(unrate),]
 
-  unrate_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
-                        ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
-                        ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
-  unrate_wts[is.na(unrate_wts)] <- 1 # 100% allocated
+  unrateleadingrets_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
+                                   ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
+                                   ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
+  unrateleadingrets_wts[is.na(unrateleadingrets_wts)] <- 1 # 100% allocated
+  colnames(unrateleadingrets_wts)[1] <- "WILL5000INDlogleadingrets_wts"
 
-  colnames(unrate_wts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^WILL5000IND.*currentrets$")], "_wts")
+  unratecurrentrets_wts <- lag.xts(unrateleadingrets_wts)
+  colnames(unratecurrentrets_wts)[1] <- "WILL5000INDlogcurrentrets_wts"
 
+  unrate_wts <- merge(unrateleadingrets_wts, unratecurrentrets_wts)
   unrate_wts
 
 })}
@@ -3595,13 +3598,19 @@ initEnv();on.exit({uninitEnv()})
   FittedOneSidedThreashold <- quantile(coredata(Fitted))["25%"]
   message("\n75% of the time, I am 'IN' the market.")
   message(stringr::str_c("FittedSignal OneSidedThreashold threashold is ", FittedOneSidedThreashold, "\n"))
-  FittedSignal <- ifelse( Fitted > FittedOneSidedThreashold, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
 
+  # leading
+  FittedSignal <- ifelse( Fitted > FittedOneSidedThreashold, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
   colnames(FittedSignal)[1] <- stringr::str_c(ModelTarget, "_wts")
 
+  # current
+  Current <- lag(FittedSignal)
+  colnames(Current) <- stringr::str_replace(colnames(FittedSignal), "leading", "current")
+
+  FittedSignalAndCurrent <- merge(FittedSignal, Current)
   logging::loginfo("End:   willShire5000MachineWts")
 
-  FittedSignal
+  FittedSignalAndCurrent
 
 }, error = function(e) { ErrorHandler(e = e) } ) }
 
@@ -3703,8 +3712,8 @@ initEnv();on.exit({uninitEnv()})
    xTs <- initXts(xTs)
 
   # excess left over
-  Cashwts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[,wtsClms(xTs)], na.rm = TRUE)
-  colnames(Cashwts)[1] <- stringr::str_c(colnames(xTs)[stringr::str_detect(colnames(xTs), "^CASH.*currentrets$")], "_wts")
+  Cashwts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[ ,wtsLeadingRetsClms(xTs)], na.rm = TRUE)
+  colnames(Cashwts)[1] <- "CASHlogleadingrets_wts"
 
   Cashwts
 
@@ -3801,55 +3810,119 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' get the indicator columns
-#'
-#' columns that do not have a corresponding column having
-#' its ending in "_wts" and do not have a do not have the
-#' same root name compared to each and every other *_wts column.
-#'
-#' CURRENTLYNOT USED
-#'
-#' @param xTs xts objectt
-#' @return column names
-#' @examples
-#' \dontrun{
-#' # > require(xts)
-#' # > xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_wts"))),zoo::as.Date(0))[0]
-#' # > indClms(xTs)
-#' # [1] "a"
-#' }
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-indClms <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-  xTs  <- initXts(xTs)
-  clms <- safeClms(xTs)
+# #' get the indicator columns
+# #'
+# #' columns that do not have a corresponding column having
+# #' its ending in "_wts" and do not have a do not have the
+# #' same root name compared to each and every other *_wts column.
+# #'
+# #' CURRENTLYNOT USED
+# #'
+# #' @param xTs xts objectt
+# #' @return column names
+# #' @examples
+# #' \dontrun{
+# #' # > require(xts)
+# #' # > xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_wts"))),zoo::as.Date(0))[0]
+# #' # > indClms(xTs)
+# #' # [1] "a"
+# #' }
+# #' @export
+# #' @importFrom tryCatchLog tryCatchLog
+# indClms <- function(xTs = NULL) {
+# tryCatchLog::tryCatchLog({
+# initEnv();on.exit({uninitEnv()})
+#   xTs  <- initXts(xTs)
+#   clms <- safeClms(xTs)
+#
+#   setdiff(clms, c(valueClms(xTs),wtsClms(xTs)))
+# })}
 
-  setdiff(clms, c(valueClms(xTs),wtsClms(xTs)))
-})}
+
+# #' get the values columns names
+# #'
+# #' Values column names have an associated column with the
+# #' same root.  However the associated column always ends with
+# #' the suffix "_wts"
+# #'
+# #' @param xTs xts object
+# #' @return column names
+# #' @examples
+# #' \dontrun{
+# #' # > require(xts)
+# #' # > xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_wts"))),zoo::as.Date(0))[0]
+# #' # > valueClms(xTs)
+# #' # [1] "b"
+# #' }
+# #' @export
+# #' @importFrom tryCatchLog tryCatchLog
+# #' @importFrom stringr str_detect
+# #' @importFrom stringr str_replace
+# valueClms <- function(xTs = NULL) {
+# tryCatchLog::tryCatchLog({
+# initEnv();on.exit({uninitEnv()})
+#   xTs  <- initXts(xTs)
+#
+#   clms <- safeClms(xTs)
+#   clms <- sort(clms)
+#
+#   stringr::str_replace(clms, "_wts$", "")[stringr::str_detect(clms, "_wts$")]
+#
+# })}
 
 
-#' get the values columns names
+
+# #' get the weights(_wts) columns
+# #'
+# #' Weights column names always ends in "_wts"
+# #' CURRENTLYNOT USED ANYWHERE
+# #'
+# #' @param xTs xts object
+# #' @return column names
+# #' @examples
+# #' \dontrun{
+# #' # > require(xts)
+# #' # > xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_wts"))),zoo::as.Date(0))[0]
+# #' # > wtsClms(xTs)
+# #' # [1] "b_wts
+# #' }
+# #' @export
+# #' @importFrom tryCatchLog tryCatchLog
+# #' @importFrom stringr str_detect
+# wtsClms  <- function(xTs = NULL) {
+# tryCatchLog::tryCatchLog({
+# initEnv();on.exit({uninitEnv()})
+#   xTs  <- initXts(xTs)
+#
+#   clms <- safeClms(xTs)
+#   clms <- sort(clms)
+#
+#   clms[stringr::str_detect(clms, "_wts$")]
+#
+# })}
+# # clms <- c("b_wts","b","a_wts","a", "c")
+# # stopifnot(valueClms(clms),  c("a",    "b"    ))
+# # stopifnot(  wtsClms(clms),  c("a_wts","b_wts"))
+
+
+
+
+#' get the currentrets_wts columns
 #'
-#' Values column names have an associated column with the
-#' same root.  However the associated column always ends with
-#' the suffix "_wts"
+#' Weights column names always end in "currentrets_wts"
 #'
 #' @param xTs xts object
 #' @return column names
 #' @examples
 #' \dontrun{
-#' # > require(xts)
-#' # > xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_wts"))),zoo::as.Date(0))[0]
-#' # > valueClms(xTs)
-#' # [1] "b"
+#' # xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_currentrets_wts"))),zoo::as.Date(0))[0]
+#' # wtsCurrentRetsClms(xTs)
+#' # [1] "b_currentrets_wts"
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
-#' @importFrom stringr str_replace
-valueClms <- function(xTs = NULL) {
+wtsCurrentRetsClms  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
@@ -3857,29 +3930,30 @@ initEnv();on.exit({uninitEnv()})
   clms <- safeClms(xTs)
   clms <- sort(clms)
 
-  stringr::str_replace(clms, "_wts$", "")[stringr::str_detect(clms, "_wts$")]
+  clms[stringr::str_detect(clms, "currentrets_wts$")]
 
 })}
+# clms <- c("b_currentrets_wts","b","a_currentrets_wts","a", "c")
+# stopifnot(  wtsCurrentRetsClms(clms),  c("a_currentrets_wts","b_currentrets_wts"))
 
 
-#' get the weights(_wts) columns
+
+#' get the leadingrets_wts columns
 #'
-#' Weights column names always ends in "_wts"
-#' CURRENTLYNOT USED ANYWHERE
+#' Weights column names always end in "leadingrets_wts"
 #'
 #' @param xTs xts object
 #' @return column names
 #' @examples
 #' \dontrun{
-#' # > require(xts)
-#' # > xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_wts"))),zoo::as.Date(0))[0]
-#' # > wtsClms(xTs)
-#' # [1] "b_wts
+#' # xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_leadingrets_wts"))),zoo::as.Date(0))[0]
+#' # wtsLeadingRetsClms(xTs)
+#' # [1] "b_leadingrets_wts"
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
-wtsClms  <- function(xTs = NULL) {
+wtsLeadingRetsClms  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
@@ -3887,12 +3961,74 @@ initEnv();on.exit({uninitEnv()})
   clms <- safeClms(xTs)
   clms <- sort(clms)
 
-  clms[stringr::str_detect(clms, "_wts$")]
+  clms[stringr::str_detect(clms, "leadingrets_wts$")]
 
 })}
-# clms <- c("b_wts","b","a_wts","a", "c")
-# stopifnot(valueClms(clms),  c("a",    "b"    ))
-# stopifnot(  wtsClms(clms),  c("a_wts","b_wts"))
+# clms <- c("b_leadingrets_wts","b","a_leadingrets_wts","a", "c")
+# stopifnot(  wtsLeadingRetsClms(clms),  c("a_leadingrets_wts","b_leadingrets_wts"))
+
+
+
+#' get the currentrets columns
+#'
+#' Value column names end in "currentrets" without "_wts"
+#'
+#' @param xTs xts object
+#' @return column names
+#' @examples
+#' \dontrun{
+#' # xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_currentrets"))),zoo::as.Date(0))[0]
+#' # valueCurrentRetsClmsClms(xTs)
+#' # [1] "b_currentrets"
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_detect
+valueCurrentRetsClms  <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  xTs  <- initXts(xTs)
+
+  clms <- safeClms(xTs)
+  clms <- sort(clms)
+
+  clms[stringr::str_detect(clms, "currentrets$")]
+
+})}
+# clms <- c("b_currentrets","b","a_currentrets","a", "c", "b_currentrets_wts", a_currentrets_wts")
+# stopifnot(valueCurrentRetsClms(clms),  c("a_currentrets","b_currentrets"))
+
+
+
+#' get the leadingrets columns
+#'
+#' Value column names end in "leadingrets" without "_wts"
+#'
+#' @param xTs xts object
+#' @return column names
+#' @examples
+#' \dontrun{
+#' # xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_leadingrets"))),zoo::as.Date(0))[0]
+#' # valueLeadingRetsClmsClms(xTs)
+#' # [1] "b_leadingrets"
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_detect
+valueLeadingRetsClms  <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  xTs  <- initXts(xTs)
+
+  clms <- safeClms(xTs)
+  clms <- sort(clms)
+
+  clms[stringr::str_detect(clms, "leadingrets$")]
+
+})}
+# clms <- c("b_leadingrets","b","a_leadingrets","a", "c", "b_leadingrets_wts", a_leadingrets_wts")
+# stopifnot(valueLeadingRetsClms(clms),  c("a_leadingrets","b_leadingrets"))
+
 
 
 #' get the porfolio log returns
@@ -3914,12 +4050,12 @@ initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
   initVal <- initPorfVal(initVal)
 
-  xTs <- xTs[,c(valueClms(xTs),wtsClms(xTs))]
+  xTs <- xTs[,c(valueCurrentRetsClms(xTs), wtsLeadingRetsClms(xTs))]
   xTs <- xTs[complete.cases(xTs)]
 
-  valuexTs <- xTs[,valueClms(xTs)]
+  valuexTs <- xTs[, valueCurrentRetsClms(xTs)]
 
-  wtsxTs   <- xTs[,wtsClms(xTs)]
+  wtsxTs   <- xTs[, wtsLeadingRetsClms(xTs)]
 
   # Return.portfolio
   # currently: it makes no difference: I tried both ways
