@@ -1185,14 +1185,13 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
 #' \dontrun{
 #'#
 #'#
-#'# > require(TTR)
-#'# > SMA(xts(c(0,1,2,3,NA), zoo::as.Date(0:4)), n = 2)
+#'# TTR::SMA(xts(c(0,1,2,3,NA), zoo::as.Date(0:4)), n = 2)
 #'# Error in runSum(x, n) : Series contains non-leading NAs
 #'#
-#'# > SMA(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), n = 2)
+#'# TTR::SMA(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), n = 2)
 #'# Error in runSum(x, n) : Series contains non-leading NAs
 #'#
-#'# > SMA(xts(c(NA,1,2,3,4), zoo::as.Date(0:4)), n = 2)
+#'# TTR::SMA(xts(c(NA,1,2,3,4), zoo::as.Date(0:4)), n = 2)
 #'#            SMA
 #'# 1970-01-01  NA
 #'# 1970-01-02  NA
@@ -1200,8 +1199,8 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
 #'# 1970-01-04 2.5
 #'# 1970-01-05 3.5
 #'#
-#'# > rollApply(xts(c(0,-1,2,-3,4), zoo::as.Date(0:4))
-#'#     , Fun = trueSortinoRatio, AltName = "SRTN", partial = TRUE, width = 2, MinRows = 2)
+#'# rollApply(xts(c(0,-1,2,-3,4), zoo::as.Date(0:4)),
+#'#   Fun = trueSortinoRatio, AltName = "SRTN", partial = TRUE, width = 2, MinRows = 2)
 #'#
 #'#                          SRTN.2
 #'# 1970-01-01                   NA
@@ -1249,7 +1248,7 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
 #'#            SMA
 #'# 1970-01-01  NA
 #'# 1970-01-02 0.5  # I programmed to loose NA observations ( and its index entries)
-#'# 1970-01-04 2.0  # unless, I come up with a *better way* to re-organize 'around' the [NA] data
+#'# 1970-01-04 2.0  # unless, I come up with a \*better way\* to re-organize 'around' the [NA] data
 #'# 1970-01-05 3.5  # then that is the best answer I have NOW.
 #'#
 #'# rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4))
@@ -1336,6 +1335,100 @@ initEnv();on.exit({uninitEnv()})
   return(xTsResult)
 
 })}
+
+
+
+#' rollapply anything
+#'
+#' based on rowr rollApply (rollapply anything)
+#'
+#' @examples
+#' \dontrun{
+#' all examples of rowr::rollApply work
+#'
+#' rollApply2(state.x77, function(x) { browser() }, window = 3, min = 3, align = "right")
+#' Called from:
+#' Browse[1]> print(x)
+#'         Population Income Illiteracy Life Exp Murder HS Grad Frost   Area
+#' Alabama       3615   3624        2.1    69.05   15.1    41.3    20  50708
+#' Alaska         365   6315        1.5    69.31   11.3    66.7   152 566432
+#' Arizona       2212   4530        1.8    70.55    7.8    58.1    15 113417
+#'
+#' # seems to be working ( notice: 8 second startup )
+#' rollApply2(state.x77, function(x, a, b) { list(list(x=x), a=a, b=b)}, window = 3, min = 3, align = "right",
+#'   a = 1, b = 2, .parallel = T)
+#'
+#' }
+#' @param x xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom foreach getDoParWorkers
+#' @importFrom parallel clusterEvalQ
+#' @importFrom rowr rows len
+rollApply2 <- function(x, fun, window = len(x), minimum = 1, align = "left", .parallel = FALSE,  ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  ops <- options()
+  options(stringsAsFactors = FALSE)
+
+ # alternative to drop=FALSE or changing default behavior [duplicate]
+ # https://stackoverflow.com/questions/15886974/alternative-to-drop-false-or-changing-default-behavior
+ # AND
+ # Generally disable dimension dropping for matrices?
+ # https://stackoverflow.com/questions/12196724/generally-disable-dimension-dropping-for-matrices
+
+  # Later: move these out
+
+  Dots <- list(...)
+  OthersList <- list()
+  if(!is.null(Dots["drop"])) OthersList <- c(list(), OthersList, drop = Dots["drop"])
+
+  old_df <- base::`[.data.frame`
+  DF <- `[.data.frame` <- function(...) {
+    DescTools::DoCall(old_df, c(list(), Dots[!names(Dots) %in% "drop"], OthersList))
+  }
+
+  # intercept
+  old_tb <- base::`[.table`
+  TB <- `[.table` <- function(...) {
+    DescTools::DoCall(old_tb, c(list(), Dots[!names(Dots) %in% "drop"], OthersList))
+  }
+
+  # intercept
+  old_array <- `[.array` <- function(...) base::`[`(...,drop=FALSE)
+  AT <- `[.array` <- function(...) {
+    DescTools::DoCall(old_array, c(list(), Dots[!names(Dots) %in% "drop"], OthersList))
+  }
+
+  this.envir <- environment()
+
+   # if(foreach::getDoParWorkers() > 1)
+   # parallel::clusterExport(cl, c("[.data.frame", "[.table","[.array"), env = this.envir)
+   # parallel::clusterEvalQ(cl, { `[.data.frame` } )
+   # Yes they are THERE
+
+  # IT SEEMS TO DO ITS OWN THING (OWN PROCESSES? NEVER CAN SEE MY CUSTOM [.XXX")
+  if (minimum > rowr::len(x)) return()
+  FUN = match.fun(fun)
+  if (align == "left")
+      result <- do.call(c, plyr::llply(1:(rowr::len(x) - minimum + 1)  , function(x2) {
+         FUN(rowr::rows(x,  x2:(min(rowr::len(x), (x2 + window - 1))) ), ...)
+      },  .parallel = .parallel))
+  if (align == "right")
+      result <- do.call(c, plyr::llply(      minimum:rowr::len(x), function(x2) {
+         FUN(rowr::rows(x,      max(1,       x2 - window + 1):x2), ...)
+      }, .parallel = .parallel))
+
+  options(ops)
+
+  return(result)
+
+})}
+
+
+
+
 
 
 

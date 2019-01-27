@@ -30,14 +30,13 @@ before that data reaches TTR functions
 \dontrun{
 #
 #
-# > require(TTR)
-# > SMA(xts(c(0,1,2,3,NA), zoo::as.Date(0:4)), n = 2)
+# TTR::SMA(xts(c(0,1,2,3,NA), zoo::as.Date(0:4)), n = 2)
 # Error in runSum(x, n) : Series contains non-leading NAs
 #
-# > SMA(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), n = 2)
+# TTR::SMA(xts(c(0,1,NA,3,4), zoo::as.Date(0:4)), n = 2)
 # Error in runSum(x, n) : Series contains non-leading NAs
 #
-# > SMA(xts(c(NA,1,2,3,4), zoo::as.Date(0:4)), n = 2)
+# TTR::SMA(xts(c(NA,1,2,3,4), zoo::as.Date(0:4)), n = 2)
 #            SMA
 # 1970-01-01  NA
 # 1970-01-02  NA
@@ -45,8 +44,8 @@ before that data reaches TTR functions
 # 1970-01-04 2.5
 # 1970-01-05 3.5
 #
-# > rollApply(xts(c(0,-1,2,-3,4), zoo::as.Date(0:4))
-#     , Fun = trueSortinoRatio, AltName = "SRTN", partial = TRUE, width = 2, MinRows = 2)
+# rollApply(xts(c(0,-1,2,-3,4), zoo::as.Date(0:4)),
+#   Fun = trueSortinoRatio, AltName = "SRTN", partial = TRUE, width = 2, MinRows = 2)
 #
 #                          SRTN.2
 # 1970-01-01                   NA
@@ -94,7 +93,7 @@ before that data reaches TTR functions
 #            SMA
 # 1970-01-01  NA
 # 1970-01-02 0.5  # I programmed to loose NA observations ( and its index entries)
-# 1970-01-04 2.0  # unless, I come up with a *better way* to re-organize 'around' the [NA] data
+# 1970-01-04 2.0  # unless, I come up with a \\*better way\\* to re-organize 'around' the [NA] data
 # 1970-01-05 3.5  # then that is the best answer I have NOW.
 #
 # rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4))

@@ -34,6 +34,7 @@ Imports:
     RPostgres,
     stringr,
     lubridate, 
+    rowr,
     data.table,
     plyr,
     dplyr,
