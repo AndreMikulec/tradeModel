@@ -911,8 +911,6 @@ initEnv();on.exit({uninitEnv()})
 
 #' months after the event
 #'
-#' 100 PERCENT UNTESTED
-#'
 #' @param x xts object
 #' @param dates vector of Dates of the events
 #' @return xts object with one new column
@@ -921,6 +919,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' # S&P 500
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' colnames(gspc) <- "GSPC"
 #' # returns
 #' gspc.ret <- TTR::ROC(gspc, type = "discrete")
 #'
@@ -932,7 +931,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom mondate  as.mondate
-#' @importFrom mondate DaysBetween
+#' @importFrom mondate MonthsBetween
 #' @importFrom DescTools DoCall
 #' @importFrom DataCombine MoveFront
 #' @export
@@ -954,7 +953,7 @@ initEnv();on.exit({uninitEnv()})
      mondate::as.mondate(index(xTs)), mondate::as.mondate(sort(EventDates)[MostRecentEventDateInd])
   )
 
-  NewClmName < stringr::str_c(colnames(xTs)[1], "_MTHDLY")
+  NewClmName <- stringr::str_c(colnames(xTs)[1], "_MTHDLY")
   newClmList <- list()
   newClmList[[NewClmName]] <- MonthsAfterEventDay
   xTs <- DescTools::DoCall(cbind, c(list(),list(xTs), newClmList))
@@ -967,8 +966,6 @@ initEnv();on.exit({uninitEnv()})
 
 #' days after the event
 #'
-#' 100 PERCENT UNTESTED
-#'
 #' @param x xts object
 #' @param dates vector of Dates of the events
 #' @return xts object with one new column
@@ -977,6 +974,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' # S&P 500
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' colnames(gspc) <- "GSPC"
 #' # returns
 #' gspc.ret <- TTR::ROC(gspc, type = "discrete")
 #'
@@ -1010,7 +1008,7 @@ initEnv();on.exit({uninitEnv()})
      mondate::as.mondate(index(xTs)), mondate::as.mondate(sort(EventDates)[MostRecentEventDateInd])
   )
 
-  NewClmName < stringr::str_c(colnames(xTs)[1], "_DAYDLY")
+  NewClmName <- stringr::str_c(colnames(xTs)[1], "_DAYDLY")
   newClmList <- list()
   newClmList[[NewClmName]] <- DaysAfterEventDay
   xTs <- DescTools::DoCall(cbind, c(list(),list(xTs), newClmList))
@@ -1025,8 +1023,6 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' wraps doBy::timeSinceEvent
 #'
-#' 100 PERCENT UNTESTED
-#'
 #' @param x xts object
 #' @param dates vector of Dates of the events
 #' @return xts object with one new column
@@ -1035,6 +1031,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' # S&P 500
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' colnames(gspc) <- "GSPC"
 #' # returns
 #' gspc.ret <- TTR::ROC(gspc, type = "discrete")
 #'
@@ -1062,9 +1059,9 @@ initEnv();on.exit({uninitEnv()})
   DaysSinceEventDay <- doBy::timeSinceEvent( c(coredata(EventIdc)), index(EventIdc) )
   colnames(DaysSinceEventDay) <- c("EVENTIDC", "INDEX", "ABSTSE", "SIGNTSE", "EWIN", "RUN", "TAE", "TBE")
 
-  # not used
-  DaysSinceEventDay <- DataCombine::VarDrop(DaysSinceEventDay, Var = "INDEX")
-  colnames(DaysSinceEventDay) <- stringr::str_c(colnames(xTs)[1], colnames(DaysSinceEventDay), "_DAYSNC")
+  # not used/ not useful(EWING)/can not use to predict
+  DaysSinceEventDay <- DataCombine::VarDrop(DaysSinceEventDay, Var = c("INDEX", "ABSTSE", "SIGNTSE", "EWIN", "TBE"))
+  colnames(DaysSinceEventDay) <- stringr::str_c(colnames(xTs)[1], "_", colnames(DaysSinceEventDay), "_DAYSNC")
 
   xTs <- DescTools::DoCall(cbind, c(list(),list(xTs), DaysSinceEventDay))
   xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% colnames(DaysSinceEventDay)])
@@ -1078,8 +1075,6 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' wraps doBy::timeSinceEvent
 #'
-#' 100 PERCENT UNTESTED
-#'
 #' @param x xts object
 #' @param dates vector of Dates of the events
 #' @return xts object with one new column
@@ -1088,6 +1083,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' # S&P 500
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' colnames(gspc) <- "GSPC"
 #' # returns
 #' gspc.ret <- TTR::ROC(gspc, type = "discrete")
 #'
@@ -1119,20 +1115,20 @@ initEnv();on.exit({uninitEnv()})
 
   plyr::llply( rlist::list.zip(ColName = colnames(MonthsSinceEventDay), ColData = MonthsSinceEventDay ), function(x) {
 
-    if(x[["ColName"]] == "yvar")
+    if(x[["ColName"]] %in% c("yvar", "ewin", "run"))
       return(x[["ColData"]])
     if(x[["ColName"]] == "tvar")
       return(zoo::as.Date(zoo::as.yearmon(x[["ColData"]]), frac = 1))
-    if(!x[["ColName"]] %in% c("yvar","tvar"))
+    if(!x[["ColName"]] %in% c("yvar","tvar", "ewin", "run"))
       return(( as.yearmon(x[["ColData"]] ) - as.yearmon(0)) * 12)
 
   }) %>% as.data.frame -> MonthsSinceEventDay
 
   colnames(MonthsSinceEventDay) <- c("EVENTIDC", "INDEX", "ABSTSE", "SIGNTSE", "EWIN", "RUN", "TAE", "TBE")
 
-  # not used
-  MonthsSinceEventDay <- DataCombine::VarDrop(MonthsSinceEventDay, Var = "INDEX")
-  colnames(MonthsSinceEventDay) <- stringr::str_c(colnames(xTs)[1], colnames(MonthsSinceEventDay), "_MTHSNC")
+  # not used/ not useful(EWING)/can not use to predict
+  MonthsSinceEventDay <- DataCombine::VarDrop(MonthsSinceEventDay, Var = c("INDEX", "ABSTSE", "SIGNTSE", "EWIN", "TBE"))
+  colnames(MonthsSinceEventDay) <- stringr::str_c(colnames(xTs)[1], "_", colnames(MonthsSinceEventDay), "_MTHSNC")
 
   xTs <- DescTools::DoCall(cbind, c(list(),list(xTs), MonthsSinceEventDay))
   xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% colnames(MonthsSinceEventDay)])

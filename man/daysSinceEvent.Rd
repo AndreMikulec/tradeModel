@@ -17,14 +17,12 @@ xts object with one new column
 \description{
 wraps doBy::timeSinceEvent
 }
-\details{
-100 PERCENT UNTESTED
-}
 \examples{
 \dontrun{
 
 # S&P 500
 gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+colnames(gspc) <- "GSPC"
 # returns
 gspc.ret <- TTR::ROC(gspc, type = "discrete")
 
