@@ -24,6 +24,7 @@ Imports:
     doParallel,
     tis,
     timeSeries,
+    mondate,
     zoo,
     matrixStats,
     TTR,

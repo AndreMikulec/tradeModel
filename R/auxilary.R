@@ -909,6 +909,239 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' months after the event
+#'
+#' 100 PERCENT UNTESTED
+#'
+#' @param x xts object
+#' @param dates vector of Dates of the events
+#' @return xts object with one new column
+#' @examples
+#' \dontrun{
+#'
+#' # S&P 500
+#' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' # returns
+#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#'
+#' # top 20 worst monthly returns in the S&P500 history
+#' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
+#'
+#' monthsAfterEvent(gspc.ret, dates = CrashDates)
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom mondate  as.mondate
+#' @importFrom mondate DaysBetween
+#' @importFrom DescTools DoCall
+#' @importFrom DataCombine MoveFront
+#' @export
+monthsAfterEvent <- function(x, dates) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(x)
+  EventDates <- initDate(dates)
+
+  # index
+  MostRecentEventDateInd <- findInterval(
+    as.numeric(index(xTs)), as.numeric(sort(EventDates)) ,
+    left.open = T, rightmost.closed = T
+  ) %>%
+    { .[. == 0] <- NA; . }
+
+  MonthsAfterEventDay <- mondate::MonthsBetween(
+     mondate::as.mondate(index(xTs)), mondate::as.mondate(sort(EventDates)[MostRecentEventDateInd])
+  )
+
+  NewClmName < stringr::str_c(colnames(xTs)[1], "_MTHDLY")
+  newClmList <- list()
+  newClmList[[NewClmName]] <- MonthsAfterEventDay
+  xTs <- DescTools::DoCall(cbind, c(list(),list(xTs), newClmList))
+  xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% names(newClmList)])
+  xTs
+
+})}
+
+
+
+#' days after the event
+#'
+#' 100 PERCENT UNTESTED
+#'
+#' @param x xts object
+#' @param dates vector of Dates of the events
+#' @return xts object with one new column
+#' @examples
+#' \dontrun{
+#'
+#' # S&P 500
+#' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' # returns
+#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#'
+#' # top 20 worst monthly returns in the S&P500 history
+#' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
+#'
+#' daysAfterEvent(gspc.ret, dates = CrashDates)
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom mondate  as.mondate
+#' @importFrom mondate DaysBetween
+#' @importFrom DescTools DoCall
+#' @importFrom DataCombine MoveFront
+#' @export
+daysAfterEvent <- function(x, dates) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(x)
+  EventDates <- initDate(dates)
+
+  # index
+  MostRecentEventDateInd <- findInterval(
+    as.numeric(index(xTs)), as.numeric(sort(EventDates)) ,
+    left.open = T, rightmost.closed = T
+  ) %>%
+    { .[. == 0] <- NA; . }
+
+  DaysAfterEventDay <-   mondate::DaysBetween(
+     mondate::as.mondate(index(xTs)), mondate::as.mondate(sort(EventDates)[MostRecentEventDateInd])
+  )
+
+  NewClmName < stringr::str_c(colnames(xTs)[1], "_DAYDLY")
+  newClmList <- list()
+  newClmList[[NewClmName]] <- DaysAfterEventDay
+  xTs <- DescTools::DoCall(cbind, c(list(),list(xTs), newClmList))
+  xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% names(newClmList)])
+  xTs
+
+})}
+
+
+
+#' days since the event
+#'
+#' wraps doBy::timeSinceEvent
+#'
+#' 100 PERCENT UNTESTED
+#'
+#' @param x xts object
+#' @param dates vector of Dates of the events
+#' @return xts object with one new column
+#' @examples
+#' \dontrun{
+#'
+#' # S&P 500
+#' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' # returns
+#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#'
+#' # top 20 worst monthly returns in the S&P500 history
+#' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
+#'
+#' daysSinceEvent(gspc.ret, dates = CrashDates)
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom doBy timeSinceEvent
+#' @importFrom DescTools DoCall
+#' @importFrom DataCombine VarDrop MoveFront
+#' @export
+daysSinceEvent <- function(x, dates) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(x)
+  EventDates <- initDate(dates)
+
+  # xts object of one column of values: NA or 1 (flag of Event on that Date)
+  EventIdc <- merge(xts(rep(1,NROW(EventDates)),CrashDates), xts(,index(xTs)))
+
+  DaysSinceEventDay <- doBy::timeSinceEvent( c(coredata(EventIdc)), index(EventIdc) )
+  colnames(DaysSinceEventDay) <- c("EVENTIDC", "INDEX", "ABSTSE", "SIGNTSE", "EWIN", "RUN", "TAE", "TBE")
+
+  # not used
+  DaysSinceEventDay <- DataCombine::VarDrop(DaysSinceEventDay, Var = "INDEX")
+  colnames(DaysSinceEventDay) <- stringr::str_c(colnames(xTs)[1], colnames(DaysSinceEventDay), "_DAYSNC")
+
+  xTs <- DescTools::DoCall(cbind, c(list(),list(xTs), DaysSinceEventDay))
+  xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% colnames(DaysSinceEventDay)])
+  xTs
+
+})}
+
+
+
+#' months since the event
+#'
+#' wraps doBy::timeSinceEvent
+#'
+#' 100 PERCENT UNTESTED
+#'
+#' @param x xts object
+#' @param dates vector of Dates of the events
+#' @return xts object with one new column
+#' @examples
+#' \dontrun{
+#'
+#' # S&P 500
+#' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' # returns
+#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#'
+#' # top 20 worst monthly returns in the S&P500 history
+#' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
+#'
+#' monthsSinceEvent(gspc.ret, dates = CrashDates)
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom doBy timeSinceEvent
+#' @importFrom zoo as.Date as.yearmon
+#' @importFrom plyr llply
+#' @importFrom DescTools DoCall
+#' @importFrom DataCombine VarDrop MoveFront
+#' @export
+monthsSinceEvent <- function(x, dates) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(x)
+  EventDates <- initDate(dates)
+
+  # xts object of one column of values: NA or 1 (flag of Event on that Date)
+  EventIdc <- merge(xts(rep(1,NROW(EventDates)),CrashDates), xts(,index(xTs)))
+
+  # in year.fraction
+  MonthsSinceEventDay <- doBy::timeSinceEvent(c(coredata(EventIdc)), as.numeric(as.yearmon(index(EventIdc))))
+
+  plyr::llply( rlist::list.zip(ColName = colnames(MonthsSinceEventDay), ColData = MonthsSinceEventDay ), function(x) {
+
+    if(x[["ColName"]] == "yvar")
+      return(x[["ColData"]])
+    if(x[["ColName"]] == "tvar")
+      return(zoo::as.Date(zoo::as.yearmon(x[["ColData"]]), frac = 1))
+    if(!x[["ColName"]] %in% c("yvar","tvar"))
+      return(( as.yearmon(x[["ColData"]] ) - as.yearmon(0)) * 12)
+
+  }) %>% as.data.frame -> MonthsSinceEventDay
+
+  colnames(MonthsSinceEventDay) <- c("EVENTIDC", "INDEX", "ABSTSE", "SIGNTSE", "EWIN", "RUN", "TAE", "TBE")
+
+  # not used
+  MonthsSinceEventDay <- DataCombine::VarDrop(MonthsSinceEventDay, Var = "INDEX")
+  colnames(MonthsSinceEventDay) <- stringr::str_c(colnames(xTs)[1], colnames(MonthsSinceEventDay), "_MTHSNC")
+
+  xTs <- DescTools::DoCall(cbind, c(list(),list(xTs), MonthsSinceEventDay))
+  xTs <- DataCombine::MoveFront(xTs, Var = colnames(xTs)[!colnames(xTs) %in% colnames(MonthsSinceEventDay)])
+  xTs
+
+})}
+
+
+
 #' (true) sortino ratio
 #'
 #' Sortino Ratio: Are you calculating it wrong?
