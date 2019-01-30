@@ -257,6 +257,252 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
+#' search OS environment variables or R options
+#'
+#' Look for truths or values in memory.
+#' Used as an alternative instead of expensive re-quering.
+#' If x is stored ins the OS environment, then x is stored as a string.
+#' To be consistent with OS storage, a value stored in options are
+#' also stored a string (see setWhat). Test exceptions are "TRUE","FALSE".
+#' These are tested as "TRUE"/"FALSE" or TRUE/FALSE.
+#'
+#' @param x character vector of size one(1)  of what to check
+#' @param y TRUE(default): value to check against (often TRUE)
+#' @param Storage "OS"(default). Otherwise "Options" or "Both"
+#' @return requested value (often TRUE)
+#' @examples
+#' \dontrun{
+#'
+#' isWhatFnd("TAB_X_COL_Y_EXISTS")
+#' isWhatFnd("TAB_X_COL_Y_EXISTS", TRUE)
+#' # not 'preferred test'
+#' isWhatFnd("TAB_X_COL_Y_EXISTS", "TRUE")
+#' # not 'preferred test location'
+#' isWhatFnd("TAB_X_COL_Y_EXISTS", TRUE, Storage = "Options")
+#' # \*any\* one or \*both\* of the two
+#' isWhatFnd("TAB_X_COL_Y_EXISTS", TRUE, Storage = "Both")
+#' # \*any\* one or \*both\* of the two
+#' isWhatFnd("TAB_X_COL_Y_EXISTS", TRUE, Storage = c("OS","Options")
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @export
+isWhatFnd <- function(x, y = TRUE, Storage = NULL) {
+tryCatchLog::tryCatchLog({
+## initEnv();on.exit({uninitEnv()})
+
+  if(is.null(Storage)) Storage <- "OS"
+  if(!any(Storage %in% c("OS", "Options", "Both")))
+    stop("isWhatFnd parameter Storage must be \"OS\" or \"Options\" or \"Both\"")
+
+  if(any(Storage  %in% c("OS", "Both"))) {
+    # Sys.setenv() always stores its input as characters
+    # Therefore, will test v.s. characters
+    SystemResult <- Sys.getenv(x)
+    if(SystemResult != "") {
+      if(is.null(y) || y == TRUE) {
+        if(SystemResult == "TRUE") return(TRUE)
+      }
+      if(y == FALSE) {
+        if(SystemResult == "FALSE") return(FALSE)
+      }
+      # "TRUE"/"FALSE" or a "specific value"
+      if(SystemResult == as.character(y)) return(TRUE)
+    }
+  }
+  #
+  # not found in the System OS
+
+  # now search options
+  if(any(Storage %in% c("Options", "Both"))) {
+
+    OptionResult <- getOption(x)
+    if(!is.null(OptionResult)) {
+      if(is.null(y) || y == TRUE) {
+       if(OptionResult == "TRUE"  || OptionResult == TRUE) return(TRUE)
+      }
+      if(y == FALSE) {
+       if(OptionResult == "FALSE" || OptionResult == FALSE) return(FALSE)
+      }
+      # "TRUE"/"FALSE" or a "specific value"
+      # should be just: OptionResult == as.character(y)
+      # BUT If a LEAK into OPTIONS exists, so do "as.character(OptionResult)"
+      if(as.character(OptionResult) == as.character(y) || OptionResult == y) return(TRUE)
+    }
+  }
+
+  # not found in either place
+  return(FALSE)
+
+})}
+
+
+
+#' set OS environment variables or R options
+#'
+#' Set truths or values in memory.
+#' Used as an alternative instead of expensive re-quering.
+#' If x is stored in the OS environment, then x is stored as a string.
+#' To be consistent with OS storage, a value stored in options are
+#' also stored a string.
+#' x is tested using isWhatFnd.
+#'
+#' @param x character vector of size one(1)  of what to set
+#' @param y TRUE(default): value to set (often TRUE).
+#' Can be a specific value that is stored as a character or not.
+#' E.g. TRUE/"TRUE", 1/"1"
+#' @param Storage "OS"(default). Otherwise "Options" or "Both"
+#' @return TRUE(if success) and FALSE(otherwise)
+#' @examples
+#' \dontrun{
+#'
+#' setWhat("TAB_X_COL_Y_EXISTS")
+#' setWhat("TAB_X_COL_Y_EXISTS", TRUE)
+#' # not 'preferred set'
+#' setWhat("TAB_X_COL_Y_EXISTS", "TRUE")
+#' # not 'preferred set location'
+#' setWhat("TAB_X_COL_Y_EXISTS", "TRUE", Storage = "Options")
+#' setWhat("TAB_X_COL_Y_EXISTS", "TRUE", Storage = "Both")
+#' setWhat("TAB_X_COL_Y_EXISTS", "TRUE", Storage = c("OS","Options"))
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom rlang parse_expr eval_bare
+#' @export
+setWhat <- function(x, y = TRUE, Storage = NULL) {
+tryCatchLog::tryCatchLog({
+## initEnv();on.exit({uninitEnv()})
+
+  if(is.null(Storage)) Storage <- "OS"
+  if(!any(Storage %in% c("OS", "Options", "Both")))
+    stop("setWhat parameter Storage must be \"OS\" or \"Options\" or \"Both\"")
+
+  # Sys.setenv() always stores its input as a character string
+  # Therefore, will set as characters (automatically by R)
+  if(any(Storage %in% c("OS", "Both"))) {
+    stringr::str_c("Sys.setenv(", x, "=", y, ")") %>%
+      {rlang::parse_expr(.)} %>% {rlang::eval_bare(.)}
+  }
+
+  # consistent with OS environment variable storage
+  y <- as.character(y)
+
+  if(any(Storage %in% c("Options", "Both"))) {
+    names(y) <- x
+    List <- c(list(), y)
+    options(y)
+  }
+
+  isWhatFnd(x, y, Storage = Storage)
+
+})}
+
+
+#' get OS environment variables or R options
+#'
+#' Get truths or values in memory.
+#' Used as an alternative instead of expensive re-quering.
+#' If x is stored ins the OS environment, then x is retrieved as a string.
+#' To be consistent with OS storage, a value stored in options are
+#' also stored a string.  Retrieval exceptions are "TRUE","FALSE".
+#' These are retrieved as TRUE/FALSE.
+#'
+#' @param x character vector of size one(1)  of what to get
+#' @param Storage "OS"(default). Otherwise "Options"
+#' @return value otherwise NULL
+#' @examples
+#' \dontrun{
+#'
+#' getWhat("TAB_X_COL_Y_EXISTS")
+#' # not 'preferred get location'
+#' # choose "OS" xor "Options"
+#' getWhat("TAB_X_COL_Y_EXISTS", Storage = "Options")
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @export
+getWhat <- function(x, Storage = NULL) {
+tryCatchLog::tryCatchLog({
+## initEnv();on.exit({uninitEnv()})
+
+  if(is.null(Storage)) Storage <- "OS"
+  if(!any(Storage %in% c("OS", "Options")))
+    stop("getWhat parameter Storage must be \"OS\" or \"Options\"")
+
+  # Sys.setenv() always stores its input as a character string
+  # Therefore, will get as characters (automatically by R)
+  if(Storage == "OS") {
+   SystemResult <- Sys.getenv(x)
+     if(SystemResult != "") {
+       if(SystemResult == "TRUE")  return(TRUE)
+       if(SystemResult == "FALSE") return(FALSE)
+       return(SystemResult)
+     } else {
+       return(NULL)
+     }
+  }
+
+  if(Storage == "Options") {
+     OptionResult <- getOption(x)
+     if(!is.null(OptionResult)) {
+       # setWhat() had already stored as a character string
+         if(OptionResult == "TRUE"   || OptionResult == TRUE)  return(TRUE)
+         if(OptionResult == "FALSE"  || OptionResult == FALSE) return(FALSE)
+       # should be just "return(OptionResult)"
+       # BUT If a LEAK into OPTIONS exists, so do "return(as.character(OptionResult))"
+       return(as.character(OptionResult))
+     }
+  }
+
+  return(NULL)
+
+})}
+
+
+
+#' unset OS environment variables or R options
+#'
+#' Unset truths or values in memory.
+#'
+#' @param x character vector of size one(1)  of what to unset
+#' @param Storage "OS"(default). Otherwise "Options" or "Both"
+#' @return NULL invisibly
+#' @examples
+#' \dontrun{
+#'
+#' unsetWhat("TAB_X_COL_Y_EXISTS")
+#' # not 'preferred unset location'
+#' unsetWhat("TAB_X_COL_Y_EXISTS", Storage = "Options")
+#' unsetWhat("TAB_X_COL_Y_EXISTS", Storage = "Both")
+#' unsetWhat("TAB_X_COL_Y_EXISTS", Storage = c("OS", "Options"))
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom rlang parse_expr eval_bare
+#' @export
+unsetWhat <- function(x, Storage = NULL) {
+tryCatchLog::tryCatchLog({
+## initEnv();on.exit({uninitEnv()})
+
+ if(is.null(Storage)) Storage <- "OS"
+ if(!any(Storage %in% c("OS", "Options", "Both")))
+   stop("unsetWhat parameter Storage must be \"OS\" or \"Options\" or \"Both\"")
+
+ if(any(Storage  %in% c("OS", "Both")))
+    Sys.unsetenv(x)
+
+ if(any(Storage %in% c("Options", "Both")))
+    stringr::str_c("options(", x, "=", "NULL", ")") %>%
+      {rlang::parse_expr(.)} %>% {rlang::eval_bare(.)}
+
+ invisible()
+
+})}
+
+
+
 #' sets the enviroment
 #' space-saver - meant to be used at the beginning of a function
 #'
