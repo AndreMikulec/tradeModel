@@ -1584,9 +1584,74 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' Allows row indexing without knowledge of dimensionality or class.
+#'
+#' Improved version of rowr::rows.  This will not drop tables/arrays/data.frames
+#' of one dimension down to dimensionless vectors
+#'
+#' @param data any R object
+#' @param rownums indices of target rows
+#' @param ... dots may include the user-sent parameter "drop = TRUE"
+#' @examples
+#' \dontrun{
+#'
+#' Rows(state.x77[, 1, drop = FALSE], 13:15)
+#'          Population
+#' Illinois      11197
+#' Indiana        5313
+#' Iowa           2861
+#'
+#' Rows(iris[, 1, drop = FALSE], 13:15)
+#'    Sepal.Length
+#' 13          4.8
+#' 14          4.3
+#' 15          5.8
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @export
+Rows <- function(data, rownums, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  ops <- options()
+  options(stringsAsFactors = FALSE)
+
+ # alternative to drop=FALSE or changing default behavior [duplicate]
+ # https://stackoverflow.com/questions/15886974/alternative-to-drop-false-or-changing-default-behavior
+ # AND
+ # Generally disable dimension dropping for matrices?
+ # https://stackoverflow.com/questions/12196724/generally-disable-dimension-dropping-for-matrices
+
+  Dots <- list(...)
+
+  # data.table and 'tibble's do not have this problem
+  if(class(data)[1] %in% c("data.frame", "matrix", "table", "array")) {
+    # only extract "drop" (if present in ... )
+    if(is.null(Dots[["drop"]])) {
+      old <- `[`
+      `[` <- function(...) { old(..., drop=FALSE) }
+    }
+  }
+
+  if (is.null(dim(data))) {
+    result <- data[rownums]
+  }
+  else {
+    result <- data[rownums, ]
+  }
+
+  options(ops)
+
+  return((result))
+
+})}
+
+
 #' rollapply anything
 #'
-#' based on rowr rollApply (rollapply anything)
+#' based on package rowr function rollApply (rollapply anything).
+#' Uses Rows so single dimension objects are not dropped to vectors
 #'
 #' @examples
 #' \dontrun{
@@ -1600,73 +1665,26 @@ initEnv();on.exit({uninitEnv()})
 #' Alaska         365   6315        1.5    69.31   11.3    66.7   152 566432
 #' Arizona       2212   4530        1.8    70.55    7.8    58.1    15 113417
 #'
-#' # seems to be working ( notice: 8 second startup )
-#' rollApply2(state.x77, function(x, a, b) { list(list(x=x), a=a, b=b)}, window = 3, min = 3, align = "right",
-#'   a = 1, b = 2, .parallel = T)
-#'
 #' }
 #' @param x xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-#' @importFrom foreach getDoParWorkers
-#' @importFrom parallel clusterEvalQ
+#' @importFrom plyr llply
 #' @importFrom rowr rows len
-rollApply2 <- function(x, fun, window = len(x), minimum = 1, align = "left", .parallel = FALSE,  ...) {
+rollApply2 <- function(x, fun, window = len(x), minimum = 1, align = "left",  ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  ops <- options()
-  options(stringsAsFactors = FALSE)
-
- # alternative to drop=FALSE or changing default behavior [duplicate]
- # https://stackoverflow.com/questions/15886974/alternative-to-drop-false-or-changing-default-behavior
- # AND
- # Generally disable dimension dropping for matrices?
- # https://stackoverflow.com/questions/12196724/generally-disable-dimension-dropping-for-matrices
-
-  # Later: move these out
-
-  Dots <- list(...)
-  OthersList <- list()
-  if(!is.null(Dots["drop"])) OthersList <- c(list(), OthersList, drop = Dots["drop"])
-
-  old_df <- base::`[.data.frame`
-  DF <- `[.data.frame` <- function(...) {
-    DescTools::DoCall(old_df, c(list(), Dots[!names(Dots) %in% "drop"], OthersList))
-  }
-
-  # intercept
-  old_tb <- base::`[.table`
-  TB <- `[.table` <- function(...) {
-    DescTools::DoCall(old_tb, c(list(), Dots[!names(Dots) %in% "drop"], OthersList))
-  }
-
-  # intercept
-  old_array <- `[.array` <- function(...) base::`[`(...,drop=FALSE)
-  AT <- `[.array` <- function(...) {
-    DescTools::DoCall(old_array, c(list(), Dots[!names(Dots) %in% "drop"], OthersList))
-  }
-
-  this.envir <- environment()
-
-   # if(foreach::getDoParWorkers() > 1)
-   # parallel::clusterExport(cl, c("[.data.frame", "[.table","[.array"), env = this.envir)
-   # parallel::clusterEvalQ(cl, { `[.data.frame` } )
-   # Yes they are THERE
-
-  # IT SEEMS TO DO ITS OWN THING (OWN PROCESSES? NEVER CAN SEE MY CUSTOM [.XXX")
-  if (minimum > rowr::len(x)) return()
+  if (minimum > NROW(x)) return()
   FUN = match.fun(fun)
   if (align == "left")
-      result <- do.call(c, plyr::llply(1:(rowr::len(x) - minimum + 1)  , function(x2) {
-         FUN(rowr::rows(x,  x2:(min(rowr::len(x), (x2 + window - 1))) ), ...)
-      },  .parallel = .parallel))
+      result <- do.call(c, plyr::llply( 1:(NROW(x) - minimum + 1), function(x2) {
+         FUN(Rows(x,      x2:(min(NROW(x), (x2 + window - 1)))     , ...), ...)
+      }))
   if (align == "right")
-      result <- do.call(c, plyr::llply(      minimum:rowr::len(x), function(x2) {
-         FUN(rowr::rows(x,      max(1,       x2 - window + 1):x2), ...)
-      }, .parallel = .parallel))
-
-  options(ops)
+      result <- do.call(c, plyr::llply(            minimum:NROW(x), function(x2) {
+         FUN(Rows(x,      max(1,       x2 - window + 1       ):x2  , ...), ...)
+      }))
 
   return(result)
 

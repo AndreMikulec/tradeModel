@@ -4,14 +4,14 @@
 \alias{rollApply2}
 \title{rollapply anything}
 \usage{
-rollApply2(x, fun, window = len(x), minimum = 1, align = "left",
-  .parallel = FALSE, ...)
+rollApply2(x, fun, window = len(x), minimum = 1, align = "left", ...)
 }
 \arguments{
 \item{x}{xts object}
 }
 \description{
-based on rowr rollApply (rollapply anything)
+based on package rowr function rollApply (rollapply anything).
+Uses Rows so single dimension objects are not dropped to vectors
 }
 \examples{
 \dontrun{
@@ -24,10 +24,6 @@ Browse[1]> print(x)
 Alabama       3615   3624        2.1    69.05   15.1    41.3    20  50708
 Alaska         365   6315        1.5    69.31   11.3    66.7   152 566432
 Arizona       2212   4530        1.8    70.55    7.8    58.1    15 113417
-
-# seems to be working ( notice: 8 second startup )
-rollApply2(state.x77, function(x, a, b) { list(list(x=x), a=a, b=b)}, window = 3, min = 3, align = "right",
-  a = 1, b = 2, .parallel = T)
 
 }
 }
