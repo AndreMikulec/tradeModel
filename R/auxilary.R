@@ -1648,11 +1648,21 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
 #' rollapply anything
 #'
 #' based on package rowr function rollApply (rollapply anything).
 #' Uses Rows so single dimension objects are not dropped to vectors
 #'
+#' @param data	any R object
+#' @param fun	the function to evaluate
+#' @param window	window width defining the size of the subset available
+#' to the fun at any given point
+#' @param minimum	minimum width of the window.
+#' Will not return results if the window is truncated below this value
+#' at the end of the data set
+#' @param align	whether to align the window right or left
+#' @param ...	additional arguments to pass to fun
 #' @examples
 #' \dontrun{
 #' all examples of rowr::rollApply work
@@ -1666,11 +1676,9 @@ initEnv();on.exit({uninitEnv()})
 #' Arizona       2212   4530        1.8    70.55    7.8    58.1    15 113417
 #'
 #' }
-#' @param x xts object
-#' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
-#' @importFrom rowr rows len
+#' @export
 rollApply2 <- function(x, fun, window = len(x), minimum = 1, align = "left",  ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})

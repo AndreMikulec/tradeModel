@@ -7,7 +7,20 @@
 rollApply2(x, fun, window = len(x), minimum = 1, align = "left", ...)
 }
 \arguments{
-\item{x}{xts object}
+\item{fun}{the function to evaluate}
+
+\item{window}{window width defining the size of the subset available
+to the fun at any given point}
+
+\item{minimum}{minimum width of the window.
+Will not return results if the window is truncated below this value
+at the end of the data set}
+
+\item{align}{whether to align the window right or left}
+
+\item{...}{additional arguments to pass to fun}
+
+\item{data}{any R object}
 }
 \description{
 based on package rowr function rollApply (rollapply anything).
