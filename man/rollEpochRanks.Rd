@@ -10,8 +10,9 @@ rollEpochRanks(xTs1, xTs2, window = 10, minimum = window, ranks = 4,
 \arguments{
 \item{xTs1}{xts object}
 
-\item{xTs2}{xts object of single column (or multiple column if I do interaction)
-xts object with a data flag of the groupings.
+\item{xTs2}{xts object of single column
+(or multiple columns if doing interaction).
+This is an xts object with a data flag of the groupings.
 This is most likely calculated from this package's
 days/months\*Since/After\*Event functions.}
 }
@@ -24,17 +25,20 @@ recaptured.)
 \details{
 [Maybe] this is (weakly) designed to run through "eXplode."
 
-Note: these are not good ways to do "accurate" rolling [percent] ranks.
+Note: These following are not good ways to do "accurate" rolling [percent] ranks.
 TTR::runPercentRank is awfully bad (I do not know what the author was thinking).
 fromo::running_apx_quantiles is unbalanced.
-( so I can not use in findInterval to get ranks)
+( so I can not use in findInterval to get ranks).
+
+Therefore, I am doing calculations per col(with lag) * row.
+This is MUCH slower. But currently, I do desire the accuracy.
+I am looking for a better solution. (I have not yet found one.)
 
 Note: Consider, sort(method = "radix")/order/tail as a
 fast(simple) way to approximate "ranks"
 }
 \examples{
 \dontrun{
-
 
 # S&P 500
 gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
@@ -67,6 +71,8 @@ length(smse)
 
 # note USUALLY "incBeforeEpochLags == FALSE"
 # to "fully" separate ONE epoch from the other.
+# to get/give full separation before/after recession crashes
+# incBeforeEpochLags = FALSE
 rollEpochRanks(mse[, c("GSPC", "GSPC_TAE_MTHSNC")], xTs2 = mse[, "GSPC_RUN_MTHSNC"], incBeforeEpochLags = TRUE)
 
 }

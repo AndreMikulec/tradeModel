@@ -1787,8 +1787,6 @@ rollEpochRanks <- function(xTs1, xTs2, window = 10, minimum = window, ranks = 4,
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-
-
   EpochIndexes <- plyr::llply(split(xTs2, interaction(coredata(xTs2))), function(x) index(x))
 
   AllEpochResults <- list()
@@ -1882,6 +1880,59 @@ multitable___mouter <- function(x, ...){
 }
 
 
+#' rolling Ranks
+#'
+#'  TTR::runPercentRank gives skewed results
+#'  (but with the results properly ordered)
+#'  This function uses that "proper ordering" and makes
+#'  usable running ranks.
+#'
+#' Note: every so-often this does "screw-up"
+#' RUN the  window = 3, ranks = 3 examples
+#'
+#' # Last fortran (maybe better)
+#' https://github.com/joshuaulrich/TTR/blob/9b30395f7604c37ea12a865961d81666bc167616/src/percentRank.f
+#'
+#' @param x xts object
+#' @param window lag to determine the ranks
+#' @param ranks number of ranks. A lower value
+#' means a lower rank number.
+#' @return xts object
+#' @examples
+#' \dontrun{
+#'
+#' runRanks(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
+#'
+#' runRanks(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
+#'
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom TTR runPercentRank
+#' @importFrom stringr str_c
+#' @export
+runRanks <- function(x, window = 10, ranks = 4, exact.multiplier = 0.5) {
+tryCatchLog::tryCatchLog({
+# initEnv();on.exit({uninitEnv()})
+
+  xOrig <- x
+  xOrigColName <- colnames(xOrig)[1]
+
+  x %>%                    # not tested (so not available)
+    TTR::runPercentRank(4, cumulative = F, exact.multiplier = exact.multiplier) %>%
+      {.* ranks} %>%                                   # very important
+        {findInterval(.,vec = window/ranks * seq_len(ranks), rightmost.closed = TRUE) + 1} -> res
+
+  res <- xts(res, index(x))
+
+  if(is.null(xOrigColName)) xOrigColName <- "V"
+  colnames(x)   <- xOrigColName
+  colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
+  x <- cbind(x, res)
+  return(x)
+
+})}
+
+
 
 #' paste with the default dot(.) separator
 #'
@@ -1951,8 +2002,6 @@ tryCatchLog::tryCatchLog({
    reclass(CoreDataNew, xTsOrig)
 
 })}
-
-
 
 
 
