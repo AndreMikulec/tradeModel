@@ -63,6 +63,9 @@ xts(matrix(abs(c(1,-2,-4,8,16,32)), ncol = 2), zoo::as.Date(0:2))
 1970-01-02    2   16
 1970-01-03    4   32
 
+# NOTE: in REAL WORLD USAGE! most likely I would want to use "APC"
+# "RC" here is just for math demonstration purposes
+#
 diffXts(xts(matrix(abs(c(1,-2,-4,8,16,32)), ncol = 2), zoo::as.Date(0:2)), differences = 1, Fun = RC, log = TRUE)
            V1logrc.1 V2logrc.1
 1970-01-01        NA        NA
@@ -84,12 +87,6 @@ diffXts(xts(matrix(c(1,-2,-4,8,16,32), ncol = 2), zoo::as.Date(0:2)), difference
 1970-01-01     NA     NA
 1970-01-02     -2      2
 1970-01-03     -1      2
-
-# note: quasi-case (unhandled)
-# absolute 'relative change' ARC?
-# so RC would actually be RRC ('relative relative change')
-#
-# justdo: ARC <- function(x) abs(RC(xTs))
 
 }
 }

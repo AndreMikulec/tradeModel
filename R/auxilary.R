@@ -1675,9 +1675,14 @@ initEnv();on.exit({uninitEnv()})
 #' Alaska         365   6315        1.5    69.31   11.3    66.7   152 566432
 #' Arizona       2212   4530        1.8    70.55    7.8    58.1    15 113417
 #'
+#' States <- rollApply2(state.x77, function(x) { tail(x,1) }, window = 3, min = 3, align = "right")
+#'
+#' # TODO [ ] replace plyr::llply with foreach::foreach
+#'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
+#' @importFrom DescTools DoCall
 #' @export
 rollApply2 <- function(x, fun, window = len(x), minimum = 1, align = "left",  ...) {
 tryCatchLog::tryCatchLog({
@@ -1685,16 +1690,154 @@ initEnv();on.exit({uninitEnv()})
 
   if (minimum > NROW(x)) return()
   FUN = match.fun(fun)
-  if (align == "left")
-      result <- do.call(c, plyr::llply( 1:(NROW(x) - minimum + 1), function(x2) {
-         FUN(Rows(x,      x2:(min(NROW(x), (x2 + window - 1)))     , ...), ...)
-      }))
-  if (align == "right")
-      result <- do.call(c, plyr::llply(            minimum:NROW(x), function(x2) {
-         FUN(Rows(x,      max(1,       x2 - window + 1       ):x2  , ...), ...)
-      }))
+  if (align == "left") {
+    result <- plyr::llply( 1:(NROW(x) - minimum + 1), function(x2) {
+       FUN(Rows(x,      x2:(min(NROW(x), (x2 + window - 1)))     , ...), ...)
+    })
+  }
+  if (align == "right") {
+    result <- plyr::llply(            minimum:NROW(x), function(x2) {
+       FUN(Rows(x,      max(1,       x2 - window + 1       ):x2  , ...), ...)
+    })
+  }
+  if(is.null(dim(x))) {
+    result <- do.call(c, result)
+  } else {
+    # assuming x has an rbind method
+    result <- DescTools::DoCall(rbind, result)
+  }
+
 
   return(result)
+
+})}
+
+
+
+#' rolling percent ranks grouped by epoch
+#'
+#' The idea is group rolling ranks from the end of crash/recession
+#' to the beginning of the next crash/recession (so that the
+#' recession to recession social/economic behavior may be
+#' recaptured.)
+#'
+#' [Maybe] this is (weakly) designed to run through "eXplode."
+#'
+#' Note: These following are not good ways to do "accurate" rolling [percent] ranks.
+#' TTR::runPercentRank is awfully bad (I do not know what the author was thinking).
+#' fromo::running_apx_quantiles is unbalanced.
+#' ( so I can not use in findInterval to get ranks).
+#'
+#' Therefore, I am doing calculations per col(with lag) * row.
+#' This is MUCH slower. But currently, I do desire the accuracy.
+#' I am looking for a better solution. (I have not yet found one.)
+#'
+#' Note: Consider, sort(method = "radix")/order/tail as a
+#' fast(simple) way to approximate "ranks"
+#'
+#' @param xTs1 xts object
+#' @param xTs2 xts object of single column
+#' (or multiple columns if doing interaction).
+#' This is an xts object with a data flag of the groupings.
+#' This is most likely calculated from this package's
+#' days/months\*Since/After\*Event functions.
+#' @examples
+#' \dontrun{
+#'
+#' # S&P 500
+#' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
+#' colnames(gspc) <- "GSPC"
+#' # returns
+#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#'
+#' # top 20 worst monthly returns in the S&P500 history
+#' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
+#'
+#' mse <- monthsSinceEvent(gspc.ret, dates = CrashDates)
+#' mse <- mse[ , c("GSPC","GSPC_TAE_MTHSNC", "GSPC_RUN_MTHSNC")]
+#' # 20 (or near so) epochs
+#' unique(mse$GSPC_RUN_MTHSNC)
+#'
+#' # nothing (no crash date) before 1962
+#' tail(mse["/1962"], 10)
+#'
+#' # e.g. (will be used on function
+#' # from crash to crash
+#' # "RUN month(MTH) since(SNC) event"
+#' smse <- split(mse[, c("GSPC", "GSPC_TAE_MTHSNC")], coredata(mse[, "GSPC_RUN_MTHSNC"]))
+#'
+#' # 20 periods
+#' length(smse)
+#' [1] 20
+#'
+#' # sample testing/demo data
+#' ## mse <- mse[114:118,]
+#'
+#' # note USUALLY "incBeforeEpochLags == FALSE"
+#' # to "fully" separate ONE epoch from the other.
+#' # to get/give full separation before/after recession crashes
+#' # incBeforeEpochLags = FALSE
+#' rollEpochRanks(mse[, c("GSPC", "GSPC_TAE_MTHSNC")], xTs2 = mse[, "GSPC_RUN_MTHSNC"], incBeforeEpochLags = TRUE)
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom plyr llply
+#' @export
+rollEpochRanks <- function(xTs1, xTs2, window = 10, minimum = window, ranks = 4, incBeforeEpochLags = FALSE) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+
+
+  EpochIndexes <- plyr::llply(split(xTs2, interaction(coredata(xTs2))), function(x) index(x))
+
+  AllEpochResults <- list()
+  for(EpochIndex in EpochIndexes) {
+
+    # getting the 'window' lag
+    # and but BELOW: eliminate observations that are OUTSIDE of the window (see BELOW)
+    if(incBeforeEpochLags) {
+      EarlierAndEpochIndex         <- c(index(xTs1)[index(xTs2) < head(EpochIndex,1)], EpochIndex)
+      OnlyEarlyEpochIndex          <- setDiff(EarlierAndEpochIndex, EpochIndex)
+      SavedLagsOnlyEarlyEpochIndex <- tail(OnlyEarlyEpochIndex, window)
+      NewEpochIndex                <- c(SavedLagsOnlyEarlyEpochIndex, EpochIndex)
+    } else {
+      NewEpochIndex <- EpochIndex
+    }
+    # , rows, cols, probs, na.rm, type, ..., drop = TRUE
+    rollApply2(xTs1[NewEpochIndex], fun = function(x2, twindow, ranks) {
+
+      # Rolling Ranks
+      plyr::llply(x2, function(x3, window, ranks) {
+
+        # lower values mean lower ranks
+        # "as.data.frame" required so that "data.table::frank"
+        # does NOT choke (and die) on 'all NAs'
+        data.table::frank(as.data.frame(x3), ties.method="dense", na.last= "keep")  %>%
+          tail(1) %>%
+            { findInterval(., vec = window/ranks * seq_len(ranks), rightmost.closed = T) + 1} ->
+        rnk
+        rnk <- xts(rnk,index(tail(x3,1)))
+        return(rnk)
+
+      }, window = twindow, ranks = ranks) -> RollingRank
+      # assuming it does have a cbind method
+      RollingRank <- DescTools::DoCall(cbind, RollingRank)
+
+      return(RollingRank)
+
+    }, window = window, minimum = minimum, align = "right", twindow = window, ranks = ranks) ->
+    EpochRes
+    # remove excess early 'window' head records (if any)
+    EpochRes <- EpochRes[head(EpochIndex,1) <= index(EpochRes)]
+    EpochResList <- list()
+    EpochResList[[as.character(index(tail(EpochRes,1)))]] <- EpochRes
+    AllEpochResults <- c(list(), AllEpochResults, EpochResList)
+
+  }
+  # assuming have an rbind method (rbind.xts)
+  Results <- DescTools::DoCall(rbind, AllEpochResults)
+  return(Results)
 
 })}
 
@@ -2163,6 +2306,24 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' absolute 'relative change' ARC
+#'
+#' we may see "negative numbers
+#'
+#' @export
+ARC <- function(x, base = 0, lag = 1, log = FALSE, ...) { RC(x = x, base = base, lag = lag, log = log, ...) }
+
+
+
+#' relative 'relative change' ARC
+#'
+#' we never see "negative numbers
+#'
+#' @export
+RRC <- function(x, base = 0, lag = 1, log = FALSE, ...) { abs(ARC(x = x, base = base, lag = lag, log = log, ...)) }
+
+
+
 #' absolute percent change
 #'
 #' Most useful for calculating velocity
@@ -2386,6 +2547,9 @@ initEnv();on.exit({uninitEnv()})
 #' 1970-01-02    2   16
 #' 1970-01-03    4   32
 #'
+#' # NOTE: in REAL WORLD USAGE! most likely I would want to use "APC"
+#' # "RC" here is just for math demonstration purposes
+#' #
 #' diffXts(xts(matrix(abs(c(1,-2,-4,8,16,32)), ncol = 2), zoo::as.Date(0:2)), differences = 1, Fun = RC, log = TRUE)
 #'            V1logrc.1 V2logrc.1
 #' 1970-01-01        NA        NA
@@ -2407,12 +2571,6 @@ initEnv();on.exit({uninitEnv()})
 #' 1970-01-01     NA     NA
 #' 1970-01-02     -2      2
 #' 1970-01-03     -1      2
-#'
-#' # note: quasi-case (unhandled)
-#' # absolute 'relative change' ARC?
-#' # so RC would actually be RRC ('relative relative change')
-#' #
-#' # justdo: ARC <- function(x) abs(RC(xTs))
 #'
 #' }
 #' @param ... dots passed

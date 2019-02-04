@@ -38,5 +38,9 @@ Alabama       3615   3624        2.1    69.05   15.1    41.3    20  50708
 Alaska         365   6315        1.5    69.31   11.3    66.7   152 566432
 Arizona       2212   4530        1.8    70.55    7.8    58.1    15 113417
 
+States <- rollApply2(state.x77, function(x) { tail(x,1) }, window = 3, min = 3, align = "right")
+
+# TODO [ ] replace plyr::llply with foreach::foreach
+
 }
 }
