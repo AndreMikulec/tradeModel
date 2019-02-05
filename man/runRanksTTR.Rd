@@ -10,7 +10,10 @@ runRanksTTR(x, window = 10, ranks = 4, cumulative = F,
 \arguments{
 \item{x}{xts object}
 
-\item{window}{10(default) lag to determine the ranks.}
+\item{window}{10(default) lag to determine the ranks.
+If cumulative=TRUE, the number of observations to use
+before the first result is returned. Not tested. So beware.
+Must be between 1 and nrow(x), inclusive}
 
 \item{ranks}{4(default) number of ranks. A lower value
 means a lower rank number.}

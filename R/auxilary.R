@@ -1812,9 +1812,12 @@ initEnv();on.exit({uninitEnv()})
         # lower values mean lower ranks
         # "as.data.frame" required so that "data.table::frank"
         # does NOT choke (and die) on 'all NAs'
+        # number between one(1) and the window(twindow)
         data.table::frank(as.data.frame(x3), ties.method="dense", na.last= "keep")  %>%
+          # since "running" (I only care about the tail(1)
           tail(1) %>%
-            { findInterval(., vec = window/ranks * seq_len(ranks), rightmost.closed = T) + 1} ->
+                                     #  window/ranks *splitter sequence # 1, 2, ... rank-1
+            { findInterval(., vec = window/ranks * seq_len(ranks - 1), rightmost.closed = T) + 1} ->
         rnk
         rnk <- xts(rnk,index(tail(x3,1)))
         return(rnk)
@@ -1835,7 +1838,10 @@ initEnv();on.exit({uninitEnv()})
 
   }
   # assuming have an rbind method (rbind.xts)
+  browser()
   Results <- DescTools::DoCall(rbind, AllEpochResults)
+  colnames(Results) <- stringr::str_c(colnames(Results), "_RNK", ranks )
+  Results <- merge(xTs1, Results)
   return(Results)
 
 })}
@@ -1895,7 +1901,7 @@ multitable___mouter <- function(x, ...){
 #' @param x xts object
 #' @param window 10(default) lag to determine the ranks.
 #' If cumulative=TRUE, the number of observations to use
-#' before the first result is returned.
+#' before the first result is returned. Not tested. So beware.
 #' Must be between 1 and nrow(x), inclusive
 #' @param ranks 4(default) number of ranks. A lower value
 #' means a lower rank number.
