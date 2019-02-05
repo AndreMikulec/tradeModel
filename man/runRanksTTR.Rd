@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{runRanksTTR}
 \alias{runRanksTTR}
-\title{rolling Ranks}
+\title{rolling ranks using TTR::runPercentRank}
 \usage{
 runRanksTTR(x, window = 10, ranks = 4, cumulative = F,
   exact.multiplier = 0.5)

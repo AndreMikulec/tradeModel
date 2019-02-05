@@ -1887,7 +1887,7 @@ multitable___mouter <- function(x, ...){
 }
 
 
-#' rolling Ranks
+#' rolling ranks using TTR::runPercentRank
 #'
 #' Wrapper around "TTR::runPercentRank."
 #' TTR::runPercentRank gives skewed values
@@ -1929,7 +1929,7 @@ multitable___mouter <- function(x, ...){
 #' @export
 runRanksTTR <- function(x, window = 10, ranks = 4, cumulative = F, exact.multiplier = 0.5) {
 tryCatchLog::tryCatchLog({
-# initEnv();on.exit({uninitEnv()})
+initEnv();on.exit({uninitEnv()})
 
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
@@ -1945,6 +1945,62 @@ tryCatchLog::tryCatchLog({
         {findInterval(.,vec = { seq_len(ranks - 1) }, rightmost.closed = TRUE) + 1} -> res
 
   res <- xts(res, index(x))
+
+  if(is.null(xOrigColName)) xOrigColName <- "V"
+  colnames(x)   <- xOrigColName
+  colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
+  x <- cbind(x, res)
+  return(x)
+
+})}
+
+
+#' backward looking and forward looking Ranks using data.table
+#'
+#' This is the rank over the "entire" data series (the window).
+#' In general this is not useful. NOT USED ANYWHERE.
+#'
+#' @param x xts object
+#' @param ranks 4(default) number of ranks. A lower value
+#' means a lower rank number.
+#' @return xts object
+#' @examples
+#' \dontrun{
+#'
+#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)))
+#'
+#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 3)
+#'
+#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 2)
+#'
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom TTR runPercentRank
+#' @importFrom stringr str_c
+#' @export
+runRanksDT <- function(x, ranks = 4, cumulative = F, exact.multiplier = 0.5) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xOrig <- x
+  xOrigColName <- colnames(xOrig)[1]
+
+  if(ranks <= 1) stop("runRanksDT: parameter \"ranks\" must be greater than one(1)")
+
+  # this is not a "running"
+  window <- NROW(x)
+
+  # lower values mean lower ranks
+  # "as.data.frame" required so that "data.table::frank"
+  # does NOT choke (and die) on 'all NAs'
+  # number between one(1) and the window
+  browser()
+  x %>% as.data.frame(x) %>%
+  data.table::frank(ties.method="average", na.last= "keep") -> res1 #  %>%
+                               #  window/ranks *splitter sequence # 1, 2, ... rank-1
+      { findInterval(res1, vec = window/ranks * seq_len(ranks - 1), rightmost.closed = T) + 1} -> res
+
+  res <- xts(res,index(x))
 
   if(is.null(xOrigColName)) xOrigColName <- "V"
   colnames(x)   <- xOrigColName
