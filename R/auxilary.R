@@ -1802,6 +1802,7 @@ initEnv();on.exit({uninitEnv()})
     } else {
       NewEpochIndex <- EpochIndex
     }
+    # TODO [ ] to be made into RunRanks
     # , rows, cols, probs, na.rm, type, ..., drop = TRUE
     rollApply2(xTs1[NewEpochIndex], fun = function(x2, twindow, ranks) {
 
@@ -1882,45 +1883,60 @@ multitable___mouter <- function(x, ...){
 
 #' rolling Ranks
 #'
-#'  TTR::runPercentRank gives skewed results
-#'  (but with the results properly ordered)
-#'  This function uses that "proper ordering" and makes
-#'  usable running ranks.
-#'
-#' Note: every so-often this does "screw-up"
-#' RUN the  window = 3, ranks = 3 examples
+#' Wrapper around "TTR::runPercentRank."
+#' TTR::runPercentRank gives skewed values
+#' (but with the value are in the correct order).
+#' This function uses that "proper ordering" and makes
+#' usable running ranks.
 #'
 #' # Last fortran (maybe better)
 #' https://github.com/joshuaulrich/TTR/blob/9b30395f7604c37ea12a865961d81666bc167616/src/percentRank.f
 #'
 #' @param x xts object
-#' @param window lag to determine the ranks
-#' @param ranks number of ranks. A lower value
+#' @param window 10(default) lag to determine the ranks.
+#' If cumulative=TRUE, the number of observations to use
+#' before the first result is returned.
+#' Must be between 1 and nrow(x), inclusive
+#' @param ranks 4(default) number of ranks. A lower value
 #' means a lower rank number.
+#' @param cumulative FALSE(default) use from-inception calculation?
+#' Not tested. So beware.
+#' @param exact.multiplier The weight applied to identical values
+#' in the window. Must be between 0 and 1, inclusive.
+#' See ? TTR::runPercentRank
 #' @return xts object
 #' @examples
 #' \dontrun{
 #'
-#' runRanks(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
+#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
 #'
-#' runRanks(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
+#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
+#'
+#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2)
+#'
+#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, cumulative = TRUE)
 #'
 #'}
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom TTR runPercentRank
 #' @importFrom stringr str_c
 #' @export
-runRanks <- function(x, window = 10, ranks = 4, exact.multiplier = 0.5) {
+runRanksTTR <- function(x, window = 10, ranks = 4, cumulative = F, exact.multiplier = 0.5) {
 tryCatchLog::tryCatchLog({
 # initEnv();on.exit({uninitEnv()})
 
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
 
-  x %>%                    # not tested (so not available)
-    TTR::runPercentRank(4, cumulative = F, exact.multiplier = exact.multiplier) %>%
+  if(ranks <= 1 || window <= 1) stop("runRanksTTR: parameters \"windows\" and \"ranks\" must be greater than one(1)")
+
+  x %>%
+    # number between zero(0) and one(1)
+    TTR::runPercentRank(n = window, cumulative = cumulative, exact.multiplier = exact.multiplier) %>%
+      # number between zero(0) and "rank"
       {.* ranks} %>%                                   # very important
-        {findInterval(.,vec = window/ranks * seq_len(ranks), rightmost.closed = TRUE) + 1} -> res
+                              # splitter sequence # 1, 2, ... rank-1
+        {findInterval(.,vec = { seq_len(ranks - 1) }, rightmost.closed = TRUE) + 1} -> res
 
   res <- xts(res, index(x))
 
