@@ -1789,6 +1789,7 @@ initEnv();on.exit({uninitEnv()})
 
   EpochIndexes <- plyr::llply(split(xTs2, interaction(coredata(xTs2))), function(x) index(x))
 
+  browser()
   AllEpochResults <- list()
   for(EpochIndex in EpochIndexes) {
 
@@ -1813,7 +1814,7 @@ initEnv();on.exit({uninitEnv()})
         # "as.data.frame" required so that "data.table::frank"
         # does NOT choke (and die) on 'all NAs'
         # number between one(1) and the window(twindow)
-        data.table::frank(as.data.frame(x3), ties.method="dense", na.last= "keep")  %>%
+        data.table::frank(as.data.frame(x3), ties.method="average", na.last= "keep")  %>%
           # since "running" (I only care about the tail(1)
           tail(1) %>%
                                      #  window/ranks *splitter sequence # 1, 2, ... rank-1
@@ -1830,6 +1831,21 @@ initEnv();on.exit({uninitEnv()})
 
     }, window = window, minimum = minimum, align = "right", twindow = window, ranks = ranks) ->
     EpochRes
+
+    browser()
+    #### (BUT CURRENLTY ****RETURNING TOO MANY LEADING RECORDS ***
+    #### LEFT OFF: WANT TO REPLACE THIS(BELOW) WITH ABOVE ###
+    # heads do not match
+    xTs1Columns <- colnames(xTs1)
+    plyr::llply(xTs1[NewEpochIndex], function(x2, window, ranks) {
+       runRanksTTR(x2, window = window, ranks = ranks)
+    }, window = window, ranks = ranks) -> EpochRes2
+    # assuming it does have a cbind method
+    EpochRes2 <- DescTools::DoCall(cbind, EpochRes2)
+    # # LATER: make a parameter in runRanksTTR not to ruturn the original columns
+    EpochRes2 <- EpochRes2[!colnames(EpochRes2) %in% xTs1Columns]
+    ### END OF "LEFT OFF"
+
     # remove excess early 'window' head records (if any)
     EpochRes <- EpochRes[head(EpochIndex,1) <= index(EpochRes)]
     EpochResList <- list()
@@ -1914,6 +1930,8 @@ multitable___mouter <- function(x, ...){
 #' @examples
 #' \dontrun{
 #'
+#' runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
+#'
 #' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
 #'
 #' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
@@ -1931,6 +1949,7 @@ runRanksTTR <- function(x, window = 10, ranks = 4, cumulative = F, exact.multipl
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  x <- initXts(x)
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
 
@@ -1941,12 +1960,12 @@ initEnv();on.exit({uninitEnv()})
     TTR::runPercentRank(n = window, cumulative = cumulative, exact.multiplier = exact.multiplier) %>%
       # number between zero(0) and "rank"
       {.* ranks} %>%                                   # very important
-                              # splitter sequence # 1, 2, ... rank-1
-        {findInterval(.,vec = { seq_len(ranks - 1) }, rightmost.closed = TRUE) + 1} -> res
+                         # splitter sequence # 1, 2, ... rank-1
+        {findInterval(., vec = { seq_len(ranks - 1) }, left.open = TRUE) + 1} -> res
 
   res <- xts(res, index(x))
 
-  if(is.null(xOrigColName)) xOrigColName <- "V"
+  if(is.null(xOrigColName)) xOrigColName <- "Data"
   colnames(x)   <- xOrigColName
   colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
   x <- cbind(x, res)
@@ -1963,9 +1982,18 @@ initEnv();on.exit({uninitEnv()})
 #' @param x xts object
 #' @param ranks 4(default) number of ranks. A lower value
 #' means a lower rank number.
+#' @param ties.method "average"(default). Passed to data.table::frank parameter ties.method.
 #' @return xts object
 #' @examples
 #' \dontrun{
+#'
+#' runRanksDT(xts(sample(4,4,T), zoo::as.Date(0:3)))
+#'
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "average")
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "first")
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "max"
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "min")
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "dense")
 #'
 #' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)))
 #'
@@ -1978,10 +2006,11 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom TTR runPercentRank
 #' @importFrom stringr str_c
 #' @export
-runRanksDT <- function(x, ranks = 4, cumulative = F, exact.multiplier = 0.5) {
+runRanksDT <- function(x, ranks = 4, ties.method = "average") {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  x <- initXts(x)
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
 
@@ -1994,18 +2023,106 @@ initEnv();on.exit({uninitEnv()})
   # "as.data.frame" required so that "data.table::frank"
   # does NOT choke (and die) on 'all NAs'
   # number between one(1) and the window
-  browser()
   x %>% as.data.frame(x) %>%
-  data.table::frank(ties.method="average", na.last= "keep") -> res1 #  %>%
-                               #  window/ranks *splitter sequence # 1, 2, ... rank-1
-      { findInterval(res1, vec = window/ranks * seq_len(ranks - 1), rightmost.closed = T) + 1} -> res
+  data.table::frank(ties.method = ties.method, na.last= "keep")  %>%
+                        #  window/ranks *splitter sequence # 1, 2, ... rank-1
+      { findInterval(., vec = window/ranks * seq_len(ranks - 1), left.open = T) + 1} -> res
 
   res <- xts(res,index(x))
 
-  if(is.null(xOrigColName)) xOrigColName <- "V"
+  if(is.null(xOrigColName)) xOrigColName <- "Data"
   colnames(x)   <- xOrigColName
   colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
   x <- cbind(x, res)
+  return(x)
+
+})}
+
+
+
+#' rolling ranks using package matrixStats.
+#'
+#' Note: this may use MUCH memory.  the number of new  matrix columns
+#' created is equal to "ranks - 1".  Also, time may be used to
+#' create these columns.
+#'
+#' In most cases, one may be better off using the function: runRanksTTR.
+#'
+#' "base" and "ranks" can be cleverly manipulated to get, for example,
+#' ranks from observations not directly adjacent to each other. An examle
+#' is not shown.
+#'
+#' @param x xts object
+#' @param laggedCols character vector of regular expressions or column names.
+#' This allows the user to give the names of the original column(the lag0 column)
+#' and the "window - 1" columns(the lag1, ... lag(window -1)).  This may be VERY useful
+#' if the columns already exist, so the columns (internally) do not
+#' need to be EXPENSIVELY created.
+#' If this parameter is used then parameters "base" and "window" are ignored.
+#' @param base passed to LagXts.  See ? LagXts.
+#' @param window 10(default) lag to determine the ranks.
+#' @param ranks 4(default) number of ranks. A lower value
+#' means a lower rank number.
+#' @param ties.method "average"(default) passed to matrixStats::rowRanks parameter ties.method
+#' @param na.pad passed to LagXts
+#' @param ... dots passed to LagXts
+#' @return xts object
+#' @examples
+#' \dontrun{
+#'
+#' runRanksMS(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
+#'
+#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "max")
+#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "average")
+#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "min")
+#'
+#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
+#'
+#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
+#'
+#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2)
+#'
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom matrixStats rowRanks
+#' @importFrom stringr str_detect str_c
+#' @export
+runRanksMS <- function(x, laggedCols = NULL, base = 0, window = 10, ranks = 4, ties.method = "average", na.pad = TRUE, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  x <- initXts(x)
+  xOrig <- x
+  xOrigColName <- colnames(xOrig)[1]
+
+  if(ranks <= 1) stop("runRanksMS: parameter \"ranks\" must be greater than one(1)")
+
+  if(is.null(laggedCols)) {
+    x <- LagXts(x, k = base + c(0,seq_len(window - 1)), na.pad = na.pad, ...)
+  } else {
+    # if I already know the columns then go and get them
+    for(colexpr in laggedCols) {
+     x <- x[, stringr::str_detect(colnames(x), pattern = colexpr)]
+    }
+    window <- NVAR(x)
+  }
+  x <- coredata(x)
+
+  # NAs possibly mess up some "rank" math
+  x[!complete.cases(x),] <- NA
+
+  # lower values mean lower ranks
+  # [, 1] tail is only needed in a "running"
+  matrixStats::rowRanks(x, ties.method = ties.method)[, 1] %>%
+                                 #  window/ranks *splitter sequence # 1, 2, ... rank-1
+      { findInterval(., vec = window/ranks * seq_len(ranks - 1), left.open = TRUE) + 1} -> res
+
+  res <- xts(res,index(xOrig))
+
+  if(is.null(xOrigColName)) xOrigColName <- "Data"
+  colnames(xOrig)   <- xOrigColName
+  colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
+  x <- cbind(xOrig, res)
   return(x)
 
 })}
@@ -2114,13 +2231,13 @@ tryCatchLog::tryCatchLog({
 #' negative one(-1) before the code is executed.
 #' After the code is executed the coredata is re-multiplied by
 #' negative one(-1).
-#' @param na.pad passed to LagXts
 #' @param rt alternate way to specify rt == 2 means r == 1:2.
 #' rt == -2 means r == -2:-1.  rt will override r.  This can be
 #' useful when passing to eXplodeXts
 #' @param nt  alternate way to specify nt == 2 means n == 1:2.
 #' nt == -2 means n == 2:1.  nt will override n.  This can be
 #' useful when passing to eXplodeXts.
+#' @param na.pad passed to LagXts
 #' @param ... dots passed to LagXts
 #' @examples
 #' \dontrun{
@@ -2188,10 +2305,9 @@ initEnv();on.exit({uninitEnv()})
   if(!is.null(Dots[["nt"]]))
     n = sort(sign(Dots[["nt"]]) * seq_len(abs(-Dots[["nt"]])))
 
+  x <- initXts(x)
   xOrig <- x
-
   xTs <- x
-  xTs <- initXts(xTs)
 
   # n == 1 now means largest value
   if(View == "max")

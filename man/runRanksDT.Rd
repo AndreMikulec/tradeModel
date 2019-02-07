@@ -4,13 +4,15 @@
 \alias{runRanksDT}
 \title{backward looking and forward looking Ranks using data.table}
 \usage{
-runRanksDT(x, ranks = 4, cumulative = F, exact.multiplier = 0.5)
+runRanksDT(x, ranks = 4, ties.method = "average")
 }
 \arguments{
 \item{x}{xts object}
 
 \item{ranks}{4(default) number of ranks. A lower value
 means a lower rank number.}
+
+\item{ties.method}{"average"(default). Passed to data.table::frank parameter ties.method.}
 }
 \value{
 xts object
@@ -21,6 +23,14 @@ In general this is not useful. NOT USED ANYWHERE.
 }
 \examples{
 \dontrun{
+
+runRanksDT(xts(sample(4,4,T), zoo::as.Date(0:3)))
+
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "average")
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "first")
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "max"
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "min")
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "dense")
 
 runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)))
 

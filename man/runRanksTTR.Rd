@@ -42,6 +42,8 @@ https://github.com/joshuaulrich/TTR/blob/9b30395f7604c37ea12a865961d81666bc16761
 \examples{
 \dontrun{
 
+runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
+
 runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
 
 runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
