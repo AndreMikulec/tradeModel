@@ -424,7 +424,7 @@ tryCatchLog::tryCatchLog({
 #' @export
 getWhat <- function(x, Storage = NULL) {
 tryCatchLog::tryCatchLog({
-## initEnv();on.exit({uninitEnv()})
+initEnv();on.exit({uninitEnv()})
 
   if(is.null(Storage)) Storage <- "OS"
   if(!any(Storage %in% c("OS", "Options")))
@@ -459,6 +459,110 @@ tryCatchLog::tryCatchLog({
 
 })}
 
+
+
+#' funky rstudio problem (involves "gstat" (and "spacetime"))
+#'
+pureBasename <- function(path, slash = FALSE) {
+
+  Orcs__unlistStrsplit <- function (x, split, ...) {
+      if (missing(split))
+          split <- " "
+      ls_split <- strsplit(x, split = split, ...)
+      ch_split <- unlist(ls_split)
+      return(ch_split)
+  }
+
+  Orcs__pureBasename <- function (path, slash = FALSE)
+  {
+      ch_purebasename = sapply(path, function(i) {
+          ch_basename <- basename(i)
+          ch_split <-  Orcs__unlistStrsplit(ch_basename, "\\.")
+          ch_split = ifelse((len <- length(ch_split)) > 1, ch_split[-len],
+              ch_split)
+          paste(ch_split, collapse = ".")
+      })
+      if (slash)
+          ch_purebasename <- file.path("", ch_purebasename)
+      return(as.character(ch_purebasename))
+  }
+
+  return(Orcs__pureBasename(path = path, slash = slash))
+
+}
+
+
+
+#' From source files, create .FST files
+#'
+#' Expected main directories (Dirs), with one level
+#' of subdirecties.  Each subdirectory contains files (with columns)
+#'
+#' @param Dirs character vector of directories
+#' @param SubDirExpr NULL(default).  NULL means "all." Character vector of directories
+#' @param FileExpr NULL(default). NULL means "all." Full file vector of names
+#' @param ColRmExpr NULL(default) NULL meand "none." Regular expression of columns to remove
+#' @param Force False(default). If the target .fst file is there, then do not replace it.
+#' Otherwise, replace it.
+#' @return NULL silently.  Side-effect of a new .fst file created on disk in the old
+#' directory location.
+#' @examples
+#' \dontrun{
+#'
+#' # earlest files
+#' makeFSTFiles(Dirs = "W:\\AAIISIProDBFs", SubDirExpr = c("12055","12083"), FileExpr = c("si_ci.dbf","si_isq.dbf","si_bsq.dbf","si_cfq.dbf","si_psd.dbf","si_date.dbf"), ColRmExpr = c("^X_NullFlags$","^X.?\\d*$"), Force = TRUE)
+#'
+#' # all files
+#' makeFSTFiles(Dirs = "W:\\AAIISIProDBFs", FileExpr = c("si_ci.dbf","si_isq.dbf","si_bsq.dbf","si_cfq.dbf","si_psd.dbf","si_date.dbf"), ColRmExpr = c("^X_NullFlags$","^X.?\\d*$"), Force = TRUE)
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_subset str_c
+#' @importFrom foreign read.dbf
+#' @importFrom fst write.fst
+#' @export
+makeFSTFiles <- function(Dirs = NULL, SubDirExpr = NULL, FileExpr = NULL, ColRmExpr = NULL, Force = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  if(is.null(Dirs)) stop("gtData needs at least a Dirs")
+  if(is.null(Force)) Force <- FALSE
+
+  for(Dir_i in Dirs) {
+    AllSubDirs <- dir(Dir_i)
+    if(!is.null(SubDirExpr)) {
+      AllSubDirs <- stringr::str_subset(AllSubDirs, stringr::str_c(SubDirExpr, collapse = "|"))
+    }
+
+    AllSubDirs <- normalizePath(stringr::str_c(Dir_i, AllSubDirs, sep = "\\"), winslash = "/", mustWork = FALSE)
+    for(AllSubDirs_i in AllSubDirs) {
+      AllFiles <- dir(AllSubDirs_i)
+      if(!is.null(FileExpr)) {
+        AllFiles <- stringr::str_subset(AllFiles, stringr::str_c(FileExpr, collapse = "|"))
+      }
+      for(File_i in AllFiles) {
+        FullPathFileExt <- normalizePath(stringr::str_c(AllSubDirs_i, File_i, sep = "\\"), winslash = "/", mustWork = TRUE)
+        FullPathFileExtFST <- stringr::str_c(dirname(FullPathFileExt), "/", pureBasename(FullPathFileExt), ".fst")
+
+        if(file.exists(FullPathFileExtFST) && !Force ) next
+
+        Dbf <- suppressWarnings(suppressMessages(foreign::read.dbf(file = FullPathFileExt, as.is = TRUE)))
+        # remove dead columns (I choose to do that here)
+        if(!is.null(ColRmExpr)) {
+          Dbf <- Dbf[, stringr::str_subset(colnames(Dbf), stringr::str_c(ColRmExpr, collapse = "|"), negate = TRUE),drop = F]
+        }
+        # write an FST file
+        if(getOption("tradeModel__makeFSTFiles__verbose") == TRUE)
+           message(stringr::str_c("makeFSTFiles starting to create file: ", FullPathFileExtFST))
+        fst::write.fst(Dbf, path = FullPathFileExtFST, compress= 0L)
+        if(getOption("tradeModel__makeFSTFiles__verbose") == TRUE)
+           message(stringr::str_c("makeFSTFiles finished creating file: ", FullPathFileExtFST))
+      }
+    }
+  }
+  invisible()
+
+})}
 
 
 #' unset OS environment variables or R options

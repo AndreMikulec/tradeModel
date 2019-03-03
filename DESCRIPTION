@@ -13,6 +13,7 @@ Depends:
     quantmod (>= 0.4-3),
     PerformanceAnalytics (>= 1.5.2)
 Imports:
+    foreign,
     fst,
     futile.logger,
     tryCatchLog,
