@@ -547,10 +547,10 @@ initEnv();on.exit({uninitEnv()})
         if(file.exists(FullPathFileExtFST) && !Force ) next
 
         Dbf <- suppressWarnings(suppressMessages(foreign::read.dbf(file = FullPathFileExt, as.is = TRUE)))
+        gc()
         # remove dead columns (I choose to do that here)
         if(!is.null(ColRmExpr)) {
           Dbf <- Dbf[, stringr::str_subset(colnames(Dbf), stringr::str_c(ColRmExpr, collapse = "|"), negate = TRUE),drop = F]
-          gc()
         }
         # write an FST file
         if(getOption("tradeModel__makeFSTFiles__verbose") == TRUE)
