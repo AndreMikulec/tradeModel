@@ -553,10 +553,10 @@ initEnv();on.exit({uninitEnv()})
           Dbf <- Dbf[, stringr::str_subset(colnames(Dbf), stringr::str_c(ColRmExpr, collapse = "|"), negate = TRUE),drop = F]
         }
         # write an FST file
-        if(getOption("tradeModel__makeFSTFiles__verbose") == TRUE)
+        if(!is.null(getOption("tradeModel__makeFSTFiles__verbose")) && getOption("tradeModel__makeFSTFiles__verbose") == TRUE)
            message(stringr::str_c("makeFSTFiles starting to create file: ", FullPathFileExtFST))
         fst::write.fst(Dbf, path = FullPathFileExtFST, compress= 0L)
-        if(getOption("tradeModel__makeFSTFiles__verbose") == TRUE)
+        if(!is.null(getOption("tradeModel__makeFSTFiles__verbose")) && getOption("tradeModel__makeFSTFiles__verbose") == TRUE)
            message(stringr::str_c("makeFSTFiles finished creating file: ", FullPathFileExtFST))
       }
     }
@@ -1903,7 +1903,7 @@ initEnv();on.exit({uninitEnv()})
     if(incBeforeEpochLags) {
       EarlierAndEpochIndex         <- c(index(xTs1)[index(xTs2) < head(EpochIndex,1)], EpochIndex)
       OnlyEarlyEpochIndex          <- setDiff(EarlierAndEpochIndex, EpochIndex)
-      SavedLagsOnlyEarlyEpochIndex <- tail(OnlyEarlyEpochIndex, window)
+      SavedLagsOnlyEarlyEpochIndex <- tail(OnlyEarlyEpochIndex, window - 1)
       NewEpochIndex                <- c(SavedLagsOnlyEarlyEpochIndex, EpochIndex)
     } else {
       NewEpochIndex <- EpochIndex
