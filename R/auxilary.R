@@ -1943,6 +1943,7 @@ initEnv();on.exit({uninitEnv()})
     # heads do not match
     xTs1Columns <- colnames(xTs1)
     plyr::llply(xTs1[NewEpochIndex], function(x2, window, ranks) {
+        browser()
        runRanksTTR(x2, window = window, ranks = ranks)
     }, window = window, ranks = ranks) -> EpochRes2
     # assuming it does have a cbind method
@@ -2035,26 +2036,37 @@ multitable___mouter <- function(x, ...){
 #' @examples
 #' \dontrun{
 #'
+#' # eXplode compatiable
 #' runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
+#' #            runRanksTTR
+#' # 1970-01-01          NA
+#' # 1970-01-02          NA
+#' # 1970-01-03          NA
+#' # 1970-01-04           3
 #'
-#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
+#' runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
+#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2)
+#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, cumulative = TRUE)
+#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2, originalData = TRUE, derivedDataDetailed = TRUE)
+#'
+#' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, cumulative = TRUE, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
 #'}
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom TTR runPercentRank
 #' @importFrom stringr str_c
 #' @export
-runRanksTTR <- function(x, window = 10, ranks = 4, cumulative = F, exact.multiplier = 0.5) {
+runRanksTTR <- function(x, window = 10, ranks = 4, cumulative = F, exact.multiplier = 0.5, originalData = FALSE, derivedDataDetailed = FALSE) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   x <- initXts(x)
+  # NOT required for eXplode
+  if(NVAR(x) > 1) stop("runRanksTTR only allows a single column xts object")
+
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
 
@@ -2070,10 +2082,25 @@ initEnv();on.exit({uninitEnv()})
 
   res <- xts(res, index(x))
 
-  if(is.null(xOrigColName)) xOrigColName <- "Data"
-  colnames(x)   <- xOrigColName
-  colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
-  x <- cbind(x, res)
+  # if(is.null(xOrigColName)) xOrigColName <- "Data"
+  # colnames(x)   <- xOrigColName
+  # colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
+  # x <- cbind(x, res)
+  # return(x)
+
+  # eXplode compatible
+  if(derivedDataDetailed == TRUE) {
+    colnames(res) <- stringr::str_c("runRanksTTR", ranks)
+  } else {
+    colnames(res) <- "runRanksTTR"
+  }
+  if(originalData == TRUE) {
+    if(is.null(xOrigColName)) xOrigColName <- "Data"
+    colnames(x)   <- xOrigColName
+    x <- cbind(x, res)
+  } else {
+    x <- res
+  }
   return(x)
 
 })}
@@ -2999,6 +3026,16 @@ initEnv();on.exit({uninitEnv()})
 #' # require(quantmod)
 #' # ibm <- getSymbols("IBM", from = "1970-01-01", to = "1970-01-13", auto.assign = FALSE)
 #' # explodeXts(ibm[,c("IBM.Open","IBM.Close")], Fun = "TTR::SMA", Whiches = list(n = 2:3))
+#' #
+#' #            IBM.Open.TTR.SMA.n.2 IBM.Close.TTR.SMA.n.2 IBM.Open.TTR.SMA.n.3 IBM.Close.TTR.SMA.n.3
+#' # 1970-01-02                   NA                    NA                   NA                    NA
+#' # 1970-01-05               18.262                18.325                   NA                    NA
+#' # 1970-01-06               18.356                18.419               18.312                18.358
+#' # 1970-01-07               18.419                18.431               18.379                18.425
+#' # 1970-01-08               18.431                18.456               18.425                18.446
+#' # 1970-01-09               18.456                18.463               18.446                18.454
+#' # 1970-01-12               18.463                18.419               18.454                18.438
+#'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom purrr transpose

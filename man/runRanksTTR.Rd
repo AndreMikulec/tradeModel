@@ -5,7 +5,8 @@
 \title{rolling ranks using TTR::runPercentRank}
 \usage{
 runRanksTTR(x, window = 10, ranks = 4, cumulative = F,
-  exact.multiplier = 0.5)
+  exact.multiplier = 0.5, originalData = FALSE,
+  derivedDataDetailed = FALSE)
 }
 \arguments{
 \item{x}{xts object}
@@ -42,15 +43,23 @@ https://github.com/joshuaulrich/TTR/blob/9b30395f7604c37ea12a865961d81666bc16761
 \examples{
 \dontrun{
 
+# eXplode compatiable
 runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
+#            runRanksTTR
+# 1970-01-01          NA
+# 1970-01-02          NA
+# 1970-01-03          NA
+# 1970-01-04           3
 
-runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
+runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
+runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2)
+runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3, originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, cumulative = TRUE)
+runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2, originalData = TRUE, derivedDataDetailed = TRUE)
+
+runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, cumulative = TRUE, originalData = TRUE, derivedDataDetailed = TRUE)
 
 }
 }
