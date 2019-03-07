@@ -53,6 +53,14 @@ runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
 
 runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 
+runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
+
+#            Data runRanksTTR4
+# 1970-01-01    2           NA
+# 1970-01-02    3           NA
+# 1970-01-03    4           NA
+# 1970-01-04    3            2
+
 runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 
 runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3, originalData = TRUE, derivedDataDetailed = TRUE)

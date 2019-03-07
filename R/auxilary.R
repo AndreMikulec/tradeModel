@@ -987,7 +987,7 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'#
-#'# > list(iris[1:2,1:2], airquality[1:2,1:2])
+#'# list(iris[1:2,1:2], airquality[1:2,1:2])
 #'# [[1]]
 #'#   Sepal.Length Sepal.Width
 #'# 1          5.1         3.5
@@ -1006,6 +1006,17 @@ initEnv();on.exit({uninitEnv()})
 #'#  $ :List of 2
 #'#   ..$ Sepal.Width: num [1:2] 3.5 3
 #'#   ..$ Solar.R    : int [1:2] 190 118
+#'#
+#'# # 1 by N recycling
+#'# #
+#'#  > str( pairWise( iris[1:2,1:2], airquality[1:2,1, drop = F] ) )
+#'#  List of 2
+#'#   $ :List of 2
+#'#    ..$ Sepal.Length: num [1:2] 5.1 4.9
+#'#    ..$ Ozone       : int [1:2] 41 36
+#'#   $ :List of 2
+#'#    ..$ Sepal.Width: num [1:2] 3.5 3
+#'#    ..$ Ozone      : int [1:2] 41 36
 #'#
 #'# > require(xts)
 #'# > data("sample_matrix", package = "xts")
@@ -1051,6 +1062,21 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 pairWise <- function(x1, x2) {
+
+  # recycling 1 to N recycling
+  #
+  if((NVAR(x1) != NVAR(x2)) && NVAR(x2) == 1) {
+
+    x2 <- DescTools::DoCall(cbind, rep(list(x2),NVAR(x1)))
+    Names(x2) <- rep(Names(x2)[1], NVAR(x2))
+
+  }
+  if((NVAR(x1) != NVAR(x2)) && NVAR(x1) == 1) {
+
+    x1 <- DescTools::DoCall(cbind, rep(list(x1),NVAR(x2)))
+    Names(x1) <- rep(Names(x1)[1], NVAR(x1))
+
+  }
 
   List <- c(list(),plyr::llply(x1, identity), plyr::llply(x2, identity))
 
@@ -1828,18 +1854,6 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' [Maybe] this is (weakly) designed to run through "eXplode."
 #'
-#' Note: These following are not good ways to do "accurate" rolling [percent] ranks.
-#' TTR::runPercentRank is awfully bad (I do not know what the author was thinking).
-#' fromo::running_apx_quantiles is unbalanced.
-#' ( so I can not use in findInterval to get ranks).
-#'
-#' Therefore, I am doing calculations per col(with lag) * row.
-#' This is MUCH slower. But currently, I do desire the accuracy.
-#' I am looking for a better solution. (I have not yet found one.)
-#'
-#' Note: Consider, sort(method = "radix")/order/tail as a
-#' fast(simple) way to approximate "ranks"
-#'
 #' @param xTs1 xts object
 #' @param xTs2 xts object of single column
 #' (or multiple columns if doing interaction).
@@ -1882,24 +1896,24 @@ initEnv();on.exit({uninitEnv()})
 #' # to "fully" separate ONE epoch from the other.
 #' # to get/give full separation before/after recession crashes
 #' # incBeforeEpochLags = FALSE
-#' rollEpochRanks(mse[, c("GSPC", "GSPC_TAE_MTHSNC")], xTs2 = mse[, "GSPC_RUN_MTHSNC"], incBeforeEpochLags = TRUE)
+#' rollEpochRanks(mse[, c("GSPC", "GSPC_TAE_MTHSNC")], xTs2 = mse[, "GSPC_RUN_MTHSNC"], incBeforeEpochLags = TRUE, originalData = TRUE, derivedDataDetailed = TRUE)
+#'
+#' #            GSPC GSPC_TAE_MTHSNC GSPC.rollEpochRanks4 GSPC_TAE_MTHSNC.rollEpochRanks4
+#' # 1950-01-31   NA              NA                   NA                              NA
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @export
-rollEpochRanks <- function(xTs1, xTs2, window = 10, minimum = window, ranks = 4, incBeforeEpochLags = FALSE) {
+rollEpochRanks <- function(xTs1, xTs2, window = 10, minimum = window, ranks = 4, incBeforeEpochLags = FALSE, originalData = FALSE, derivedDataDetailed = FALSE) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   EpochIndexes <- plyr::llply(split(xTs2, interaction(coredata(xTs2))), function(x) index(x))
 
-  browser()
   AllEpochResults <- list()
   for(EpochIndex in EpochIndexes) {
 
-    # getting the 'window' lag
-    # and but BELOW: eliminate observations that are OUTSIDE of the window (see BELOW)
     if(incBeforeEpochLags) {
       EarlierAndEpochIndex         <- c(index(xTs1)[index(xTs2) < head(EpochIndex,1)], EpochIndex)
       OnlyEarlyEpochIndex          <- setDiff(EarlierAndEpochIndex, EpochIndex)
@@ -1908,63 +1922,68 @@ initEnv();on.exit({uninitEnv()})
     } else {
       NewEpochIndex <- EpochIndex
     }
-    # TODO [ ] to be made into RunRanks
-    # , rows, cols, probs, na.rm, type, ..., drop = TRUE
-    rollApply2(xTs1[NewEpochIndex], fun = function(x2, twindow, ranks) {
 
-      # Rolling Ranks
-      plyr::llply(x2, function(x3, window, ranks) {
-
-        # lower values mean lower ranks
-        # "as.data.frame" required so that "data.table::frank"
-        # does NOT choke (and die) on 'all NAs'
-        # number between one(1) and the window(twindow)
-        data.table::frank(as.data.frame(x3), ties.method="average", na.last= "keep")  %>%
-          # since "running" (I only care about the tail(1)
-          tail(1) %>%
-                                     #  window/ranks *splitter sequence # 1, 2, ... rank-1
-            { findInterval(., vec = window/ranks * seq_len(ranks - 1), rightmost.closed = T) + 1} ->
-        rnk
-        rnk <- xts(rnk,index(tail(x3,1)))
-        return(rnk)
-
-      }, window = twindow, ranks = ranks) -> RollingRank
-      # assuming it does have a cbind method
-      RollingRank <- DescTools::DoCall(cbind, RollingRank)
-
-      return(RollingRank)
-
-    }, window = window, minimum = minimum, align = "right", twindow = window, ranks = ranks) ->
-    EpochRes
-
-    browser()
-    #### (BUT CURRENLTY ****RETURNING TOO MANY LEADING RECORDS ***
-    #### LEFT OFF: WANT TO REPLACE THIS(BELOW) WITH ABOVE ###
-    # heads do not match
-    xTs1Columns <- colnames(xTs1)
     plyr::llply(xTs1[NewEpochIndex], function(x2, window, ranks) {
-        browser()
-       runRanksTTR(x2, window = window, ranks = ranks)
-    }, window = window, ranks = ranks) -> EpochRes2
+      res <- runRanksTTR(x2, window = window, ranks = ranks)
+      colnames(res) <- colnames(x2)
+      return(res)
+    }, window = window, ranks = ranks) -> EpochRes
     # assuming it does have a cbind method
-    EpochRes2 <- DescTools::DoCall(cbind, EpochRes2)
-    # # LATER: make a parameter in runRanksTTR not to ruturn the original columns
-    EpochRes2 <- EpochRes2[!colnames(EpochRes2) %in% xTs1Columns]
-    ### END OF "LEFT OFF"
+    EpochRes <- DescTools::DoCall(cbind, EpochRes)
+    # take off the extra stuff that I had added
+    if(incBeforeEpochLags == TRUE) {
+      EpochRes <- tail(EpochRes, NROW(EpochRes) - (window - 1))
+    }
 
-    # remove excess early 'window' head records (if any)
+    # Keep only the epoch records
+    # (remove excess early 'window' head records (if any): This should NOT happen HERE))
     EpochRes <- EpochRes[head(EpochIndex,1) <= index(EpochRes)]
+
     EpochResList <- list()
     EpochResList[[as.character(index(tail(EpochRes,1)))]] <- EpochRes
     AllEpochResults <- c(list(), AllEpochResults, EpochResList)
 
   }
   # assuming have an rbind method (rbind.xts)
-  browser()
   Results <- DescTools::DoCall(rbind, AllEpochResults)
-  colnames(Results) <- stringr::str_c(colnames(Results), "_RNK", ranks )
-  Results <- merge(xTs1, Results)
-  return(Results)
+
+  res <- Results
+  x <- xTs1
+  xOrigColName <- colnames(x)
+  if(NVAR(res) == 1) {
+
+    # eXplode compatible
+    if(derivedDataDetailed == TRUE) {
+        colnames(res) <- stringr::str_c("rollEpochRanks", ranks)
+    } else {
+      colnames(res) <- "rollEpochRanks"
+    }
+    if(originalData == TRUE) {
+      if(is.null(xOrigColName)) xOrigColName <- "Data"
+      colnames(x)   <- xOrigColName
+      x <- cbind(x, res)
+    } else {
+      x <- res
+    }
+
+  } else { # NVAR(res) > 1
+
+    # eXplode compatible
+    if(derivedDataDetailed == TRUE) {
+        colnames(res) <- stringr::str_c(stringr::str_c(colnames(res), "rollEpochRanks", sep = "."), ranks)
+    } else {
+      colnames(res) <- stringr::str_c(colnames(res), "rollEpochRanks", sep = ".")
+    }
+    if(originalData == TRUE) {
+      if(any(is.null(xOrigColName))) xOrigColName <- stringr::str_c("Data", seq_len(NVAR(res)), sep = ".")
+      colnames(x)   <- xOrigColName
+      x <- cbind(x, res)
+    } else {
+      x <- res
+    }
+
+  }
+  return(x)
 
 })}
 
@@ -2046,6 +2065,14 @@ multitable___mouter <- function(x, ...){
 #'
 #' runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
+#' runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
+#'
+#' #            Data runRanksTTR4
+#' # 1970-01-01    2           NA
+#' # 1970-01-02    3           NA
+#' # 1970-01-03    4           NA
+#' # 1970-01-04    3            2
+#'
 #' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
 #' runRanksTTR(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3, originalData = TRUE, derivedDataDetailed = TRUE)
@@ -2072,21 +2099,19 @@ initEnv();on.exit({uninitEnv()})
 
   if(ranks <= 1 || window <= 1) stop("runRanksTTR: parameters \"windows\" and \"ranks\" must be greater than one(1)")
 
-  x %>%
-    # number between zero(0) and one(1)
-    TTR::runPercentRank(n = window, cumulative = cumulative, exact.multiplier = exact.multiplier) %>%
-      # number between zero(0) and "rank"
-      {.* ranks} %>%                                   # very important
-                         # splitter sequence # 1, 2, ... rank-1
-        {findInterval(., vec = { seq_len(ranks - 1) }, left.open = TRUE) + 1} -> res
+  if(window <= NROW(x)) {
+    x %>%
+      # number between zero(0) and one(1)
+      TTR::runPercentRank(n = window, cumulative = cumulative, exact.multiplier = exact.multiplier) %>%
+        # number between zero(0) and "rank"
+        {.* ranks} %>%                                   # very important
+                           # splitter sequence # 1, 2, ... rank-1
+          {findInterval(., vec = { seq_len(ranks - 1) }, left.open = TRUE) + 1} -> res
+  } else {
+     res <- rep(NA_real_, NROW(x))
+  }
 
   res <- xts(res, index(x))
-
-  # if(is.null(xOrigColName)) xOrigColName <- "Data"
-  # colnames(x)   <- xOrigColName
-  # colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
-  # x <- cbind(x, res)
-  # return(x)
 
   # eXplode compatible
   if(derivedDataDetailed == TRUE) {
