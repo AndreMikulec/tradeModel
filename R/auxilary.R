@@ -1860,6 +1860,12 @@ initEnv();on.exit({uninitEnv()})
 #' This is an xts object with a data flag of the groupings.
 #' This is most likely calculated from this package's
 #' days/months\*Since/After\*Event functions.
+#' @param window size of zone of rank calculation
+#' @param ranks number of ranks
+#' @param incBeforeEpochLags FALSE(default), if TRUE include early data the size of "window - 1".
+#' @param originalData FALSE(default), if TRUE include oringinal data in the output.
+#' @param derivedDataDetailed FALSE(default) if TRUE, include the rank as part of the derived data column name.
+#' @return xts object
 #' @examples
 #' \dontrun{
 #'
@@ -1905,7 +1911,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
 #' @export
-rollEpochRanks <- function(xTs1, xTs2, window = 10, minimum = window, ranks = 4, incBeforeEpochLags = FALSE, originalData = FALSE, derivedDataDetailed = FALSE) {
+rollEpochRanks <- function(xTs1, xTs2, window = 10, ranks = 4, incBeforeEpochLags = FALSE, originalData = FALSE, derivedDataDetailed = FALSE) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -2051,6 +2057,8 @@ multitable___mouter <- function(x, ...){
 #' @param exact.multiplier The weight applied to identical values
 #' in the window. Must be between 0 and 1, inclusive.
 #' See ? TTR::runPercentRank
+#' @param originalData FALSE(default), if TRUE include oringinal data in the output.
+#' @param derivedDataDetailed FALSE(default) if TRUE, include the rank as part of the derived data column name.
 #' @return xts object
 #' @examples
 #' \dontrun{
