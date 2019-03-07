@@ -1060,6 +1060,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom DescTools DoCall
 #' @importFrom plyr llply
 pairWise <- function(x1, x2) {
 

@@ -20,7 +20,7 @@ works better on xts objects ( lapply or plyr::llply structure is held together )
 \examples{
 \dontrun{
 #
-# > list(iris[1:2,1:2], airquality[1:2,1:2])
+# list(iris[1:2,1:2], airquality[1:2,1:2])
 # [[1]]
 #   Sepal.Length Sepal.Width
 # 1          5.1         3.5
@@ -39,6 +39,17 @@ works better on xts objects ( lapply or plyr::llply structure is held together )
 #  $ :List of 2
 #   ..$ Sepal.Width: num [1:2] 3.5 3
 #   ..$ Solar.R    : int [1:2] 190 118
+#
+# # 1 by N recycling
+# #
+#  > str( pairWise( iris[1:2,1:2], airquality[1:2,1, drop = F] ) )
+#  List of 2
+#   $ :List of 2
+#    ..$ Sepal.Length: num [1:2] 5.1 4.9
+#    ..$ Ozone       : int [1:2] 41 36
+#   $ :List of 2
+#    ..$ Sepal.Width: num [1:2] 3.5 3
+#    ..$ Ozone      : int [1:2] 41 36
 #
 # > require(xts)
 # > data("sample_matrix", package = "xts")

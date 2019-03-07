@@ -25,6 +25,10 @@ Not tested. So beware.}
 \item{exact.multiplier}{The weight applied to identical values
 in the window. Must be between 0 and 1, inclusive.
 See ? TTR::runPercentRank}
+
+\item{originalData}{FALSE(default), if TRUE include oringinal data in the output.}
+
+\item{derivedDataDetailed}{FALSE(default) if TRUE, include the rank as part of the derived data column name.}
 }
 \value{
 xts object

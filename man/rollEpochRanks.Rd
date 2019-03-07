@@ -4,7 +4,7 @@
 \alias{rollEpochRanks}
 \title{rolling percent ranks grouped by epoch}
 \usage{
-rollEpochRanks(xTs1, xTs2, window = 10, minimum = window, ranks = 4,
+rollEpochRanks(xTs1, xTs2, window = 10, ranks = 4,
   incBeforeEpochLags = FALSE, originalData = FALSE,
   derivedDataDetailed = FALSE)
 }
@@ -16,6 +16,19 @@ rollEpochRanks(xTs1, xTs2, window = 10, minimum = window, ranks = 4,
 This is an xts object with a data flag of the groupings.
 This is most likely calculated from this package's
 days/months\*Since/After\*Event functions.}
+
+\item{window}{size of zone of rank calculation}
+
+\item{ranks}{number of ranks}
+
+\item{incBeforeEpochLags}{FALSE(default), if TRUE include early data the size of "window - 1".}
+
+\item{originalData}{FALSE(default), if TRUE include oringinal data in the output.}
+
+\item{derivedDataDetailed}{FALSE(default) if TRUE, include the rank as part of the derived data column name.}
+}
+\value{
+xts object
 }
 \description{
 The idea is group rolling ranks from the end of crash/recession
