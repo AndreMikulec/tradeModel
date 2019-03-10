@@ -5,7 +5,8 @@
 \title{rolling ranks using package matrixStats.}
 \usage{
 runRanksMS(x, laggedCols = NULL, base = 0, window = 10, ranks = 4,
-  ties.method = "average", na.pad = TRUE, ...)
+  ties.method = "average", na.pad = TRUE, originalData = FALSE,
+  derivedDataDetailed = FALSE, ...)
 }
 \arguments{
 \item{x}{xts object}
@@ -48,17 +49,17 @@ is not shown.
 \examples{
 \dontrun{
 
-runRanksMS(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
+runRanksMS(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "max")
-runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "average")
-runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "min")
+runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "max", originalData = TRUE, derivedDataDetailed = TRUE)
+runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "average", originalData = TRUE, derivedDataDetailed = TRUE)
+runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "min", originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
+runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
+runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3, originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2)
+runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2, originalData = TRUE, derivedDataDetailed = TRUE)
 
 }
 }

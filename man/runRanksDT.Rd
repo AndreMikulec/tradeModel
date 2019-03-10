@@ -4,7 +4,8 @@
 \alias{runRanksDT}
 \title{backward looking and forward looking Ranks using data.table}
 \usage{
-runRanksDT(x, ranks = 4, ties.method = "average")
+runRanksDT(x, ranks = 4, ties.method = "average",
+  originalData = FALSE, derivedDataDetailed = FALSE)
 }
 \arguments{
 \item{x}{xts object}
@@ -24,19 +25,19 @@ In general this is not useful. NOT USED ANYWHERE.
 \examples{
 \dontrun{
 
-runRanksDT(xts(sample(4,4,T), zoo::as.Date(0:3)))
+runRanksDT(xts(sample(4,4,T), zoo::as.Date(0:3)), originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "average")
-runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "first")
-runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "max"
-runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "min")
-runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "dense")
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "average", originalData = TRUE, derivedDataDetailed = TRUE)
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "first", originalData = TRUE, derivedDataDetailed = TRUE)
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "max", originalData = TRUE, derivedDataDetailed = TRUE)
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "min", originalData = TRUE, derivedDataDetailed = TRUE)
+runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "dense", originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)))
+runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 3)
+runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 3, originalData = TRUE, derivedDataDetailed = TRUE)
 
-runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 2)
+runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 2, originalData = TRUE, derivedDataDetailed = TRUE)
 
 }
 }

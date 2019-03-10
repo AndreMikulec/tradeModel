@@ -1966,6 +1966,7 @@ initEnv();on.exit({uninitEnv()})
       colnames(res) <- "rollEpochRanks"
     }
     if(originalData == TRUE) {
+      x <- x[,1, drop = F]
       if(is.null(xOrigColName)) xOrigColName <- "Data"
       colnames(x)   <- xOrigColName
       x <- cbind(x, res)
@@ -2129,6 +2130,7 @@ initEnv();on.exit({uninitEnv()})
     colnames(res) <- "runRanksTTR"
   }
   if(originalData == TRUE) {
+    x <- x[,1, drop = F]
     if(is.null(xOrigColName)) xOrigColName <- "Data"
     colnames(x)   <- xOrigColName
     x <- cbind(x, res)
@@ -2153,30 +2155,33 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'
-#' runRanksDT(xts(sample(4,4,T), zoo::as.Date(0:3)))
+#' runRanksDT(xts(sample(4,4,T), zoo::as.Date(0:3)), originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "average")
-#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "first")
-#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "max"
-#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "min")
-#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "dense")
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "average", originalData = TRUE, derivedDataDetailed = TRUE)
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "first", originalData = TRUE, derivedDataDetailed = TRUE)
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "max", originalData = TRUE, derivedDataDetailed = TRUE)
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "min", originalData = TRUE, derivedDataDetailed = TRUE)
+#' runRanksDT(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), ties.method = "dense", originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)))
+#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 3)
+#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 3, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 2)
+#' runRanksDT(xts(sample(10,10,T), zoo::as.Date(0:9)), ranks = 2, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
 #'}
 #' @importFrom tryCatchLog tryCatchLog
-#' @importFrom TTR runPercentRank
+#' @importFrom data.table frank
 #' @importFrom stringr str_c
 #' @export
-runRanksDT <- function(x, ranks = 4, ties.method = "average") {
+runRanksDT <- function(x, ranks = 4, ties.method = "average", originalData = FALSE, derivedDataDetailed = FALSE) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   x <- initXts(x)
+  # NOT required for eXplode
+  if(NVAR(x) > 1) stop("runRanksDT only allows a single column xts object")
+
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
 
@@ -2196,10 +2201,26 @@ initEnv();on.exit({uninitEnv()})
 
   res <- xts(res,index(x))
 
-  if(is.null(xOrigColName)) xOrigColName <- "Data"
-  colnames(x)   <- xOrigColName
-  colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
-  x <- cbind(x, res)
+  # if(is.null(xOrigColName)) xOrigColName <- "Data"
+  # colnames(x)   <- xOrigColName
+  # colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
+  # x <- cbind(x, res)
+
+  # eXplode compatible
+  if(derivedDataDetailed == TRUE) {
+    colnames(res) <- stringr::str_c("runRanksDT", ranks)
+  } else {
+    colnames(res) <- "runRanksDT"
+  }
+  if(originalData == TRUE) {
+    x <- x[,1, drop = F]
+    if(is.null(xOrigColName)) xOrigColName <- "Data"
+    colnames(x)   <- xOrigColName
+    x <- cbind(x, res)
+  } else {
+    x <- res
+  }
+
   return(x)
 
 })}
@@ -2236,28 +2257,31 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'
-#' runRanksMS(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
+#' runRanksMS(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "max")
-#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "average")
-#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "min")
+#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "max", originalData = TRUE, derivedDataDetailed = TRUE)
+#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "average", originalData = TRUE, derivedDataDetailed = TRUE)
+#' runRanksMS(xts(matrix(c(2,2,4,4),ncol=1), zoo::as.Date(0:3)), window = 4, ties.method = "min", originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4)
+#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3)
+#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 3, ranks = 3, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
-#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2)
+#' runRanksMS(xts(sample(10,10,T), zoo::as.Date(0:9)), window = 4, ranks = 2, originalData = TRUE, derivedDataDetailed = TRUE)
 #'
 #'}
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom matrixStats rowRanks
 #' @importFrom stringr str_detect str_c
 #' @export
-runRanksMS <- function(x, laggedCols = NULL, base = 0, window = 10, ranks = 4, ties.method = "average", na.pad = TRUE, ...) {
+runRanksMS <- function(x, laggedCols = NULL, base = 0, window = 10, ranks = 4, ties.method = "average", na.pad = TRUE, originalData = FALSE, derivedDataDetailed = FALSE, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   x <- initXts(x)
+  # NOT required for eXplode
+  if(NVAR(x) > 1) stop("runRanksMS only allows a single column xts object")
+
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
 
@@ -2285,10 +2309,26 @@ initEnv();on.exit({uninitEnv()})
 
   res <- xts(res,index(xOrig))
 
-  if(is.null(xOrigColName)) xOrigColName <- "Data"
-  colnames(xOrig)   <- xOrigColName
-  colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
-  x <- cbind(xOrig, res)
+  # if(is.null(xOrigColName)) xOrigColName <- "Data"
+  # colnames(xOrig)   <- xOrigColName
+  # colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
+  # x <- cbind(xOrig, res)
+
+  # eXplode compatible
+  if(derivedDataDetailed == TRUE) {
+    colnames(res) <- stringr::str_c("runRanksMS", ranks)
+  } else {
+    colnames(res) <- "runRanksMS"
+  }
+  if(originalData == TRUE) {
+    x <- x[,1, drop = F]
+    if(is.null(xOrigColName)) xOrigColName <- "Data"
+    colnames(x)   <- xOrigColName
+    x <- cbind(x, res)
+  } else {
+    x <- res
+  }
+
   return(x)
 
 })}
