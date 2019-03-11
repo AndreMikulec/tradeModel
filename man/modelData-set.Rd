@@ -12,5 +12,9 @@ modelData(x, ...) <- value
 \item{...}{list of name-value pairs}
 }
 \description{
-# methods/html/slot.html
+\preformatted{
+
+methods/html/slot.html
+
+}
 }

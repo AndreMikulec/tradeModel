@@ -33,8 +33,12 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
-From FRED (historical) and briefing.com (recent) University of
-Michigan: Consumer Sentiment voting results data
+\preformatted{
+
+Get from FRED (historical) and briefing.com (recent) University of
+Michigan: Consumer Sentiment voting results data.
+
+}
 }
 \examples{
 \dontrun{

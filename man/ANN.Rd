@@ -13,7 +13,11 @@ ANN(x)
 xts object with values multiplied to get annualization
 }
 \description{
+\preformatted{
+
 Uses the xts index
+
+}
 }
 \examples{
 \dontrun{

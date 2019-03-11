@@ -18,7 +18,11 @@ saveSymbols.RData(Symbols = NULL,
 \item{...}{pass through not used}
 }
 \description{
-see quantmod SaveSymbols
+\preformatted{
+
+See quantmod SaveSymbols.
+
+}
 }
 \examples{
 \dontrun{

@@ -7,6 +7,13 @@
 \method{within}{xts}(data, expr, ...)
 }
 \description{
-unstable structure to debug inside: holds for 2 seconds then bounces out
-within.xts IS TOO VOLITILE: CAN NOT browser/rstudio debug inside: SOMETHING IS NOT RIGHT
+\preformatted{
+
+Has an unstable structure to debug inside;
+holds for 2 seconds then bounces out.
+
+Within.xts IS TOO VOLITILE:
+CAN NOT browser/rstudio debug inside: SOMETHING IS NOT RIGHT
+
+}
 }

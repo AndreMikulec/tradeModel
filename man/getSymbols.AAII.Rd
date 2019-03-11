@@ -23,7 +23,7 @@ Can be xts, zoo, data.frame, or xts (default)}
 
 \item{...}{additional parameters}
 
-\item{force}{FALSE(default) re-download data from AAII ( See the examples. )
+\item{force}{FALSE(default) re-download data from AAII (See the examples.)
 The hidden variables ".AAIIsentiment_path2file" and
 ".AAIISentimentSurveyPastResults_path2file" located in the
 environment of parameter env are the last know location of the "xls" file
@@ -38,10 +38,11 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
+\preformatted{
+
 Data represents what direction members feel the
 stock market will be in next 6 months.
-}
-\details{
+
 The sentiment survey measures the percentage of individual investors who are
 bullish, bearish, and neutral on the stock market short term;
 individuals are polled from the AAII Web site on a weekly basis.
@@ -49,6 +50,8 @@ Only one vote per member is accepted in each weekly voting period.
 
 The latest published date/data is every Thursday.
 The delivery time is during Friday (UNVERIFIED)
+
+}
 }
 \examples{
 \dontrun{

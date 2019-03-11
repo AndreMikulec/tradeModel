@@ -20,7 +20,7 @@ to all possible combinations by expand.grid}
 
 \item{AltName}{string alternate name for "Fun"}
 
-\item{Prefix}{boolan default is FALSE.  TRUE would place the column meta before the column name}
+\item{Prefix}{boolan default is FALSE.  TRUE would place the column meta before the column name.}
 
 \item{FixedSep}{string divider of meta items}
 
@@ -32,11 +32,11 @@ to all possible combinations by expand.grid}
 new xts object of new derived columns
 }
 \description{
-from an xts function stub, create an ets object of derived columns
-}
-\details{
-Meant to create many package TTR technical trading column results
-CURRENTLY NOT USED
+\preformatted{
+
+from an xts function stub, create an xts object of derived columns
+
+Meant to create many package TTR/PerformanceAnalytics column results
 
 Idea was from
 
@@ -44,9 +44,13 @@ Time series cross-validation 5
 January 24, 2013
 By Deane-Mayer
 http://www.r-bloggers.com/time-series-cross-validation-5/
-http://moderntoolmaking.blogspot.com/2013/01/time-series-cross-validation-5.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+ModernToolMaking+%28Modern+Tool+Making%29
+http://moderntoolmaking.blogspot.com/2013/01
+      /time-series-cross-validation-5.html?utm_source=feedburner
+      &utm_medium=feed&utm_campaign=Feed%3A+ModernToolMaking+%28Modern+Tool+Making%29
 
-NOTE: if any xTs2, then xTs1 and xTs2 are paired/matched column position to column position)
+NOTE: if any xTs2, then xTs1 and xTs2 are paired/matched column position to column position.
+
+}
 }
 \examples{
 \dontrun{

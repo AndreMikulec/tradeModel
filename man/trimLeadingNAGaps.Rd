@@ -13,11 +13,14 @@ trimLeadingNAGaps(xTs)
 xts object
 }
 \description{
+\preformatted{
+
 Some FRED early data was delivered less
 frequently than later FRED data.
 Remove that earlier wider-gapped data.
-}
-\details{
+
 Also, many functions in R CRAN package TTR
 will return an error if leading NA values are found
+
+}
 }

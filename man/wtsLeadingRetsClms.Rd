@@ -13,7 +13,11 @@ wtsLeadingRetsClms(xTs = NULL)
 column names
 }
 \description{
-Weights column names always end in "leadingrets_wts"
+\preformatted{
+
+Weights column names always end in "leadingrets_wts".
+
+}
 }
 \examples{
 \dontrun{

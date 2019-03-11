@@ -25,22 +25,25 @@ getSymbols(Symbols = NULL, env = parent.frame(),
 
 \item{symbol.lookup}{retrieve symbol's sourcing method from external lookup (TRUE)}
 
-\item{auto.assign}{should results be loaded to env If FALSE, return results instead.
-As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE}
+\item{auto.assign}{should results be loaded to env. If FALSE, return results instead.
+As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE.}
 
 \item{source.envir}{override: source environment to aquire the Symbols}
 
 \item{...}{pass other parameters}
 }
 \description{
-Get some Symbols from an environment (source.envir)
-It will search first in (source.envir)
+\preformatted{
+
+Get some Symbols from an environment (source.envir).
+It will search first in (source.envir).
 If the Symbol is not found in the enviroment (source.envir),
 then get the Symbol from elsewhere.
-}
-\details{
+
 NOTE: do not do: "source.envir = e, "env = e"
 when auto.assign = TRUE(default), .GetSymbols is placed where "env = e"
+
+}
 }
 \examples{
 \dontrun{

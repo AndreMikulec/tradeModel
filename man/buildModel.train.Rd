@@ -7,6 +7,8 @@
 buildModel.train(quantmod, training.data, ...)
 }
 \description{
+\preformatted{
+
 # tuneGrid ( production tester )
 tg <- expand.grid(
   nrounds   =  10, # TEN TREES
@@ -27,8 +29,8 @@ tg <- expand.grid(
   min_child_weight = 1,
   subsample        = 1
 )
-}
-\details{
+
+
 cl <- parallel::makeCluster(parallel::detectCores(logical = FALSE))
 doParallel::registerDoParallel(cl)
 assign("cl", cl, envir = asNamespace("base")); rm(cl)
@@ -42,7 +44,9 @@ doParallel::stopImplicitCluster()
 
 tc <- caret::trainControl(method = "cv", number = 5)
 
-TODO [ ] : fully WORKED EXAMPLE: combine WITH below
+TODO [ ] : fully WORKED EXAMPLE: combine WITH below.
 builtModel <- buildModel(specmodel, method="train", training.per=c("1970-12-31","2006-12-31")
   , method_train = "xgbTree", tuneGrid = tg, trControl = tc)
+
+}
 }

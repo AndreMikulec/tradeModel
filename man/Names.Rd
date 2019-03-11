@@ -10,6 +10,10 @@ Names(x)
 \item{x}{names}
 }
 \description{
-if the argument to names is NULL or has zero(0) length
-then instead for returning NULL, return character(0)
+\preformatted{
+
+If the argument to names is NULL or has zero(0) length
+then instead for returning NULL, return character(0).
+
+}
 }

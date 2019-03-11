@@ -19,8 +19,13 @@ means a lower rank number.}
 xts object
 }
 \description{
+\preformatted{
+
 This is the rank over the "entire" data series (the window).
-In general this is not useful. NOT USED ANYWHERE.
+In general this is not useful. This is NOT USED ANYWHERE.
+This uses package data.table
+
+}
 }
 \examples{
 \dontrun{

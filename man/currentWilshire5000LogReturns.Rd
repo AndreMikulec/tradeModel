@@ -10,5 +10,7 @@ currentWilshire5000LogReturns()
 xts object
 }
 \description{
-get the Wilshire 5000 Index lagging log returns
+\preformatted{
+
+}
 }

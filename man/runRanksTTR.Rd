@@ -26,7 +26,7 @@ Not tested. So beware.}
 in the window. Must be between 0 and 1, inclusive.
 See ? TTR::runPercentRank}
 
-\item{originalData}{FALSE(default), if TRUE include oringinal data in the output.}
+\item{originalData}{FALSE(default). If TRUE include original data in the output.}
 
 \item{derivedDataDetailed}{FALSE(default) if TRUE, include the rank as part of the derived data column name.}
 }
@@ -34,15 +34,20 @@ See ? TTR::runPercentRank}
 xts object
 }
 \description{
-Wrapper around "TTR::runPercentRank."
-TTR::runPercentRank gives skewed values
+\preformatted{
+
+This is a wrapper around TTR runPercentRank.
+TTR runPercentRank gives skewed values
 (but with the value are in the correct order).
 This function uses that "proper ordering" and makes
 usable running ranks.
-}
-\details{
-# Last fortran (maybe better)
+
+Note, this is the function before being converted to C.
+the last fortran version may be better.
+However, the C version has a correction(fix).
 https://github.com/joshuaulrich/TTR/blob/9b30395f7604c37ea12a865961d81666bc167616/src/percentRank.f
+
+}
 }
 \examples{
 \dontrun{

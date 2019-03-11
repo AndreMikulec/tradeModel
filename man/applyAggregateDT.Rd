@@ -24,7 +24,9 @@ as.character(substitute(Fun)) == "Fun"}
 data.table of aggregates
 }
 \description{
-apply data.table aggregator on subsets of rows
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

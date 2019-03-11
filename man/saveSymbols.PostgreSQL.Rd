@@ -22,11 +22,11 @@ names of fields to insert}
 
 \item{keys}{passed to dfToCREATETable and dfGetPKEYNames}
 
-\item{placeNewRecords}{"AddOnlyNew"(default)
+\item{placeNewRecords}{"AddOnlyNew"(default).
 Append 'new' records determined by 'new' inbound key values
 to the table using pgInsert.
 The other choice is "TruncateTable". TRUNCATE TABLE the table contents.
-Follow by running "pgInsert"
+Follow by running "pgInsert".
 NOTE, user choice is specific to the nature of the changing source
 data.  For example, FRED historical data is typically static: e.g. UNRATE
 (but maybe not all historic data in FRED is static.  Therefore, in the
@@ -34,7 +34,7 @@ case of most FRED data, a good choice may be, "AddOnlyNew". Differently,
 Yahoo finanical stock data is very often re-adjuste to account
 for split and dividends, therefore yesterday's query on data may
 be useless.  Therefore, in the case of Yahoo financial stock data, a
-good choice may be "TruncateTable"}
+good choice may be "TruncateTable".}
 
 \item{varHint}{if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert}
 
@@ -52,19 +52,21 @@ good choice may be "TruncateTable"}
 
 \item{port}{database port (default 5432)}
 
-\item{options}{pass extra parameters in aa string to the command line}
+\item{options}{pass extra parameters in a string to the command line}
 
-\item{forceISOdate}{TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
-is forced to ISO style at conection}
+\item{forceISOdate}{TRUE(default)/FALSE. If the communication of date (time stamp) from PostgreSQL
+is forced to ISO style at connection}
 
 \item{...}{pass through parameters}
 
 \item{sourc.envir}{location of xts objects}
 }
 \description{
-# Once only, the end-user must pre-create the [database and [ user and]] schema
-}
-\details{
+\preformatted{
+
+Hard note: once only, the end-user must pre-create
+the [database and [ user and]] schema
+
 CREATE ROLE "Symbols" LOGIN
   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
 
@@ -95,6 +97,8 @@ CREATE SCHEMA "Symbols"
 # );
 # ALTER TABLE "Symbols"
 #   OWNER TO "Symbols";
+
+}
 }
 \examples{
 \dontrun{

@@ -13,7 +13,11 @@ valueLeadingRetsClms(xTs = NULL)
 column names
 }
 \description{
+\preformatted{
+
 Value column names end in "leadingrets" without "_wts"
+
+}
 }
 \examples{
 \dontrun{

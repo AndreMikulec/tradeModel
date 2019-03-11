@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{oneColumn}
 \alias{oneColumn}
-\title{returns One column from a database (con)}
+\title{returns one column from a database (con)}
 \usage{
 oneColumn(con, Query, outName, unQuote = NULL)
 }
@@ -20,7 +20,9 @@ no value, or a single value with with comma separted internal parts}
 single column data.frame
 }
 \description{
-returns One column from a database (con)
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

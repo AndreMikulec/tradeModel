@@ -30,5 +30,7 @@ is forced to ISO style at conection}
 list of "con" DBI Connection object and "schname" final chosen schema name
 }
 \description{
-smartly connect to PostgreSQL database
+\preformatted{
+
+}
 }

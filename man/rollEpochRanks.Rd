@@ -31,13 +31,16 @@ days/months\*Since/After\*Event functions.}
 xts object
 }
 \description{
+\preformatted{
+
 The idea is group rolling ranks from the end of crash/recession
 to the beginning of the next crash/recession (so that the
 recession to recession social/economic behavior may be
 recaptured.)
-}
-\details{
+
 [Maybe] this is (weakly) designed to run through "eXplode."
+
+}
 }
 \examples{
 \dontrun{

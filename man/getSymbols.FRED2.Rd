@@ -42,37 +42,40 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
-Alternative to the quantmod::getSymbols.FRED
-}
-\details{
+\preformatted{
+
+This is an alternative to quantmod::getSymbols.FRED.
+
 This an en extension of quantmod::getSymbols.FRED.
-Extra attibutes (e.g. Last_Updated, Frequency andothers)
+Extra attibutes (e.g. Last_Updated, Frequency an dothers)
 are added to the xts object (if returned as an xts object
-(recommended) and default).
+(recommended and default).
 
-The user may sent 'from' and 'to' dates.
-
-Throught the 'Edit' parameter, the  user may pass
+The user may send 'from' and 'to' dates.
+Through the 'Edit' parameter, the  user may pass
 in data transformation formulas.
 
 For this apply either of the following must be true.
+
 (1) The foruma query paramter formula(fml)
 has just one veriable "a" and then this Edit transformation
 is applied across all Symbols sent by the user. Or,
 (2), if the number of Symbols is two(2) or greater then
 then the number of symbols must equal to the number
-of variables in the query paramter e.g. if the Symbols
-sent are "WILL5000IND","BAMLC0A4CBBBEY" in
+of variables in the query paramter. E.g. if the Symbols
+sent are "WILL5000IND" and "BAMLC0A4CBBBEY" in
 getSymbols(c("WILL5000IND","BAMLC0A4CBBBEY") then the
-number of paraters must be two(2) and these are
+number of parameters must be two(2) and these are
 letters of the aphabet starting with "a" and must be
-lowercase. An example is 'fml="a-b"' (Se The Example.
+lowercase. An example is 'fml="a-b"' (See The Example.)
+
+}
 }
 \examples{
 \dontrun{
 
+# Reading text tables
 
-# reading text tables
 Text2DF <- function(x) {
     read.csv(textConnection(x),
      sep = ":",
@@ -80,7 +83,6 @@ Text2DF <- function(x) {
      colClasses = "character") -> x
      x
 }
-
 
 # Edit possible query parameters
 

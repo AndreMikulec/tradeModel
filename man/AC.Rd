@@ -16,7 +16,9 @@ AC(x, base = 0, lag = 1, ...)
 \item{...}{dots passed to LagXts}
 }
 \description{
-absolute change
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

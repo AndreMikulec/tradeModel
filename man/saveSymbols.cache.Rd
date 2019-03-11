@@ -17,7 +17,9 @@ saveSymbols.cache(Symbols = NULL, source.envir = NULL,
 \item{target.envir}{location of where to store xts objects ( location of cache )}
 }
 \description{
-save xts objects as .xts in source.envir ( cache )
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

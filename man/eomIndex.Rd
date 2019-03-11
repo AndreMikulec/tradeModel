@@ -24,7 +24,13 @@ eomIndex(x = NULL)
 xts object or data object with the index moved up
 }
 \description{
-change the index date to the future
+\preformatted{
+
+}
+
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

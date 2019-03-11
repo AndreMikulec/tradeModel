@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{\%Like\%}
 \alias{\%Like\%}
-\title{convenience function calling stringr::str_detect}
+\title{convenience function calling stringr str_detect}
 \usage{
 x \%Like\% pattern
 }
@@ -15,7 +15,11 @@ x \%Like\% pattern
 logical
 }
 \description{
-Stricter. NA values are returned as FALSE
+\preformatted{
+
+This is stricter. NA values are returned as FALSE.
+
+}
 }
 \examples{
 \dontrun{

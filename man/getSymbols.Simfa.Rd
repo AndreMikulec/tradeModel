@@ -16,7 +16,7 @@ BondsAveMaturity"}
 \item{env}{where to create objects. (.GlobalEnv)}
 
 \item{return.class}{desired class of returned object.
-Can be xts, zoo, data.frame, or xts (default)}
+Can be xts, zoo, data.frame, or xts (default).}
 
 \item{...}{additional parameters}
 
@@ -34,17 +34,18 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
+\preformatted{
+
 Note only the monthly dates for the current year and the previous
 year are available.  The remaining data is year-end-data.
-The dates intermediate dates are filled in using
-xts::to.monthly() and seq()
+The intermediate dates are filled in using
+xts::to.monthly() and seq().
 The monthly dates are interpolated using zoo::na.approx
 that is stats::approx. (In R Code that is "approx1").
-}
-\details{
+
 # 1 (HAVE)
-most valuable information
-tab "Issuance" column "Corporate Debt" (Symbol is "CorporateDebt")
+Most valuable information follows.
+Tab "Issuance" column "Corporate Debt" (Symbol is "CorporateDebt")
 US Bond Market Issuance and Outstanding
 https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
 https://www.sifma.org/resources/research/us-bond-market-issuance-and-outstanding/
@@ -54,7 +55,7 @@ click on "explore"
 SIFMA
 https://www.sifma.org/
 
-same
+Same follows.
 Click on \[Explore\]
 US Bond Market Issuance and Outstanding
   (Upper Right Corner)
@@ -62,57 +63,62 @@ US Bond Market Issuance and Outstanding
   https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
     XLS: "Issuance" tab ( has data through the previous month)
 # XLS bottom ( SEE DEC 31 2018: EXACT SAME AS THE ARTICLE )
-         Year	M	 Municipal 	 Treasury 	 Mortgage-Related 	 Corporate Debt 	 Federal Agency Securities 	 Asset-Backed 	 Total
+         Year	M	 Municipal 	 Treasury 	 Mortgage-Related 	 Corporate Debt
+         Federal Agency Securities 	 Asset-Backed 	 Total
 YTD '17
 YTD '18
 % Change
 
 # 2 (HAVE)
-most valuable information
-tab "Average Maturity" column "Years" (Symbol is "BondsAveMaturity")
+Most valuable information follows.
+Tab "Average Maturity" column "Years" (Symbol is "BondsAveMaturity")
 https://www.sifma.org/wp-content/uploads/2017/08/Corporate-US-Corporate-Issuance-SIFMA.xls
 US Corporate Bond Issuance
 https://www.sifma.org/resources/research/us-corporate-bond-issuance/
 Securities Industry and Financial Markets Association
 SIFMA
 https://www.sifma.org/
-#
 
 # 3 (HAVE)
-most valuable information
-tab "US Bond Market" column "Corporate Debt" (Symbol is "CorporateDebtTradeVol")
+Most valuable information follows.
+Tab "US Bond Market" column "Corporate Debt" (Symbol is "CorporateDebtTradeVol")
 US Bond Market Trading Volume
 https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-trading-volume-sifma.xls
 https://www.sifma.org/resources/research/us-bond-market-trading-volume/
 
 # 4 (DO NOT HAVE - PROBLEM - CAN NOT READ THE DATETIME COLUMN)
 US Equity Issuance and Trading Volumes
-most valuable information
-tab "Underwriting" column "TOTAL EQUITY"
+Most valuable information follows.
+Tab "Underwriting" column "TOTAL EQUITY"
 https://www.sifma.org/wp-content/uploads/2017/06/cm-us-equity-sifma1.xls
 https://www.sifma.org/resources/research/us-equity-stats/
 
-main pages ( html list of all excel spreadsheets )
+# Main pages ( html list of all excel spreadsheets )
 https://www.sifma.org/resources/archive/research/statistics/
 # a.k.a.
-https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=0&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+https://www.sifma.org/resources/archive/research/statistics
+       /?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=0&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
 next two pages
-https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=1&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
-https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=2&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+https://www.sifma.org/resources/archive/research/statistics
+       /?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=1&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+https://www.sifma.org/resources/archive/research/statistics
+       /?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=2&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
 
-referred by Jeff Cox
+This was referred by Jeff Cox
 AND
-Christopher Whalen
+Christopher Whalen.
 twitter handle: rcwhalen
 
-When the Bid Goes to Zero |
-https://goo.gl/2tUeJp  |
+When the Bid Goes to Zero
+https://goo.gl/2tUeJp
 https://twitter.com/rcwhalen/status/1072619534819971072
 AND
 When the Bid Goes to Zero
 December 11, 2018
 By: R. Christopher Whalen
 https://www.theinstitutionalriskanalyst.com/single-post/2018/12/11/When-the-Bid-Goes-to-Zero
+
+}
 }
 \examples{
 \dontrun{

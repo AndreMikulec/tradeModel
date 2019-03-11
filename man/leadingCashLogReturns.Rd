@@ -13,5 +13,7 @@ leadingCashLogReturns(xTs = NULL)
 leading xts object
 }
 \description{
-leading cash log returns (CASHlogrets)
+\preformatted{
+
+}
 }

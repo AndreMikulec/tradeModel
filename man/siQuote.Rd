@@ -10,5 +10,9 @@ siQuote(x)
 \item{x}{vector of strings}
 }
 \description{
+\preformatted{
+
 NOT USED ANYWHERE
+
+}
 }

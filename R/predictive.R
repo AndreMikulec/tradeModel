@@ -1,17 +1,22 @@
 
 
+
 #' setdiff any dimension-less  object
 #'
-#' Unlike base::setdiff does not do "as.vector",
-#' therefore vector classes are not lost
+#' @description
+#' \preformatted{
+#'
+#' Unlike base::setdiff does not do "as.vector".
+#' Therefore vector classes are not lost.
 #' ( e.g. Date and POSIXt).
 #'
-#' To compare, it uses (same as setdiff.default) match
+#' To compare, it uses (same as setdiff.default) match.
+#'
+#' }
 #'
 #' @param x vector
 #' @param y vector of elements to subtract off from x
-#' @return vector from x, elements of y have been subtracted
-#' from x
+#' @return vector from x, elements of y have been subtracted from x
 #' @export
 setDiff <- function (x, y) {
 tryCatchLog::tryCatchLog({
@@ -28,6 +33,9 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' safely make a xts into a df and safely make df into an xts
+#'
+#' @description
+#' \preformatted{
 #'
 #' library(xts)
 #' sample_xts <- as.xts(sample_matrix)
@@ -50,6 +58,9 @@ initEnv();on.exit({uninitEnv()})
 #' An 'xts' object of zero-width
 #' > index(xtsize(dfize(xts1)))
 #' [1] "Date of length 0"
+#'
+#' }
+#'
 #' @rdname converting
 #' @export
 #' @importFrom zoo as.Date
@@ -67,6 +78,11 @@ dfize <- function(xtso) {
 
 #' safely make df into an xts
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @rdname converting
 #' @export
 xtsize <- function(dfo) {
@@ -81,8 +97,16 @@ xtsize <- function(dfo) {
 
 #' inside and exts environment
 #'
-#' unstable structure to debug inside: holds for 2 seconds then bounces out
-#' within.xts IS TOO VOLITILE: CAN NOT browser/rstudio debug inside: SOMETHING IS NOT RIGHT
+#' @description
+#' \preformatted{
+#'
+#' Has an unstable structure to debug inside;
+#' holds for 2 seconds then bounces out.
+#'
+#' Within.xts IS TOO VOLITILE:
+#' CAN NOT browser/rstudio debug inside: SOMETHING IS NOT RIGHT
+#'
+#' }
 #'
 #' @export
 within.xts <- function (data, expr, ...) {
@@ -107,6 +131,11 @@ within.xts <- function (data, expr, ...) {
 
 
 #' comparison of two objects
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param test boolean test
 #' @param yes result of pass
@@ -145,6 +174,11 @@ ifelse.xts    <- function(test, yes, no) {
 
 #' difference of two xTs objects
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param xTs1 leading xts object
 #' @param xTs2 trailing xts object
 #' @return xts object with the same index as xTs1
@@ -167,19 +201,24 @@ initEnv();on.exit({uninitEnv()})
 
 #' quantmod getModelData with parameter source.envir
 #'
-#' get some Symbols from an environment (source.envir)
-#'   will search first in (source.envir)
-#'   if the Symbol is not found in the enviroment (source.envir),
+#' @description
+#' \preformatted{
+#'
+#' Get some Symbols from an environment (source.envir).
+#'   Will search first in (source.envir).
+#'   If the Symbol is not found in the enviroment (source.envir),
 #'   then get the Symbol from elsewhere
 #' ...
-#' passed to getSymbols
+#' Passed to getSymbols . . .
 #'         useful: from, to
 #'   maybe useful: src
 #'   maybe useful: set per Symbol src using setSymbolLookup
 #'
 #' specifyModel(getModelData)
 #' if na.rm == TRUE, then does 'na.exclude',
-#'   BUT 'without rules' PUTS back (rbind) the last observation
+#'   BUT 'without rules' PUTS back (rbind) the last observation.
+#'
+#' }
 #'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -250,9 +289,17 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
+
+
 #' try to download a file
 #'
-#' see pacakge quantmod quantmod:::convert.time.series
+#' @description
+#' \preformatted{
+#'
+#' See pacakge quantmod quantmod:::convert.time.series.
+#'
+#' }
 #'
 #' @param url as quantmod:::try.download.file
 #' @param destfile as quantmod:::try.download.file
@@ -294,7 +341,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' convert time series
 #'
-#' see pacakge quantmod quantmod:::convert.time.series
+#' @description
+#' \preformatted{
+#'
+#' See pacakge quantmod quantmod:::convert.time.series.
+#'
+#' }
 #'
 #' @param fr as quantmod:::convert.time.series
 #' @param return.class as quantmod:::convert.time.series
@@ -341,12 +393,19 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' Create one data object from multiple sources,
-#' applying transformations via standard R formula mechanism.
+#' create one data object from multiple sources
+#'
+#' @description
+#' \preformatted{
+#'
+#' Applying transformations via standard R formula mechanism.
 #'
 #' UNUSED
-#' see quantmod buildData
-#' and this function can also acquire symbols that are stored in an environment
+#' See quantmod buildData.
+#' Also, this function can also acquire symbols
+#' that are stored in an environment.
+#'
+#' }
 #'
 #' @param formula as quantmod buildData
 #' @param na.rm as quantmod buildData
@@ -369,15 +428,17 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-
 #' quantmod specifyModel with parameter source.envir
 #'
-#' get some Symbols from an environment (source.envir)
-#'   will search first in (source.envir)
-#'   if the Symbol is not found in the enviroment (source.envir),
-#'   then get the Symbol from elsewhere
+#' @description
+#' \preformatted{
+#'
+#' Get some Symbols from an environment (source.envir).
+#'   Will search first in (source.envir).
+#'   If the Symbol is not found in the enviroment (source.envir),
+#'   then get the Symbol from elsewhere.
 #' ...
-#' passed to getSymbols
+#' Passed to getSymbols ...
 #'         useful: from, to
 #'   maybe useful: src
 #'   maybe useful: set per Symbol src using setSymbolLookup
@@ -409,6 +470,8 @@ initEnv();on.exit({uninitEnv()})
 #'   , to   ="2011-12-31"
 #'   )
 #'
+#' }
+#'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 specifyModel <- function (formula, na.rm = TRUE, source.envir = NULL, ...) {
@@ -439,8 +502,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' column split a data.frame object into
-#' an environment of column-xts objects
+#' column split a data.frame object into an environment of column-xts objects
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param x data.frame object
 #' @param order.by xts compabile index
@@ -473,7 +540,13 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+
 #' converts to a quantmod object
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname as.quantmod
 #' @export
@@ -482,13 +555,18 @@ as.quantmod.default <- function(x, outcomename, order.by, na.rm = TRUE, ...) { i
 #' @export
 as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { UseMethod("as.quantmod") }
 
-# from a data.frame, covert to a quantmod object directly
-#
+
+
+#' from a data.frame, covert to a quantmod object directly
+#'
+#' @description
+#' \preformatted{
+#'
 # CURRENLY NOT USED
 #
-# if I have to do preprocessing ( e.g. a treatment )
+# If I have to do preprocessing ( e.g. a treatment )
 #   therefore the situation may be cheaper to make a quantmod object
-#     from a data.frame
+#     from a data.frame.
 #
 # if na.rm == TRUE, then does 'na.exclude'
 #   BUT 'without rules' PUTS back (rbind) the last observation
@@ -496,6 +574,8 @@ as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { U
 #' data(sample_matrix)
 #' sample_xts <- as.xts(sample_matrix)
 #' quantmodSample <- as.quantmod(as.data.frame(sample_xts), outcomename = "Close", order.by = index(sample_xts))
+#'
+#' }
 #'
 #' @rdname as.quantmod
 #' @export
@@ -545,14 +625,24 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
+
+
+
 #' detect the number of computer cores
 #'
+#' @description
+#' \preformatted{
+#'
 #' Re: [Rd] Get Logical processor count correctly whether NUMA is enabled or disabled
-#' Tomas Kalibera <tomas.kalibera@gmail.com>
+#' Tomas Kalibera <tomas.kalibera@@gmail.com>
 #' Mon 9/3/2018, 8:07 AM
-#' A summary for reference: the new detectCores() for Windows in R-devel
-#' Get Logical processor count correctly whether NUMA is enabled or disabled
-#' http://r.789695.n4.nabble.com/Get-Logical-processor-count-correctly-whether-NUMA-is-enabled-or-disabled-td4751774.html
+#' A summary for reference: the new detectCores() for Windows in R-devel.
+#' Get Logical processor count correctly whether NUMA is enabled or disabled.
+#' http://r.789695.n4.nabble.com/Get-Logical-processor-count-correctly-whether-
+#'        NUMA-is-enabled-or-disabled-td4751774.html
+#'
+#' }
 #'
 #' @return integer value of numer of cores
 #' @examples
@@ -580,6 +670,9 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' S3-like method buildModel.train
+#'
+#' @description
+#' \preformatted{
 #'
 #' # tuneGrid ( production tester )
 #' tg <- expand.grid(
@@ -616,16 +709,17 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' tc <- caret::trainControl(method = "cv", number = 5)
 #'
-#' TODO [ ] : fully WORKED EXAMPLE: combine WITH below
+#' TODO [ ] : fully WORKED EXAMPLE: combine WITH below.
 #' builtModel <- buildModel(specmodel, method="train", training.per=c("1970-12-31","2006-12-31")
 #'   , method_train = "xgbTree", tuneGrid = tg, trControl = tc)
+#'
+#' }
 #'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom caret trainControl train
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
-#  # DescTools DoCall
 buildModel.train <- function(quantmod,training.data, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -716,13 +810,22 @@ initEnv();on.exit({uninitEnv()})
   }
 })}
 
+
+
 #' determine the future
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname predictModel
 #' @export
 predictModel <- function(object, data, ...) {
     UseMethod("predictModel")
 }
+
+
 
 #' @rdname predictModel
 #' @export
@@ -731,9 +834,16 @@ predictModel.default <- function (object, data, ...) {
 }
 
 
+
+
 #' check the .libPaths() to see a package has a training function
 #'
-#' extracted because quantmod does not export this
+#' @description
+#' \preformatted{
+#'
+#' Extracted because quantmod does not export this.
+#'
+#' }
 #'
 #' @rdname is.method.available
 #' @export
@@ -760,17 +870,22 @@ is.method.available <- function(method, package) quantmod___is.method.available(
 
 
 
-# example (TODO [ ]) simplify
-#
-
-# from quantmod predictModel
-#
-# does caret train
-#
-#
+#' does caret train
+#'
+#' @description
+#' \preformatted{
+#'
+#' This is from quantmod predictModel.
+#'
+#' Example (TODO [ ]) simplify.
+#'
+#' }
+#'
+#'
 predictModel.train <- function (object, data, ...) {
     if (quantmod___is.method.available('train','caret')) {
         predict(object, data, ...)
     }
 }
+
 

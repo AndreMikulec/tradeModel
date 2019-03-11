@@ -2,8 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{xTsCols2SymbolsEnv}
 \alias{xTsCols2SymbolsEnv}
-\title{column split an xts object into
-an environment of column-xts objects}
+\title{column split an xts object into an environment of column-xts objects}
 \usage{
 xTsCols2SymbolsEnv(xTs)
 }
@@ -11,5 +10,9 @@ xTsCols2SymbolsEnv(xTs)
 \item{xTs}{xts object}
 }
 \description{
-uses S3 function: xts:::as.data.frame.xts
+\preformatted{
+
+uses xts private S3 function as.data.frame.xts
+
+}
 }

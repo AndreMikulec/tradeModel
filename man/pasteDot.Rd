@@ -14,5 +14,9 @@ pasteDot(..., sep = ".", collapse = NULL)
 \item{collapse}{as paste}
 }
 \description{
+\preformatted{
+
 NOT USED ANYWHERE
+
+}
 }

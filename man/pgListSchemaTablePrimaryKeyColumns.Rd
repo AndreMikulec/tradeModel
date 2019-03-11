@@ -18,5 +18,7 @@ vector of characters of primary key column names
 The results are ordered.
 }
 \description{
-of a specific PostgreSQL database schema table, show its primary key columns
+\preformatted{
+
+}
 }

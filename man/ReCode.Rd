@@ -39,15 +39,19 @@ Otherwise, the results will be attempted be returned as a list.
 returned list may be composed of elements of different classes.}
 }
 \description{
+\preformatted{
+
+THIS IS NOT PRODUCTION QUALITY.
 R LANGUAGE INTERNAL CRASHING (I JUST GET NAs)
-}
-\details{
+
 Adapted from blockmodeling::recode.
 Originally enhanced to be intermediary coding item
 in the processes assignment of xts index time classes from one
 class to another. If the oldcode and newcode classes
 are not compatiable (see below)
 then results are returned as elements in a a list.
+
+}
 }
 \examples{
 \dontrun{

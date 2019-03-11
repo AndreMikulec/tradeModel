@@ -14,7 +14,9 @@ RC(x, base = 0, lag = 1, log = FALSE, ...)
 \item{lag}{observations backwards}
 }
 \description{
-relative change
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

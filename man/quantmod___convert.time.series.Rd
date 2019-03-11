@@ -12,5 +12,9 @@ quantmod___convert.time.series(fr, return.class)
 \item{return.class}{as quantmod:::convert.time.series}
 }
 \description{
-see pacakge quantmod quantmod:::convert.time.series
+\preformatted{
+
+See pacakge quantmod quantmod:::convert.time.series.
+
+}
 }

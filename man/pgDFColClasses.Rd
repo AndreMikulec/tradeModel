@@ -16,7 +16,9 @@ named vector of names of column names and
 values of Server DB column data types
 }
 \description{
-from R data.frame column types, determine Server DB data types
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

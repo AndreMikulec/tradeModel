@@ -13,7 +13,11 @@ valueCurrentRetsClms(xTs = NULL)
 column names
 }
 \description{
-Value column names end in "currentrets" without "_wts"
+\preformatted{
+
+Value column names end in "currentrets" without "_wts".
+
+}
 }
 \examples{
 \dontrun{

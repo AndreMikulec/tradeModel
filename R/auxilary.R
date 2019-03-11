@@ -1,6 +1,13 @@
 
+# SEARCH FOR
+# LEFT_OFF
 
 #' garantee a date is a date or and empty date
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param date date
 #' @return date
@@ -28,6 +35,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' garantee a passed xts object or a zero length xts object
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object
@@ -67,10 +79,15 @@ initEnv();on.exit({uninitEnv()})
 
 #' garantees return value value is a 'matrix of at least one dimension'or NULL
 #'
-#' handles the edge case of coredata(<vector of element of size 1 or size 0>)
-#' meant specifically to input empty coredata data into xts(, index)
-#' xts(,index) only accepts a non zero-dimension matrix or a NULL
-
+#' @description
+#' \preformatted{
+#'
+#' handles the edge case of coredata(<vector of element of size 1 or size 0>).
+#' Meant specifically to input empty coredata data into xts(, index).
+#' xts(,index) only accepts a non zero-dimension matrix or a NULL.
+#'
+#' }
+#'
 #' @param xTs xts object
 #' @return matrix
 #' @examples
@@ -116,11 +133,16 @@ initEnv();on.exit({uninitEnv()})
 
 #' Convert time series data to an monthly OHLC series
 #'
-#' Wrapper around xts::to.monthly
+#' @description
+#' \preformatted{
+#'
+#' This is a wrapper around xts to.monthly.
 #' Months between the first date and the last
 #' date will have and entry filled in.
 #' It will get the "firstof" or "lastof"
 #' months between dates as the same in the call.
+#'
+#' }
 #'
 #' @param x ? xts::to.monthly and the index(x) class must
 #' have an S3 method for "seq(by = "months")".
@@ -130,7 +152,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param name See ? xts::to.monthly
 #' @param fillMissing TRUE(default). If indexAt is one of "firstof"
 #' or "lastof", then fill in missing month dates, if any.
-#' Otherwise FALSE, just pass throught to xts::to.monthly
+#' Otherwise FALSE, just pass throught to xts::to.monthly.
 #' @param ... dots See. ? xts::to.monthly
 #' @return See. ? xts::to.monthly
 #' @importFrom tryCatchLog tryCatchLog
@@ -176,7 +198,14 @@ initEnv(); on.exit({uninitEnv()})
 
 #' number of variables
 #'
-#' currently NOT USED
+#' @description
+#' \preformatted{
+#'
+#' NCOL wrongly returns value one(1)
+#' on non-data.frame 2nd dimension objects
+#' with a 2nd dimension size of zero(0).
+#'
+#' }
 #'
 #' @param x xts object
 #' @return integer number of variables
@@ -199,6 +228,7 @@ tryCatchLog::tryCatchLog({
   base::NCOL(x)
 
 })}
+
 
 
 #' @rdname NVAR
@@ -226,9 +256,14 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' convenience function calling stringr::str_detect
+#' convenience function calling stringr str_detect
 #'
-#' Stricter. NA values are returned as FALSE
+#' @description
+#' \preformatted{
+#'
+#' This is stricter. NA values are returned as FALSE.
+#'
+#' }
 #'
 #' @param x string
 #' @param pattern ICU regular expression pattern
@@ -259,12 +294,17 @@ initEnv(); on.exit({uninitEnv()})
 
 #' search OS environment variables or R options
 #'
+#' @description
+#' \preformatted{
+#'
 #' Look for truths or values in memory.
 #' Used as an alternative instead of expensive re-quering.
 #' If x is stored ins the OS environment, then x is stored as a string.
 #' To be consistent with OS storage, a value stored in options are
 #' also stored a string (see setWhat). Test exceptions are "TRUE","FALSE".
 #' These are tested as "TRUE"/"FALSE" or TRUE/FALSE.
+#'
+#' }
 #'
 #' @param x character vector of size one(1)  of what to check
 #' @param y TRUE(default): value to check against (often TRUE)
@@ -340,12 +380,17 @@ tryCatchLog::tryCatchLog({
 
 #' set OS environment variables or R options
 #'
+#' @description
+#' \preformatted{
+#'
 #' Set truths or values in memory.
 #' Used as an alternative instead of expensive re-quering.
 #' If x is stored in the OS environment, then x is stored as a string.
 #' To be consistent with OS storage, a value stored in options are
 #' also stored a string.
 #' x is tested using isWhatFnd.
+#'
+#' }
 #'
 #' @param x character vector of size one(1)  of what to set
 #' @param y TRUE(default): value to set (often TRUE).
@@ -401,12 +446,17 @@ tryCatchLog::tryCatchLog({
 
 #' get OS environment variables or R options
 #'
+#' @description
+#' \preformatted{
+#'
 #' Get truths or values in memory.
 #' Used as an alternative instead of expensive re-quering.
 #' If x is stored ins the OS environment, then x is retrieved as a string.
 #' To be consistent with OS storage, a value stored in options are
 #' also stored a string.  Retrieval exceptions are "TRUE","FALSE".
 #' These are retrieved as TRUE/FALSE.
+#'
+#' }
 #'
 #' @param x character vector of size one(1)  of what to get
 #' @param Storage "OS"(default). Otherwise "Options"
@@ -461,7 +511,16 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' From a path-file get the file name without the extension?
+#'
+#' @description
+#' \preformatted{
+#'
+#' VERIFY [ ]!
+#' See Orcs pureBasename
 #' funky rstudio problem (involves "gstat" (and "spacetime"))
+#'
+#' }
 #'
 pureBasename <- function(path, slash = FALSE) {
 
@@ -493,10 +552,15 @@ pureBasename <- function(path, slash = FALSE) {
 
 
 
-#' From source files, create .FST files
+#' From source files, create .fst files
 #'
-#' Expected main directories (Dirs), with one level
-#' of subdirecties.  Each subdirectory contains files (with columns)
+#' @description
+#' \preformatted{
+#'
+#' Expected main directories (dirs), with exactly one level
+#' of subdirectories. Each subdirectory contains files (with columns).
+#'
+#' }
 #'
 #' @param Dirs character vector of directories
 #' @param SubDirExpr NULL(default).  NULL means "all." Character vector of directories
@@ -568,7 +632,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' unset OS environment variables or R options
 #'
+#' @description
+#' \preformatted{
+#'
 #' Unset truths or values in memory.
+#'
+#' }
 #'
 #' @param x character vector of size one(1)  of what to unset
 #' @param Storage "OS"(default). Otherwise "Options" or "Both"
@@ -609,11 +678,16 @@ tryCatchLog::tryCatchLog({
 
 
 #' sets the enviroment
-#' space-saver - meant to be used at the beginning of a function
 #'
-#' Variable ops from the calling environment sets R options
-#' Environment variable TZ using the calling environment variable oldtz
-#' sets.
+#' @description
+#' \preformatted{
+#'
+#' This is a space-saver that is meant to be used at the beginning of a function.
+#'
+#' Variable ops from the calling environment sets R options.
+#' Environment variable TZ using the calling environment variable oldtz sets.
+#'
+#' }
 #'
 #' @return envi, options, and TZ are set
 #' @examples
@@ -697,11 +771,16 @@ tryCatchLog::tryCatchLog({
 
 
 #' unsets the enviroment
-#' space-saver - meant to be used at the beginning of a function
 #'
-#' Variable ops from the calling environment resets R options
-#' Environment variable TZ using the calling environment variable oldtz
-#' resets.
+#' @description
+#' \preformatted{
+#'
+#' This is a space-saver that is meant to be used at the beginning of a function.
+#'
+#' Variable ops from the calling environment resets R options.
+#' Environment variable TZ using the calling environment variable oldtz resets.
+#'
+#' }
 #'
 #' @return options, and TZ are un-set
 #' @examples
@@ -746,7 +825,12 @@ tryCatchLog::tryCatchLog({
 
 #' geometric investment results
 #'
+#' @description
+#' \preformatted{
+#'
 #' xTs values less that zero will generate a numeric error
+#'
+#' }
 #'
 #' @param xTs xts object of arithmatic returns
 #' @return xts object of geometric returns
@@ -786,15 +870,21 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
 #' get data from the St. Louis FRED
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param Symbol FRED symbol as a string
-#' @param New TRUE(default) of the Symbol get the data and store the data
+#' @param New TRUE(default) of the Symbol gets the data and stores the data
 #' through the method of getNewSymbols (TRUE).  Otherwise,
-#' get the data and store the through the method of getNewSymbols (FALSE).
+#' get the data and store the data through the method of getNewSymbols (FALSE).
 #' @param NewMaxAge default("4 hours"), if New = TRUE, then this
-#' is the timeout period of the stored data. After NewMaxAge, the
-#' the data will be re-queried from the St. Louis FRED.
+#' is the timeout period of the stored data. After NewMaxAge time has passed,
+#' the the data will be re-queried from the St. Louis FRED.
 #' of the data
 #' @param ... dots passed
 #' @return xts object of results
@@ -805,11 +895,11 @@ initEnv();on.exit({uninitEnv()})
 #' #                           gdp
 #' # 1947-01-01 243.16399999999999
 #'
-#' Get all of the records from the "cache" or "pg"
+#' Get all of the records from the "cache" or "pg".
 #' If the cache and pg is older than 4 hours then
 #' the data will be acquired anew from the source
 #' and loaded into the "pg" and the "cache" and returned
-#' to the user
+#' to the user.
 #'
 #' default New == TRUE (default)
 #' means use the function get\*New\*Symbols
@@ -817,7 +907,7 @@ initEnv();on.exit({uninitEnv()})
 #'   checks (1)cache then (2)pg if data is older than NewMaxAge = "4 hours"
 #'   checks "cache": manually check cache by ls(all.names = TRUE)
 #'   checks "pg": manually check database by using: SELECT * FROM "Symbols"."Symbols"
-#' then will get the new data from the "cache" or "pg"
+#' then will get the new data from the "cache" or "pg".
 #'
 #' fredData(Symbol = "UNRATE")
 #'
@@ -886,8 +976,13 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
 
 #' get the latest value in the month
 #'
-#' @param xTs xts object
-#' (currently) eomData only works on single column xtx objects
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object.
+#' (currently) eomData only works on single column xtx objects.
 #' @return xts object of the last observation with the
 #' month date rounded up to the last day of the month
 #' @examples
@@ -926,6 +1021,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' generate a good xts column name
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param x single column xts with the old column name
 #' @return single column xts with  the new column name
@@ -979,7 +1079,18 @@ initEnv();on.exit({uninitEnv()})
 
 #' pairwise interleave of columns
 #'
-#' works better on xts objects ( lapply or plyr::llply structure is held together )
+#' @description
+#' \preformatted{
+#'
+#' This works better on xts objects.
+#' (lapply or plyr::llply structure is held together.)
+#'
+#' If one or the other has one column while the other
+#' has N columns, then the one will be recycled to N columns.
+#'
+#' Helper to eXplode.
+#'
+#' }
 #'
 #' @param x1 data.frame or xts object
 #' @param x2 data.frame or xts object
@@ -1091,7 +1202,12 @@ pairWise <- function(x1, x2) {
 
 #' Interleave two vectors of arbitrary length
 #'
+#' @description
+#' \preformatted{
+#'
 #' from R CRAN package rmngb
+#'
+#' }
 #'
 #' @export
 interleave <- function (x, y)
@@ -1106,19 +1222,24 @@ interleave <- function (x, y)
 
 #' liquify a data.frame
 #'
+#' @description
+#' \preformatted{
+#'
 #' From a long data.frame, makes it into a wide data.frame.
 #'
-#' First, split-off into many data.frames using UniqueIDRegex
+#' First, split-off into many data.frames using UniqueIDRegex.
 #' (and 100 percent correlated ConstColsRegex)
 #'
 #' Next, generates new columns using FactorColsRegex and then
-#' repositions data items into those new columns ( see the example )
+#' repositions data items into those new columns (see the example)
 #' Data items are found in columns that are 'not members' of
 #' UniqueIDRegex, ConstColsRegex, and FactorColsRegex
 #'
-#' Last, 'smart' merges all of the data.frames together while
+#' Last, "smart" merges all of the data.frames together while
 #' adding new columns contributed by each splitted-off data.frame.
-#' Results, will/should be (hopfully) 'less' rows with many more columns
+#' Results, will/should be (hopfully) "less" rows with many more columns.
+#'
+#' }
 #'
 #' @param UniqueIDRegex unique IDs column names regular expression: determines the
 #' character vector of the columns that compose of the "unique identifier" for the row.
@@ -1127,12 +1248,12 @@ interleave <- function (x, y)
 #' character vector of (1) the columns that compose of the "unique identifier" for the row.
 #' (must include columns determined by parameter "UniqueIDRegex")
 #' and (2) optionally its 100 percent correlated columns (with values that
-#' do not vary with the values of the "unique identifer" columns.
+#' do not vary with the values of the "unique identifer" columns.)
 #' An examples would be another datatype or alias or alternate name: eg. 17000 "2016-07-18"
 #' @param FactorColsRegex reqular expression that determines the columns
-#' to be flattened. It also the program "subtracts off" columns found in parameter "ConstColsRegex"
+#' to be flattened. Also the program, it "subtracts off" columns found in parameter "ConstColsRegex".
 #' @param FactorColsNAReplace of columns that are the "result of FactorColsRegex",
-#' replacement of the NA values.  Good options may be "None" or "Unknown" or "NotAppl"
+#' replacement of the NA values.  Good options may be "None" or "Unknown" or "NotAppl".
 #' @param FactorColsFixedSep output FactorColsRegex divider(concatinator) characters
 #' @param DetailColsFixedSep output "generated (new) columns" divider(concatinator) characters
 #' @param SpaceFixedSep just before the data is returned, replace column name
@@ -1289,6 +1410,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' months after the event
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param x xts object
 #' @param dates vector of Dates of the events
 #' @return xts object with one new column
@@ -1343,6 +1469,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' days after the event
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param x xts object
 #' @param dates vector of Dates of the events
@@ -1401,6 +1532,11 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' wraps doBy::timeSinceEvent
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param x xts object
 #' @param dates vector of Dates of the events
 #' @return xts object with one new column
@@ -1452,6 +1588,11 @@ initEnv();on.exit({uninitEnv()})
 #' months since the event
 #'
 #' wraps doBy::timeSinceEvent
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param x xts object
 #' @param dates vector of Dates of the events
@@ -1518,14 +1659,19 @@ initEnv();on.exit({uninitEnv()})
 
 #' (true) sortino ratio
 #'
+#' @description
+#' \preformatted{
+#'
 #' Sortino Ratio: Are you calculating it wrong?
 #' https://www.rcmalternatives.com/2013/09/sortino-ratio-are-you-calculating-it-wrong/
 #'
 #' I CAN GET RID OF THIS FUNCTION
-#'
-#' # THIS WORKS CORRECTLY "AS IS"
+#' THIS WORKS CORRECTLY "AS IS".
+#' See. . . .
 #' Add feature zeroMAR to SortinoRatio ( actually DownsideDeviation ) #106
 #' https://github.com/braverock/PerformanceAnalytics/issues/106
+#'
+#' }
 #'
 #' @examples
 #' \dontrun{
@@ -1546,7 +1692,10 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
 
 #' apply rolling
 #'
-#' The best roller can roll anything with the most features
+#' @description
+#' \preformatted{
+#'
+#' The best roller can roll anything with the most features.
 #' The idea is that I can control(change) the INTERIOR data OF NAs founds
 #' within the middle of the data.
 #' This data and middle of data is meant to be sent
@@ -1555,6 +1704,8 @@ trueSortinoRatio <- function(x, MinRows, rf = 0.0, na.rm = FALSE) {
 #'
 #' Here I can estimate or replace those NAs found in the middle of the data
 #' before that data reaches TTR functions
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return modified xts object
@@ -1718,8 +1869,14 @@ initEnv();on.exit({uninitEnv()})
 
 #' Allows row indexing without knowledge of dimensionality or class.
 #'
-#' Improved version of rowr::rows.  This will not drop tables/arrays/data.frames
-#' of one dimension down to dimensionless vectors
+#' @description
+#' \preformatted{
+#'
+#' This is an improved version of rowr::rows.
+#' This will not drop tables/arrays/data.frames
+#' of one dimension down to dimensionless vectors.
+#'
+#' }
 #'
 #' @param data any R object
 #' @param rownums indices of target rows
@@ -1783,8 +1940,13 @@ initEnv();on.exit({uninitEnv()})
 
 #' rollapply anything
 #'
-#' based on package rowr function rollApply (rollapply anything).
-#' Uses Rows so single dimension objects are not dropped to vectors
+#' @description
+#' \preformatted{
+#'
+#' This is based on package rowr function rollApply (rollapply anything).
+#' Uses Rows so single dimension objects are not dropped to vectors.
+#'
+#' }
 #'
 #' @param data	any R object
 #' @param fun	the function to evaluate
@@ -1808,8 +1970,6 @@ initEnv();on.exit({uninitEnv()})
 #' Arizona       2212   4530        1.8    70.55    7.8    58.1    15 113417
 #'
 #' States <- rollApply2(state.x77, function(x) { tail(x,1) }, window = 3, min = 3, align = "right")
-#'
-#' # TODO [ ] replace plyr::llply with foreach::foreach
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
@@ -1846,7 +2006,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+
 #' rolling percent ranks grouped by epoch
+#'
+#' @description
+#' \preformatted{
 #'
 #' The idea is group rolling ranks from the end of crash/recession
 #' to the beginning of the next crash/recession (so that the
@@ -1854,6 +2018,8 @@ initEnv();on.exit({uninitEnv()})
 #' recaptured.)
 #'
 #' [Maybe] this is (weakly) designed to run through "eXplode."
+#'
+#' }
 #'
 #' @param xTs1 xts object
 #' @param xTs2 xts object of single column
@@ -1997,15 +2163,16 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-
-
-
-
 #' multi outer
 #'
-#' Applies reduction of outer amoung multiple vectors
+#' @description
+#' \preformatted{
+#'
+#' Applies reduction of outer amoung multiple vectors.
 #' FUN has a required formals that are similar to "paste". See the example.
-#' NOT USED ANYWHERE
+#' This is NOT USED ANYWHERE.
+#'
+#' }
 #'
 #' @author Steven Walker
 #' @references
@@ -2038,14 +2205,21 @@ multitable___mouter <- function(x, ...){
 
 #' rolling ranks using TTR::runPercentRank
 #'
-#' Wrapper around "TTR::runPercentRank."
-#' TTR::runPercentRank gives skewed values
+#' @description
+#' \preformatted{
+#'
+#' This is a wrapper around TTR runPercentRank.
+#' TTR runPercentRank gives skewed values
 #' (but with the value are in the correct order).
 #' This function uses that "proper ordering" and makes
 #' usable running ranks.
 #'
-#' # Last fortran (maybe better)
+#' Note, this is the function before being converted to C.
+#' the last fortran version may be better.
+#' However, the C version has a correction(fix).
 #' https://github.com/joshuaulrich/TTR/blob/9b30395f7604c37ea12a865961d81666bc167616/src/percentRank.f
+#'
+#' }
 #'
 #' @param x xts object
 #' @param window 10(default) lag to determine the ranks.
@@ -2059,7 +2233,7 @@ multitable___mouter <- function(x, ...){
 #' @param exact.multiplier The weight applied to identical values
 #' in the window. Must be between 0 and 1, inclusive.
 #' See ? TTR::runPercentRank
-#' @param originalData FALSE(default), if TRUE include oringinal data in the output.
+#' @param originalData FALSE(default). If TRUE include original data in the output.
 #' @param derivedDataDetailed FALSE(default) if TRUE, include the rank as part of the derived data column name.
 #' @return xts object
 #' @examples
@@ -2144,8 +2318,14 @@ initEnv();on.exit({uninitEnv()})
 
 #' backward looking and forward looking Ranks using data.table
 #'
+#' @description
+#' \preformatted{
+#'
 #' This is the rank over the "entire" data series (the window).
-#' In general this is not useful. NOT USED ANYWHERE.
+#' In general this is not useful. This is NOT USED ANYWHERE.
+#' This uses package data.table
+#'
+#' }
 #'
 #' @param x xts object
 #' @param ranks 4(default) number of ranks. A lower value
@@ -2227,9 +2407,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' rolling ranks using package matrixStats.
+#' rolling ranks using package matrixStats
 #'
-#' Note: this may use MUCH memory.  the number of new  matrix columns
+#' @description
+#' \preformatted{
+#'
+#' Note: this may use MUCH memory.  The number of new  matrix columns
 #' created is equal to "ranks - 1".  Also, time may be used to
 #' create these columns.
 #'
@@ -2238,6 +2421,8 @@ initEnv();on.exit({uninitEnv()})
 #' "base" and "ranks" can be cleverly manipulated to get, for example,
 #' ranks from observations not directly adjacent to each other. An examle
 #' is not shown.
+#'
+#' }
 #'
 #' @param x xts object
 #' @param laggedCols character vector of regular expressions or column names.
@@ -2337,7 +2522,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' paste with the default dot(.) separator
 #'
+#' @description
+#' \preformatted{
+#'
 #' NOT USED ANYWHERE
+#'
+#' }
 #'
 #' @param ... dots as paste
 #' @param sep as paste
@@ -2348,14 +2538,20 @@ pasteDot <- function(..., sep = ".", collapse = NULL) {
 }
 
 
+
 #' choose local minima (or maxima)
 #'
-#' Lags an xts column into a 2nd+ columns.
-#' Chooses the lowest(or highest) value rowwise
+#' @description
+#' \preformatted{
 #'
-#' Meant for removing noise from a monthly financial time series.
+#' Lags an xts column into a 2nd+ columns.
+#' This chooses the lowest(or highest) value rowwise
+#'
+#' This is meant for removing noise from a monthly financial time series.
 #' If the goal is a pessimisic (buy "puts") solution
 #' then an optimal choice may be (lag = 0:1, take = "min")
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @param base choose -1 (or less) to look into the future
@@ -2408,8 +2604,11 @@ tryCatchLog::tryCatchLog({
 
 #' specific orders of n  (smallest/largest) of values within a range
 #'
+#' @description
+#' \preformatted{
+#'
 #' Within a range, find the smallest observation
-#' of order (n). n == 1 smallest. n == 2 2nd smallest.
+#' of order (n). n == 1 is the smallest. n == 2 is the 2nd smallest.
 #'
 #' within range, within a subrange of smallest
 #' observations defined by nt, find the sum
@@ -2420,9 +2619,11 @@ tryCatchLog::tryCatchLog({
 #' is to choose the minimal of the previous two(2)
 #' observations before/or/after applying an SMA(x, 3).
 #'
-#' Other, expected be used on future data. Find
+#' Other, expected be used on future data. e.g. find
 #' the lowest valued two(2) months in the next(future)
 #' six(6) months and add(sum) those values together.
+#'
+#' }
 #'
 #' @param x  xts object
 #' @param base passed to LagXts.  See ? LagXts.
@@ -2562,7 +2763,13 @@ initEnv();on.exit({uninitEnv()})
 
 #' annualized an xts object
 #'
+#'
+#' @description
+#' \preformatted{
+#'
 #' Uses the xts index
+#'
+#' }
 #'
 #' @param x xts object of 'percent change'
 #' @return xts object with values multiplied to get annualization
@@ -2608,6 +2815,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' absolute change
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param x xts object
 #' @param base choose -1 (or less) to look into the future
 #' @param lag observations backwards
@@ -2645,6 +2857,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' relative change
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param x xts object
 #' @param base choose -1 (or less) to look into the future
@@ -2757,7 +2974,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' absolute 'relative change' ARC
 #'
-#' we may see "negative numbers
+#' @description
+#' \preformatted{
+#'
+#' Results MAY include "negative numbers."
+#'
+#' }
 #'
 #' @export
 ARC <- function(x, base = 0, lag = 1, log = FALSE, ...) { RC(x = x, base = base, lag = lag, log = log, ...) }
@@ -2766,7 +2988,12 @@ ARC <- function(x, base = 0, lag = 1, log = FALSE, ...) { RC(x = x, base = base,
 
 #' relative 'relative change' ARC
 #'
-#' we never see "negative numbers
+#' @description
+#' \preformatted{
+#'
+#' Results NEVER include "negative numbers."
+#'
+#' }
 #'
 #' @export
 RRC <- function(x, base = 0, lag = 1, log = FALSE, ...) { abs(ARC(x = x, base = base, lag = lag, log = log, ...)) }
@@ -2775,12 +3002,17 @@ RRC <- function(x, base = 0, lag = 1, log = FALSE, ...) { abs(ARC(x = x, base = 
 
 #' absolute percent change
 #'
-#' Most useful for calculating velocity
-#' and acceleration, (and jerk).
-#' To get accelleration and jerk use with
-#' diffXts and differences 2 (and 3) respectively.
+#' @description
+#' \preformatted{
 #'
-#' 99% percent of the people in the world should have been using this one.
+#' This is most useful for calculating velocity
+#' and acceleration, (and jerk).
+#' To get accelleration and jerk use this with
+#' diffXts with differences 2 (and 3) respectively.
+#'
+#' Ninety-nine (99%) percent of the people in the world SHOULD HAVE BEEN using this one.
+#'
+#' }
 #'
 #' @param x xts object
 #' @param base choose -1 (or less) to look into the future
@@ -2822,7 +3054,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' relative percent change
 #'
-#' 99% percent of the people in the world are using this wrong one
+#' @description
+#' \preformatted{
+#'
+#' Ninety-nine (99%) percent of the people in the world are using THIS WRONG ONE.
+#'
+#' }
 #'
 #' @param x xts object
 #' @param base choose -1 (or less) to look into the future
@@ -2864,9 +3101,14 @@ initEnv();on.exit({uninitEnv()})
 
 #' lag an xts object
 #'
-#' Does not complain when: any(abs(k) > NROW(xTs)):
+#' @description
+#' \preformatted{
+#'
+#' This does not complain when: any(abs(k) > NROW(xTs)):
 #' zoo_lag can not and will not handle. So k's are eliminated
-#' beforehand
+#' beforehand.
+#'
+#' }
 #'
 #' @param x xts object
 #' @param k choose -1 to look into the future
@@ -2953,6 +3195,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' lag and/or difference and/or use a function(Fun) upon and xts object
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param x as diff.xts
 #' @param lag as diff.xts
 #' @param differences as diff.xts
@@ -2961,7 +3208,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param na.pad as diff.xts
 #' @param Fun differencing function.
 #' Meant to change the xTs in some way.
-#' (Default diff (expected: xts::diff.xts))
+#' (Default diff (expected: xts::diff.xts)).
 #' Should accept or (accept and ignore) the parameters: lag;
 #' for S3 compatibility, differences; for xts compatiblity,
 #' arithmetic, log, and/or na.pad.
@@ -3056,7 +3303,7 @@ initEnv();on.exit({uninitEnv()})
       xTs <- DescTools::DoCall(Fun, c(list(), list(x),     lag=lag,   arithmetic=arithmetic, log = log, na.pad = na.pad, Fun = Fun, Dots))
       diffXts(xTs, lag=lag, differences=differences - 1,              arithmetic=arithmetic, log = log, na.pad = na.pad, Fun = Fun,   ...)
     } else {
-      xTs <- DescTools::DoCall(Fun,  c(list(), list(x),     lag=lag,   arithmetic=arithmetic, log = log, na.pad = na.pad, Fun = Fun, Dots))
+      xTs <- DescTools::DoCall(Fun,  c(list(), list(x),    lag=lag,   arithmetic=arithmetic, log = log, na.pad = na.pad, Fun = Fun, Dots))
       return(xTs)
     }
 
@@ -3068,10 +3315,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' expland out xts
 #'
-#' from an xts function stub, create an ets object of derived columns
+#' @description
+#' \preformatted{
 #'
-#' Meant to create many package TTR technical trading column results
-#' CURRENTLY NOT USED
+#' from an xts function stub, create an xts object of derived columns
+#'
+#' Meant to create many package TTR/PerformanceAnalytics column results
 #'
 #' Idea was from
 #'
@@ -3079,9 +3328,13 @@ initEnv();on.exit({uninitEnv()})
 #' January 24, 2013
 #' By Deane-Mayer
 #' http://www.r-bloggers.com/time-series-cross-validation-5/
-#' http://moderntoolmaking.blogspot.com/2013/01/time-series-cross-validation-5.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+ModernToolMaking+%28Modern+Tool+Making%29
+#' http://moderntoolmaking.blogspot.com/2013/01
+#'       /time-series-cross-validation-5.html?utm_source=feedburner
+#'       &utm_medium=feed&utm_campaign=Feed%3A+ModernToolMaking+%28Modern+Tool+Making%29
 #'
-#' NOTE: if any xTs2, then xTs1 and xTs2 are paired/matched column position to column position)
+#' NOTE: if any xTs2, then xTs1 and xTs2 are paired/matched column position to column position.
+#'
+#' }
 #'
 #' @param xTs1 xts object
 #' @param xTs2 xts object
@@ -3089,7 +3342,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param Whiches list of possible varying parameters that are expanded
 #' to all possible combinations by expand.grid
 #' @param AltName string alternate name for "Fun"
-#' @param Prefix boolan default is FALSE.  TRUE would place the column meta before the column name
+#' @param Prefix boolan default is FALSE.  TRUE would place the column meta before the column name.
 #' @param FixedSep string divider of meta items
 #' @param quote boolean passed to DescTools DoCall
 #' @param envir calling environment
@@ -3170,7 +3423,14 @@ initEnv();on.exit({uninitEnv()})
 
 #' leading
 #'
-#' pads beginning date as necessary
+#' @description
+#' \preformatted{
+#'
+#' Pads the beginning date as necessary.
+#'
+#' Get the leading month near eom date.
+#'
+#' }
 #'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -3207,6 +3467,13 @@ initEnv();on.exit({uninitEnv()})
 
 #' lagging
 #'
+#' @description
+#' \preformatted{
+#'
+#' Get the lagging month near eom date.
+#'
+#' }
+#'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
@@ -3242,7 +3509,14 @@ initEnv();on.exit({uninitEnv()})
 
 #' current
 #'
-#' pads beginning date as necessary
+#' @description
+#' \preformatted{
+#'
+#' Pads beginning date as necessary.
+#'
+#' Get the current month near eom date.
+#'
+#' }
 #'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -3278,15 +3552,22 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+
+
 #' NBER timeslices
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #'@param allSlicesStart NULL(default), Date of the earlies possbile date.
 #'This Date is the first day(1st) of a month. Note: this filter is applied LAST.
 #'@param allSlicesEnd NULL(default), Date of the latest possbile date.
 #'This Date is the last day(last) of a month. Note: this filter is applied late.
-#'@param LongTimeSlices FALSE(default), if TRUE, include non-recession range that
+#'@param LongTimeSlices FALSE(default). If TRUE, include non-recession range that
 #'is before this recession range.
-#'@param LongestTimeSlice FALSE(default), if TRUE then the start value is the
+#'@param LongestTimeSlice FALSE(default). If TRUE then the start value is the
 #'beginning of "NBER dates" (and limited by allSlicesStart)
 #'LongestTimeSlice = TRUE and LongTimeSlices = TRUE ARE mutually exclusive choices
 #'of each other
@@ -3375,9 +3656,14 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+
 #' get the latest value in the month from FRED
 #'
-#' ...
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param Symbol FRED symbol as a string
 #' @return xts object of the last observation with the
 #' month date rounded up to the last day of the month
@@ -3406,7 +3692,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' Wilshire 5000 Index price
+#' Get the Wilshire 5000 Index eom price from FRED
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @return xts object of end of month returns
 #' @export
@@ -3420,9 +3711,13 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-# NOTE: I may want to change to function(x, ...)
 
 #' change the index date to the future
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param x xts object or Date object
 #' @return xts object or data object with the index moved up
@@ -3448,6 +3743,13 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+#' convert to an eom date
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param x date object
 #' @rdname eomIndex
 #' @examples
@@ -3512,6 +3814,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the end of month UNRATE from FRED
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -3528,6 +3835,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' add UNRATE (unrate)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -3546,10 +3858,16 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+
 #' University of Michigan: Consumer Sentiment
 #'
-#' From FRED (historical) and briefing.com (recent) University of
-#' Michigan: Consumer Sentiment voting results data
+#' @description
+#' \preformatted{
+#'
+#' Get from FRED (historical) and briefing.com (recent) University of
+#' Michigan: Consumer Sentiment voting results data.
+#'
+#' }
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' Possible Symbols are the following:
@@ -3725,8 +4043,12 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
-#' end of month University of Michigan: Consumer Sentiment
-#' from FRED (historical) and briefing.com (recent)
+#' end of month University of Michigan: Consumer Sentiment data
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @return xts object
 #' @export
@@ -3744,7 +4066,11 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
 #' trim leading NAs and leading gaps of NAs
+#'
+#' @description
+#' \preformatted{
 #'
 #' Some FRED early data was delivered less
 #' frequently than later FRED data.
@@ -3752,6 +4078,8 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' Also, many functions in R CRAN package TTR
 #' will return an error if leading NA values are found
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object
@@ -3775,10 +4103,14 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-
 #' add University of Michigan: Consumer Sentiment
 #'
-#' NOT USED ANYWHERE
+#' @description
+#' \preformatted{
+#'
+#' NOT YET USED ANYWHERE
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -3799,26 +4131,32 @@ initEnv();on.exit({uninitEnv()})
 
 #' join two xts objects
 #'
-#' handles the edge case: if BOTH have no coredata (then merge.xts produces
-#' ONE no-data no-index xts object) then instead, preserve the indexes
+#' @description
+#' \preformatted{
+#'
+#' Handles the edge case: if BOTH have no coredata
+#' (then merge.xts produces ONE no-data no-index xts object)
+#' then instead, preserve the indexes.
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @param xTs1 xts object to merge into xTs
 #' @return xts object
 #' @examples
 #' \dontrun{
-#' #  > combineXts( initXts(NULL),xts(,zoo::as.Date(0)) )
-#' # Data:
-#' # numeric(0)
-#' #
-#' # Index:
-#' #  Date[1:1], format: "1970-01-01"
-#' # > combineXts( xts(,zoo::as.Date(1)), xts(,zoo::as.Date(0)) )
-#' # Data:
-#' # numeric(0)
-#' #
-#' # Index:
-#' #  Date[1:2], format: "1970-01-01" "1970-01-02"
+#' > combineXts( initXts(NULL),xts(,zoo::as.Date(0)) )
+#' Data:
+#' numeric(0)
+#'
+#' Index:
+#'  Date[1:1], format: "1970-01-01"
+#' > combineXts( xts(,zoo::as.Date(1)), xts(,zoo::as.Date(0)) )
+#' Data:
+#' numeric(0)
+#'
+#' Index:
+#'  Date[1:2], format: "1970-01-01" "1970-01-02"
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -3840,6 +4178,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' join two Log Returned xts objects
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param xTs xts object
 #' @param xTs1 xts object to merge into xTs
 #' @return xts object
@@ -3857,6 +4200,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object (only takes the index)
 #' @return xts object with the same index as xTs
@@ -3880,7 +4228,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' add cash log returns (CASHlogrets)
 #'
-#' currently not used anywhere
+#' @description
+#' \preformatted{
+#'
+#' CURRENTLY NOT USED ANYWHERE?
+#'
+#' }
 #'
 #' @param xTs xts object (only takes the index)
 #' @return xts object with merged data into xTs
@@ -3897,7 +4250,14 @@ initEnv();on.exit({uninitEnv()})
 
 })}
 
+
+
 #' leading cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object (only takes the index)
 #' @return leading xts object
@@ -3914,7 +4274,14 @@ initEnv();on.exit({uninitEnv()})
 
 })}
 
+
+
 #' current cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object (only takes the index)
 #' @return leading xts object
@@ -3934,7 +4301,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add cash log returns (CASHlogrets)
+#' add current cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -3955,6 +4327,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the Wilshare 5000 Index log returns
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -3973,7 +4350,10 @@ initEnv();on.exit({uninitEnv()})
 
 #' add Willshire 5000 Index log returns (WILL5000INDlogrets)
 #'
-#' currently not used anywhere
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -3994,6 +4374,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the Wilshare 5000 Index leadinglog returns
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -4006,7 +4391,13 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
 #' get the Wilshire 5000 Index lagging log returns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @return xts object
 #' @export
@@ -4022,7 +4413,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add Willshire 5000 Index log returns (WILL5000INDlogrets)
+#' add current Willshire 5000 Index log returns (WILL5000INDlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -4047,6 +4443,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' add weights (_wts)
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param xTs target xts object
 #' @param xTs1 source xts object of new weights
 #' @return xts object with merged data into xTs
@@ -4065,10 +4466,15 @@ initEnv();on.exit({uninitEnv()})
 
 #' add Willshire 5000 Index weights using eyeball
 #'
+#' @description
+#' \preformatted{
+#'
 #' This is the workhorse function. This is where the magic/logic happens.
 #' Use any other columns (called indicators) that do not have the weights (_wts)
 #' suffix and do not have the same root name compared to each and every
 #' other *_wts column.
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -4100,7 +4506,13 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' SMAs of the unrate Eyeball Indicator
+
+#' collection of SMAs of the unrate Eyeball Indicator
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -4128,8 +4540,14 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' for package caret function trainControl parameter summaryFunction
-#' True Sortino Ratio 'summary function'
+#' True Sortino Ratio "summary function"
+#'
+#' @description
+#' \preformatted{
+#'
+#' for package caret trainControl parameter summaryFunction
+#'
+#' }
 #'
 #' @export
 SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
@@ -4162,8 +4580,15 @@ SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
 }
 
 
-#' for package iml function FeatureImp$new
+
 #' True Sortino Ratio 'loss function'
+#'
+#' @description
+#' \preformatted{
+#'
+#' for iml FeatureImp$new
+#'
+#' }
 #'
 #' @param see ? iml::FeatureImp
 #' @param see ? iml::FeatureImp
@@ -4176,11 +4601,17 @@ SortinoRatioLoss <- function (actual, predicted, ...) {
 }
 
 
+
 #' relative scaling
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param x anything with methods for
 #' Ops: "+","-","/", "*" and possibly methods for min/max
-#' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
+#' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx.
 #' @return re-scaled from low:mim/max*100' to max:100
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -4192,13 +4623,19 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
 #' relative scaling of 2 dimensions
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param 2 dim object data.frame or two=dim non-matrix, non-array
 #' with methods for
 #' Ops: "+","-","/", "*" and possibly methods for min/max
 #' @param cols columns to rescale
-#' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx
+#' @param ... passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx.
 #' @return re-scaled from low:mim/max*100' to max:100
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -4223,7 +4660,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' formula.tools:::as.character.formula
+#' formula.tools private as.character.formula
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @export
 formula_tools___as_character_formula <- function (x, ...) {
@@ -4233,10 +4675,15 @@ formula_tools___as_character_formula <- function (x, ...) {
 }
 
 
-#' column split an xts object into
-#' an environment of column-xts objects
+
+#' column split an xts object into an environment of column-xts objects
 #'
-#' uses S3 function: xts:::as.data.frame.xts
+#' @description
+#' \preformatted{
+#'
+#' uses xts private S3 function as.data.frame.xts
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @export
@@ -4265,30 +4712,35 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' weights
+#' model weights
 #'
-#' xgboost weights ( using objective(y hieght) value to determine 'how much I care'(weights))
-#' The weights are then
+#' @description
+#' \preformatted{
 #'
-#' simply multiplied by the classification error at each iteration of the learning process.
+#' Using xgboost weights
+#' (using objective(y hieght) value to determine 'how much I care'(weights))
+#' the weights are then simply multiplied by the classification error
+#' at each iteration of the learning process.
 #'
-#' Gradient boosting machines, a tutoria
+#' Gradient boosting machines, a tutorial
 #' Front Neurorobot. 2013; 7: 21.
 #' Published online 2013 Dec 4. doi:  10.3389/fnbot.2013.00021
 #' PMCID: PMC3885826l
 #' http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885826/
+#'
+#' }
 #'
 #' @param xTs data
 #' @param target the column being predicted
 #' @param TrainStart absolute training start date
 #' @param TrainEnd absolute training end date
 #' @param weightings passed to Hmisc::wtd.quantile weights
-#' @param probs passed to Hmisc::wtd.quantile probs
-#' Default is seven(7) intervals of probs = c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00)
-#' @param CaseAdj new (re)values for values of the intervals 7:1 (from probs)
+#' @param probs passed to Hmisc::wtd.quantile probs.
+#' Default is seven(7) intervals of probs = c(0.00, 0.01, 0.10, 0.25, 0.75, 0.90, 0.99, 1.00).
+#' @param CaseAdj new (re)values for values of the intervals 7:1 (from probs).
 #' Must be passed to dplyr::case_when as a quoted list of formulas.
-#' Passed as formula elements:  BareWeightRankings == <oldvalue> ~ <newvalue>
-#' See the default (in the code: tradeModel::AdjustedWeightRankings )
+#' Passed as formula elements:  BareWeightRankings == <oldvalue> ~ <newvalue>.
+#' See the default (in the code: tradeModel::AdjustedWeightRankings ).
 #' @export
 #' @importFrom Hmisc wtd.quantile
 #' @importFrom dplyr case_when
@@ -4340,9 +4792,16 @@ initEnv();on.exit({uninitEnv()})
 
 #' Rob Hyndman style time slices
 #'
-#' create time slice indexes to be passed to aret::trainControl index and indexOut
-#' My visual observation is that this model DOES \*worse\* than general cross validateion
-#' This is because, per time slice, less observations exist to TRAIN/TEST over
+#' @description
+#' \preformatted{
+#'
+#' Create time slice indexes to be passed to caret trainControl index
+#' and indexOut. My visual observation is that this model
+#' DOES \*worse\* than general cross validation.
+#' This is because, per time slice, less observations
+#' exist to TRAIN/TEST over.
+#'
+#' }
 #'
 #' @param xTs data
 #' @param SlicesAllData list of index slice date vectors
@@ -4421,12 +4880,16 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-
 #' give more observations to the focused data
 #'
-#' produce more focused data duplicate observations
-#' such that focused data as at least the same number of observations
-#' as "all observations - focused observations"
+#' @description
+#' \preformatted{
+#'
+#' Produce more focused data duplicate observations
+#' such that "focused data" is at least the same number of observations
+#' as "all observations less focused observations"
+#'
+#' }
 #'
 #' @param xTs xts object of training data
 #' @param SlicesAllData list of index slice date vectors
@@ -4478,7 +4941,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' create/remove more or less observations determined by an UBL function
 #'
-#' produce more or less duplicate/near observations
+#' @description
+#' \preformatted{
+#'
+#' Produce more or less duplicate/near observations.
+#'
+#' }
 #'
 #' @param xTs xts object of training data
 #' @param Fmla formula that is sent to the UBL function
@@ -4601,7 +5069,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' low-level set the values quantmod object slots
 #'
-#' # methods/html/slot.html
+#' @description
+#' \preformatted{
+#'
+#' methods/html/slot.html
+#'
+#' }
 #'
 #' @param x quantmod object
 #' @param ... list of name-value pairs
@@ -4623,10 +5096,15 @@ initEnv();on.exit({uninitEnv()})
 
 #' add Willshire 5000 Index weights using Machine learning
 #'
+#' @description
+#' \preformatted{
+#'
 #' This is the workhorse function. This is where the magic/logic happens.
 #' Use any other columns (called indicators) that do not have the weights (_wts)
 #' suffix and do not have the same root name compared to each and every
 #' other *_wts column.
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -4835,12 +5313,17 @@ initEnv();on.exit({uninitEnv()})
 
 #' error handler function meant for tryCatchLog::tryCatchLog
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param e input from
 #' tryCatchLog::tryCatchLog(. . . , error = function(e) { ErrorHandler(e) })"
 #' @param useENVI getOption("useENVI") option.
 #' If NULL or TRUE, will use get("envi") to search for
-#' the calling environment location that is stored in "envi"
-#' Otherwise, will just get the calling environment from parent.frame(8)
+#' the calling environment location that is stored in "envi".
+#' Otherwise, will just get the calling environment from parent.frame(8).
 #' @importFrom DescTools DoCall
 #' @importFrom plyr llply
 #' @export
@@ -4879,9 +5362,12 @@ ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
 
 
 
-
-
 #' add Willshire 5000 Index log weights returns using eyeball (WILL5000INDlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -4899,6 +5385,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' add Willshire 5000 Index log weights returns using Machine learning (WILL5000INDlogrets)
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
@@ -4912,10 +5403,15 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' add cash weights
+#' cash weights
+#'
+#' @description
+#' \preformatted{
 #'
 #' Currently, this number is just only all of the other weight
 #' columns (*_wts) subtracted from one(1)
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
@@ -4939,6 +5435,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' add cash weights returns (CASHlogrets)
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
@@ -4953,7 +5454,13 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
 #' show the last six(6) records
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @param title heading
@@ -4978,7 +5485,13 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' show the last six(6) records
+
+#' initialize
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param initVal portfolio starting value($$). If it is null
 #' then the value is set to by 100000
@@ -5008,7 +5521,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the column names
 #'
-#' used internally
+#' @description
+#' \preformatted{
+#'
+#' This is used internally.
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return zero length vector or column names
@@ -5028,13 +5546,20 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
 # #' get the indicator columns
 # #'
-# #' columns that do not have a corresponding column having
+# #' @description
+# #' \preformatted{
+# #'
+# #' These are columns that do not have a
+# #' corresponding column having
 # #' its ending in "_wts" and do not have a do not have the
 # #' same root name compared to each and every other *_wts column.
 # #'
-# #' CURRENTLYNOT USED
+# #' CURRENTLY NOT USED
+# #'
+# #' }
 # #'
 # #' @param xTs xts objectt
 # #' @return column names
@@ -5059,9 +5584,14 @@ initEnv();on.exit({uninitEnv()})
 
 # #' get the values columns names
 # #'
+# #' @description
+# #' \preformatted{
+# #'
 # #' Values column names have an associated column with the
 # #' same root.  However the associated column always ends with
 # #' the suffix "_wts"
+# #'
+# #' }
 # #'
 # #' @param xTs xts object
 # #' @return column names
@@ -5092,8 +5622,13 @@ initEnv();on.exit({uninitEnv()})
 
 # #' get the weights(_wts) columns
 # #'
+# #' @description
+# #' \preformatted{
+# #'
 # #' Weights column names always ends in "_wts"
-# #' CURRENTLYNOT USED ANYWHERE
+# #' THIS IS CURRENTLY NOT USED ANYWHERE
+# #'
+# #' }
 # #'
 # #' @param xTs xts object
 # #' @return column names
@@ -5127,7 +5662,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the currentrets_wts columns
 #'
+#' @description
+#' \preformatted{
+#'
 #' Weights column names always end in "currentrets_wts"
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return column names
@@ -5158,7 +5698,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the leadingrets_wts columns
 #'
-#' Weights column names always end in "leadingrets_wts"
+#' @description
+#' \preformatted{
+#'
+#' Weights column names always end in "leadingrets_wts".
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return column names
@@ -5189,7 +5734,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the currentrets columns
 #'
-#' Value column names end in "currentrets" without "_wts"
+#' @description
+#' \preformatted{
+#'
+#' Value column names end in "currentrets" without "_wts".
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return column names
@@ -5220,7 +5770,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the leadingrets columns
 #'
+#' @description
+#' \preformatted{
+#'
 #' Value column names end in "leadingrets" without "_wts"
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return column names
@@ -5250,6 +5805,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the CASH columns
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param xTs xts object
 #' @return column names
 #' @export
@@ -5270,6 +5830,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' get the un-massaged original 'predictor' columns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @return column names
@@ -5293,10 +5858,15 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the porfolio log returns
 #'
-#' This calculated by taking the proporation of weights(0-1),
+#' @description
+#' \preformatted{
+#'
+#' This is calculated by taking the proporation of weights(0-1),
 #' but typically a fraction and then multiplying this proportion
 #' by its corresponding value column.  The sum of weights(_wts)
 #' columns sum to be one(1).
+#'
+#' }
 #'
 #' @param xTs xts object
 #' @param initVal start value of the investor's porfolio
@@ -5336,6 +5906,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' get the porfolio non-log(arithmatic) returns
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param xTs xts object
 #' @param initVal start value of the investor's porfolio
 #' @return xts object of arithmatic returns
@@ -5367,10 +5942,16 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
 #' print calendar of month by mont returns
 #'
-#' vericle left side axis is in years
-#' horizonl axis is in months
+#' @description
+#' \preformatted{
+#'
+#' The vericle left side axis is in "years".
+#' The horizontal axis is in "months".
+#'
+#' }
 #'
 #' Geometric adding is done across months
 #' An end of year(12 month summary) is in the verticle right side axis

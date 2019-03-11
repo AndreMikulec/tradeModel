@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{getNewSymbols}
 \alias{getNewSymbols}
-\title{get a recent Symbol i(f I do not have one)}
+\title{get a recent Symbol (if I do not have one)}
 \usage{
 getNewSymbols(Symbols = NULL, env = parent.frame(),
   reload.Symbols = FALSE, verbose = FALSE, warnings = TRUE,
@@ -26,7 +26,8 @@ getNewSymbols(Symbols = NULL, env = parent.frame(),
 
 \item{symbol.lookup}{as quantmod getSymbols: retrieve symbol's sourcing method from external lookup (TRUE)}
 
-\item{auto.assign}{as quantmod getSymbols: should results be loaded to env If FALSE, return results instead. As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE}
+\item{auto.assign}{as quantmod getSymbols: should results be loaded to env.
+If FALSE, return results instead. As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE.}
 
 \item{nextsrc}{next alternative sourcing methods trying in order, if found data is refreshed in reverse order}
 
@@ -44,15 +45,16 @@ The format uses as.difftime: "# secs", "# mins", "# hours", "# days", "# weeks"}
 \item{file.path}{as quantmod getSymbols: character string of file location}
 }
 \description{
-get a recent Symbol i(f I do not have one)
+\preformatted{
+
+First look in  nextsrc[1].
+If not found look in  nextsrc[2], . . . etc.
+If ran out of nextsrc, look in src.
+  Then next back-updated all of  nextsrc (going backwards).
+ Alt: if DID NOT run out of nextsrc, then a nextsrc was found the newer data.
+  Then next backload the newer data into all previous nextsrcs (going backwards).
+
 }
-\details{
-first look in  nextsrc[1]
-if not found look in  nextsrc[2], . . . etc
-if ran out of  nextsrc, look in src
-  then next back-updated all of  nextsrc (going backwards)
- alt: if DID NOT run out of nextsrc. A  nextsrc found the newer data.
-   then backload the newer data into all previous nextsrcs (going backwards)
 }
 \examples{
 \dontrun{

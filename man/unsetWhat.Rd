@@ -15,7 +15,11 @@ unsetWhat(x, Storage = NULL)
 NULL invisibly
 }
 \description{
+\preformatted{
+
 Unset truths or values in memory.
+
+}
 }
 \examples{
 \dontrun{

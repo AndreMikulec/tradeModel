@@ -7,5 +7,9 @@
 ARC(x, base = 0, lag = 1, log = FALSE, ...)
 }
 \description{
-we may see "negative numbers
+\preformatted{
+
+Results MAY include "negative numbers."
+
+}
 }

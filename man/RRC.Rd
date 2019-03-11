@@ -7,5 +7,9 @@
 RRC(x, base = 0, lag = 1, log = FALSE, ...)
 }
 \description{
-we never see "negative numbers
+\preformatted{
+
+Results NEVER include "negative numbers."
+
+}
 }

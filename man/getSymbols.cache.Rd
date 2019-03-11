@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{getSymbols.cache}
 \alias{getSymbols.cache}
-\title{Downloads Symbols to specified env from a local R environment}
+\title{downloads Symbols to specified env from a local R environment}
 \usage{
 getSymbols.cache(Symbols = NULL, env, return.class = "xts",
   cache.envir = NULL, ...)
@@ -22,10 +22,12 @@ getSymbols.cache(Symbols = NULL, env, return.class = "xts",
 A call to getSymbols.csv will load into the
 specified environment one object for each Symbol specified,
 with class defined by return.class. Presently this may be
-ts, zoo, xts, data.frame, or timeSeries
+ts, zoo, xts, data.frame, or timeSeries.
 }
 \description{
-Downloads Symbols to specified env from a local R environment
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

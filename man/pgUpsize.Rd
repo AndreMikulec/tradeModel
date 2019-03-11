@@ -36,7 +36,9 @@ Parameter valHint is sent to pgOldData.}
 \item{...}{dots passed to pgUpdate}
 }
 \description{
-addto/update a database with new information
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

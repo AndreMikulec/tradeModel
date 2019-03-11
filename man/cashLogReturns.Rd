@@ -13,5 +13,7 @@ cashLogReturns(xTs = NULL)
 xts object with the same index as xTs
 }
 \description{
-cash log returns (CASHlogrets)
+\preformatted{
+
+}
 }

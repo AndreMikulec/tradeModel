@@ -20,7 +20,7 @@ Classes "Date" and POSIXt are provided  S3 methods in package "base".}
 
 \item{fillMissing}{TRUE(default). If indexAt is one of "firstof"
 or "lastof", then fill in missing month dates, if any.
-Otherwise FALSE, just pass throught to xts::to.monthly}
+Otherwise FALSE, just pass throught to xts::to.monthly.}
 
 \item{...}{dots See. ? xts::to.monthly}
 }
@@ -28,11 +28,15 @@ Otherwise FALSE, just pass throught to xts::to.monthly}
 See. ? xts::to.monthly
 }
 \description{
-Wrapper around xts::to.monthly
+\preformatted{
+
+This is a wrapper around xts to.monthly.
 Months between the first date and the last
 date will have and entry filled in.
 It will get the "firstof" or "lastof"
 months between dates as the same in the call.
+
+}
 }
 \examples{
 \dontrun{

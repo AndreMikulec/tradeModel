@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{getSymbols.PostgreSQL}
 \alias{getSymbols.PostgreSQL}
-\title{Retrieve Data from PostgreSQL Database}
+\title{retrieve data from PostgreSQL Database}
 \usage{
 getSymbols.PostgreSQL(Symbols = NULL, con = NULL, env,
   return.class = "xts", db.fields = c("o", "h", "l", "c", "v", "a"),

@@ -15,5 +15,7 @@ newXtsColName(xTs = NULL, Fun = NULL, isCharFun = NULL,
 single column xts with  the new column name
 }
 \description{
-generate a good xts column name
+\preformatted{
+
+}
 }

@@ -19,14 +19,14 @@ This combination splits the input data.frame(x) into many data.frames(x - splitt
 character vector of (1) the columns that compose of the "unique identifier" for the row.
 (must include columns determined by parameter "UniqueIDRegex")
 and (2) optionally its 100 percent correlated columns (with values that
-do not vary with the values of the "unique identifer" columns.
+do not vary with the values of the "unique identifer" columns.)
 An examples would be another datatype or alias or alternate name: eg. 17000 "2016-07-18"}
 
 \item{FactorColsRegex}{reqular expression that determines the columns
-to be flattened. It also the program "subtracts off" columns found in parameter "ConstColsRegex"}
+to be flattened. Also the program, it "subtracts off" columns found in parameter "ConstColsRegex".}
 
 \item{FactorColsNAReplace}{of columns that are the "result of FactorColsRegex",
-replacement of the NA values.  Good options may be "None" or "Unknown" or "NotAppl"}
+replacement of the NA values.  Good options may be "None" or "Unknown" or "NotAppl".}
 
 \item{FactorColsFixedSep}{output FactorColsRegex divider(concatinator) characters}
 
@@ -39,20 +39,23 @@ character spaces with this value}
 amperstand(&) characters with this value(And)}
 }
 \description{
+\preformatted{
+
 From a long data.frame, makes it into a wide data.frame.
-}
-\details{
-First, split-off into many data.frames using UniqueIDRegex
+
+First, split-off into many data.frames using UniqueIDRegex.
 (and 100 percent correlated ConstColsRegex)
 
 Next, generates new columns using FactorColsRegex and then
-repositions data items into those new columns ( see the example )
+repositions data items into those new columns (see the example)
 Data items are found in columns that are 'not members' of
 UniqueIDRegex, ConstColsRegex, and FactorColsRegex
 
-Last, 'smart' merges all of the data.frames together while
+Last, "smart" merges all of the data.frames together while
 adding new columns contributed by each splitted-off data.frame.
-Results, will/should be (hopfully) 'less' rows with many more columns
+Results, will/should be (hopfully) "less" rows with many more columns.
+
+}
 }
 \examples{
 \dontrun{

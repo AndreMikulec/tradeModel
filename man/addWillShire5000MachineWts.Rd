@@ -13,5 +13,7 @@ addWillShire5000MachineWts(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add Willshire 5000 Index log weights returns using Machine learning (WILL5000INDlogrets)
+\preformatted{
+
+}
 }

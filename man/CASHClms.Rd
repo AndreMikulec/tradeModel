@@ -13,5 +13,7 @@ CASHClms(xTs = NULL)
 column names
 }
 \description{
-get the CASH columns
+\preformatted{
+
+}
 }

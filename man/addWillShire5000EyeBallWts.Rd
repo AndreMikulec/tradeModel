@@ -13,5 +13,7 @@ addWillShire5000EyeBallWts(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add Willshire 5000 Index log weights returns using eyeball (WILL5000INDlogrets)
+\preformatted{
+
+}
 }

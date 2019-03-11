@@ -9,7 +9,7 @@ relativeScaleImportance(x, cols = c("importance"), ...)
 \arguments{
 \item{cols}{columns to rescale}
 
-\item{...}{passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx}
+\item{...}{passed to DMwR ReScaling. Do not pass: x, t.mn, and t.mx.}
 
 \item{2}{dim object data.frame or two=dim non-matrix, non-array
 with methods for
@@ -19,5 +19,7 @@ Ops: "+","-","/", "*" and possibly methods for min/max}
 re-scaled from low:mim/max*100' to max:100
 }
 \description{
-relative scaling of 2 dimensions
+\preformatted{
+
+}
 }

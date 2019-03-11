@@ -7,15 +7,18 @@
 trueSortinoRatio(x, MinRows, rf = 0, na.rm = FALSE)
 }
 \description{
+\preformatted{
+
 Sortino Ratio: Are you calculating it wrong?
 https://www.rcmalternatives.com/2013/09/sortino-ratio-are-you-calculating-it-wrong/
-}
-\details{
-I CAN GET RID OF THIS FUNCTION
 
-# THIS WORKS CORRECTLY "AS IS"
+I CAN GET RID OF THIS FUNCTION
+THIS WORKS CORRECTLY "AS IS".
+See. . . .
 Add feature zeroMAR to SortinoRatio ( actually DownsideDeviation ) #106
 https://github.com/braverock/PerformanceAnalytics/issues/106
+
+}
 }
 \examples{
 \dontrun{

@@ -14,7 +14,9 @@ xts object of the last observation with the
 month date rounded up to the last day of the month
 }
 \description{
-...
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

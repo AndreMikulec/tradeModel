@@ -14,7 +14,11 @@ RPC(x, base = 0, lag = 1, ...)
 \item{lag}{observations backwards}
 }
 \description{
-99% percent of the people in the world are using this wrong one
+\preformatted{
+
+Ninety-nine (99%) percent of the people in the world are using THIS WRONG ONE.
+
+}
 }
 \examples{
 \dontrun{

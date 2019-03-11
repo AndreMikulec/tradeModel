@@ -15,16 +15,19 @@ rollApply(xTs = NULL, width = NULL, partial = NULL, align = NULL,
 modified xts object
 }
 \description{
-The best roller can roll anything with the most features
+\preformatted{
+
+The best roller can roll anything with the most features.
 The idea is that I can control(change) the INTERIOR data OF NAs founds
 within the middle of the data.
 This data and middle of data is meant to be sent
 to package TTR/PerformanceAnaltics functions.
 TTR functions reject(error out) on NAs found in the interior.
-}
-\details{
+
 Here I can estimate or replace those NAs found in the middle of the data
 before that data reaches TTR functions
+
+}
 }
 \examples{
 \dontrun{

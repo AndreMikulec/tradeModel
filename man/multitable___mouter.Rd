@@ -15,9 +15,13 @@ multitable___mouter(x, ...)
 array
 }
 \description{
-Applies reduction of outer amoung multiple vectors
+\preformatted{
+
+Applies reduction of outer amoung multiple vectors.
 FUN has a required formals that are similar to "paste". See the example.
-NOT USED ANYWHERE
+This is NOT USED ANYWHERE.
+
+}
 }
 \examples{
 \dontrun{

@@ -13,7 +13,11 @@ logReturns(xTs = NULL)
 xts object of geometric returns
 }
 \description{
+\preformatted{
+
 xTs values less that zero will generate a numeric error
+
+}
 }
 \examples{
 \dontrun{

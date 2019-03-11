@@ -17,5 +17,7 @@ printTail(xTs = NULL, title = NULL, n = NULL)
 invisible xts object
 }
 \description{
-show the last six(6) records
+\preformatted{
+
+}
 }

@@ -17,5 +17,7 @@ existSymbols.cache(Symbols = NULL, cache.envir = NULL, ...)
 R named list of Symbols and results (TRUE/FALSE)
 }
 \description{
-xts object symbols
+\preformatted{
+
+}
 }

@@ -15,22 +15,27 @@ combineXts(xTs = NULL, xTs1 = NULL)
 xts object
 }
 \description{
-handles the edge case: if BOTH have no coredata (then merge.xts produces
-ONE no-data no-index xts object) then instead, preserve the indexes
+\preformatted{
+
+Handles the edge case: if BOTH have no coredata
+(then merge.xts produces ONE no-data no-index xts object)
+then instead, preserve the indexes.
+
+}
 }
 \examples{
 \dontrun{
-#  > combineXts( initXts(NULL),xts(,zoo::as.Date(0)) )
-# Data:
-# numeric(0)
-#
-# Index:
-#  Date[1:1], format: "1970-01-01"
-# > combineXts( xts(,zoo::as.Date(1)), xts(,zoo::as.Date(0)) )
-# Data:
-# numeric(0)
-#
-# Index:
-#  Date[1:2], format: "1970-01-01" "1970-01-02"
+> combineXts( initXts(NULL),xts(,zoo::as.Date(0)) )
+Data:
+numeric(0)
+
+Index:
+ Date[1:1], format: "1970-01-01"
+> combineXts( xts(,zoo::as.Date(1)), xts(,zoo::as.Date(0)) )
+Data:
+numeric(0)
+
+Index:
+ Date[1:2], format: "1970-01-01" "1970-01-02"
 }
 }

@@ -15,5 +15,7 @@ combineLogReturns(xTs = NULL, xTs1 = NULL)
 xts object
 }
 \description{
-join two Log Returned xts objects
+\preformatted{
+
+}
 }

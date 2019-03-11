@@ -15,5 +15,7 @@ addWts(xTs = NULL, xTs1 = NULL)
 xts object with merged data into xTs
 }
 \description{
-add weights (_wts)
+\preformatted{
+
+}
 }

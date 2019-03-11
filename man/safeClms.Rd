@@ -13,5 +13,9 @@ safeClms(xTs = NULL)
 zero length vector or column names
 }
 \description{
-used internally
+\preformatted{
+
+This is used internally.
+
+}
 }

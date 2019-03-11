@@ -19,12 +19,16 @@ E.g. TRUE/"TRUE", 1/"1"}
 TRUE(if success) and FALSE(otherwise)
 }
 \description{
+\preformatted{
+
 Set truths or values in memory.
 Used as an alternative instead of expensive re-quering.
 If x is stored in the OS environment, then x is stored as a string.
 To be consistent with OS storage, a value stored in options are
 also stored a string.
 x is tested using isWhatFnd.
+
+}
 }
 \examples{
 \dontrun{

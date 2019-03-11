@@ -13,5 +13,7 @@ addWilshire5000LogReturns(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-currently not used anywhere
+\preformatted{
+
+}
 }

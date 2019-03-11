@@ -2,10 +2,16 @@
 % Please edit documentation in R/auxilary.R
 \name{pureBasename}
 \alias{pureBasename}
-\title{funky rstudio problem (involves "gstat" (and "spacetime"))}
+\title{From a path-file get the file name without the extension?}
 \usage{
 pureBasename(path, slash = FALSE)
 }
 \description{
+\preformatted{
+
+VERIFY [ ]!
+See Orcs pureBasename
 funky rstudio problem (involves "gstat" (and "spacetime"))
+
+}
 }

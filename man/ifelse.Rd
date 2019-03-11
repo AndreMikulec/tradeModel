@@ -23,5 +23,7 @@ ifelse(test, yes, no)
 xts object with the same index as xTs1
 }
 \description{
-comparison of two objects
+\preformatted{
+
+}
 }

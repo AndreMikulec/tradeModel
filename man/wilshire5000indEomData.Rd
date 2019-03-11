@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{wilshire5000indEomData}
 \alias{wilshire5000indEomData}
-\title{Wilshire 5000 Index price}
+\title{Get the Wilshire 5000 Index eom price from FRED}
 \usage{
 wilshire5000indEomData()
 }
@@ -10,5 +10,7 @@ wilshire5000indEomData()
 xts object of end of month returns
 }
 \description{
-Wilshire 5000 Index price
+\preformatted{
+
+}
 }

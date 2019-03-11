@@ -15,7 +15,9 @@ monthsAfterEvent(x, dates)
 xts object with one new column
 }
 \description{
-months after the event
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

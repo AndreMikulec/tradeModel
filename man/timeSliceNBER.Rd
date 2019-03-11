@@ -15,10 +15,10 @@ This Date is the first day(1st) of a month. Note: this filter is applied LAST.}
 \item{allSlicesEnd}{NULL(default), Date of the latest possbile date.
 This Date is the last day(last) of a month. Note: this filter is applied late.}
 
-\item{LongTimeSlices}{FALSE(default), if TRUE, include non-recession range that
+\item{LongTimeSlices}{FALSE(default). If TRUE, include non-recession range that
 is before this recession range.}
 
-\item{LongestTimeSlice}{FALSE(default), if TRUE then the start value is the
+\item{LongestTimeSlice}{FALSE(default). If TRUE then the start value is the
 beginning of "NBER dates" (and limited by allSlicesStart)
 LongestTimeSlice = TRUE and LongTimeSlices = TRUE ARE mutually exclusive choices
 of each other}
@@ -32,7 +32,9 @@ repetition of data, for example in sending timeslices to machine learning models
 a list of vectors of Dates of recession Ranges
 }
 \description{
-NBER timeslices
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

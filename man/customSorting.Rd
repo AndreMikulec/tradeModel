@@ -56,10 +56,52 @@ not found in InitOrder are removed}
 vector sorted by InitOrder
 }
 \description{
-excess Vector elements are appended to the end ( sort or not sort, CI sort or CS sort )
-other elements found in InitOrder that are 'not found in Vector' are ignored
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+Excess Vector elements are appended to the end.
+(sort or not sort, CI sort or CS sort)
+
+other elements found in InitOrder that are 'not found in Vector' are ignored.
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
 
 class 'timeSeries' does not have a customSorting implementation
+
+}
 }
 \examples{
 \dontrun{

@@ -13,7 +13,9 @@ initXts(xTs = NULL)
 xts object
 }
 \description{
-garantee a passed xts object or a zero length xts object
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

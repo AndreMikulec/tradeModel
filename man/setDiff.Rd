@@ -12,14 +12,16 @@ setDiff(x, y)
 \item{y}{vector of elements to subtract off from x}
 }
 \value{
-vector from x, elements of y have been subtracted
-from x
+vector from x, elements of y have been subtracted from x
 }
 \description{
-Unlike base::setdiff does not do "as.vector",
-therefore vector classes are not lost
+\preformatted{
+
+Unlike base::setdiff does not do "as.vector".
+Therefore vector classes are not lost.
 ( e.g. Date and POSIXt).
+
+To compare, it uses (same as setdiff.default) match.
+
 }
-\details{
-To compare, it uses (same as setdiff.default) match
 }

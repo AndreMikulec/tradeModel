@@ -15,7 +15,17 @@ pairWise(x1, x2)
 list of length two of two data.frames or xts objects
 }
 \description{
-works better on xts objects ( lapply or plyr::llply structure is held together )
+\preformatted{
+
+This works better on xts objects.
+(lapply or plyr::llply structure is held together.)
+
+If one or the other has one column while the other
+has N columns, then the one will be recycled to N columns.
+
+Helper to eXplode.
+
+}
 }
 \examples{
 \dontrun{

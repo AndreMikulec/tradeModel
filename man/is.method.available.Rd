@@ -10,5 +10,9 @@ quantmod___is.method.available(method, package)
 is.method.available(method, package)
 }
 \description{
-extracted because quantmod does not export this
+\preformatted{
+
+Extracted because quantmod does not export this.
+
+}
 }

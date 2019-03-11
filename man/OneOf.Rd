@@ -22,13 +22,16 @@ then "take" is ignored.}
 \item{...}{dots passed to Fun}
 }
 \description{
+\preformatted{
+
 Lags an xts column into a 2nd+ columns.
-Chooses the lowest(or highest) value rowwise
-}
-\details{
-Meant for removing noise from a monthly financial time series.
+This chooses the lowest(or highest) value rowwise
+
+This is meant for removing noise from a monthly financial time series.
 If the goal is a pessimisic (buy "puts") solution
 then an optimal choice may be (lag = 0:1, take = "min")
+
+}
 }
 \examples{
 \dontrun{

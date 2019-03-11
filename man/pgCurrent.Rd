@@ -28,9 +28,43 @@ pgSetCurrentSearchPath(con, path)
 pgCurrentTempSchema(con)
 }
 \description{
-Find the host name and port using PSQL commands
-https://stackoverflow.com/questions/5598517/find-the-host-name-and-port-using-psql-commands
+\preformatted{
 
-Find the host name and port using PSQL commands
-https://stackoverflow.com/questions/5598517/find-the-host-name-and-port-using-psql-commands
+Find the host name and port using PSQL commands.
+https://stackoverflow.com/questions/5598517/find-the-
+host-name-and-port-using-psql-commands
+
+}
+
+\preformatted{
+
+Find the host name and port using PSQL commands.
+https://stackoverflow.com/questions/5598517/find-the-
+host-name-and-port-using-psql-commands
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
+
+\preformatted{
+
+}
 }

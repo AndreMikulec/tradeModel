@@ -15,8 +15,12 @@ portfolioLogReturns(xTs = NULL, initVal = NULL)
 xts object of geometric returns
 }
 \description{
-This calculated by taking the proporation of weights(0-1),
+\preformatted{
+
+This is calculated by taking the proporation of weights(0-1),
 but typically a fraction and then multiplying this proportion
 by its corresponding value column.  The sum of weights(_wts)
 columns sum to be one(1).
+
+}
 }

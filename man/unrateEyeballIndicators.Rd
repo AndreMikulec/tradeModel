@@ -2,10 +2,12 @@
 % Please edit documentation in R/auxilary.R
 \name{unrateEyeballIndicators}
 \alias{unrateEyeballIndicators}
-\title{SMAs of the unrate Eyeball Indicator}
+\title{collection of SMAs of the unrate Eyeball Indicator}
 \usage{
 unrateEyeballIndicators(unrate = NULL)
 }
 \description{
-SMAs of the unrate Eyeball Indicator
+\preformatted{
+
+}
 }

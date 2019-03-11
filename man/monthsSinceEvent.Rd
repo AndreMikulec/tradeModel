@@ -15,6 +15,11 @@ monthsSinceEvent(x, dates)
 xts object with one new column
 }
 \description{
+\preformatted{
+
+}
+}
+\details{
 wraps doBy::timeSinceEvent
 }
 \examples{

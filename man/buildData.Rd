@@ -2,8 +2,7 @@
 % Please edit documentation in R/predictive.R
 \name{buildData}
 \alias{buildData}
-\title{Create one data object from multiple sources,
-applying transformations via standard R formula mechanism.}
+\title{create one data object from multiple sources}
 \usage{
 buildData(formula, na.rm = TRUE, return.class = "zoo",
   source.envir = NULL, ...)
@@ -21,7 +20,14 @@ buildData(formula, na.rm = TRUE, return.class = "zoo",
 "return.class" as quantmod buildData
 }
 \description{
+\preformatted{
+
+Applying transformations via standard R formula mechanism.
+
 UNUSED
-see quantmod buildData
-and this function can also acquire symbols that are stored in an environment
+See quantmod buildData.
+Also, this function can also acquire symbols
+that are stored in an environment.
+
+}
 }

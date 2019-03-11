@@ -19,5 +19,9 @@ existSymbols(Symbols = NULL, source.envir = NULL, ...)
 R named list of Symbols and results (TRUE/FALSE)
 }
 \description{
+\preformatted{
+
 looks in source.envir xor "src" exclusively
+
+}
 }

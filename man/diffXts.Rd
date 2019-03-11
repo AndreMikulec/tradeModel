@@ -22,7 +22,7 @@ diffXts(x, lag = 1, differences = 1, arithmetic = TRUE,
 
 \item{Fun}{differencing function.
 Meant to change the xTs in some way.
-(Default diff (expected: xts::diff.xts))
+(Default diff (expected: xts::diff.xts)).
 Should accept or (accept and ignore) the parameters: lag;
 for S3 compatibility, differences; for xts compatiblity,
 arithmetic, log, and/or na.pad.}
@@ -30,7 +30,9 @@ arithmetic, log, and/or na.pad.}
 \item{...}{dots passed}
 }
 \description{
-lag and/or difference and/or use a function(Fun) upon and xts object
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

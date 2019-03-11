@@ -18,5 +18,7 @@ table last date/time index value
 The results do not have any order.
 }
 \description{
-of a specific PostgreSQL database schema table show it's last date/time index value
+\preformatted{
+
+}
 }

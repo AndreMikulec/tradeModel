@@ -9,20 +9,24 @@ DetectEmptyRows(x, Var = NULL, Ele = NULL)
 \arguments{
 \item{x}{data.frame}
 
-\item{Var}{columns determining complete cases
-Can be column names or positions
+\item{Var}{columns determining complete cases.
+Can be column names or positions.
 Var is the determiner of empty rows.
-Other columns are ignored}
+Other columns are ignored.}
 
-\item{Ele}{"All"(default), of elements in Var, the test results
-Other option is "Any"}
+\item{Ele}{"All"(default), of elements in Var, the test results.
+The other option is "Any".}
 }
 \value{
 df with rows of all-NA removed
 }
 \description{
+\preformatted{
+
 complete.cases does not work on tibbles!
-Function is written in DataCombine style
+This function is written in package DataCombine style.
+
+}
 }
 \examples{
 \dontrun{

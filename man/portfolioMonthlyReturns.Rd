@@ -15,5 +15,7 @@ portfolioMonthlyReturns(xTs = NULL, initVal = NULL)
 xts object of arithmatic returns
 }
 \description{
-get the porfolio non-log(arithmatic) returns
+\preformatted{
+
+}
 }

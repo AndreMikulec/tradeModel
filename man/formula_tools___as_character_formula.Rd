@@ -2,10 +2,12 @@
 % Please edit documentation in R/auxilary.R
 \name{formula_tools___as_character_formula}
 \alias{formula_tools___as_character_formula}
-\title{formula.tools:::as.character.formula}
+\title{formula.tools private as.character.formula}
 \usage{
 formula_tools___as_character_formula(x, ...)
 }
 \description{
-formula.tools:::as.character.formula
+\preformatted{
+
+}
 }

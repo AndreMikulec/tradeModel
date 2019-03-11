@@ -10,11 +10,12 @@ dfize(xtso)
 xtsize(dfo)
 }
 \description{
+\preformatted{
+
 library(xts)
 sample_xts <- as.xts(sample_matrix)
 str(head(xtsize(dfize(sample_xts))))
-}
-\details{
+
 edge case tests
 
 xts1 <- xts(NA_real_, zoo::as.Date(0))
@@ -32,4 +33,10 @@ exiting from: dfize(xts1)
 An 'xts' object of zero-width
 > index(xtsize(dfize(xts1)))
 [1] "Date of length 0"
+
+}
+
+\preformatted{
+
+}
 }

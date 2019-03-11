@@ -40,19 +40,23 @@ About, "INSERT", the situation is best to use varHint and valHint to
 generate some "INSERT" key to key comparison data.}
 }
 \description{
-Elegible Server DB data that is available for update/insert.
+\preformatted{
+
+This is about elegible Server DB data that is available for update/insert.
 The idea is to get data from the server, so that one MAY want to update/insert.
 For performance reasons,
 the unique combinations of the keys of the data.frame df
 are sent to the server, to limit the number of rows returned from the server.
-}
-\details{
+
 if a column is found in df and not found on the Server DB,
 then, the function removes that column from df,
 (because that column can not be selected from the Server DB),
 and the user is warned about the column removal.
+
 Hint, before running this function, run pgAddColumnType, to garantee(create)
 columns from db to be new columns on the Server DB
+
+}
 }
 \examples{
 \dontrun{

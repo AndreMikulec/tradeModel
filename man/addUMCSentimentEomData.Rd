@@ -13,5 +13,9 @@ addUMCSentimentEomData(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-NOT USED ANYWHERE
+\preformatted{
+
+NOT YET USED ANYWHERE
+
+}
 }

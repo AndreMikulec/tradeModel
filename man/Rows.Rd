@@ -14,8 +14,13 @@ Rows(data, rownums, ...)
 \item{...}{dots may include the user-sent parameter "drop = TRUE"}
 }
 \description{
-Improved version of rowr::rows.  This will not drop tables/arrays/data.frames
-of one dimension down to dimensionless vectors
+\preformatted{
+
+This is an improved version of rowr::rows.
+This will not drop tables/arrays/data.frames
+of one dimension down to dimensionless vectors.
+
+}
 }
 \examples{
 \dontrun{

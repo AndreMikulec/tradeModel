@@ -7,15 +7,17 @@
 eomData(xTs = NULL)
 }
 \arguments{
-\item{xTs}{xts object
-(currently) eomData only works on single column xtx objects}
+\item{xTs}{xts object.
+(currently) eomData only works on single column xtx objects.}
 }
 \value{
 xts object of the last observation with the
 month date rounded up to the last day of the month
 }
 \description{
-get the latest value in the month
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

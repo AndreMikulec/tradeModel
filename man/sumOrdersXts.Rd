@@ -39,10 +39,11 @@ nt == -2 means n == 2:1.  nt will override n.  This can be
 useful when passing to eXplodeXts.}
 }
 \description{
+\preformatted{
+
 Within a range, find the smallest observation
-of order (n). n == 1 smallest. n == 2 2nd smallest.
-}
-\details{
+of order (n). n == 1 is the smallest. n == 2 is the 2nd smallest.
+
 within range, within a subrange of smallest
 observations defined by nt, find the sum
 of those small values.
@@ -52,9 +53,11 @@ item on past St. Louis FRED data.  Typical use
 is to choose the minimal of the previous two(2)
 observations before/or/after applying an SMA(x, 3).
 
-Other, expected be used on future data. Find
+Other, expected be used on future data. e.g. find
 the lowest valued two(2) months in the next(future)
 six(6) months and add(sum) those values together.
+
+}
 }
 \examples{
 \dontrun{

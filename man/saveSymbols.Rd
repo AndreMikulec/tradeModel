@@ -32,15 +32,18 @@ See ? saveSymbols.cache and ? saveSymbols.pg}
 Note: .getSymbols is * NOT UPDATED.*  A user is reponsible for 'self-tracking.'}
 }
 \description{
-First, it will look for Symbols in the .getSymbols file and env and gather them
-Next,  it will look for Symbols in source.envir and gather them
-}
-\details{
+\preformatted{
+
+First, it will look for Symbols in the .getSymbols file and env and gather them.
+Next,  it will look for Symbols in source.envir and gather them.
+
 If provided file.path, then object will be stored on disk(same as "RData")
 If provided trg == "RData", "cache", or "PostgreSQL (or just "pg")
-then the objectw be ALSO saved in this OTHER location
+then the objectw be ALSO saved in this OTHER location.
 
 Needs either/both "trg" or "file.path"
+
+}
 }
 \examples{
 \dontrun{

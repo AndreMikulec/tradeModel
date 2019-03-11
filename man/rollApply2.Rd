@@ -23,8 +23,12 @@ at the end of the data set}
 \item{data}{any R object}
 }
 \description{
-based on package rowr function rollApply (rollapply anything).
-Uses Rows so single dimension objects are not dropped to vectors
+\preformatted{
+
+This is based on package rowr function rollApply (rollapply anything).
+Uses Rows so single dimension objects are not dropped to vectors.
+
+}
 }
 \examples{
 \dontrun{
@@ -39,8 +43,6 @@ Alaska         365   6315        1.5    69.31   11.3    66.7   152 566432
 Arizona       2212   4530        1.8    70.55    7.8    58.1    15 113417
 
 States <- rollApply2(state.x77, function(x) { tail(x,1) }, window = 3, min = 3, align = "right")
-
-# TODO [ ] replace plyr::llply with foreach::foreach
 
 }
 }

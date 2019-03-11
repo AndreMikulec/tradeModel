@@ -19,7 +19,11 @@ names themselves}
 character vector of column names that make up the PRIMARY KEY
 }
 \description{
-friendly function with dfToCREATETable
+\preformatted{
+
+This is a friendly function with dfToCREATETable.
 This convenience function guesses the column names of the
-table's PRIMARY KEY columns
+table's PRIMARY KEY columns.
+
+}
 }

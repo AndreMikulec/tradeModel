@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{addCurrLeadWilshire5000LogReturns}
 \alias{addCurrLeadWilshire5000LogReturns}
-\title{add Willshire 5000 Index log returns (WILL5000INDlogrets)}
+\title{add current Willshire 5000 Index log returns (WILL5000INDlogrets)}
 \usage{
 addCurrLeadWilshire5000LogReturns(xTs = NULL)
 }
@@ -13,5 +13,7 @@ addCurrLeadWilshire5000LogReturns(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add Willshire 5000 Index log returns (WILL5000INDlogrets)
+\preformatted{
+
+}
 }

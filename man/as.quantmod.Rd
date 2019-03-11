@@ -15,9 +15,15 @@ as.quantmod(x, outcomename, order.by, na.rm = TRUE, ...)
   ...)
 }
 \description{
-converts to a quantmod object
+\preformatted{
+
+}
+
+\preformatted{
 
 data(sample_matrix)
 sample_xts <- as.xts(sample_matrix)
 quantmodSample <- as.quantmod(as.data.frame(sample_xts), outcomename = "Close", order.by = index(sample_xts))
+
+}
 }

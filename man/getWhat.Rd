@@ -15,12 +15,16 @@ getWhat(x, Storage = NULL)
 value otherwise NULL
 }
 \description{
+\preformatted{
+
 Get truths or values in memory.
 Used as an alternative instead of expensive re-quering.
 If x is stored ins the OS environment, then x is retrieved as a string.
 To be consistent with OS storage, a value stored in options are
 also stored a string.  Retrieval exceptions are "TRUE","FALSE".
 These are retrieved as TRUE/FALSE.
+
+}
 }
 \examples{
 \dontrun{

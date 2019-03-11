@@ -10,5 +10,7 @@ leadingWilshire5000LogReturns()
 xts object
 }
 \description{
-get the Wilshare 5000 Index leadinglog returns
+\preformatted{
+
+}
 }

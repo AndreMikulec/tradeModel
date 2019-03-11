@@ -35,7 +35,11 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
-NOT USED ANYWHERE
+\preformatted{
+
+NOT YET USED ANYWHERE
+
+}
 }
 \examples{
 \dontrun{

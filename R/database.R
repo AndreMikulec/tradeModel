@@ -4,6 +4,11 @@
 
 #' convert an OHLC xTs into aN OHLC data.frame MEANT to be loaded into a database
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param xTs OHLC[V][A] object
 #' @param con DBI database connection
 #' @param field.names R column names
@@ -33,9 +38,14 @@ initEnv();on.exit({uninitEnv()})
 
 #' determine the column names of a data.frame's key columns
 #'
-#' friendly function with dfToCREATETable
+#' @description
+#' \preformatted{
+#'
+#' This is a friendly function with dfToCREATETable.
 #' This convenience function guesses the column names of the
-#' table's PRIMARY KEY columns
+#' table's PRIMARY KEY columns.
+#'
+#' }
 #'
 #' @param df data.frame sent to function dfToCREATETable
 #' @param keys if passed NULL or 1 then the first column is returned.
@@ -65,12 +75,16 @@ dfGetPKEYNames <- function(df, keys) {
 
 
 #' from column names and datatypes, make a CREATE TABLE statement
-#' needed to persistently store data
 #'
-#' also register its meta-data
-#' (Note: if the meta-data table(Symbols) does not exist, then it will be created)
+#' @description
+#' \preformatted{
 #'
-#' friendly function with dfGetPKEYNames
+#' This is needed to persistently store data.
+#'
+#' Also register its meta-data.
+#' (Note: if the meta-data table(Symbols) does not exist, then it will be created.)
+#'
+#' This is a friendly function with dfGetPKEYNames.
 #'
 #'# # create automatically by function: dfToCREATETable
 #'
@@ -87,6 +101,8 @@ dfGetPKEYNames <- function(df, keys) {
 #'# );
 #'# ALTER TABLE "Symbols"
 #'#   OWNER TO "Symbols";
+#'
+#' }
 #'
 #' @param df data.frame (with column names)
 #' @param con DBI database connection
@@ -169,8 +185,13 @@ initEnv();on.exit({uninitEnv()})
 
 #' better Names
 #'
-#' if the argument to names is NULL or has zero(0) length
-#' then instead for returning NULL, return character(0)
+#' @description
+#' \preformatted{
+#'
+#' If the argument to names is NULL or has zero(0) length
+#' then instead for returning NULL, return character(0).
+#'
+#' }
 #'
 #' @param x names
 #' @export
@@ -181,8 +202,16 @@ Names <- function(x) {
   return(res)
 }
 
+
+#' garantee that Names assigns a zero length character vector
+#'
+#' @description
+#' \preformatted{
+#'
 #' if x or value is null or has length zero(0) then
 #' then that item is character(0)
+#'
+#' }
 #'
 #' @param x names
 #' @param value result
@@ -198,7 +227,12 @@ Names <- function(x) {
 
 #' extract a list of R objects and assign to an environment
 #'
-#' mostly for 'space saving' and cleanliness
+#' @description
+#' \preformatted{
+#'
+#' This is mostly for 'space saving' and cleanliness.
+#'
+#' }
 #'
 #' @param List R list: a collection of R objects
 #' @param nms vector of names of List object (default: everything)
@@ -230,6 +264,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' smartly connect to PostgreSQL database
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param user username(default "Symbols") to access database
 #' @param password password(default "Symbols") to access database
@@ -289,6 +328,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' of a specific PostgreSQL database schema, show its tables
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param con PostgreSQL DBI connection
 #' @param schname schema name
 #' @return vector of characters of table names
@@ -323,6 +367,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' of a specific PostgreSQL database schema table, show its columns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param con PostgreSQL DBI connection
 #' @param schema name
@@ -364,6 +413,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' of a specific PostgreSQL database schema table, show its columns and data types
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param con PostgreSQL DBI connection
 #' @param schema name
@@ -407,6 +461,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' of a specific PostgreSQL database schema table, show its primary key columns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param con PostgreSQL DBI connection
 #' @param schema name
@@ -456,7 +515,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' returns One column from a database (con)
+#' returns one column from a database (con)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param con DBI database connection
 #' @param Query SQL expecting output to be a single value,
@@ -517,7 +581,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' single quote
 #'
+#' @description
+#' \preformatted{
+#'
 #' NOT USED ANYWHERE
+#'
+#' }
 #'
 #' @param x vector of strings
 #' @importFrom stringr str_c
@@ -530,6 +599,11 @@ siQuote <- function(x) {
 
 
 #' addto/update a database with new information
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
@@ -605,6 +679,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' add a table to a database
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param con DBI database connection
 #' @param Symbol new table name. E.g Could be a company TICKER or a FRED column.
 #' @param keys trgt remote server side vector of strings of table
@@ -631,6 +710,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' from R data.frame column types, determine Server DB data types
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param df local client side data.frame. If df's class `[` method
 #' drops single dimentions to vectors the call by using
@@ -681,10 +765,15 @@ initEnv();on.exit({uninitEnv()})
 
 #' add a column to a database table
 #'
-#' matches by colum name. If the column the does not
+#' @description
+#' \preformatted{
+#'
+#' This matches by colum name. If the column the does not
 #' exist on the Server DB, then the column is added to the Server DB
-#' by ALTER TABLE <trgt> ADD ( column ) called each per new column.
-
+#' by ALTER TABLE <trgt> ADD ( column ) (called each per new column.)
+#'
+#' }
+#'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
 #' @param schname schema name
@@ -733,16 +822,22 @@ initEnv();on.exit({uninitEnv()})
 
 #' insert into a database table 'new' data
 #'
-#' The keys parameter determine distinct records.
-#' Only 'new' records area added.
-#' (See pgUpdate to add information to current(already existing) records)
+#' @description
+#' \preformatted{
 #'
-#' In internal feature
-#' oldData previously collected limited server DB data used to
+#' The keys parameter determines distinct records.
+#' Only 'new' records area added.
+#' (See pgUpdate to add information to current(already existing) records.)
+#'
+#' In the internal feature,
+#' oldData previously collected *limited server DB data* used to
 #' restrict what is inserted.
-#' In oldData of data: server data and df data that is common by primary keys
+#'
+#' In oldData of data, server data and df data that is common by primary keys
 #' is eliminatated from the attempted insert.
 #' The keys are checked for 'no duplicates'
+#'
+#' }
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
@@ -894,7 +989,10 @@ initEnv();on.exit({uninitEnv()})
 
 #' collect from the Server DB a limited amount of data restricted by df and VarHint
 #'
-#' Elegible Server DB data that is available for update/insert.
+#' @description
+#' \preformatted{
+#'
+#' This is about elegible Server DB data that is available for update/insert.
 #' The idea is to get data from the server, so that one MAY want to update/insert.
 #' For performance reasons,
 #' the unique combinations of the keys of the data.frame df
@@ -904,8 +1002,11 @@ initEnv();on.exit({uninitEnv()})
 #' then, the function removes that column from df,
 #' (because that column can not be selected from the Server DB),
 #' and the user is warned about the column removal.
+#'
 #' Hint, before running this function, run pgAddColumnType, to garantee(create)
 #' columns from db to be new columns on the Server DB
+#'
+#' }
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
@@ -1072,10 +1173,15 @@ initEnv();on.exit({uninitEnv()})
 
 #' update a database table with 'updated' data
 #'
+#' @description
+#' \preformatted{
+#'
 #' For performance reasons,
 #' the unique combinations of the keys of the data.frame df
 #' are sent to the server, to limit the number of
-#' rows returned from the server by pgOldData
+#' rows returned from the server by pgOldData.
+#'
+#' }
 #'
 #' @param con DBI connection PostgreSQL
 #' @param trgt remote server side string database table name of old data
@@ -1384,50 +1490,96 @@ initEnv();on.exit({uninitEnv()})
 
 #' get PostgreSQL host address
 #'
-#' Find the host name and port using PSQL commands
-#' https://stackoverflow.com/questions/5598517/find-the-host-name-and-port-using-psql-commands
+#' @description
+#' \preformatted{
+#'
+#' Find the host name and port using PSQL commands.
+#' https://stackoverflow.com/questions/5598517/find-the-
+#' host-name-and-port-using-psql-commands
+#'
+#' }
 #'
 #' @rdname pgCurrent
 #' @export
 pgCurrentHostAddress <- function(con) { oneColumn(con, "SELECT inet_server_addr();", "CurrentHostAddress") }
 
+
+
 #' get PostgreSQL host address
 #'
-#' Find the host name and port using PSQL commands
-#' https://stackoverflow.com/questions/5598517/find-the-host-name-and-port-using-psql-commands
+#' @description
+#' \preformatted{
+#'
+#' Find the host name and port using PSQL commands.
+#' https://stackoverflow.com/questions/5598517/find-the-
+#' host-name-and-port-using-psql-commands
+#'
+#' }
 #'
 #' @rdname pgCurrent
 #' @export
 pgCurrentPort <- function(con) { oneColumn(con, "SELECT inet_server_port();", "CurrentPort") }
 
 
+
 #' get PostgreSQL current user name
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname pgCurrent
 #' @export
 pgCurrentUser <- function(con) { oneColumn(con, "SELECT CURRENT_USER;", "CurrentUser") }
 
+
+
 #' get PostgreSQL current user schema
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname pgCurrent
 #' @export
 pgCurrentSchema <- function(con) { oneColumn(con, "SELECT current_schema();", "CurrentSchema") }
 
+
+
 #' get PostgreSQL current user database name
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname pgCurrent
 #' @export
 pgCurrentDB <- function(con) { oneColumn(con, "SELECT current_database();", "CurrentDB") }
 
 
+
 #' get PostgreSQL current user search path
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname pgCurrent
 #' @export
 pgCurrentSearchPath <- function(con) { oneColumn(con, "SHOW SEARCH_PATH;", "CurrentSearchPath", unQuote = TRUE) }
 
 
+
 #' set PostgreSQL current user search path
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname pgCurrent
 #' @export
@@ -1439,12 +1591,23 @@ pgSetCurrentSearchPath <- function(con, path) { DBI::dbExecute(con, stringr::str
 
 #' get PostgreSQL current user temp schema
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @rdname pgCurrent
 #' @export
 pgCurrentTempSchema <- function(con) { oneColumn(con, "SELECT nspname FROM pg_namespace WHERE oid = pg_my_temp_schema();", "CurrentTempSchema") }
 
 
+
 #' get PostgreSQL current user time zone
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname pgTimeZone
 #' @export
@@ -1454,20 +1617,41 @@ pgCurrentTimeZone <- function(con) {  oneColumn(con, "SHOW TIMEZONE;", "CurrentT
 
 #' custom sorting a vector
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @rdname customSorting
 #' @export
 customSorting <- function(x, ...) UseMethod("customSorting")
 
+
+
 #' custom sorting a vector
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname customSorting
 #' @export
 customSorting.default <- function(x, ...) stop("No customSorting S3 method found")
 
+
+
 #' custom sorting a vector
 #'
-#' excess Vector elements are appended to the end ( sort or not sort, CI sort or CS sort )
-#' other elements found in InitOrder that are 'not found in Vector' are ignored
+#' @description
+#' \preformatted{
+#'
+#' Excess Vector elements are appended to the end.
+#' (sort or not sort, CI sort or CS sort)
+#'
+#' other elements found in InitOrder that are 'not found in Vector' are ignored.
+#'
+#' }
 #'
 #' @param x vector  to be sorted
 #' @param InitOrder starting custom sorting ( without the excess )
@@ -1544,7 +1728,15 @@ customSorting.character <- function(x, InitOrder, CI = FALSE, sortVectorExcess =
   Vector
 
 }
+
+
+
 #' custom sorting a vector
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname customSorting
 #' @examples
@@ -1555,7 +1747,14 @@ customSorting.character <- function(x, InitOrder, CI = FALSE, sortVectorExcess =
 #' @export
 customSorting.numeric <- customSorting.character
 
+
+
 #' custom sorting a vector
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname customSorting
 #' @examples
@@ -1581,7 +1780,14 @@ customSorting.Date <- function(x, InitOrder, ...) {
   zoo::as.Date(x, ...)
 }
 
+
+
 #' custom sorting a vector
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname customSorting
 #' @importFrom zoo yearmon
@@ -1594,7 +1800,14 @@ customSorting.yearmon <- function(x, InitOrder, ...) {
   zoo::as.yearmon(x, ...)
 }
 
+
+
 #' custom sorting a vector
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname customSorting
 #' @importFrom zoo yearqtr
@@ -1607,7 +1820,14 @@ customSorting.yearqtr <- function(x, InitOrder, ...) {
   zoo::as.yearqtr(x, ...)
 }
 
+
+
 #' custom sorting a vector
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname customSorting
 #' @export
@@ -1620,7 +1840,14 @@ customSorting.POSIXct <- function(x, InitOrder, ...) {
 
 }
 
+
+
 #' custom sorting a vector
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @rdname customSorting
 #' @importFrom chron as.chron
@@ -1636,9 +1863,16 @@ customSorting.chron <- function(x, InitOrder, ...) {
   x
 }
 
+
+
 #' custom sorting a vector
 #'
+#' @description
+#' \preformatted{
+#'
 #' class 'timeSeries' does not have a customSorting implementation
+#'
+#' }
 #'
 #' @rdname customSorting
 #' @importFrom timeSeries as.timeSeries
@@ -1651,11 +1885,16 @@ customSorting.timeSeries <- function(x, InitOrder, ...) {
 
 
 
-#' Philadelphia Fed Survey of Professinal Forecasters Release Dates
+#' Philadelphia Fed Survey of Professinal Forecasters release dates
+#'
+#' @description
+#' \preformatted{
 #'
 #' About the date/time index . . .
 #'
-#' Deadline and Release Dates for the Survey of Professional Forecasters
+#' This is the Deadline and Release Dates for the
+#' Survey of Professional Forecasters.
+#'
 #' True deadline and news release dates for surveys prior to 1990:Q2 are not known.
 #'
 #' *The 1990Q2 survey was not taken in real time, because the Philadelphia Fed
@@ -1667,6 +1906,8 @@ customSorting.timeSeries <- function(x, InitOrder, ...) {
 #'
 #' ***The 2013Q4 survey was delayed because of the federal government shutdown,
 #' which in turn delayed the release of government statistical data.
+#'
+#' }
 #'
 #' @param env where to create objects. (.GlobalEnv)
 #' @param MaxAge "4 hours"(default) is longest age allowed, such that the retrieving the
@@ -1775,6 +2016,11 @@ initEnv(); on.exit({uninitEnv()})
 
 #' apply data.table aggregator on subsets of rows
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param x data.table to rung the aggrcation
 #' @param Fun (default none: required) function to pass
 #' @param By column to aggregate upon
@@ -1831,6 +2077,10 @@ initEnv(); on.exit({uninitEnv()})
 
 #' Recodes values in a vector.
 #'
+#' @description
+#' \preformatted{
+#'
+#' THIS IS NOT PRODUCTION QUALITY.
 #' R LANGUAGE INTERNAL CRASHING (I JUST GET NAs)
 #'
 #' Adapted from blockmodeling::recode.
@@ -1839,6 +2089,8 @@ initEnv(); on.exit({uninitEnv()})
 #' class to another. If the oldcode and newcode classes
 #' are not compatiable (see below)
 #' then results are returned as elements in a a list.
+#'
+#' }
 #'
 #' @param x vector or list
 #' @param oldcode vector or list of old codes. Will be made into a vector.
@@ -1979,6 +2231,9 @@ initEnv(); on.exit({uninitEnv()})
 
 #' number of days since Last Published
 #'
+#' @description
+#' \preformatted{
+#'
 #' The time between the "Last Updated Date" and the "index" date 'published date'
 #' can be important in "model" building.
 #' This amount of time can IMPACT THE QUALITY of
@@ -1997,7 +2252,7 @@ initEnv(); on.exit({uninitEnv()})
 #' "Monthly", "Weekly", or "Daily"
 #'
 #' From a timeseries returned by getSymbols.FRED2.
-#' The xts attribute "Last_Updated" is used.
+#' the xts attribute "Last_Updated" is used.
 #'
 #' Used is To.Monthly to convert the series to to a "Month-like" series.
 #' This is typical in makeing long term predictions.
@@ -2008,9 +2263,11 @@ initEnv(); on.exit({uninitEnv()})
 #' ALFRED', but that path choice utimately was not taken.
 #'
 #' NOTE: since the xts returned index has been changed.  Currently,
-#' not exists, a good way to make this fully "eXplode compatible"
+#' not exists is a good way to make this fully "eXplode compatible"
 #' Currently (temporarily), will leave "ASIS".
 #' See the "Quarterly" example.
+#'
+#' }
 #'
 #' @param x xts object returned by getSymbols.FRED2 or
 #' an xts object with an attribute of "Last_Updated" and "Frequency".
@@ -2069,7 +2326,7 @@ initEnv(); on.exit({uninitEnv()})
 #' GDP_DLY <- fancifyXts(GDP)
 #'
 #' > str(GDP)
-#' An ‘xts’ object on 1947-01-01/2018-10-01 containing:
+#' An ?xts? object on 1947-01-01/2018-10-01 containing:
 #'   Data: num [1:288, 1] 243 246 250 260 266 ...
 #'  - attr(*, "dimnames")=List of 2
 #'   ..$ : NULL
@@ -2313,30 +2570,35 @@ initEnv();on.exit({uninitEnv()})
 
 #' economic data from the St. Louis FRED
 #'
-#' Alternative to the quantmod::getSymbols.FRED
+#' @description
+#' \preformatted{
+#'
+#' This is an alternative to quantmod::getSymbols.FRED.
 #'
 #' This an en extension of quantmod::getSymbols.FRED.
-#' Extra attibutes (e.g. Last_Updated, Frequency andothers)
+#' Extra attibutes (e.g. Last_Updated, Frequency an dothers)
 #' are added to the xts object (if returned as an xts object
-#' (recommended) and default).
+#' (recommended and default).
 #'
-#' The user may sent 'from' and 'to' dates.
-#'
-#' Throught the 'Edit' parameter, the  user may pass
+#' The user may send 'from' and 'to' dates.
+#' Through the 'Edit' parameter, the  user may pass
 #' in data transformation formulas.
 #'
 #' For this apply either of the following must be true.
+#'
 #' (1) The foruma query paramter formula(fml)
 #' has just one veriable "a" and then this Edit transformation
 #' is applied across all Symbols sent by the user. Or,
 #' (2), if the number of Symbols is two(2) or greater then
 #' then the number of symbols must equal to the number
-#' of variables in the query paramter e.g. if the Symbols
-#' sent are "WILL5000IND","BAMLC0A4CBBBEY" in
+#' of variables in the query paramter. E.g. if the Symbols
+#' sent are "WILL5000IND" and "BAMLC0A4CBBBEY" in
 #' getSymbols(c("WILL5000IND","BAMLC0A4CBBBEY") then the
-#' number of paraters must be two(2) and these are
+#' number of parameters must be two(2) and these are
 #' letters of the aphabet starting with "a" and must be
-#' lowercase. An example is 'fml="a-b"' (Se The Example.
+#' lowercase. An example is 'fml="a-b"' (See The Example.)
+#'
+#' }
 #'
 #' @param Symbols  a character vector specifying the names of each symbol
 #' @param env where to create objects. (.GlobalEnv)
@@ -2376,8 +2638,8 @@ initEnv();on.exit({uninitEnv()})
 #' @examples
 #' \dontrun{
 #'
+#' # Reading text tables
 #'
-#' # reading text tables
 #' Text2DF <- function(x) {
 #'     read.csv(textConnection(x),
 #'      sep = ":",
@@ -2385,7 +2647,6 @@ initEnv();on.exit({uninitEnv()})
 #'      colClasses = "character") -> x
 #'      x
 #' }
-#'
 #'
 #' # Edit possible query parameters
 #'
@@ -2893,22 +3154,25 @@ initEnv(); on.exit({uninitEnv()})
 
 #' Survey of Professional Forecasters data from the Philadelphia FED
 #'
+#' @description
+#' \preformatted{
+#'
 #' About the data . . .
 #'
 #' File Structure: Column Header Nomenclature and Forecast Horizons
 #'
-#' “1” to “6” (quarterly forecasts) or
-#' “A” and “B” (annual-average forecasts)
+#' ?1? to ?6? (quarterly forecasts) or
+#' ?A? and ?B? (annual-average forecasts)
 #'
-#' The number “1” represents the “forecast” for the quarter prior to the quarter in
+#' The number ?1? represents the ?forecast? for the quarter prior to the quarter in
 #' which the survey is conducted. The forecasters know the values of the variables for this
 #' quarter at the time they submit their projections. . . . The forecasters are permitted
 #' to forecast a revision
 #'
-#' The number “2” represents the forecast for the current quarter, defined as
-#' the quarter in which the survey is conducted. The numbers “3” through “6”
+#' The number ?2? represents the forecast for the current quarter, defined as
+#' the quarter in which the survey is conducted. The numbers ?3? through ?6?
 #' represent the forecasts for the four quarters after the current quarter.
-#' The letters “A” and “B” represent annual average forecasts
+#' The letters ?A? and ?B? represent annual average forecasts
 #' for the current year (the year in which the survey is conducted) and
 #' the following year.
 #'
@@ -2917,12 +3181,13 @@ initEnv(); on.exit({uninitEnv()})
 #' Deadline and Release Dates for the Survey of Professional Forecasters
 #'
 #' release dates
-#' https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en
+#' https://www.philadelphiafed.org/-/media/research-and-data/real-time-center
+#'        /survey-of-professional-forecasters/spf-release-dates.txt?la=en
 #'
 #' True deadline and news release dates for surveys prior to 1990:Q2 are not known.
 #'
 #' NOTE: about "not known" (see below), for simplicity
-#' xts time index of these "not known" periods is the middle date of the calendar quarter
+#' xts time index of these "not known" periods is the middle date of the calendar quarter.
 #'
 #' *The 1990Q2 survey was not taken in real time, because the Philadelphia Fed
 #' had not yet taken over the survey. Forecasters were asked to provide dated
@@ -2934,12 +3199,14 @@ initEnv(); on.exit({uninitEnv()})
 #' ***The 2013Q4 survey was delayed because of the federal government shutdown,
 #' which in turn delayed the release of government statistical data.
 #'
-#' # Popular start page
-#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files
+#' # popular start page
+#' https://www.philadelphiafed.org/research-and-data/real-time-center
+#'        /survey-of-professional-forecasters/data-files
 #'
 #' # all of the data (1968 to the present) in five(5) excel files
 #' Individual Forecasts for the Survey of Professional Forecasters
-#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data/individual-forecasts
+#' https://www.philadelphiafed.org/research-and-data/real-time-center
+#'        /survey-of-professional-forecasters/historical-data/individual-forecasts
 #'
 #' # Some, compare and constrasts may be
 #' 'forcasters'(prediction) w.s. FRED (acutally what happened)
@@ -2947,7 +3214,8 @@ initEnv(); on.exit({uninitEnv()})
 #' # unemployment
 #'
 #' Civilian Unemployment Rate (UNEMP)
-#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/unemp
+#' https://www.philadelphiafed.org/research-and-data/real-time-center
+#'        /survey-of-professional-forecasters/data-files/unemp
 #'
 #' Civilian Unemployment Rate (UNRATE)
 #' https://fred.stlouisfed.org/series/UNRATE/
@@ -2955,7 +3223,8 @@ initEnv(); on.exit({uninitEnv()})
 #' # prices ( e.g. inflation )
 #'
 #' Price Index for Gross National Product/Gross Domestic Product (PGDP)
-#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/pgdp
+#' https://www.philadelphiafed.org/research-and-data/real-time-center
+#'        /survey-of-professional-forecasters/data-files/pgdp
 #'
 #' Gross National Product (chain-type price index) (A001RV1Q225SBEA)
 #' https://fred.stlouisfed.org/series/A001RV1Q225SBEA
@@ -2963,19 +3232,22 @@ initEnv(); on.exit({uninitEnv()})
 #' # gross domestic product
 #'
 #' Nominal Gross National Product/Gross Domestic Product (NGDP)
-#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/ngdp
+#' https://www.philadelphiafed.org/research-and-data/real-time-center
+#'        /survey-of-professional-forecasters/data-files/ngdp
 #'
 #' Gross Domestic Product (GDP)
 #' https://fred.stlouisfed.org/series/GDP
 #'
-#' # Corporate Profits
+#' # corporate Profits
 #'
 #' Corporate Profits After Tax (CPROF)
-#' https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/cprof
+#' https://www.philadelphiafed.org/research-and-data/real-time-center
+#'        /survey-of-professional-forecasters/data-files/cprof
 #'
 #' Corporate Profits After Tax (without IVA and CCAdj) (CP)
 #' https://fred.stlouisfed.org/series/CP
-#'#'
+#'
+#' }
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' To get all of the data use: "USFedPhilForecastingData".  Possible individual
@@ -3377,10 +3649,11 @@ initEnv(); on.exit({uninitEnv()})
 #' American Association of Individual Investors (AAII) weekly sentiment survey
 #'
 #' @description
+#' \preformatted{
+#'
 #' Data represents what direction members feel the
 #' stock market will be in next 6 months.
 #'
-#' @details
 #' The sentiment survey measures the percentage of individual investors who are
 #' bullish, bearish, and neutral on the stock market short term;
 #' individuals are polled from the AAII Web site on a weekly basis.
@@ -3388,6 +3661,8 @@ initEnv(); on.exit({uninitEnv()})
 #'
 #' The latest published date/data is every Thursday.
 #' The delivery time is during Friday (UNVERIFIED)
+#'
+#' }
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' Possible Symbols are the following:
@@ -3400,7 +3675,7 @@ initEnv(); on.exit({uninitEnv()})
 #' @param env where to create objects. (.GlobalEnv)
 #' @param return.class desired class of returned object.
 #' Can be xts, zoo, data.frame, or xts (default)
-#' @param force FALSE(default) re-download data from AAII ( See the examples. )
+#' @param force FALSE(default) re-download data from AAII (See the examples.)
 #' The hidden variables ".AAIIsentiment_path2file" and
 #' ".AAIISentimentSurveyPastResults_path2file" located in the
 #' environment of parameter env are the last know location of the "xls" file
@@ -3626,7 +3901,12 @@ initEnv(); on.exit({uninitEnv()})
 
 #' stock market data from Yale University
 #'
-#' NOT USED ANYWHERE
+#' @description
+#' \preformatted{
+#'
+#' NOT YET USED ANYWHERE
+#'
+#' }
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' Possible Symbols are the following:
@@ -3813,28 +4093,33 @@ initEnv(); on.exit({uninitEnv()})
 })}
 
 
-#' detect rows with columns of non-NA vaues
-#' and other columns of non-NA values
+
+#' detect rows with columns of non-NA vaues and other columns of non-NA values
 #'
-#' detect columns(Var) where the values are
+#' @description
+#' \preformatted{
+#'
+#' Detect columns(Var) where the values are
 #' not-NA (determined by Ele) but
 #' the rest of the columns are
-#' NA everywhere else (determined by EleO)
+#' NA everywhere else (determined by EleO).
 #'
 #' [ ] Fix?
-#' NOTE: originally a domain-specific solution
-#' API however is inconsitent about the
-#' other Detect*Rows functions
+#' NOTE: originally this is a domain-specific solution.
+#' The API however, is inconsitent about the
+#' other Detect*Rows functions.
 #'
-#' Function is written in DataCombine style
+#' The function is written in package DataCombine style.
+#'
+#' }
 #'
 #' @param x data.frame
 #' @param Var columns determining complete cases.
-#' Can be column names or positions
-#' @param Ele "All"(default), of elements in Var, the test results
-#' Other option is "Any"
-#' @param EleO "All"(default), of elements in 'other than Var', the test results
-#' Other option is "Any"
+#' Can be column names or positions.
+#' @param Ele "All"(default), of elements in Var, the test results.
+#' Other option is "Any".
+#' @param Ele "All"(default), of elements in 'other than Var', the test results.
+#' The other option is "Any".
 #' @return df with rows of all-NA removed
 #' @examples
 #' \dontrun{
@@ -3879,16 +4164,21 @@ initEnv(); on.exit({uninitEnv()})
 
 #' detect rows with non-NA vaues
 #'
+#' @description
+#' \preformatted{
+#'
 #' complete.cases does not work on tibbles!
-#' Function is written in DataCombine style
+#' This function is written in package DataCombine style.
+#'
+#' }
 #'
 #' @param x data.frame
-#' @param Var columns determining complete cases
-#' Can be column names or positions
+#' @param Var columns determining complete cases.
+#' Can be column names or positions.
 #' Var is the determiner of full rows.
-#' Other columns are ignored
-#' @param Ele "All"(default), of elements in Var, the test results
-#' Other option is "Any"
+#' Other columns are ignored.
+#' @param Ele "All"(default), of elements in Var, the test results.
+#' The other option is "Any".
 #' @return df with rows of all-NA removed
 #' @examples
 #' \dontrun{
@@ -3923,16 +4213,21 @@ initEnv(); on.exit({uninitEnv()})
 
 #' detect rows with NA vaues
 #'
+#' @description
+#' \preformatted{
+#'
 #' complete.cases does not work on tibbles!
-#' Function is written in DataCombine style
+#' This function is written in package DataCombine style.
+#'
+#' }
 #'
 #' @param x data.frame
-#' @param Var columns determining complete cases
-#' Can be column names or positions
+#' @param Var columns determining complete cases.
+#' Can be column names or positions.
 #' Var is the determiner of empty rows.
-#' Other columns are ignored
-#' @param Ele "All"(default), of elements in Var, the test results
-#' Other option is "Any"
+#' Other columns are ignored.
+#' @param Ele "All"(default), of elements in Var, the test results.
+#' The other option is "Any".
 #' @examples
 #' \dontrun{
 #' data.frame(A = c(1,NA,NA), B = c(11,12,NA), C = c(101,102,103))
@@ -3966,14 +4261,19 @@ initEnv(); on.exit({uninitEnv()})
 
 #' remove rows with NA vaues
 #'
+#' @description
+#' \preformatted{
+#'
 #' complete.cases does not work on tibbles!
-#' Function is written in DataCombine style
+#' This function is written in package DataCombine style.
+#'
+#' }
 #'
 #' @param x data.frame
-#' @param Var columns determining complete cases
-#' Can be column names or positions
+#' @param Var columns determining complete cases.
+#' Can be column names or positions.
 #' Var is the determiner of empty rows.
-#' Other columns are ignored
+#' Other columns are ignored.
 #' @param Ele "All"(default), of elements in Var, the test results
 #' Other option is "Any"
 #' @examples
@@ -4015,16 +4315,19 @@ initEnv(); on.exit({uninitEnv()})
 
 #' Simfa bond and equity information
 #'
+#' @description
+#' \preformatted{
+#'
 #' Note only the monthly dates for the current year and the previous
 #' year are available.  The remaining data is year-end-data.
-#' The dates intermediate dates are filled in using
-#' xts::to.monthly() and seq()
+#' The intermediate dates are filled in using
+#' xts::to.monthly() and seq().
 #' The monthly dates are interpolated using zoo::na.approx
 #' that is stats::approx. (In R Code that is "approx1").
 #'
 #' # 1 (HAVE)
-#' most valuable information
-#' tab "Issuance" column "Corporate Debt" (Symbol is "CorporateDebt")
+#' Most valuable information follows.
+#' Tab "Issuance" column "Corporate Debt" (Symbol is "CorporateDebt")
 #' US Bond Market Issuance and Outstanding
 #' https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
 #' https://www.sifma.org/resources/research/us-bond-market-issuance-and-outstanding/
@@ -4034,7 +4337,7 @@ initEnv(); on.exit({uninitEnv()})
 #' SIFMA
 #' https://www.sifma.org/
 #'
-#' same
+#' Same follows.
 #' Click on \[Explore\]
 #' US Bond Market Issuance and Outstanding
 #'   (Upper Right Corner)
@@ -4042,57 +4345,62 @@ initEnv(); on.exit({uninitEnv()})
 #'   https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-sifma.xls
 #'     XLS: "Issuance" tab ( has data through the previous month)
 #' # XLS bottom ( SEE DEC 31 2018: EXACT SAME AS THE ARTICLE )
-#'          Year	M	 Municipal 	 Treasury 	 Mortgage-Related 	 Corporate Debt 	 Federal Agency Securities 	 Asset-Backed 	 Total
+#'          Year	M	 Municipal 	 Treasury 	 Mortgage-Related 	 Corporate Debt
+#'          Federal Agency Securities 	 Asset-Backed 	 Total
 #' YTD '17
 #' YTD '18
 #' % Change
 #'
 #' # 2 (HAVE)
-#' most valuable information
-#' tab "Average Maturity" column "Years" (Symbol is "BondsAveMaturity")
+#' Most valuable information follows.
+#' Tab "Average Maturity" column "Years" (Symbol is "BondsAveMaturity")
 #' https://www.sifma.org/wp-content/uploads/2017/08/Corporate-US-Corporate-Issuance-SIFMA.xls
 #' US Corporate Bond Issuance
 #' https://www.sifma.org/resources/research/us-corporate-bond-issuance/
 #' Securities Industry and Financial Markets Association
 #' SIFMA
 #' https://www.sifma.org/
-#' #
 #'
 #' # 3 (HAVE)
-#' most valuable information
-#' tab "US Bond Market" column "Corporate Debt" (Symbol is "CorporateDebtTradeVol")
+#' Most valuable information follows.
+#' Tab "US Bond Market" column "Corporate Debt" (Symbol is "CorporateDebtTradeVol")
 #' US Bond Market Trading Volume
 #' https://www.sifma.org/wp-content/uploads/2017/06/cm-us-bond-market-trading-volume-sifma.xls
 #' https://www.sifma.org/resources/research/us-bond-market-trading-volume/
 #'
 #' # 4 (DO NOT HAVE - PROBLEM - CAN NOT READ THE DATETIME COLUMN)
 #' US Equity Issuance and Trading Volumes
-#' most valuable information
-#' tab "Underwriting" column "TOTAL EQUITY"
+#' Most valuable information follows.
+#' Tab "Underwriting" column "TOTAL EQUITY"
 #' https://www.sifma.org/wp-content/uploads/2017/06/cm-us-equity-sifma1.xls
 #' https://www.sifma.org/resources/research/us-equity-stats/
 #'
-#' main pages ( html list of all excel spreadsheets )
+#' # Main pages ( html list of all excel spreadsheets )
 #' https://www.sifma.org/resources/archive/research/statistics/
 #' # a.k.a.
-#' https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=0&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+#' https://www.sifma.org/resources/archive/research/statistics
+#'        /?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=0&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
 #' next two pages
-#' https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=1&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
-#' https://www.sifma.org/resources/archive/research/statistics/?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=2&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+#' https://www.sifma.org/resources/archive/research/statistics
+#'        /?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=1&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
+#' https://www.sifma.org/resources/archive/research/statistics
+#'        /?aq=&hPP=10&idx=prod_wp_searchable_posts&ap=2&fR%5Btaxonomies.research_type%5D%5B0%5D=Statistics&is_v=1
 #'
-#' referred by Jeff Cox
+#' This was referred by Jeff Cox
 #' AND
-#' Christopher Whalen
+#' Christopher Whalen.
 #' twitter handle: rcwhalen
 #'
-#' When the Bid Goes to Zero |
-#' https://goo.gl/2tUeJp  |
+#' When the Bid Goes to Zero
+#' https://goo.gl/2tUeJp
 #' https://twitter.com/rcwhalen/status/1072619534819971072
 #' AND
 #' When the Bid Goes to Zero
 #' December 11, 2018
 #' By: R. Christopher Whalen
 #' https://www.theinstitutionalriskanalyst.com/single-post/2018/12/11/When-the-Bid-Goes-to-Zero
+#'
+#' }
 #'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' Possible Symbols are the following:
@@ -4101,7 +4409,7 @@ initEnv(); on.exit({uninitEnv()})
 #' BondsAveMaturity"
 #' @param env where to create objects. (.GlobalEnv)
 #' @param return.class desired class of returned object.
-#' Can be xts, zoo, data.frame, or xts (default)
+#' Can be xts, zoo, data.frame, or xts (default).
 #' @param force FALSE(default) re-download data from Simfa ( See the examples. )
 #' The hidden variable ".SimfaBondMarketData_path2file" located in the
 #' environment of parameter env is the last known location of the "xls" file.
@@ -4687,13 +4995,18 @@ initEnv(); on.exit({uninitEnv()})
 
 #' quantmod getSymbols with source.envir
 #'
-#' Get some Symbols from an environment (source.envir)
-#' It will search first in (source.envir)
+#' @description
+#' \preformatted{
+#'
+#' Get some Symbols from an environment (source.envir).
+#' It will search first in (source.envir).
 #' If the Symbol is not found in the enviroment (source.envir),
 #' then get the Symbol from elsewhere.
 #'
 #' NOTE: do not do: "source.envir = e, "env = e"
 #' when auto.assign = TRUE(default), .GetSymbols is placed where "env = e"
+#'
+#' }
 #'
 #' @param Symbols	a character vector specifying the names of each symbol to be loaded
 #' @param env where to create objects. Setting env=NULL is equal to auto.assign=FALSE
@@ -4702,8 +5015,8 @@ initEnv(); on.exit({uninitEnv()})
 #' @param warnings	boolean to turn on warnings. (TRUE)
 #' @param src character string specifying sourcing method. (yahoo)
 #' @param symbol.lookup retrieve symbol's sourcing method from external lookup (TRUE)
-#' @param auto.assign should results be loaded to env If FALSE, return results instead.
-#' As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE
+#' @param auto.assign should results be loaded to env. If FALSE, return results instead.
+#' As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE.
 #' @param source.envir override: source environment to aquire the Symbols
 #' @param ... pass other parameters
 #' @examples
@@ -4857,7 +5170,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' Downloads Symbols to specified env from a local R environment
+#' downloads Symbols to specified env from a local R environment
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param Symbols	a character vector specifying the names of each symbol to be loaded
 #' @param env	where to create objects. (.GlobalEnv)
@@ -4867,7 +5185,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return A call to getSymbols.csv will load into the
 #' specified environment one object for each Symbol specified,
 #' with class defined by return.class. Presently this may be
-#' ts, zoo, xts, data.frame, or timeSeries
+#' ts, zoo, xts, data.frame, or timeSeries.
 #' @examples
 #' \dontrun{
 #'
@@ -4948,7 +5266,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' Retrieve Data from PostgreSQL Database
+#' retrieve data from PostgreSQL Database
 #'
 #' @description
 #' Fetch data from PostgreSQL database.  As with other
@@ -4977,6 +5295,7 @@ initEnv();on.exit({uninitEnv()})
 #' layout changes it is best to use
 #' \code{setDefaults(getSymbols.PostgreSQL,...)} with
 #' the new db.fields values specified.
+#'
 #' @param Symbols  a character vector specifying the names of each symbol to be loaded
 #' @param con DBI connection
 #' @param env where to create objects. (.GlobalEnv) CURRENLY BROKEN
@@ -5198,16 +5517,20 @@ initEnv();on.exit({uninitEnv()})
 getSymbols.pg <- getSymbols.PostgreSQL
 
 
-#' get a recent Symbol i(f I do not have one)
+
+#' get a recent Symbol (if I do not have one)
 #'
-#' @details
+#' @description
+#' \preformatted{
 #'
-#' first look in  nextsrc[1]
-#' if not found look in  nextsrc[2], . . . etc
-#' if ran out of  nextsrc, look in src
-#'   then next back-updated all of  nextsrc (going backwards)
-#'  alt: if DID NOT run out of nextsrc. A  nextsrc found the newer data.
-#'    then backload the newer data into all previous nextsrcs (going backwards)
+#' First look in  nextsrc[1].
+#' If not found look in  nextsrc[2], . . . etc.
+#' If ran out of nextsrc, look in src.
+#'   Then next back-updated all of  nextsrc (going backwards).
+#'  Alt: if DID NOT run out of nextsrc, then a nextsrc was found the newer data.
+#'   Then next backload the newer data into all previous nextsrcs (going backwards).
+#'
+#' }
 #'
 #' @param Symbols as quantmod getSymbols: a character vector specifying the names of each symbol to be loaded
 #' @param con DBI connection
@@ -5218,7 +5541,8 @@ getSymbols.pg <- getSymbols.PostgreSQL
 #' @param warnings as quantmod getSymbols: boolean to turn on warnings. (TRUE)
 #' @param src as quantmod getSymbols: character string specifying sourcing method. (yahoo)
 #' @param symbol.lookup as quantmod getSymbols: retrieve symbol's sourcing method from external lookup (TRUE)
-#' @param auto.assign as quantmod getSymbols: should results be loaded to env If FALSE, return results instead. As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE
+#' @param auto.assign as quantmod getSymbols: should results be loaded to env.
+#' If FALSE, return results instead. As of 0.4-0, this is the same as setting env=NULL. Defaults to TRUE.
 #' @param file.path as quantmod getSymbols: character string of file location
 #' @param nextsrc next alternative sourcing methods trying in order, if found data is refreshed in reverse order
 #' @param MaxAge (default "4 hours") is longest age allowed, such the retrieving from
@@ -5347,14 +5671,19 @@ initEnv();on.exit({uninitEnv()})
 
 #' saves xts object symbols to a persistent location (dispatcher)
 #'
-#' First, it will look for Symbols in the .getSymbols file and env and gather them
-#' Next,  it will look for Symbols in source.envir and gather them
+#' @description
+#' \preformatted{
+#'
+#' First, it will look for Symbols in the .getSymbols file and env and gather them.
+#' Next,  it will look for Symbols in source.envir and gather them.
 #'
 #' If provided file.path, then object will be stored on disk(same as "RData")
 #' If provided trg == "RData", "cache", or "PostgreSQL (or just "pg")
-#' then the objectw be ALSO saved in this OTHER location
+#' then the objectw be ALSO saved in this OTHER location.
 #'
 #' Needs either/both "trg" or "file.path"
+#'
+#' }
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir source location of Symbols
@@ -5526,7 +5855,12 @@ initEnv();on.exit({uninitEnv()})
 
 #' saves xts object symbols to a persistent location (disk: Symbol.RData file)
 #'
-#' see quantmod SaveSymbols
+#' @description
+#' \preformatted{
+#'
+#' See quantmod SaveSymbols.
+#'
+#' }
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir source location of Symbols
@@ -5571,6 +5905,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' save xts objects as .xts in source.envir ( cache )
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir location of xts objects
 #' @param target.envir location of where to store xts objects ( location of cache )
@@ -5612,7 +5951,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' saves xts object symbols to a persistent location (database: PostgreSQL)
 #'
-#' # Once only, the end-user must pre-create the [database and [ user and]] schema
+#' @description
+#' \preformatted{
+#'
+#' Hard note: once only, the end-user must pre-create
+#' the [database and [ user and]] schema
 #'
 #' CREATE ROLE "Symbols" LOGIN
 #'   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
@@ -5645,17 +5988,20 @@ initEnv();on.exit({uninitEnv()})
 #'# ALTER TABLE "Symbols"
 #'#   OWNER TO "Symbols";
 # #
+#'
+#' }
+#'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param sourc.envir location of xts objects
 #' @param field.names names existing in starting columns
 #' @param db.fields character vector indicating
 #' names of fields to insert
 #' @param keys passed to dfToCREATETable and dfGetPKEYNames
-#' @param placeNewRecords "AddOnlyNew"(default)
+#' @param placeNewRecords "AddOnlyNew"(default).
 #' Append 'new' records determined by 'new' inbound key values
 #' to the table using pgInsert.
 #' The other choice is "TruncateTable". TRUNCATE TABLE the table contents.
-#' Follow by running "pgInsert"
+#' Follow by running "pgInsert".
 #' NOTE, user choice is specific to the nature of the changing source
 #' data.  For example, FRED historical data is typically static: e.g. UNRATE
 #' (but maybe not all historic data in FRED is static.  Therefore, in the
@@ -5663,7 +6009,7 @@ initEnv();on.exit({uninitEnv()})
 #' Yahoo finanical stock data is very often re-adjuste to account
 #' for split and dividends, therefore yesterday's query on data may
 #' be useless.  Therefore, in the case of Yahoo financial stock data, a
-#' good choice may be "TruncateTable"
+#' good choice may be "TruncateTable".
 #' @param varHint if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert
 #' @param valHint if placeNewRecords = "AddOnlyNew", then passed to pgInsert. See ? pgInsert
 #' @param user username(default "Symbols") to access database
@@ -5672,9 +6018,9 @@ initEnv();on.exit({uninitEnv()})
 #' @param schname schema name (default "Symbols")
 #' @param host database host (default "localhost")
 #' @param port database port (default 5432)
-#' @param options pass extra parameters in aa string to the command line
-#' @param forceISOdate TRUE(default)/FALSE if the communication of date (time stamp) from PostgreSQL
-#' is forced to ISO style at conection
+#' @param options pass extra parameters in a string to the command line
+#' @param forceISOdate TRUE(default)/FALSE. If the communication of date (time stamp) from PostgreSQL
+#' is forced to ISO style at connection
 #' @param ... pass through parameters
 #' @examples
 #' \dontrun{
@@ -5919,10 +6265,14 @@ saveSymbols.pg <- saveSymbols.PostgreSQL
 
 
 
-#' 'updated' date-ish/time-ish property
-#' of an [xts] object symbols in a persistent location (dispatcher)
+#' "updated" date-ish/time-ish property of an [xts] object symbols in a persistent location (dispatcher)
+#'
+#' @description
+#' \preformatted{
 #'
 #' looks in source.envir
+#'
+#' }
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir source location of Symbols
@@ -6012,11 +6362,16 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' 'updated' property of xts object symbols in the cache
+#' "updated" property of xts object symbols in the cache
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir location of xts objects
-#' @return a named list of 'updated' properties
+#' @return a named list of "updated" properties
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_detect
@@ -6061,7 +6416,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' 'updated' property of symbols in the PostgreSQL (pg) database
+#' "updated" property of symbols in the PostgreSQL (pg) database
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param con PostgreSQL DBI connection
@@ -6125,7 +6485,12 @@ updatedSymbols.pg <- updatedSymbols.PostgreSQL
 
 #' object symbols in a persistent location (dispatcher)
 #'
+#' @description
+#' \preformatted{
+#'
 #' looks in source.envir xor "src" exclusively
+#'
+#' }
 #'
 #' @param source.envir source location of Symbols
 #' xts objects must have the attribute "src"
@@ -6199,6 +6564,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' xts object symbols in the cache
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param source.envir location of xts objects
 #' @param ... passed unused
 #' @return character vector of Symbols
@@ -6224,6 +6594,11 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' xts object symbols in the PostgreSQL (pg) database
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param con PostgreSQL DBI connection
 #' @param user username (default "Symbols") to access database
@@ -6264,13 +6639,23 @@ initEnv();on.exit({uninitEnv()})
 })}
 #' listSymbols pg
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #'@export
 listSymbols.pg <- listSymbols.PostgreSQL
 
 
 #' xts object symbols
 #'
-#'looks in source.envir xor "src" exclusively
+#' @description
+#' \preformatted{
+#'
+#' looks in source.envir xor "src" exclusively
+#'
+#' }
 #'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir location of xts objects
@@ -6321,6 +6706,11 @@ initEnv();on.exit({uninitEnv()})
 
 #' xts object symbols
 #'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param source.envir location of xts objects
 #' @param ... passed unused
@@ -6359,6 +6749,12 @@ initEnv();on.exit({uninitEnv()})
 
 
 #' xts object symbols exist in the PostgreSQL (pg) database
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
 #' @param Symbols	a character vector specifying the names of each symbol
 #' @param con PostgreSQL DBI connection
 #' @param user username (default "Symbols") to access database
@@ -6418,6 +6814,11 @@ existSymbols.pg <- existSymbols.PostgreSQL
 
 
 #' of a specific PostgreSQL database schema table show it's last date/time index value
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
 #'
 #' @param con PostgreSQL DBI connection
 #' @param schname schema name

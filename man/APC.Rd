@@ -14,13 +14,16 @@ APC(x, base = 0, lag = 1, ...)
 \item{lag}{observations backwards}
 }
 \description{
-Most useful for calculating velocity
+\preformatted{
+
+This is most useful for calculating velocity
 and acceleration, (and jerk).
-To get accelleration and jerk use with
-diffXts and differences 2 (and 3) respectively.
+To get accelleration and jerk use this with
+diffXts with differences 2 (and 3) respectively.
+
+Ninety-nine (99%) percent of the people in the world SHOULD HAVE BEEN using this one.
+
 }
-\details{
-99% percent of the people in the world should have been using this one.
 }
 \examples{
 \dontrun{

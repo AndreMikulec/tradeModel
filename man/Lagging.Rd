@@ -7,5 +7,9 @@
 Lagging(xTs = NULL, Shift = NULL)
 }
 \description{
-lagging
+\preformatted{
+
+Get the lagging month near eom date.
+
+}
 }

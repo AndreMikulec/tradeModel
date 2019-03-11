@@ -34,5 +34,7 @@ is forced to ISO style at conection}
 character vector of Symbols
 }
 \description{
-xts object symbols in the PostgreSQL (pg) database
+\preformatted{
+
+}
 }

@@ -19,7 +19,11 @@ balanceFocusedData(xTs, SlicesFocusedData, SlicesAllData, TrainStart,
 \item{TrainEnd}{absolute training end date}
 }
 \description{
-produce more focused data duplicate observations
-such that focused data as at least the same number of observations
-as "all observations - focused observations"
+\preformatted{
+
+Produce more focused data duplicate observations
+such that "focused data" is at least the same number of observations
+as "all observations less focused observations"
+
+}
 }

@@ -2,8 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{UMCSentimentEomData}
 \alias{UMCSentimentEomData}
-\title{end of month University of Michigan: Consumer Sentiment
-from FRED (historical) and briefing.com (recent)}
+\title{end of month University of Michigan: Consumer Sentiment data}
 \usage{
 UMCSentimentEomData()
 }
@@ -11,6 +10,7 @@ UMCSentimentEomData()
 xts object
 }
 \description{
-end of month University of Michigan: Consumer Sentiment
-from FRED (historical) and briefing.com (recent)
+\preformatted{
+
+}
 }

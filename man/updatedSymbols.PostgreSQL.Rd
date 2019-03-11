@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{updatedSymbols.PostgreSQL}
 \alias{updatedSymbols.PostgreSQL}
-\title{'updated' property of symbols in the PostgreSQL (pg) database}
+\title{"updated" property of symbols in the PostgreSQL (pg) database}
 \usage{
 updatedSymbols.PostgreSQL(Symbols = NULL, con = NULL, user = NULL,
   password = NULL, dbname = NULL, schname = NULL,
@@ -37,5 +37,7 @@ is forced to ISO style at conection}
 named list of the object 'updated' property
 }
 \description{
-'updated' property of symbols in the PostgreSQL (pg) database
+\preformatted{
+
+}
 }

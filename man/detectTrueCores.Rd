@@ -10,12 +10,17 @@ detectTrueCores()
 integer value of numer of cores
 }
 \description{
+\preformatted{
+
 Re: [Rd] Get Logical processor count correctly whether NUMA is enabled or disabled
 Tomas Kalibera <tomas.kalibera@gmail.com>
 Mon 9/3/2018, 8:07 AM
-A summary for reference: the new detectCores() for Windows in R-devel
-Get Logical processor count correctly whether NUMA is enabled or disabled
-http://r.789695.n4.nabble.com/Get-Logical-processor-count-correctly-whether-NUMA-is-enabled-or-disabled-td4751774.html
+A summary for reference: the new detectCores() for Windows in R-devel.
+Get Logical processor count correctly whether NUMA is enabled or disabled.
+http://r.789695.n4.nabble.com/Get-Logical-processor-count-correctly-whether-
+       NUMA-is-enabled-or-disabled-td4751774.html
+
+}
 }
 \examples{
 \dontrun{

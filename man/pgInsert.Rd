@@ -34,17 +34,21 @@ Position matches one to one with valHint.}
 \item{...}{dots passed currently not used}
 }
 \description{
-The keys parameter determine distinct records.
+\preformatted{
+
+The keys parameter determines distinct records.
 Only 'new' records area added.
-(See pgUpdate to add information to current(already existing) records)
-}
-\details{
-In internal feature
-oldData previously collected limited server DB data used to
+(See pgUpdate to add information to current(already existing) records.)
+
+In the internal feature,
+oldData previously collected *limited server DB data* used to
 restrict what is inserted.
-In oldData of data: server data and df data that is common by primary keys
+
+In oldData of data, server data and df data that is common by primary keys
 is eliminatated from the attempted insert.
 The keys are checked for 'no duplicates'
+
+}
 }
 \examples{
 \dontrun{

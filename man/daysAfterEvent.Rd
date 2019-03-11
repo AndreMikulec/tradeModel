@@ -15,7 +15,9 @@ daysAfterEvent(x, dates)
 xts object with one new column
 }
 \description{
-days after the event
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

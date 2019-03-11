@@ -15,10 +15,13 @@ printCalendar(xTs = NULL, title = NULL)
 xts object of arithmatic returns
 }
 \description{
-vericle left side axis is in years
-horizonl axis is in months
+\preformatted{
+
+The vericle left side axis is in "years".
+The horizontal axis is in "months".
+
 }
-\details{
+
 Geometric adding is done across months
 An end of year(12 month summary) is in the verticle right side axis
 }

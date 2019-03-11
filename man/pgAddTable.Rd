@@ -22,5 +22,7 @@ keys can not be zero length. keys can not be null.}
 \item{Symbol}{new table name. E.g Could be a company TICKER or a FRED column.}
 }
 \description{
-add a table to a database
+\preformatted{
+
+}
 }

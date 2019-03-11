@@ -7,5 +7,9 @@
 interleave(x, y)
 }
 \description{
+\preformatted{
+
 from R CRAN package rmngb
+
+}
 }

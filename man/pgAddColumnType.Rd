@@ -17,9 +17,13 @@ pgAddColumnType(con, trgt = NULL, schname = NULL, df = NULL)
 names are matched to the Server DB table}
 }
 \description{
-matches by colum name. If the column the does not
+\preformatted{
+
+This matches by colum name. If the column the does not
 exist on the Server DB, then the column is added to the Server DB
-by ALTER TABLE <trgt> ADD ( column ) called each per new column.
+by ALTER TABLE <trgt> ADD ( column ) (called each per new column.)
+
+}
 }
 \examples{
 \dontrun{

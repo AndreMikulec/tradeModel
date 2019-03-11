@@ -7,5 +7,11 @@
 Current(xTs = NULL, Shift = NULL)
 }
 \description{
-pads beginning date as necessary
+\preformatted{
+
+Pads beginning date as necessary.
+
+Get the current month near eom date.
+
+}
 }

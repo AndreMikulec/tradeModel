@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{addCurrLeadCashLogReturns}
 \alias{addCurrLeadCashLogReturns}
-\title{add cash log returns (CASHlogrets)}
+\title{add current cash log returns (CASHlogrets)}
 \usage{
 addCurrLeadCashLogReturns(xTs = NULL)
 }
@@ -13,5 +13,7 @@ addCurrLeadCashLogReturns(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add cash log returns (CASHlogrets)
+\preformatted{
+
+}
 }

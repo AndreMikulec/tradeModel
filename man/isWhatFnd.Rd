@@ -17,12 +17,16 @@ isWhatFnd(x, y = TRUE, Storage = NULL)
 requested value (often TRUE)
 }
 \description{
+\preformatted{
+
 Look for truths or values in memory.
 Used as an alternative instead of expensive re-quering.
 If x is stored ins the OS environment, then x is stored as a string.
 To be consistent with OS storage, a value stored in options are
 also stored a string (see setWhat). Test exceptions are "TRUE","FALSE".
 These are tested as "TRUE"/"FALSE" or TRUE/FALSE.
+
+}
 }
 \examples{
 \dontrun{

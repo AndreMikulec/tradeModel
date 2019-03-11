@@ -9,5 +9,7 @@ listSymbols.pg(con = NULL, user = NULL, password = NULL,
   options = NULL, forceISOdate = TRUE, ...)
 }
 \description{
-listSymbols pg
+\preformatted{
+
+}
 }

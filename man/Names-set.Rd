@@ -2,8 +2,7 @@
 % Please edit documentation in R/database.R
 \name{Names<-}
 \alias{Names<-}
-\title{if x or value is null or has length zero(0) then
-then that item is character(0)}
+\title{garantee that Names assigns a zero length character vector}
 \usage{
 Names(x) <- value
 }
@@ -13,6 +12,10 @@ Names(x) <- value
 \item{value}{result}
 }
 \description{
+\preformatted{
+
 if x or value is null or has length zero(0) then
 then that item is character(0)
+
+}
 }

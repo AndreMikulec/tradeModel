@@ -13,7 +13,9 @@ initDate(date = NULL)
 date
 }
 \description{
-garantee a date is a date or and empty date
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

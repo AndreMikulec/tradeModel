@@ -2,8 +2,7 @@
 % Please edit documentation in R/predictive.R
 \name{DFCols2SymbolsEnv}
 \alias{DFCols2SymbolsEnv}
-\title{column split a data.frame object into
-an environment of column-xts objects}
+\title{column split a data.frame object into an environment of column-xts objects}
 \usage{
 DFCols2SymbolsEnv(x, order.by, xts.attributes = NULL)
 }
@@ -15,6 +14,7 @@ DFCols2SymbolsEnv(x, order.by, xts.attributes = NULL)
 \item{xts.attributes}{list of xts attributes to apply}
 }
 \description{
-column split a data.frame object into
-an environment of column-xts objects
+\preformatted{
+
+}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{initPorfVal}
 \alias{initPorfVal}
-\title{show the last six(6) records}
+\title{initialize}
 \usage{
 initPorfVal(initVal = NULL)
 }
@@ -14,7 +14,9 @@ then the value is set to by 100000}
 set value
 }
 \description{
-show the last six(6) records
+\preformatted{
+
+}
 }
 \examples{
 \dontrun{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{updatedSymbols.cache}
 \alias{updatedSymbols.cache}
-\title{'updated' property of xts object symbols in the cache}
+\title{"updated" property of xts object symbols in the cache}
 \usage{
 updatedSymbols.cache(Symbols = NULL, cache.envir = NULL, ...)
 }
@@ -12,8 +12,10 @@ updatedSymbols.cache(Symbols = NULL, cache.envir = NULL, ...)
 \item{source.envir}{location of xts objects}
 }
 \value{
-a named list of 'updated' properties
+a named list of "updated" properties
 }
 \description{
-'updated' property of xts object symbols in the cache
+\preformatted{
+
+}
 }

@@ -13,7 +13,11 @@ wtsCurrentRetsClms(xTs = NULL)
 column names
 }
 \description{
+\preformatted{
+
 Weights column names always end in "currentrets_wts"
+
+}
 }
 \examples{
 \dontrun{

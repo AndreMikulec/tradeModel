@@ -15,5 +15,7 @@ listSymbols.cache(cache.envir = NULL, ...)
 character vector of Symbols
 }
 \description{
-xts object symbols in the cache
+\preformatted{
+
+}
 }

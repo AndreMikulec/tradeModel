@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{makeFSTFiles}
 \alias{makeFSTFiles}
-\title{From source files, create .FST files}
+\title{From source files, create .fst files}
 \usage{
 makeFSTFiles(Dirs = NULL, SubDirExpr = NULL, FileExpr = NULL,
   ColRmExpr = NULL, Force = NULL)
@@ -24,8 +24,12 @@ NULL silently.  Side-effect of a new .fst file created on disk in the old
 directory location.
 }
 \description{
-Expected main directories (Dirs), with one level
-of subdirecties.  Each subdirectory contains files (with columns)
+\preformatted{
+
+Expected main directories (dirs), with exactly one level
+of subdirectories. Each subdirectory contains files (with columns).
+
+}
 }
 \examples{
 \dontrun{

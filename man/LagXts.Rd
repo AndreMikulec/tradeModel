@@ -16,9 +16,13 @@ LagXts(x, k = 1, na.pad = TRUE, ...)
 \item{...}{dots passed to lag.xts}
 }
 \description{
-Does not complain when: any(abs(k) > NROW(xTs)):
+\preformatted{
+
+This does not complain when: any(abs(k) > NROW(xTs)):
 zoo_lag can not and will not handle. So k's are eliminated
-beforehand
+beforehand.
+
+}
 }
 \examples{
 \dontrun{

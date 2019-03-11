@@ -72,13 +72,14 @@ mkAsOfToday2LastObs == TRUE is more trouble that it is worth.}
 xts object with a new column of show the delay since last update.
 }
 \description{
+\preformatted{
+
 The time between the "Last Updated Date" and the "index" date 'published date'
 can be important in "model" building.
-This amount of time can impact the quality of
+This amount of time can IMPACT THE QUALITY of
 the observations.  Therefore, the "model" building program needs
-to know about the number of days since the "Last Updated Date."
-}
-\details{
+to know about the 'number of days since the "Last Updated Date."'
+
 First:
 Of the data of Yahoo finance, the "Last Updated Date" and
 the index date 'published date' are the same day. quantmod::getSymbols.yahoo
@@ -91,7 +92,7 @@ is "Daily".  The St. Louis FRED's "Frequency" can be"Quarterly",
 "Monthly", "Weekly", or "Daily"
 
 From a timeseries returned by getSymbols.FRED2.
-The xts attribute "Last_Updated" is used.
+the xts attribute "Last_Updated" is used.
 
 Used is To.Monthly to convert the series to to a "Month-like" series.
 This is typical in makeing long term predictions.
@@ -100,6 +101,13 @@ The xts is returned with an extra column added..
 
 The author put some thought had been put into 'instead querying
 ALFRED', but that path choice utimately was not taken.
+
+NOTE: since the xts returned index has been changed.  Currently,
+not exists is a good way to make this fully "eXplode compatible"
+Currently (temporarily), will leave "ASIS".
+See the "Quarterly" example.
+
+}
 }
 \examples{
 \dontrun{
@@ -107,6 +115,44 @@ ALFRED', but that path choice utimately was not taken.
 # "Quarterly" time series on the St. Louis FRED
 GDP <- getSymbols("GDP", src = "FRED2", auto.assign = FALSE)
 GDP_DLY <- fancifyXts(GDP)
+
+> str(GDP)
+An ?xts? object on 1947-01-01/2018-10-01 containing:
+  Data: num [1:288, 1] 243 246 250 260 266 ...
+ - attr(*, "dimnames")=List of 2
+  ..$ : NULL
+  ..$ : chr "GDP"
+  Indexed by objects of class: [Date] TZ: UTC
+  xts Attributes:
+List of 12
+ $ src                : chr "FRED2"
+ $ updated            : POSIXct[1:1], format: "2019-03-10 18:41:55"
+ $ Title              : chr "Gross Domestic Product"
+ $ Series_ID          : chr "GDP"
+ $ Source             : chr "U.S. Bureau of Economic Analysis"
+ $ Release            : chr "Gross Domestic Product"
+ $ Seasonal_Adjustment: chr "Seasonally Adjusted Annual Rate"
+ $ Frequency          : chr "Quarterly"
+ $ Units              : chr "Billions of Dollars"
+ $ Date_Range         : chr "1947-01-01 to 2018-10-01"
+ $ Last_Updated       : chr "2019-02-28 8:03 AM CST"
+ $ Notes              : chr "BEA Account Code: A191RC . . . "
+> tail(GDP)
+             GDP
+2017-07-01 19588
+2017-10-01 19832
+2018-01-01 20041
+2018-04-01 20412
+2018-07-01 20658
+2018-10-01 20891
+> tail(GDP_DLY)
+             GDP GDP_DLY
+2018-10-31 20412      64
+2018-11-30 20412       2
+2018-12-31 20658      33
+2019-01-31 20658      64
+2019-02-28 20658      92
+2019-03-31 20891      10 # TODAY: SUN MAR 10 2019
 
 # "Monthly" time series on the St. Louis FRED
 PAYEMS <- getSymbols("PAYEMS", src = "FRED2", auto.assign = FALSE)

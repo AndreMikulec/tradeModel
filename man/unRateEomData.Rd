@@ -10,5 +10,7 @@ unRateEomData()
 xts object
 }
 \description{
-get the end of month UNRATE from FRED
+\preformatted{
+
+}
 }

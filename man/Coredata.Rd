@@ -13,9 +13,13 @@ Coredata(xTs = NULL)
 matrix
 }
 \description{
-handles the edge case of coredata(<vector of element of size 1 or size 0>)
-meant specifically to input empty coredata data into xts(, index)
-xts(,index) only accepts a non zero-dimension matrix or a NULL
+\preformatted{
+
+handles the edge case of coredata(<vector of element of size 1 or size 0>).
+Meant specifically to input empty coredata data into xts(, index).
+xts(,index) only accepts a non zero-dimension matrix or a NULL.
+
+}
 }
 \examples{
 \dontrun{

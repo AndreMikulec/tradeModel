@@ -7,5 +7,11 @@
 Leading(xTs = NULL, Shift = NULL)
 }
 \description{
-pads beginning date as necessary
+\preformatted{
+
+Pads the beginning date as necessary.
+
+Get the leading month near eom date.
+
+}
 }

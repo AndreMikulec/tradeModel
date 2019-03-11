@@ -12,9 +12,11 @@ tryCatchLog::tryCatchLog(. . . , error = function(e) { ErrorHandler(e) })"}
 
 \item{useENVI}{getOption("useENVI") option.
 If NULL or TRUE, will use get("envi") to search for
-the calling environment location that is stored in "envi"
-Otherwise, will just get the calling environment from parent.frame(8)}
+the calling environment location that is stored in "envi".
+Otherwise, will just get the calling environment from parent.frame(8).}
 }
 \description{
-error handler function meant for tryCatchLog::tryCatchLog
+\preformatted{
+
+}
 }

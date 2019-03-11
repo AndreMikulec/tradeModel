@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{cashWts}
 \alias{cashWts}
-\title{add cash weights}
+\title{cash weights}
 \usage{
 cashWts(xTs = NULL)
 }
@@ -13,6 +13,10 @@ cashWts(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
+\preformatted{
+
 Currently, this number is just only all of the other weight
 columns (*_wts) subtracted from one(1)
+
+}
 }

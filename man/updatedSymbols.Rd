@@ -2,8 +2,7 @@
 % Please edit documentation in R/database.R
 \name{updatedSymbols}
 \alias{updatedSymbols}
-\title{'updated' date-ish/time-ish property
-of an [xts] object symbols in a persistent location (dispatcher)}
+\title{"updated" date-ish/time-ish property of an [xts] object symbols in a persistent location (dispatcher)}
 \usage{
 updatedSymbols(Symbols = NULL, source.envir = NULL, ...)
 }
@@ -20,7 +19,11 @@ updatedSymbols(Symbols = NULL, source.envir = NULL, ...)
 a named list of 'updated' properties
 }
 \description{
+\preformatted{
+
 looks in source.envir
+
+}
 }
 \examples{
 \dontrun{

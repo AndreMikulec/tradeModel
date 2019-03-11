@@ -63,23 +63,24 @@ environment one object for each \code{Symbol} specified,
 with class defined by \code{return.class}.
 }
 \description{
+\preformatted{
+
 About the data . . .
-}
-\details{
+
 File Structure: Column Header Nomenclature and Forecast Horizons
 
-“1” to “6” (quarterly forecasts) or
-“A” and “B” (annual-average forecasts)
+?1? to ?6? (quarterly forecasts) or
+?A? and ?B? (annual-average forecasts)
 
-The number “1” represents the “forecast” for the quarter prior to the quarter in
+The number ?1? represents the ?forecast? for the quarter prior to the quarter in
 which the survey is conducted. The forecasters know the values of the variables for this
 quarter at the time they submit their projections. . . . The forecasters are permitted
 to forecast a revision
 
-The number “2” represents the forecast for the current quarter, defined as
-the quarter in which the survey is conducted. The numbers “3” through “6”
+The number ?2? represents the forecast for the current quarter, defined as
+the quarter in which the survey is conducted. The numbers ?3? through ?6?
 represent the forecasts for the four quarters after the current quarter.
-The letters “A” and “B” represent annual average forecasts
+The letters ?A? and ?B? represent annual average forecasts
 for the current year (the year in which the survey is conducted) and
 the following year.
 
@@ -88,12 +89,13 @@ About the date/time index . . .
 Deadline and Release Dates for the Survey of Professional Forecasters
 
 release dates
-https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/spf-release-dates.txt?la=en
+https://www.philadelphiafed.org/-/media/research-and-data/real-time-center
+       /survey-of-professional-forecasters/spf-release-dates.txt?la=en
 
 True deadline and news release dates for surveys prior to 1990:Q2 are not known.
 
 NOTE: about "not known" (see below), for simplicity
-xts time index of these "not known" periods is the middle date of the calendar quarter
+xts time index of these "not known" periods is the middle date of the calendar quarter.
 
 *The 1990Q2 survey was not taken in real time, because the Philadelphia Fed
 had not yet taken over the survey. Forecasters were asked to provide dated
@@ -105,12 +107,14 @@ which in turn delayed the release of government statistical data.
 ***The 2013Q4 survey was delayed because of the federal government shutdown,
 which in turn delayed the release of government statistical data.
 
-# Popular start page
-https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files
+# popular start page
+https://www.philadelphiafed.org/research-and-data/real-time-center
+       /survey-of-professional-forecasters/data-files
 
 # all of the data (1968 to the present) in five(5) excel files
 Individual Forecasts for the Survey of Professional Forecasters
-https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data/individual-forecasts
+https://www.philadelphiafed.org/research-and-data/real-time-center
+       /survey-of-professional-forecasters/historical-data/individual-forecasts
 
 # Some, compare and constrasts may be
 'forcasters'(prediction) w.s. FRED (acutally what happened)
@@ -118,7 +122,8 @@ https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-pro
 # unemployment
 
 Civilian Unemployment Rate (UNEMP)
-https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/unemp
+https://www.philadelphiafed.org/research-and-data/real-time-center
+       /survey-of-professional-forecasters/data-files/unemp
 
 Civilian Unemployment Rate (UNRATE)
 https://fred.stlouisfed.org/series/UNRATE/
@@ -126,7 +131,8 @@ https://fred.stlouisfed.org/series/UNRATE/
 # prices ( e.g. inflation )
 
 Price Index for Gross National Product/Gross Domestic Product (PGDP)
-https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/pgdp
+https://www.philadelphiafed.org/research-and-data/real-time-center
+       /survey-of-professional-forecasters/data-files/pgdp
 
 Gross National Product (chain-type price index) (A001RV1Q225SBEA)
 https://fred.stlouisfed.org/series/A001RV1Q225SBEA
@@ -134,19 +140,22 @@ https://fred.stlouisfed.org/series/A001RV1Q225SBEA
 # gross domestic product
 
 Nominal Gross National Product/Gross Domestic Product (NGDP)
-https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/ngdp
+https://www.philadelphiafed.org/research-and-data/real-time-center
+       /survey-of-professional-forecasters/data-files/ngdp
 
 Gross Domestic Product (GDP)
 https://fred.stlouisfed.org/series/GDP
 
-# Corporate Profits
+# corporate Profits
 
 Corporate Profits After Tax (CPROF)
-https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/data-files/cprof
+https://www.philadelphiafed.org/research-and-data/real-time-center
+       /survey-of-professional-forecasters/data-files/cprof
 
 Corporate Profits After Tax (without IVA and CCAdj) (CP)
 https://fred.stlouisfed.org/series/CP
-#'
+
+}
 }
 \examples{
 \dontrun{

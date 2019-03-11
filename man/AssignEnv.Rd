@@ -17,7 +17,11 @@ AssignEnv(List, nms = NULL, envir = parent.frame())
 invisible
 }
 \description{
-mostly for 'space saving' and cleanliness
+\preformatted{
+
+This is mostly for 'space saving' and cleanliness.
+
+}
 }
 \examples{
 \dontrun{

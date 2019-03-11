@@ -15,5 +15,7 @@ Less(xTs1 = NULL, xTs2 = NULL)
 xts object with the same index as xTs1
 }
 \description{
-difference of two xTs objects
+\preformatted{
+
+}
 }

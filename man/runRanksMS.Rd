@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{runRanksMS}
 \alias{runRanksMS}
-\title{rolling ranks using package matrixStats.}
+\title{rolling ranks using package matrixStats}
 \usage{
 runRanksMS(x, laggedCols = NULL, base = 0, window = 10, ranks = 4,
   ties.method = "average", na.pad = TRUE, originalData = FALSE,
@@ -35,16 +35,19 @@ means a lower rank number.}
 xts object
 }
 \description{
-Note: this may use MUCH memory.  the number of new  matrix columns
+\preformatted{
+
+Note: this may use MUCH memory.  The number of new  matrix columns
 created is equal to "ranks - 1".  Also, time may be used to
 create these columns.
-}
-\details{
+
 In most cases, one may be better off using the function: runRanksTTR.
 
 "base" and "ranks" can be cleverly manipulated to get, for example,
 ranks from observations not directly adjacent to each other. An examle
 is not shown.
+
+}
 }
 \examples{
 \dontrun{

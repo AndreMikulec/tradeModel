@@ -7,17 +7,18 @@
 specifyModel(formula, na.rm = TRUE, source.envir = NULL, ...)
 }
 \description{
-get some Symbols from an environment (source.envir)
-  will search first in (source.envir)
-  if the Symbol is not found in the enviroment (source.envir),
-  then get the Symbol from elsewhere
+\preformatted{
+
+Get some Symbols from an environment (source.envir).
+  Will search first in (source.envir).
+  If the Symbol is not found in the enviroment (source.envir),
+  then get the Symbol from elsewhere.
 ...
-passed to getSymbols
+Passed to getSymbols ...
         useful: from, to
   maybe useful: src
   maybe useful: set per Symbol src using setSymbolLookup
-}
-\details{
+
 specifyModel(getModelData) original code ( not changed by me )
 if na.rm == TRUE,  then does 'na.exclude'
   BUT 'without rules' PUTS back (rbind) the last observation
@@ -44,4 +45,6 @@ quantmod <- specifyModel(Next(ClCl(WMT)) ~ Lag(OpCl(AAPL)) + Lag(LoHi(COST),0:2)
   , from ="2007-01-01"
   , to   ="2011-12-31"
   )
+
+}
 }

@@ -37,5 +37,7 @@ is forced to ISO style at conection}
 R named list of Symbols and results (TRUE/FALSE)
 }
 \description{
-xts object symbols exist in the PostgreSQL (pg) database
+\preformatted{
+
+}
 }

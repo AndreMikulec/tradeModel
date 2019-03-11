@@ -7,5 +7,7 @@
 pgCurrentTimeZone(con)
 }
 \description{
-get PostgreSQL current user time zone
+\preformatted{
+
+}
 }

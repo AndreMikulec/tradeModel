@@ -19,5 +19,7 @@ ordered by ordinal position
 The results are ordered.
 }
 \description{
-of a specific PostgreSQL database schema table, show its columns and data types
+\preformatted{
+
+}
 }

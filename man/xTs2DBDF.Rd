@@ -16,5 +16,7 @@ xTs2DBDF(xTs, con, field.names, db.fields)
 \item{db.fields}{database column names}
 }
 \description{
-convert an OHLC xTs into aN OHLC data.frame MEANT to be loaded into a database
+\preformatted{
+
+}
 }

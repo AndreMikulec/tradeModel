@@ -2,8 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{SortinoRatioLoss}
 \alias{SortinoRatioLoss}
-\title{for package iml function FeatureImp$new
-True Sortino Ratio 'loss function'}
+\title{True Sortino Ratio 'loss function'}
 \usage{
 SortinoRatioLoss(actual, predicted, ...)
 }
@@ -15,6 +14,9 @@ SortinoRatioLoss(actual, predicted, ...)
 \item{see}{? iml::FeatureImp}
 }
 \description{
-for package iml function FeatureImp$new
-True Sortino Ratio 'loss function'
+\preformatted{
+
+for iml FeatureImp$new
+
+}
 }

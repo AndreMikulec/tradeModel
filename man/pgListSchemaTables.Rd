@@ -16,5 +16,7 @@ vector of characters of table names
 The results do not have any order.
 }
 \description{
-of a specific PostgreSQL database schema, show its tables
+\preformatted{
+
+}
 }

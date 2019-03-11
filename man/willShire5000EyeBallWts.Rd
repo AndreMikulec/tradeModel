@@ -13,8 +13,12 @@ willShire5000EyeBallWts(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
+\preformatted{
+
 This is the workhorse function. This is where the magic/logic happens.
 Use any other columns (called indicators) that do not have the weights (_wts)
 suffix and do not have the same root name compared to each and every
 other *_wts column.
+
+}
 }

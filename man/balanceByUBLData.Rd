@@ -25,5 +25,9 @@ thr.rel = 0.5,  C.perc = list(1.0, 2.5),
 rel: values less than zero are important, values greater than zero are not important}
 }
 \description{
-produce more or less duplicate/near observations
+\preformatted{
+
+Produce more or less duplicate/near observations.
+
+}
 }

@@ -13,5 +13,7 @@ appendCashWts(xTs = NULL)
 xts object with merged data into xTs
 }
 \description{
-add cash weights returns (CASHlogrets)
+\preformatted{
+
+}
 }

@@ -2,8 +2,7 @@
 % Please edit documentation in R/database.R
 \name{DetectOnlyNonEmptyVarsInRows}
 \alias{DetectOnlyNonEmptyVarsInRows}
-\title{detect rows with columns of non-NA vaues
-and other columns of non-NA values}
+\title{detect rows with columns of non-NA vaues and other columns of non-NA values}
 \usage{
 DetectOnlyNonEmptyVarsInRows(x, Var = NULL, Ele = NULL, EleO = NULL)
 }
@@ -11,30 +10,33 @@ DetectOnlyNonEmptyVarsInRows(x, Var = NULL, Ele = NULL, EleO = NULL)
 \item{x}{data.frame}
 
 \item{Var}{columns determining complete cases.
-Can be column names or positions}
+Can be column names or positions.}
 
-\item{Ele}{"All"(default), of elements in Var, the test results
-Other option is "Any"}
+\item{Ele}{"All"(default), of elements in Var, the test results.
+Other option is "Any".}
 
-\item{EleO}{"All"(default), of elements in 'other than Var', the test results
-Other option is "Any"}
+\item{Ele}{"All"(default), of elements in 'other than Var', the test results.
+The other option is "Any".}
 }
 \value{
 df with rows of all-NA removed
 }
 \description{
-detect columns(Var) where the values are
+\preformatted{
+
+Detect columns(Var) where the values are
 not-NA (determined by Ele) but
 the rest of the columns are
-NA everywhere else (determined by EleO)
-}
-\details{
-[ ] Fix?
-NOTE: originally a domain-specific solution
-API however is inconsitent about the
-other Detect*Rows functions
+NA everywhere else (determined by EleO).
 
-Function is written in DataCombine style
+[ ] Fix?
+NOTE: originally this is a domain-specific solution.
+The API however, is inconsitent about the
+other Detect*Rows functions.
+
+The function is written in package DataCombine style.
+
+}
 }
 \examples{
 \dontrun{

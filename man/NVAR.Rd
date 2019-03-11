@@ -19,7 +19,13 @@ NVAR(x = NULL)
 integer number of variables
 }
 \description{
-currently NOT USED
+\preformatted{
+
+NCOL wrongly returns value one(1)
+on non-data.frame 2nd dimension objects
+with a 2nd dimension size of zero(0).
+
+}
 }
 \examples{
 \dontrun{

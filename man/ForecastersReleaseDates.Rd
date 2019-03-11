@@ -2,7 +2,7 @@
 % Please edit documentation in R/database.R
 \name{ForecastersReleaseDates}
 \alias{ForecastersReleaseDates}
-\title{Philadelphia Fed Survey of Professinal Forecasters Release Dates}
+\title{Philadelphia Fed Survey of Professinal Forecasters release dates}
 \usage{
 ForecastersReleaseDates(env = parent.frame(), MaxAge = NULL, ...)
 }
@@ -26,10 +26,13 @@ MOST RECENTLY PUBLISHED FORECASTERS RELEASE DATES FILE then this file will be do
 data.frame of YearQtr (yearqtr) TrueDeadlineDate (Date) ReleaseDate (Date)
 }
 \description{
+\preformatted{
+
 About the date/time index . . .
-}
-\details{
-Deadline and Release Dates for the Survey of Professional Forecasters
+
+This is the Deadline and Release Dates for the
+Survey of Professional Forecasters.
+
 True deadline and news release dates for surveys prior to 1990:Q2 are not known.
 
 *The 1990Q2 survey was not taken in real time, because the Philadelphia Fed
@@ -41,6 +44,8 @@ which in turn delayed the release of government statistical data.
 
 ***The 2013Q4 survey was delayed because of the federal government shutdown,
 which in turn delayed the release of government statistical data.
+
+}
 }
 \examples{
 \dontrun{

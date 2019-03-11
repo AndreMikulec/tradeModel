@@ -18,7 +18,11 @@ xts objects must have the attribute "src"}
 character vector of Symbols
 }
 \description{
+\preformatted{
+
 looks in source.envir xor "src" exclusively
+
+}
 }
 \examples{
 \dontrun{

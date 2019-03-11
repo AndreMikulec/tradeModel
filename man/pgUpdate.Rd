@@ -49,10 +49,14 @@ An alternative way to to specify the password is throught the environment
 variable PGPASS.  E.g. Sys.setenv("PGPASSWORD" = "postgres")}
 }
 \description{
+\preformatted{
+
 For performance reasons,
 the unique combinations of the keys of the data.frame df
 are sent to the server, to limit the number of
-rows returned from the server by pgOldData
+rows returned from the server by pgOldData.
+
+}
 }
 \examples{
 \dontrun{
