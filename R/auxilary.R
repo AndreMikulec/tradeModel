@@ -4553,15 +4553,13 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #'
 #' @export
+#' @importFrom PerformanceAnalytics SortinoRatio
 SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
 
-  require(PerformanceAnalytics)
-
-  Power <- 16
   R <- data[,"obs"] - data[,"pred"]
   # numeric vector of size NROW(data)
   #
-  outOrig <- SortinoRatio(R = R, MAR = 0)
+  outOrig <- PerformanceAnalytics::SortinoRatio(R = R, MAR = 0)
   # marix if size 1x1
   #
   dimnames(outOrig) <- NULL
@@ -4574,7 +4572,13 @@ SortinoRatioSummary <- function (data, lev = NULL, model = NULL) {
   # ranges
   StrengthAboveMAR <- 1
   if(0 <= outOrig) out <- out * StrengthAboveMAR
-  StrengthBelowMAR <- 4
+  #
+  # shut off multiply
+  # (currently): does not seem to have a noticable effect
+  # having the "right" data is !more important!
+  #
+  # StrengthBelowMAR <- 4
+  StrengthBelowMAR <- 1
   if(outOrig < 0)  out <- out * StrengthBelowMAR
 
   names(out)[1] <- "ratio"
@@ -5035,6 +5039,9 @@ initEnv();on.exit({uninitEnv()})
     C.perc <- Dots[["C.perc"]]
   }
 
+  # UBL::ImpSampRegress: The relevance function is used to introduce
+  # replicas of the most important examples and to remove the least important examples.
+  # ? UBL::ImpSampRegress
   if(identical(UBLFunction, UBL::ImpSampRegress)) {
     # WERCS: WEighted Relevance-based Combination Strategy
     UBLResults <- DescTools::DoCall(UBL::ImpSampRegress
@@ -5044,7 +5051,7 @@ initEnv();on.exit({uninitEnv()})
     )
     # I AM ending up LOOSING some 'UBLDataCompleteCases' data. WHY?
     # NOTE: no NEW index Values are created.
-    # I CAN NOT garnantee that all UBL functons do NOT do that
+    # I CAN NOT garantee that all UBL functons do NOT do that
   } else {
     # anything else
     UBLResults <- DescTools::DoCall(UBLFunction, c(list(), form = UBLDataFormula, DoData, Dots[!names(Dots) %in% c("form","dat","train")] ) )
@@ -5060,6 +5067,13 @@ initEnv();on.exit({uninitEnv()})
   # (+) non-core attributes (user) [if any]
   xtsAttributes(TrainingData) <- xtsAttributes(xTs)
 
+  #
+  # UBL functions will not leak data
+  #   EXCEPT *GaussNoiseRegression* that can/will leak data.
+  #
+  # question about new/replicated UBL data and range of creation area #3
+  # https://github.com/paobranco/UBL/issues/3
+  #
   # prevent any leaking of 'new' [if any] UBL data into the validation area
   TrainingData <- window(TrainingData, start = TrainStart, end = TrainEnd)
   # add back validation area data
