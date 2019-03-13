@@ -3552,90 +3552,94 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-
-
-#' NBER timeslices
+#' time slices
 #'
 #' @description
 #' \preformatted{
-#'
+#' Given a matrix(Start, End) of cell Real values of YYYYMMDD.
+#' Return a list of date ranges.
 #' }
 #'
-#'@param allSlicesStart NULL(default), Date of the earlies possbile date.
-#'This Date is the first day(1st) of a month. Note: this filter is applied LAST.
-#'@param allSlicesEnd NULL(default), Date of the latest possbile date.
-#'This Date is the last day(last) of a month. Note: this filter is applied late.
-#'@param LongTimeSlices FALSE(default). If TRUE, include non-recession range that
-#'is before this recession range.
-#'@param LongestTimeSlice FALSE(default). If TRUE then the start value is the
-#'beginning of "NBER dates" (and limited by allSlicesStart)
-#'LongestTimeSlice = TRUE and LongTimeSlices = TRUE ARE mutually exclusive choices
-#'of each other
-#'@param OmitSliceFirstDate FALSE(default), All dates are end of month dates.
-#'A previous timeslice tailing date is the the same date as the next timeslice heading date.
-#'TRUE omits the heading date from each time slice.  This may be necessary to prevent
-#'repetition of data, for example in sending timeslices to machine learning models.
-#' @return a list of vectors of Dates of recession Ranges
+#' @param timeSliceMatrix NULL(default) required.
+#' Two column matrix of start and end dates.  The left column is named "Start."
+#' The right column is named "End". The cell values are Real values in format YYYYMMDD.
+#' The "Start" column contains beginning of month dates.
+#' The "End" column contains end of month dates.
+#' @param allSlicesStart NULL(default), Date of the earlies possible date.
+#' This Date is the first day(1st) of a month. Note: this filter is applied LAST.
+#' @param allSlicesEnd NULL(default), Date of the latest possbile date.
+#' This Date is the last day(last) of a month. Note: this filter is applied late.
+#' @param LongTimeSlices FALSE(default). If TRUE, include non-date range that
+#' is before this date range.
+#' @param LongestTimeSlice FALSE(default). If TRUE then the start value is the
+#' beginning of "NBER dates" (and limited by allSlicesStart)
+#' LongestTimeSlice = TRUE and LongTimeSlices = TRUE ARE mutually exclusive choices
+#' of each other
+#' @param OmitSliceFirstDate FALSE(default), All dates are end of month dates.
+#' A previous timeslice tailing date is the the same date as the next timeslice heading date.
+#' TRUE omits the heading date from each time slice.  This may be necessary to prevent
+#' repetition of data, for example in sending timeslices to machine learning models.
+#' @return a list of vectors of Dates of date Ranges
 #' @examples
 #' \dontrun{
-#' # str(timeSliceNBER())
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")))
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
-#' # , LongTimeSlices = TRUE)
-#' # )
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
-#' #   , LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
-#' # )
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
-#' # , LongestTimeSlice = TRUE)
-#' # )
-#' # # now after seeing all of the date, THEN, choose the filter
-#' # str(timeSliceNBER(allSlicesStart = zoo::as.Date("1969-12-31")
-#' # , LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?)
-#' # )
+#' str(timeSlices(timeSliceMatrix = tis::nberDates()))
+#' str(timeSlices(timeSliceMatrix = tis::nberDates(), allSlicesStart = zoo::as.Date("1969-12-31")))
+#' str(timeSlices(timeSliceMatrix = tis::nberDates(), allSlicesStart = zoo::as.Date("1969-12-31")
+#'   , LongTimeSlices = TRUE)
+#' )
+#' str(timeSlices(timeSliceMatrix = tis::nberDates(), allSlicesStart = zoo::as.Date("1969-12-31")
+#'   , LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
+#' )
+#' str(timeSlices(timeSliceMatrix = tis::nberDates(), allSlicesStart = zoo::as.Date("1969-12-31")
+#' , LongestTimeSlice = TRUE)
+#' )
+#' # now after seeing all of the date, THEN, choose the filter
+#' str(timeSlices(timeSliceMatrix = tis::nberDates(), allSlicesStart = zoo::as.Date("1969-12-31")
+#' , LongestTimeSlice = TRUE, allSlicesStart = ?, allSlicesEnd = ?)
+#' )
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom plyr llply
-#' @importFrom tis nberDates
 #' @importFrom zoo as.Date
-timeSliceNBER <- function(allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL, OmitSliceFirstDate = NULL) {
+timeSlices <- function(timeSliceMatrix = NULL, allSlicesStart = NULL, allSlicesEnd = NULL, LongTimeSlices = NULL, LongestTimeSlice = NULL, OmitSliceFirstDate = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  if(is.null(timeSliceMatrix)) stop("timeSlices needs a timeSliceMatrix")
 
   if(!length(LongTimeSlices))   LongTimeSlices <- FALSE
   if(!length(LongestTimeSlice)) LongestTimeSlice <- FALSE
 
-  NBERTISMatrix <-  tis::nberDates()
-  datesFromTIS <-  function(x) zoo::as.Date(as.character(x), format = "%Y%m%d")
-  beginNBERDates <- datesFromTIS(NBERTISMatrix[, "Start"])
-    endNBERDates <- datesFromTIS(NBERTISMatrix[, "End"  ])
+  datesFrom <-  function(x) zoo::as.Date(as.character(x), format = "%Y%m%d")
+  beginDates <- datesFrom(timeSliceMatrix[, "Start"])
+    endDates <- datesFrom(timeSliceMatrix[, "End"  ])
   xts(
       matrix(c(
-          as.numeric(beginNBERDates)
-        , as.numeric(endNBERDates)
+          as.numeric(beginDates)
+        , as.numeric(endDates)
         )
         , ncol = 2, dimnames = list(NULL, c("Start","End"))
       )
-    , beginNBERDates
-  ) -> NBERDates
+    , beginDates
+  ) -> THEDates
   # previous recession's end
-  LongStart <- lag(NBERDates[,"End"]) + 1; colnames(LongStart)[1] <- "LongStart"
-  NBERDates <- merge(LongStart, NBERDates)
+  LongStart <- lag(THEDates[,"End"]) + 1; colnames(LongStart)[1] <- "LongStart"
+  THEDates <- merge(LongStart, THEDates)
 
   # filter out
-  if(length(allSlicesStart)) NBERDates <- NBERDates[allSlicesStart   <= index(NBERDates)]
-    if(!NROW(NBERDates)) stop("timeSliceNBER allSlicesStart removed all data")
-  if(length(allSlicesEnd))   NBERDates <- NBERDates[index(NBERDates) <= allSlicesEnd]
-    if(!NROW(NBERDates)) stop("timeSliceNBER allSlicesEnd removed all data")
+  if(length(allSlicesStart)) THEDates <- THEDates[allSlicesStart   <= index(THEDates)]
+    if(!NROW(THEDates)) stop("timeSlices allSlicesStart removed all data")
+  if(length(allSlicesEnd))   THEDates <- THEDates[index(THEDates) <= allSlicesEnd]
+    if(!NROW(THEDates)) stop("timeSlices allSlicesEnd removed all data")
 
   # FUTURE: instead, could have detected periodicity and used split.xts
   # determine
-  split(as.data.frame(NBERDates), seq_len(NROW(NBERDates))) %>%
+  split(as.data.frame(THEDates), seq_len(NROW(THEDates))) %>%
      plyr::llply(function(x) {
 
        if(LongestTimeSlice) {
-         ActualStart <- index(NBERDates[1,"Start"])
+         ActualStart <- index(THEDates[1,"Start"])
        } else if(LongTimeSlices) {
          ActualStart <- zoo::as.Date(x[["LongStart"]])[allSlicesStart <= zoo::as.Date(x[["LongStart"]])]
        } else {
@@ -3648,12 +3652,11 @@ initEnv();on.exit({uninitEnv()})
        if(!is.null(OmitSliceFirstDate) && OmitSliceFirstDate && length(DateSeq)) DateSeq <- DateSeq[-1]
        return(DateSeq)
 
-     }) -> ListOfNBERDateRanges
+     }) -> ListOfDateRanges
 
-     ListOfNBERDateRanges
+     ListOfDateRanges
 
 })}
-
 
 
 
@@ -5111,6 +5114,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom logging loginfo
+#' @importFrom tis nberDates
 #' @importFrom plyr llply
 #' @importFrom stringr str_c
 #' @importFrom dplyr arrange
@@ -5170,8 +5174,8 @@ initEnv();on.exit({uninitEnv()})
   #                                             I do not have any Predictee information earlier than this
   #                                             HARD-CODED(I just know this)        Desired end "2006-12-31", but actual end is "2001-11-30"
   #                                             as.Date("1970-12-31")
-  NBERAllData     <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
-  NBERFocusedData <- timeSliceNBER(allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
+  NBERAllData     <- timeSlices(timeSliceMatrix = tis::nberDates(), allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate, LongTimeSlices = TRUE, OmitSliceFirstDate = TRUE)
+  NBERFocusedData <- timeSlices(timeSliceMatrix = tis::nberDates(), allSlicesStart = ModelTargetTrainTestFirstDate, allSlicesEnd = ModelTargetTrainTestLastDate,                        OmitSliceFirstDate = TRUE)
 
   # should be min(earliest),max(latest) Date of (NBERAllData,NBERFocusedData)
   TrainingBegin <- min(head(NBERAllData[[1]],1), head(NBERFocusedData[[1]],1))
