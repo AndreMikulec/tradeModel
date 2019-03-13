@@ -5195,6 +5195,8 @@ initEnv();on.exit({uninitEnv()})
   TrainingBegin <- min(head(NBERAllData[[1]],1), head(NBERFocusedData[[1]],1))
   TrainingEnd   <- max(tail(NBERAllData[[length(NBERAllData)]],1), tail(NBERAllData[[length(NBERFocusedData)]],1))
 
+  # give a more balanced observation count to the focused data
+  # with respect to the non-focused data
   balanceFocusedData(
       xTs               = modelData(specifiedUnrateModel) # exclude.training not built/defined yet
     , SlicesAllData     = NBERAllData
@@ -5204,6 +5206,8 @@ initEnv();on.exit({uninitEnv()})
   ) -> TrainingData
   modelData(specifiedUnrateModel) <- list(model.data = TrainingData)
 
+  # of the obserations that fall below (a number)
+  # give them MORE like-observations.
   balanceByUBLData(
       xTs  = modelData(specifiedUnrateModel) # exclude.training not built/defined yet
     , Fmla = formula(specifiedUnrateModel)
