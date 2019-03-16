@@ -4,11 +4,17 @@
 \alias{balanceFocusedData}
 \title{give more observations to the focused data}
 \usage{
-balanceFocusedData(xTs, SlicesFocusedData, SlicesAllData, TrainStart,
-  TrainEnd)
+balanceFocusedData(xTs, NumbReplicaCopiesMultiple = NULL,
+  SlicesFocusedData, SlicesAllData, TrainStart, TrainEnd)
 }
 \arguments{
 \item{xTs}{xts object of training data}
+
+\item{NumbReplicaCopiesMultiple}{NULL(default) How much "more" to to
+overbalance the focused data comparted to all of the data.
+One(1) is the same as NULL(default).
+Two(2) or any other fraction, e.g. 2.5 means multiply the internally derived
+"number of replica copies" by this value.}
 
 \item{SlicesFocusedData}{list of index slice date vectors}
 

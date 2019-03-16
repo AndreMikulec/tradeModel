@@ -4899,6 +4899,11 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #'
 #' @param xTs xts object of training data
+#' @param NumbReplicaCopiesMultiple NULL(default) How much "more" to to
+#' overbalance the focused data comparted to all of the data.
+#' One(1) is the same as NULL(default).
+#' Two(2) or any other fraction, e.g. 2.5 means multiply the internally derived
+#' "number of replica copies" by this value.
 #' @param SlicesAllData list of index slice date vectors
 #' @param SlicesFocusedData list of index slice date vectors
 #' @param TrainStart absolute training start date
@@ -4907,6 +4912,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom tryCatchLog tryCatchLog
 balanceFocusedData <- function(
     xTs
+  , NumbReplicaCopiesMultiple = NULL
   , SlicesFocusedData
   , SlicesAllData
   , TrainStart
@@ -4914,6 +4920,8 @@ balanceFocusedData <- function(
 ) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  if(is.null(NumbReplicaCopiesMultiple)) NumbReplicaCopiesMultiple <- 1.0
 
   if(length(SlicesAllData) != length(SlicesFocusedData)) {
     stop("In balanceFocusedData: need length(SlicesAllData) == length(SlicesFocusedData)")
@@ -4932,6 +4940,7 @@ initEnv();on.exit({uninitEnv()})
     # copy over enough (or more) so that the
     # SlicesFocusedData and and SlicesAllData numbers of records are balanced
     NumbReplicaCopies <- ceiling((length(SlicesAllData[[slice]]) - length(SlicesFocusedData[[slice]]))/length(SlicesFocusedData[[slice]]))
+    NumbReplicaCopies <- NumbReplicaCopiesMultiple * NumbReplicaCopies
     FocusedDataOrigSliceData <- Data[SlicesFocusedData[[slice]]]
     for(copy in seq_len(NumbReplicaCopies)) {
       TrainingData <- rbind(TrainingData, FocusedDataOrigSliceData)
@@ -5124,6 +5133,8 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #'
 #' @param xTs xts object
+#' @param NumbReplicaCopiesMultiple passed to NumbReplicaCopies
+#' This means how much more ( e.g. "focused" data ) is replicated compared to "all" data
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -5139,18 +5150,11 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom rlist list.zip
 #' @importFrom caret trainControl
 #' @importFrom formula.tools lhs.vars
-willShire5000MachineWts <- function(xTs = NULL) {
+willShire5000MachineWts <- function(xTs = NULL, NumbReplicaCopiesMultiple = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   logging::loginfo("Begin: willShire5000MachineWts")
-
-  # received xTs( WILL5000INDlogrets, CASHlogrets, UNRATE )
-  # merge.xts target, indictors, and predictors into merged xTs
-
-  ### unrate <- xTs[,"UNRATE"]
-  ### unrateIndicators <- unrateEyeballIndicators(unrate)
-  ### unrateIndicators <- initXts(unrateIndicators)
 
   willShire5000MachineWtsData <- xTs[ , c(valueLeadingRetsClms(xTs), valuePredictorClms(xTs))]
 
@@ -5199,6 +5203,7 @@ initEnv();on.exit({uninitEnv()})
   # with respect to the non-focused data
   balanceFocusedData(
       xTs               = modelData(specifiedUnrateModel) # exclude.training not built/defined yet
+    , NumbReplicaCopiesMultiple = NumbReplicaCopiesMultiple
     , SlicesAllData     = NBERAllData
     , SlicesFocusedData = NBERFocusedData
     , TrainStart        = TrainingBegin

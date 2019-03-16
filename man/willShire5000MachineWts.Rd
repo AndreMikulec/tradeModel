@@ -4,10 +4,13 @@
 \alias{willShire5000MachineWts}
 \title{add Willshire 5000 Index weights using Machine learning}
 \usage{
-willShire5000MachineWts(xTs = NULL)
+willShire5000MachineWts(xTs = NULL, NumbReplicaCopiesMultiple = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
+
+\item{NumbReplicaCopiesMultiple}{passed to NumbReplicaCopies
+This means how much more ( e.g. "focused" data ) is replicated compared to "all" data}
 }
 \value{
 xts object with merged data into xTs
