@@ -4,24 +4,32 @@
 \alias{willShire5000MachineWts}
 \title{add Willshire 5000 Index weights using Machine learning}
 \usage{
-willShire5000MachineWts(xTs = NULL, NumbReplicaCopiesMultiple = NULL)
+willShire5000MachineWts(xTs = NULL,
+  Predictee = "WILL5000INDlogleadingrets", Predictors = "UNRATE",
+  IndicatorGeneratorFUN = "unrateEyeballIndicators",
+  NumbReplicaCopiesMultiple = NULL, ...)
 }
 \arguments{
 \item{xTs}{xts object}
 
+\item{Predictee}{string of the name of the Predictee variable}
+
+\item{Predictors}{characters vector of the require columns needed in the
+indictor generator function: IndicatorGeneratorFUN}
+
+\item{IndicatorGeneratorFUN}{string of the name of the function
+or the function itself that generates more columns (to eventually
+be used in the model.)}
+
 \item{NumbReplicaCopiesMultiple}{passed to NumbReplicaCopies
-This means how much more ( e.g. "focused" data ) is replicated compared to "all" data}
+This means how much more ( e.g. "focused" data ) is replicated
+compared to "all" data.}
+
+\item{...}{dots passed to the indicator generator function}
 }
 \value{
-xts object with merged data into xTs
+xts object
 }
 \description{
-\preformatted{
-
-This is the workhorse function. This is where the magic/logic happens.
-Use any other columns (called indicators) that do not have the weights (_wts)
-suffix and do not have the same root name compared to each and every
-other *_wts column.
-
-}
+add Willshire 5000 Index weights using Machine learning
 }

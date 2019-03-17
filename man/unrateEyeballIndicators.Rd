@@ -4,7 +4,7 @@
 \alias{unrateEyeballIndicators}
 \title{collection of SMAs of the unrate Eyeball Indicator}
 \usage{
-unrateEyeballIndicators(unrate = NULL)
+unrateEyeballIndicators(unrate = NULL, ...)
 }
 \description{
 \preformatted{

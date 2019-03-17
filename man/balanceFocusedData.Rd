@@ -11,7 +11,7 @@ balanceFocusedData(xTs, NumbReplicaCopiesMultiple = NULL,
 \item{xTs}{xts object of training data}
 
 \item{NumbReplicaCopiesMultiple}{NULL(default) How much "more" to to
-overbalance the focused data comparted to all of the data.
+overbalance the "focused data" compareed to its corresponding "all data"
 One(1) is the same as NULL(default).
 Two(2) or any other fraction, e.g. 2.5 means multiply the internally derived
 "number of replica copies" by this value.}
