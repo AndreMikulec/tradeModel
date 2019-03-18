@@ -546,37 +546,37 @@ initEnv();on.exit({uninitEnv()})
 #' @description
 #' \preformatted{
 #'
+#' quantmod class conversion
+#'
 #' }
-#'
-#' @rdname as.quantmod
-#' @export
-as.quantmod.default <- function(x, outcomename, order.by, na.rm = TRUE, ...) { invisible() }
-#' @rdname as.quantmod
-#' @export
-as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { UseMethod("as.quantmod") }
-
-
-
-#' from a data.frame, covert to a quantmod object directly
-#'
-#' @description
+#' @details
 #' \preformatted{
 #'
-# CURRENLY NOT USED
-#
-# If I have to do preprocessing ( e.g. a treatment )
-#   therefore the situation may be cheaper to make a quantmod object
-#     from a data.frame.
-#
-# if na.rm == TRUE, then does 'na.exclude'
-#   BUT 'without rules' PUTS back (rbind) the last observation
-#
+#' CURRENLY NOT USED
+#'
+#' If I have to do preprocessing ( e.g. a treatment )
+#'   therefore the situation may be cheaper to make a quantmod object
+#'     from a data.frame.
+#'
+#' if na.rm == TRUE, then does 'na.exclude'
+#'   BUT 'without rules' PUTS back (rbind) the last observation
+#'
 #' data(sample_matrix)
 #' sample_xts <- as.xts(sample_matrix)
 #' quantmodSample <- as.quantmod(as.data.frame(sample_xts), outcomename = "Close", order.by = index(sample_xts))
 #'
 #' }
 #'
+#' @rdname as.quantmod
+#' @export
+as.quantmod         <- function(x, outcomename, order.by, na.rm = TRUE, ...) { UseMethod("as.quantmod") }
+#' @rdname as.quantmod
+#' @export
+as.quantmod.default <- function(x, outcomename, order.by, na.rm = TRUE, ...) { invisible() }
+#' @details
+#' \preformatted{
+#' From a data.frame, covert to a quantmod object directly.
+#' }
 #' @rdname as.quantmod
 #' @export
 #' @importFrom tryCatchLog tryCatchLog

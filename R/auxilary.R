@@ -4444,6 +4444,554 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+
+#' less modernized FRB federal funds interest rate Taylor Rule
+#'
+#' @rdname lessModernFEDFundsTayorRule
+#'
+#' @author St. Louis Federal Board of Governors President James Bullard
+#' @author Kevin L. Kliesen (articles author)
+#' @author Andre Mikulec (adapted original code from the articles)
+#' @references
+#' \cite{Is the Fed Following a "Modernized" Version of the Taylor Rule? Part 1 - Posted 2019-01-15 \url{https://research.stlouisfed.org/publications/economic-synopses/2019/01/15/is-the-fed-following-a-modernized-version-of-the-taylor-rule-part-1}}
+#' @references
+#' \cite{Is the Fed Following a "Modernized" Version of the Taylor Rule? Part 2 - Posted 2019-01-15 \url{https://research.stlouisfed.org/publications/economic-synopses/2019/01/15/is-the-fed-following-a-modernized-version-of-the-taylor-rule-part-2}}
+#' @references
+#' \cite{Kevin L. Kliesen - Business Economist and Research Officer \url{https://research.stlouisfed.org/econ/kliesen/sel/}}
+#' @references
+#' \cite{Economic Synopses \url{https://research.stlouisfed.org/publications/economic-synopses/}}
+#'
+#' @description
+#' \preformatted{
+#'
+#' Taylor rule states that the monetary authority (e.g., the Federal Reserve)
+#' should set its policy [federal funds interest] rate in the following manner.
+#'
+#'}
+#' @details
+#' \preformatted{
+#'
+#' Authority (e.g., the Federal Reserve) should set its
+#' policy rate (federal funds rate i(t)) in the following manner:
+#'
+#' GOAL
+#'
+#' i(t) <- r*  +  n(t) + alpha * (y(t) - y_ask)           + beta * (n(t) - n_ask)
+#' i_t     r_ask  n_t             y_t                               n_t
+#'
+#' is actually calculated:
+#'
+#' METHOD 1
+#'
+#' y_t_less_y_ask <- 100 * (y_t - y_ask)/y_ask
+#'
+#' i_t <- r_ask +  n_t + alpha *  (y_t_less_y_ask) + beta * (n_t - n_ask)
+#'
+#' METHOD 2
+#'
+#' i_t <- r_ask +  n_t + alpha *  (output_gap    ) + beta * (n_t - n_ask)
+#'
+#' Three Key Principles
+#' --------------------
+#'
+#' First
+#' Fed should raise its federal funds target rate proportionally more
+#' when inflation increases.  This is known as the Taylor principle.
+#'
+#' Second
+#' The interest rate should be adjusted in response to the
+#' output gap, a measure of "slack" in the economy.
+#' This is known as the Phillips relationship, whereby inflation decreases (increases)
+#' if real GDP decreases (increases) relative to real potential GDP.
+#' (related to alpha and beta)
+#'
+#' Third
+#' Taylor stipulated that the "equilibrium real interest rate" r_ask(r*),
+#' should be fixed over time at 2 percent.
+#'
+#' Although Taylor believes that r_ask(r*) should remain invariant over time,
+#' other policymakers have instead adopted the position that
+#' r_ask(r*) is time varying and depends importantly on the following:
+#'
+#'   (1) underlying growth rate of the economy
+#'     and
+#'   (2) other factors, such as the
+#'       demand for risk-free Treasury securities (i.e., "safe assets") ARTICLE_LINK
+#'
+#' Implemenaton
+#' ------------
+#'
+#' GOAL
+#'
+#' i_t : nominal federal funds interest rate
+#'
+#' INPUT
+#'
+#' r_ask: equilibrium real interest rate
+#'        should be fixed over time at 2 percent
+#'
+#'   r_ask <- 2.00
+#'
+#' n_t: current inflation rate measure from one year earlier
+#'
+#'     Measuring inflation trends
+#'     "
+#'     The Federal Open Market Committee (FOMC) has determined that
+#'     "inflation at the rate of 2 percent, as measured by the
+#'     annual change in the price index for personal consumption expenditures [PCE],
+#'     is most consistent over the longer run with the Federal Reserves statutory mandate"
+#'     for price stability.
+#'     "
+#'     How this graph was created:
+#'     Search for “PCEPI,”
+#'     check the three series, and click on “Add to Graph.”
+#'     From the “Edit Graph” menu, change the units to “Percent Change from Year Ago.”
+#'     Change the frequency to “Monthly” and the starting date to “2017-03-01.”
+#'
+#'     NOT THIS:
+#'     Personal Consumption Expenditures (PCE)
+#'     Seasonally Adjusted Annual Rate
+#'     Frequency: Monthly
+#'     # PLUS a three month delay to the reporting dta
+#'     https://fred.stlouisfed.org/series/PCE
+#'
+#'     # PCEPI into "Percent Change from Year Ago" results in INFLATIONRATE
+#'     THIS ONE:
+#'     PCEPI "headline" (volitile)
+#'     Personal Consumption Expenditures: Chain-type Price Index, Index 2012=100, Seasonally Adjusted (PCEPI)
+#'     Last Updated: 2019-03-01 7:49 AM CST
+#'     (last value): 2018-12-01  108.929
+#'     Last Updated (publish date) is three months ago
+#'     Personal Consumption Expenditures: Chain-type Price Index (PCEPI)
+#'     https://fred.stlouisfed.org/series/PCEPI
+#'
+#'     # SO: inflation rate measured by the headline PCE
+#'     PCEPI into "Percent Change from Year Ago" -> INFLATIONRATE
+#'
+#'     OTHERS:
+#'
+#'     "core PCE"
+#'     PCEPILFE
+#'     Personal Consumption Expenditures Excluding Food and Energy
+#'     (Chain-Type Price Index), Monthly, Seasonally Adjusted
+#'     Personal Consumption Expenditures Excluding Food and Energy (Chain-Type Price Index) (PCEPILFE)
+#'     https://fred.stlouisfed.org/series/PCEPILFE
+#'
+#'     PCETRIM12M159SFRBDAL "trimmed" (Federal Reserve Bank of Dallas)
+#'     Trimmed Mean PCE Inflation Rate, Seasonally Adjusted
+#'     Trimmed Mean PCE Inflation Rate (PCETRIM12M159SFRBDAL)
+#'     https://fred.stlouisfed.org/series/PCETRIM12M159SFRBDAL
+#'
+#'     Measuring inflation trends
+#'     Posted on May 14, 2018
+#'     David Wheelock
+#'     Why use different inflation measures for policy analysis?
+#'     https://fredblog.stlouisfed.org/2018/05/measuring-inflation-trends/
+#'
+#'     require(xts)
+#'     PCEPI <- quantmod::getSymbols("PCEPI", src="FRED", auto.assign = F)
+#'     index(PCEPI) <- DescTools::AddMonths(index(PCEPI),3)
+#'     index(PCEPI) <- index(PCEPI) - 1 # now at the end of the current month
+#'
+#'  # percent change from a year ago
+#'  n_t <- inflation_rate <- 100*(PCEPI - lag.xts(PCEPI,12))/abs(lag.xts(PCEPI,12))
+#'  colnames(n_t) <- "n_t"
+#'
+#' y_t_less_y_ask OR output_gap (components) follow . . . :
+#'
+#' y_t: Real Gross Domestic Product (GDPC1)
+#'
+#'     Real Gross Domestic Product (GDPC1)
+#'     Seasonally Adjusted Annual Rate
+#'     Frequency: Quarterly
+#'     E.g.
+#'     As of MAR 15 2019:
+#'     Last Updated: 2019-02-28 8:03 AM CST
+#'     (last value): 2018-10-01  18784.632
+#'     True as of date: 2018-12-31
+#'     Last Updated (publish date) is slightly less than 2 months later
+#'     So this is published 4x year: end of FEB, MAY, AUG, NOV.
+#'     Real Gross Domestic Product (GDPC1)
+#'     https://fred.stlouisfed.org/series/GDPC1
+#'
+#'     require(xts)
+#'     GDPC1 <- quantmod::getSymbols("GDPC1", src="FRED", auto.assign = F)
+#'     # "as of record date" to "last updated date"
+#'     # (five months)
+#'     index(GDPC1) <- DescTools::AddMonths(index(GDPC1),5)
+#'     # first report
+#'     From <- head(index(GDPC1),1)
+#'     # last report
+#'     To <-tail(index(GDPC1),1)
+#'     # create intermediate monthly observations
+#'     GDPC1 <- merge(GDPC1, xts(, seq(from = From, to = To, by = "months")) )
+#'     # fill in intermediate months with last known data
+#'     GDPC1 <- na.locf(GDPC1)
+#'     # Change "beginning of month dates" to "end of month dates".
+#'     index(GDPC1) <- index(GDPC1) - 1 # subtrace off one(1) day
+#'
+#'   y_t <- GDPC1; colnames(y_t) <- "y_t"
+#'
+#' y_ask: real potiential GDP
+#'
+#'     Real Potential Gross Domestic Product (GDPPOT)
+#'     Not Seasonally Adjusted
+#'     Frequency: Quarterly
+#'     E.g.
+#'     As of MAR 15 2019:
+#'     Last Updated: 2019-02-06 9:01 AM CST
+#'     (last value): 2029-10-01
+#'     (last useful value): 2018-10-01
+#'     True as of date: 2018-12-31
+#'     Last Updated (publish date) is five(5) weeks later
+#'     So this is published 4x year: just after the beginning of FEB, MAY, AUG, NOV.
+#'     Real Potential Gross Domestic Product (GDPPOT)
+#'     https://fred.stlouisfed.org/series/GDPPOT
+#'
+#'     This will use (almost) the same math as "Real Gross Domestic Product (GDPC1)"
+#'
+#'     require(xts)
+#'     GDPPOT <- quantmod::getSymbols("GDPPOT", src="FRED", auto.assign = F)
+#'     # "as of record date" to "last updated date"
+#'     # (four months and one week: round up to the end of five(5) months)
+#'     index(GDPPOT) <- DescTools::AddMonths(index(GDPPOT),5)
+#'     # first report
+#'     From <- head(index(GDPPOT),1)
+#'     # last "useful"
+#'     To <- tail(index(GDPPOT),1)
+#'     # create intermediate monthly observations
+#'     GDPPOT <- merge(GDPPOT, xts(, seq(from = From, to = To, by = "months")) )
+#'     # fill in intermediate months with last known data
+#'     GDPPOT <- na.locf(GDPPOT)
+#'     # Change "beginning of month dates" to "end of month dates".
+#'     index(GDPPOT) <- index(GDPPOT) - 1 # subtrace off one(1) day
+#'
+#'   y_ask <- GDPPOT; colnames(y_ask) <- "y_ask"
+#'
+#' y_t_less_y_ask:
+#'
+#'     METHOD 1
+#'     Actually the math seems to not be a  "subtraction".
+#'     Author's word "difference" may mean "log difference"
+#'     The method "log difference" is sometimes used as an approximation of "percent change."
+#'     See:
+#'     100*(Real Gross Domestic Product-Real Potential Gross Domestic Product)/Real Potential Gross Domestic Product
+#'     https://fred.stlouisfed.org/graph/?g=f1cZ#0
+#'
+#'     y_t_less_y_ask <- 100*(y_t - y_ask)/abs(y_ask)  # 100*(a-b)/b
+#'     colnames(y_t_less_y_ask) <- "y_t_less_y_ask"
+#'
+#'     OR THE SAME . . .
+#'
+#'     100*(Real Gross Domestic Product-Real Potential Gross Domestic Product)/Real Potential Gross Domestic Product
+#'     a <- GDPC1
+#'     b <- GDPPOT
+#'     Edit Graph: Formula; 100*(a-b)/b
+#'     https://fred.stlouisfed.org/graph/?g=f1cZ#0
+#'
+#'     y_t_less_y_ask <- . . .  data from graph
+#'
+#' output_gap:  a measure of "slack" in the economy
+#'
+#'     See URL web page footnotes #2:
+#'     The difference between the two (GDP and potential GDP) being the  "output gap"
+#'     percentage deviations—that is, the percent that real GDP is above or below real potential GDP.
+#'     The original Taylor rule used the four-quarter percent change in the GDP price deflator.
+#'
+#'     Gross Domestic Product: Implicit Price Deflator (GDPDEF)
+#'     Seasonally Adjusted
+#'     Frequency: Quarterly
+#'     E.g.
+#'     As of MAR 15 2019:
+#'     Last Updated: 2019-02-28
+#'     (last value): 2018-10-01
+#'     True as of date: 2018-12-31
+#'     Last Updated (publish date) is slightly less than 2 months later.
+#'     So this is published 4x year: end of FEB, MAY, AUG, NOV.
+#'     Gross Domestic Product: Implicit Price Deflator (GDPDEF)
+#'     https://fred.stlouisfed.org/series/GDPDEF
+#'
+#'     require(xts)
+#'     GDPDEF <- quantmod::getSymbols("GDPDEF", src="FRED", auto.assign = F)
+#'     # "as of record date" to "last updated date"
+#'     # (five months)
+#'     index(GDPDEF) <- DescTools::AddMonths(index(GDPDEF),5)
+#'     # first report
+#'     From <- head(index(GDPDEF),1)
+#'     # last report
+#'     To   <- tail(index(GDPDEF),1)
+#'     # create intermediate monthly observations
+#'     GDPDEF <- merge(GDPDEF, xts(, seq(from = From, to = To, by = "months")) )
+#'     # fill in intermediate months with last known data
+#'     GDPDEF <- na.locf(GDPDEF)
+#'     # Change "beginning of month dates" to "end of month dates".
+#'     index(GDPDEF) <- index(GDPDEF) - 1 # subtrace off one(1) day
+#'
+#'   METHOD 2 (original Taylor Rule)
+#'
+#'   output_gap <- 100*(GDPDEF - lag.xts(GDPDEF,12))/abs(lag.xts(GDPDEF,12))
+#'   colnames(output_gap) <- "output_gap"
+#'
+#' n_ask: Feds inflation target
+#'        which is currently 2 percent for the personal consumption expenditures price index.
+#'
+#'   n_ask <- 2.00
+#'
+#' alpha:
+#' beta:
+#'       In Taylors original specification,
+#'       the coefficients on the output and inflation gaps,
+#'       a and ß, respectively, were each 0.5.
+#'
+#'   alpha <- 0.5
+#'   beta  <- 0.5
+#'
+#' GOAL
+#'
+#' i_t : nominal federal funds interest rate
+#'
+#' calculated:
+#'
+#' METHOD 1
+#'
+#' i_t <- r_ask +  n_t + alpha * (y_t_less_y_ask) + beta * (n_t - n_ask)
+#' colnames(i_t) <- "i_t"
+#' dygraphs::dygraph(i_t, main = "Nominal Federal Funds Interest Rate")
+#'
+#' METHOD  2
+#'
+#' i_t <- r_ask +  n_t + alpha *  (output_gap    ) + beta * (n_t - n_ask)
+#' colnames(i_t) <- "i_t"
+#' dygraphs::dygraph(i_t, main = "Nominal Federal Funds Interest Rate")
+#'
+#' }
+"_PACKAGE"
+
+
+
+#' @rdname lessModernFEDFundsTayorRule
+#' @return n_t: xts object; less modernized current inflation rate measure from one year earlier
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths
+n_t <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+  # Personal Consumption Expenditures: Chain-type Price Index, Index 2012=100, Seasonally Adjusted (PCEPI)
+  # https://fred.stlouisfed.org/series/PCEPI
+  PCEPI <- quantmod::getSymbols("PCEPI", src="FRED", auto.assign = F)
+  index(PCEPI) <- DescTools::AddMonths(index(PCEPI),3)
+  index(PCEPI) <- index(PCEPI) - 1 # now at the end of the current month
+
+  # percent change
+  n_t <- inflation_rate <- 100*(PCEPI - lag.xts(PCEPI,12))/abs(lag.xts(PCEPI))
+  colnames(n_t) <- "n_t"
+  return(n_t)
+
+})}
+#' @rdname lessModernFEDFundsTayorRule
+#' @return y_t: xts object; less modernized real gross domestic product (GDP)
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths LastDayOfMonth
+y_t <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+  # Real Gross Domestic Product (GDPC1)
+  # https://fred.stlouisfed.org/series/GDPC1
+  GDPC1 <- quantmod::getSymbols("GDPC1", src="FRED", auto.assign = F)
+  # "as of record date" to "last updated date"
+  # (five months)
+  index(GDPC1) <- DescTools::AddMonths(index(GDPC1),5)
+  # first report
+  From <- head(index(GDPC1),1)
+  # last "useful" report and I want a future date (so, I can predict))
+  # To   <- max(tail(index(GDPPOT)[index(GDPPOT) <= Sys.Date()],1), (DescTools::LastDayOfMonth(Sys.Date()) + 1))
+  # last report
+  To  <- tail(index(GDPC1),1)
+  # create intermediate monthly observations
+  GDPC1 <- merge(GDPC1, xts(, seq(from = From, to = To, by = "months")) )
+  # fill in intermediate months with last known data
+  GDPC1 <- na.locf(GDPC1)
+  # Change "beginning of month dates" to "end of month dates".
+  index(GDPC1) <- index(GDPC1) - 1 # subtrace off one(1) day
+
+  y_t <- GDPC1; colnames(y_t) <- "y_t"
+  return(y_t)
+
+})}
+#' @rdname lessModernFEDFundsTayorRule
+#' @return y_ask: xts object; less modernized real potiential GDP
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths LastDayOfMonth
+y_ask <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+  # Real Potential Gross Domestic Product (GDPPOT)
+  # https://fred.stlouisfed.org/series/GDPPOT
+  GDPPOT <- quantmod::getSymbols("GDPPOT", src="FRED", auto.assign = F)
+  # "as of record date" to "last updated date"
+  # (four months and one week: round up to the end of five(5) months)
+  index(GDPPOT) <- DescTools::AddMonths(index(GDPPOT),5)
+  # first report
+  From <- head(index(GDPPOT),1)
+  # last "useful"
+  To <- tail(index(GDPPOT),1)
+  # create intermediate monthly observations
+  GDPPOT <- merge(GDPPOT, xts(, seq(from = From, to = To, by = "months")) )
+  # fill in intermediate months with last known data
+  GDPPOT <- na.locf(GDPPOT)
+  # Change "beginning of month dates" to "end of month dates".
+  index(GDPPOT) <- index(GDPPOT) - 1 # subtrace off one(1) day
+
+  y_ask <- GDPPOT; colnames(y_ask) <- "y_ask"
+  return(y_ask)
+
+})}
+#' @rdname lessModernFEDFundsTayorRule
+#' @return y_t_less_y_ask: xts object; less modernized "Percent change difference from
+#' "real potiential GDP" to "real gross domestic product"
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths LastDayOfMonth
+y_t_less_y_ask  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+  # METHOD 1
+  y_t   <- y_t()
+  y_ask <- y_ask()
+
+  y_t_less_y_ask <- 100*(y_t - y_ask)/abs(y_ask) # 100*(a-b)/b
+  colnames(y_t_less_y_ask) <- "y_t_less_y_ask"
+  return(y_t_less_y_ask)
+
+})}
+#' @rdname lessModernFEDFundsTayorRule
+#' @return output_gap: xts object: less modernized "output gap"
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths LastDayOfMonth
+output_gap  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+  # Gross Domestic Product: Implicit Price Deflator (GDPDEF)
+  # https://fred.stlouisfed.org/series/GDPDEF
+  GDPDEF <- quantmod::getSymbols("GDPDEF", src="FRED", auto.assign = F)
+  # "as of record date" to "last updated date"
+  # (five months)
+  index(GDPDEF) <- DescTools::AddMonths(index(GDPDEF),5)
+  # first report
+  From <- head(index(GDPDEF),1)
+  # last report
+  To <- tail(index(GDPDEF),1)
+  # create intermediate monthly observations
+  GDPDEF <- merge(GDPDEF, xts(, seq(from = From, to = To, by = "months")) )
+  # fill in intermediate months with last known data
+  GDPDEF <- na.locf(GDPDEF)
+  # Change "beginning of month dates" to "end of month dates".
+  index(GDPDEF) <- index(GDPDEF) - 1 # subtrace off one(1) day
+
+  # METHOD 2 (original Taylor Rule)
+  output_gap <- 100*(GDPDEF - lag.xts(GDPDEF,12))/abs(lag.xts(GDPDEF,12))
+  colnames(output_gap) <- "output_gap"
+  return(output_gap)
+
+})}
+#' @rdname lessModernFEDFundsTayorRule
+#' @return i_t_method1: xts object; version 1 of
+#' less modernized federal funds nominal interest rate
+#' @examples
+#' \dontrun{
+#' dygraphs::dygraph(i_t_method1(), main = "Less Modernized method 1 Nominal Federal Funds Interest Rate")
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+i_t_method1  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  r_ask <- 2.00
+  n_ask <- 2.00
+
+  alpha <- 0.5
+  beta  <- 0.5
+
+  # METHOD 1
+
+  i_t_method1 <- r_ask +  n_t() + alpha * (y_t_less_y_ask()) + beta * (n_t() - n_ask)
+  colnames(i_t_method1) <- "i_t_method1"
+  # dygraphs::dygraph(i_t_method1, main = "Nominal Federal Funds Interest Rate")
+  return(i_t_method1)
+
+})}
+#' @rdname lessModernFEDFundsTayorRule
+#' @return i_t_method2: xts object; version 2 of
+#' less modernized federal funds nominal interest rate
+#' @examples
+#' \dontrun{
+#' dygraphs::dygraph(i_t_method2(), main = "Less Modernized method 2 Nominal Federal Funds Interest Rate")
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+i_t_method2  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  r_ask <- 2.00
+  n_ask <- 2.00
+
+  alpha <- 0.5
+  beta  <- 0.5
+
+  # METHOD 2
+
+  i_t_method2 <- r_ask +  n_t() + alpha * (output_gap()) + beta * (n_t() - n_ask)
+  colnames(i_t_method2) <- "i_t_method2"
+  # dygraphs::dygraph(i_t_method2, main = "Nominal Federal Funds Interest Rate")
+  return(i_t_method2)
+
+})}
+#' @rdname lessModernFEDFundsTayorRule
+#' @return lessModernFEDFundsTayorRule: xts object; version 2 of
+#' less modernized federal funds nominal interest rate
+#' @examples
+#' \dontrun{
+#' dygraphs::dygraph(LMFFTR(), main = "Less Modernized method 1 Nominal Federal Funds Interest Rate")
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+LMFFTR  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # 1 instead of 2, because this #1 looks most like the graph in the article
+  res <- i_t_method1()
+  colnames(res) <- "LMFFTR"
+  return(res)
+
+})}
+
+
+
+
+
+
 #' add weights (_wts)
 #'
 #' @description
