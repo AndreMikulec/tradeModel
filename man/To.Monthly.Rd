@@ -4,7 +4,7 @@
 \alias{To.Monthly}
 \title{Convert time series data to an monthly OHLC series}
 \usage{
-To.Monthly(x, indexAt = "yearmon", drop.time = TRUE, name,
+To.Monthly(x, indexAt = "firstof", drop.time = TRUE, name,
   fillMissing = NULL, ...)
 }
 \arguments{
@@ -12,7 +12,8 @@ To.Monthly(x, indexAt = "yearmon", drop.time = TRUE, name,
 have an S3 method for "seq(by = "months")".
 Classes "Date" and POSIXt are provided  S3 methods in package "base".}
 
-\item{indexAt}{See ? xts::to.monthly}
+\item{indexAt}{"firstof"(default). Different from xts::to.monthly.
+See ? xts::to.monthly}
 
 \item{drop.time}{See ? xts::to.monthly}
 

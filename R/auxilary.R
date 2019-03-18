@@ -4696,6 +4696,13 @@ initEnv();on.exit({uninitEnv()})
 #'
 #'     y_t_less_y_ask <- . . .  data from graph
 #'
+#'     word "difference" pending clarification
+#'     From: Andre Mikulec <andre_mikulec@@hotmail.com>
+#'     Sent: Sunday, March 17, 2019 11:29 PM
+#'     To: kliesen@@stls.frb.org
+#'     Subject: TWO QUICK QUESTIONS: Is the Fed Following a “Modernized” Version of the Taylor Rule? Part 1/2
+#'
+#'
 #' output_gap:  a measure of "slack" in the economy
 #'
 #'     See URL web page footnotes #2:
@@ -5262,6 +5269,13 @@ initEnv();on.exit({uninitEnv()})
 #'     # four quarter change of "trimmed mean PCE inflation rate"
 #'     change_of_tm_PCE_infl_rate <- PCETRIM1M158SFRBDAL - lag.xts(PCETRIM1M158SFRBDAL,12)
 #'     colnames(change_of_tm_PCE_infl_rate) <- "change_of_tm_PCE_infl_rate"
+#'
+#'     (I WAS TIRED AND I MAY HAVE ASKED THE WRONG QUESTION)
+#'     word "difference" pending clarification
+#'     From: Andre Mikulec <andre_mikulec@@hotmail.com>
+#'     Sent: Sunday, March 17, 2019 11:29 PM
+#'     To: kliesen@@stls.frb.org
+#'     Subject: TWO QUICK QUESTIONS: Is the Fed Following a “Modernized” Version of the Taylor Rule? Part 1/2
 #'
 #'   r_ask_t <- year_1_nom_cm_yield - change_of_tm_PCE_infl_rate
 #'   colnames(r_ask_t) <- "r_ask_t"

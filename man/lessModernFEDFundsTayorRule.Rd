@@ -282,6 +282,13 @@ y_t_less_y_ask:
 
     y_t_less_y_ask <- . . .  data from graph
 
+    word "difference" pending clarification
+    From: Andre Mikulec <andre_mikulec@hotmail.com>
+    Sent: Sunday, March 17, 2019 11:29 PM
+    To: kliesen@stls.frb.org
+    Subject: TWO QUICK QUESTIONS: Is the Fed Following a “Modernized” Version of the Taylor Rule? Part 1/2
+
+
 output_gap:  a measure of "slack" in the economy
 
     See URL web page footnotes #2:
