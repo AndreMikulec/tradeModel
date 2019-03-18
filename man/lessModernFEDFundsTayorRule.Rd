@@ -345,15 +345,15 @@ calculated:
 
 METHOD 1
 
-i_t <- r_ask +  n_t + alpha * (y_t_less_y_ask) + beta * (n_t - n_ask)
-colnames(i_t) <- "i_t"
-dygraphs::dygraph(i_t, main = "Nominal Federal Funds Interest Rate")
+i_t_method1 <- r_ask +  n_t + alpha * (y_t_less_y_ask) + beta * (n_t - n_ask)
+colnames(i_t_method1) <- "i_t_method1"
+dygraphs::dygraph(i_t_method1, main = "Less Modernized method 1 Nominal Federal Funds Interest Rate")
 
 METHOD  2
 
-i_t <- r_ask +  n_t + alpha *  (output_gap    ) + beta * (n_t - n_ask)
-colnames(i_t) <- "i_t"
-dygraphs::dygraph(i_t, main = "Nominal Federal Funds Interest Rate")
+i_t_method2 <- r_ask +  n_t + alpha *  (output_gap    ) + beta * (n_t - n_ask)
+colnames(i_t_method2) <- "i_t_method2"
+dygraphs::dygraph(i_t_method2, main = "Less Modernized method 2 Nominal Federal Funds Interest Rate")
 
 }
 }
@@ -365,6 +365,7 @@ dygraphs::dygraph(i_t_method1(), main = "Less Modernized method 1 Nominal Federa
 dygraphs::dygraph(i_t_method2(), main = "Less Modernized method 2 Nominal Federal Funds Interest Rate")
 }
 \dontrun{
+# less(L) modern(M) Federal(F) Funds(F) Taylor(T) Rule(R): LMFTTR
 dygraphs::dygraph(LMFFTR(), main = "Less Modernized method 1 Nominal Federal Funds Interest Rate")
 }
 }

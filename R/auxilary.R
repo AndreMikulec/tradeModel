@@ -147,7 +147,8 @@ initEnv();on.exit({uninitEnv()})
 #' @param x ? xts::to.monthly and the index(x) class must
 #' have an S3 method for "seq(by = "months")".
 #' Classes "Date" and POSIXt are provided  S3 methods in package "base".
-#' @param indexAt See ? xts::to.monthly
+#' @param indexAt "firstof"(default). Different from xts::to.monthly.
+#' See ? xts::to.monthly
 #' @param drop.time See ? xts::to.monthly
 #' @param name See ? xts::to.monthly
 #' @param fillMissing TRUE(default). If indexAt is one of "firstof"
@@ -164,15 +165,18 @@ initEnv();on.exit({uninitEnv()})
 #' To.Monthly(x, OHLC = FALSE, indexAt = "firstof")
 #'}
 #' @export
-To.Monthly <- function(x,indexAt='yearmon',drop.time=TRUE,name, fillMissing = NULL, ...) {
+To.Monthly <- function(x,indexAt='firstof',drop.time=TRUE,name, fillMissing = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
-  fillMissing <- if(is.null(fillMissing)) { TRUE } else { FALSE }
+  fillMissing <- if(is.null(fillMissing)) { TRUE }
+
+  if(indexAt == "yearmon") stop("To.Monthly does not suport class 'yearmon'")
+  # because no S3 seq.yearmon exists (I WROTE ONE somewhere)
 
   monthly <- xts::to.monthly(x = x,indexAt=indexAt,drop.time=drop.time,name=name,...)
   if(fillMissing && (NROW(monthly) > 1)) {
-    if(indexAt %in% c("firstof", "lastof", "yearmon")) {
+    if(indexAt %in% c("firstof", "lastof")) {
 
     From <- head(index(monthly),1); DescTools::Day(From) <- 1
     To   <- tail(index(monthly),1); DescTools::Day(To)   <- 1
@@ -184,9 +188,10 @@ initEnv(); on.exit({uninitEnv()})
     if(indexAt == "lastof") {
        intermediates <- DescTools::LastDayOfMonth(intermediates)
     }
-    if(indexAt == "yearmon") {
-       intermediates <- zoo::as.yearmon(intermediates)
-    }
+    # FUTURE ...
+    # if(indexAt == "yearmon") {
+    #    intermediates <- zoo::as.yearmon(intermediates)
+    # }
     newDates <- setDiff(c(intermediates, index(monthly)),index(monthly))
     monthly <- merge(monthly, xts(, newDates))
   }
@@ -4467,7 +4472,7 @@ initEnv();on.exit({uninitEnv()})
 #' Taylor rule states that the monetary authority (e.g., the Federal Reserve)
 #' should set its policy [federal funds interest] rate in the following manner.
 #'
-#'}
+#' }
 #' @details
 #' \preformatted{
 #'
@@ -4754,15 +4759,15 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' METHOD 1
 #'
-#' i_t <- r_ask +  n_t + alpha * (y_t_less_y_ask) + beta * (n_t - n_ask)
-#' colnames(i_t) <- "i_t"
-#' dygraphs::dygraph(i_t, main = "Nominal Federal Funds Interest Rate")
+#' i_t_method1 <- r_ask +  n_t + alpha * (y_t_less_y_ask) + beta * (n_t - n_ask)
+#' colnames(i_t_method1) <- "i_t_method1"
+#' dygraphs::dygraph(i_t_method1, main = "Less Modernized method 1 Nominal Federal Funds Interest Rate")
 #'
 #' METHOD  2
 #'
-#' i_t <- r_ask +  n_t + alpha *  (output_gap    ) + beta * (n_t - n_ask)
-#' colnames(i_t) <- "i_t"
-#' dygraphs::dygraph(i_t, main = "Nominal Federal Funds Interest Rate")
+#' i_t_method2 <- r_ask +  n_t + alpha *  (output_gap    ) + beta * (n_t - n_ask)
+#' colnames(i_t_method2) <- "i_t_method2"
+#' dygraphs::dygraph(i_t_method2, main = "Less Modernized method 2 Nominal Federal Funds Interest Rate")
 #'
 #' }
 "_PACKAGE"
@@ -4972,6 +4977,7 @@ initEnv();on.exit({uninitEnv()})
 #' less modernized federal funds nominal interest rate
 #' @examples
 #' \dontrun{
+#' # less(L) modern(M) Federal(F) Funds(F) Taylor(T) Rule(R): LMFTTR
 #' dygraphs::dygraph(LMFFTR(), main = "Less Modernized method 1 Nominal Federal Funds Interest Rate")
 #' }
 #' @export
@@ -4989,6 +4995,520 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' more modernized FRB federal funds interest rate Taylor Rule
+#'
+#' @rdname moreModernFEDFundsTayorRule
+#'
+#' @author St. Louis Federal Board of Governors President James Bullard
+#' @author Kevin L. Kliesen (articles author)
+#' @author Andre Mikulec (adapted original code from the articles)
+#' @references
+#' \cite{Is the Fed Following a “Modernized” Version of the Taylor Rule? Part 1 - Posted 2019-01-15 \url{https://research.stlouisfed.org/publications/economic-synopses/2019/01/15/is-the-fed-following-a-modernized-version-of-the-taylor-rule-part-1}}
+#' @references
+#' \cite{Is the Fed Following a “Modernized” Version of the Taylor Rule? Part 2 - Posted 2019-01-15 \url{https://research.stlouisfed.org/publications/economic-synopses/2019/01/15/is-the-fed-following-a-modernized-version-of-the-taylor-rule-part-2}}
+#' @references
+#' \cite{Kevin L. Kliesen - Business Economist and Research Officer \url{https://research.stlouisfed.org/econ/kliesen/sel/}}
+#' @references
+#' \cite{Economic Synopses \url{https://research.stlouisfed.org/publications/economic-synopses/}}
+#'
+#' @description
+#' \preformatted{
+#' Bullard proposes an alternative, what he terms a
+#' "modernized" version, of the Taylor rule
+#' [to set its policy [federal funds interest] rate.]
+#' }
+#'
+#' @details
+#' \preformatted{
+#'
+#' In a recent speech,
+#' Federal Reserve Bank of St. Louis President James Bullard
+#' presented an alternative version of the Taylor rule
+#' that reflects three developments that todays monetary policymakers
+#' routinely confront.
+#'
+#' GOAL
+#'
+#' i(t) <- rho * i(t-1) + (1 - rho)(r_ask(t) + n_ask + phi(n) * n_GAP(t) + phi(u) * u_GAP(t))
+#' i_t           i_tm1              r_ask_t            phi_n    n_GAP_t    phi_u    u_gap_t
+#'
+#' is actually calculated:
+#'
+#' METHOD 3
+#'
+#' i_t <- rho * i_tm1 + (1 - rho)(r_ask_t + n_ask + phi_n * n_GAP_t + phi_u * u_GAP_t)
+#'
+#' Three Key Principles
+#' --------------------
+#'
+#' First,
+#' the economy has entered an economic regime of low interest rates
+#' that reflects, importantly, weak productivity growth and a
+#' strong demand for safe assets.
+#'
+#' Second,
+#' the Fed appears to have successfully engineered a regime of
+#' low and relatively stable inflation expectations
+#' that are anchored near the Feds inflation target.
+#'
+#' Third,
+#' The Phillips relationship that posits a negative relationship between
+#' inflation and the current level of the unemployment rate
+#' and a measure of the "natural rate" has all but disappeared.
+#' (Accordingly, this development means falling levels of the
+#' unemployment rate relative to its natural rate will have a
+#' very small effect on inflation.)
+#'
+#' Implemenaton
+#' ------------
+#'
+#' GOAL
+#'
+#' i_t : nominal federal funds interest rate
+#'
+#' INPUT
+#'
+#' i_tm1: one quarter lag in the federal funds rate
+#'
+#'     Four series exist.
+#'     I just take the the general one: the monthlies.
+#'     Frequency: Monthly
+#'     Notes:  Averages of daily figures.
+#'     Effective Federal Funds Rate (FEDFUNDS)
+#'     https://fred.stlouisfed.org/series/FEDFUNDS
+#'
+#'     require(xts)
+#'     FEDFUNDS <- quantmod::getSymbols("FEDFUNDS", src = "FRED", auto.assign = F)
+#'     index(FEDFUNDS) <- DescTools::AddMonths(index(FEDFUNDS),1)
+#'     FEDFUNDS <- lag.xts(FEDFUNDS,3)
+#'     # Change "beginning of month dates" to "end of month dates".
+#'     index(FEDFUNDS) <- index(FEDFUNDS) - 1
+#'
+#'   i_tm1 <- FEDFUNDS; colnames(i_tm1) <- "i_tm1"
+#'
+#' rho:  fixed coefficient of "one quarter lag in the federal funds rate"
+#'       This is a smoothing parameter with a value of 0.85.
+#'       This means that the past periods policy rate is
+#'       extraordinarily important for setting the current periods policy rate.
+#'
+#'   rho <- 0.85
+#'
+#' u_GAP_t: "[unemployment] output gap" measured as the
+#'          difference between the
+#'
+#'     (1) current unemployment rate
+#'       and the
+#'     (2) Congressional Budget Offices natural rate of unemployment
+#'
+#'     Civilian Unemployment Rate (UNRATE)
+#'     https://fred.stlouisfed.org/series/UNRATE/
+#'
+#'     Natural Rate of Unemployment (Long-Term) (NROU)
+#'     U.S. Congressional Budget Office, Natural Rate of Unemployment (Long-Term) [NROU
+#'     At the end of the quarter, the last useful value date
+#'     and the Last Updated date are one month apart.
+#'     Percent, Not Seasonally Adjusted
+#'     Frequency: Quarterly
+#'     E.g.
+#'     As of MAR 15 2019
+#'     Last Updated: 2019-02-06 9:01 AM CST
+#'     (last value): 2029-10-01  4.455
+#'     (last useful value): 2018-10-01  4.607
+#'     True as of date: 2018-12-31
+#'     Last Updated (publish date) is five(5) weeks later
+#'     So this is published 4x year: just after the beginning of FEB, MAY, AUG, NOV.
+#'     Natural Rate of Unemployment (Long-Term) (NROU)
+#'     https://fred.stlouisfed.org/series/NROU
+#'
+#'     require(xts)
+#'
+#'     UNRATE <- quantmod::getSymbols("UNRATE", src = "FRED", auto.assign = F)
+#'     index(UNRATE) <- DescTools::AddMonths(index(UNRATE),1)
+#'     # Change "beginning of month dates" to "end of month dates".
+#'     index(UNRATE) <- index(UNRATE) - 1
+#'
+#'     unrate <- UNRATE; colnames(unrate) <- "unrate"
+#'
+#'     Use (almost) the same math as "Real Gross Domestic Product (GDPC1)".
+#'
+#'     NROU <- quantmod::getSymbols("NROU", src="FRED", auto.assign = F)
+#'     # "as of record date" to "last updated date"
+#'     # (four months and one week: round up to the end of five(5) months)
+#'     index(NROU) <- DescTools::AddMonths(index(NROU),5)
+#'     # first report
+#'     From <- head(index(NROU),1)
+#'     # last "useful"
+#'     To   <- tail(index(NROU),1)
+#'     # create intermediate monthly observations
+#'     NROU <- merge(NROU, xts(, seq(from = From, to = To, by = "months")) )
+#'     # fill in intermediate months with last known data
+#'     NROU <- na.locf(NROU)
+#'     # Change "beginning of month dates" to "end of month dates".
+#'     index(NROU) <- index(NROU) - 1 # subtrace off one(1) day
+#'
+#'     nrou <- NROU; colnames(nrou) <- "nrou"
+#'
+#'   u_GAP_t <- unrate - nrou
+#'   colnames(u_GAP_t) <- "u_GAP_t"
+#'
+#' n_GAP_t: "inflation gap" measured as the
+#'          difference between a
+#'
+#'     (1) market-based measure of "inflation expectations"
+#'       and the
+#'     (2) Feds inflation target.
+#'
+#'     Specifically, "inflation expectations" are measured as the
+#'     difference between
+#'
+#'     (1) the nominal yield on a 5-year (5Y) Treasury security
+#'       and
+#'     (2) the yield on an inflation-adjusted (real) 5Y Treasury inflation-protected security (TIPS).
+#'
+#'     This difference is sometimes called the breakeven inflation (BEI) rate.
+#'
+#'     5-Year Breakeven Inflation Rate (T5YIE)
+#'     Percent, Not Seasonally Adjusted, Daily
+#'       a measure of expected inflation derived from
+#'         5-Year Treasury Constant Maturity Securities
+#'         (https://fred.stlouisfed.org/series/DGS5 ) - Daily
+#'           and
+#'         5-Year Treasury Inflation-Indexed Constant Maturity Securities
+#'         (https://fred.stlouisfed.org/series/DFII5 ). - Daily
+#'     The latest value implies what
+#'     market participants expect inflation to be in the next 5 years, on average.
+#'     Percent
+#'     Not Seasonally Adjusted
+#'     Daily
+#'     5-Year Breakeven Inflation Rate (T5YIE)
+#'     https://fred.stlouisfed.org/series/T5YIE
+#'
+#'     The Treasury uses the consumer price index to adjust the nominal price of the TIPS.
+#'     Bullard subtracts 30 basis points from the 5Y BEI.
+#'     (In article, this is called "the adjusted 5Y BEI".)
+#'     Bullard argues this better accounts for the
+#'
+#'       (1) upward bias of the consumer price index
+#'         relative to
+#'       (2) inflation measured by the PCE inflation rate
+#'
+#'     require(xts)
+#'
+#'     # market inflation expectations
+#'     T5YIE <- quantmod::getSymbols("T5YIE", src = "FRED", auto.assign = F)
+#'     # acquire the last observation of the month
+#'     # and re-date it to be the last day of the month
+#'     mkt_inf_exp <- (To.Monthly(T5YIE, OHLC = FALSE, indexAt = "lastof") - 0.30)
+#'     mkt_inf_exp <- mkt_inf_exp[index(mkt_inf_exp) <= Sys.Date()]
+#'     n_ask <- 2.00
+#'
+#'   n_GAP_t <- mkt_inf_exp - n_ask
+#'   colnames(n_GAP_t) <- "n_GAP_t"
+#'
+#' r_ask_t: "equilibrium real interest rate"
+#'          This is different from the non-modern Taylor rule.
+#'          This now varies over time (instead of being set at a fixed 2 percent).
+#'
+#'     This is measured as the trend interest rate estimated
+#'     from a Hodrick-Prescott filter of the following:
+#'
+#'       (1) the 1-year nominal constant maturity Treasury yield
+#'         less
+#'       (2) the four-quarter change in the Federal Reserve Bank of Dallas
+#'           trimmed mean measure of the personal consumption expenditures (PCE) inflation rate
+#'
+#'     1-Year Treasury Constant Maturity Rate (GS1)
+#'     Three data series exist. I just take the monthlies.
+#'     (last value) date and Last Updated date are the same.
+#'     Percent
+#'     Not Seasonally Adjusted
+#'     Monthly
+#'     1-Year Treasury Constant Maturity Rate (GS1)
+#'     https://fred.stlouisfed.org/series/GS1
+#'
+#'     require(xts)
+#'
+#'     GS1 <- quantmod::getSymbols("GS1", src = "FRED", auto.assign = F)
+#'     index(GS1) <- DescTools::AddMonths(index(GS1), 1)
+#'     # Change "beginning of month dates" to "end of month dates".
+#'     index(GS1) <-  index(GS1) - 1
+#'
+#'     # one year nominal constant maturity yield
+#'     year_1_nom_cm_yield <- GS1
+#'     colnames(year_1_nom_cm_yield) <- "year_1_nom_cm_yield"
+#'
+#'     # Less . . .
+#'
+#'     "four quarter change of" the Trimmed Mean PCE inflation rate
+#'     produced by the Federal Reserve Bank of Dallas.
+#'
+#'     Trimmed Mean PCE Inflation Rate (PCETRIM1M158SFRBDAL)
+#'     Percent Change at Annual Rate
+#'     Seasonally Adjusted
+#'     Frequency: Monthly
+#'     E.g.
+#'     As of MAR 15 2019:
+#'     Last Updated: 2019-03-01 2:33 PM CST
+#'     (last value): 2018-12-01   1.69
+#'     Last Updated (publish date) is 3 months later.
+#'     Trimmed Mean PCE Inflation Rate (PCETRIM1M158SFRBDAL)
+#'     https://fred.stlouisfed.org/series/PCETRIM1M158SFRBDAL
+#'
+#'     require(xts)
+#'     PCETRIM1M158SFRBDAL <- quantmod::getSymbols("PCETRIM1M158SFRBDAL", src="FRED", auto.assign = F)
+#'     index(PCETRIM1M158SFRBDAL) <- DescTools::AddMonths(index(PCETRIM1M158SFRBDAL),3)
+#'     index(PCETRIM1M158SFRBDAL) <- index(PCETRIM1M158SFRBDAL) - 1 # now at the end of the current month
+#'
+#'     # four quarter change of "trimmed mean PCE inflation rate"
+#'     change_of_tm_PCE_infl_rate <- PCETRIM1M158SFRBDAL - lag.xts(PCETRIM1M158SFRBDAL,12)
+#'     colnames(change_of_tm_PCE_infl_rate) <- "change_of_tm_PCE_infl_rate"
+#'
+#'   r_ask_t <- year_1_nom_cm_yield - change_of_tm_PCE_infl_rate
+#'   colnames(r_ask_t) <- "r_ask_t"
+#'
+#' n_ask: Federal Open Market Committees (FOMC) inflation target
+#'        which is set at 2 percent for the personal consumption expenditures price index.
+#'
+#'     Note
+#'     n_t: current inflation rate [ measured from one year earlier ]
+#'     in the non-modernized version of the Taylor Rule
+#'     is replaced by *this* n_ask: the Federal Open Market Committee's (FOMC's) inflation target
+#'
+#'     History (earliest to latest(first written to ammended)):
+#'
+#'     Federal Reserve issues FOMC statement of longer-run goals and policy strategy
+#'     Last Update: January 25, 2012
+#'     https://www.federalreserve.gov/newsevents/pressreleases/monetary20120125c.htm
+#'
+#'     What is the statement on longer-run goals and monetary policy strategy and why does the Federal Open Market Committee put it out?
+#'     Last Update: May 15, 2017
+#'     https://www.federalreserve.gov/faqs/statement-on-longer-run-goals-monetary-policy-strategy-fomc.htm
+#'
+#'     Statement on Longer-Run Goals and Monetary Policy Strategy (PDF)
+#'     Amended January 29, 2019
+#'     Adopted effective January 24, 2012; as amended effective January 29, 2019
+#'
+#'     Inflation at the rate of 2 percent, as measured by the
+#'     "annual change in the price index for personal consumption expenditures"
+#'     is most consistent over the longer run with the Federal Reserve’s statutory mandate
+#'     https://www.federalreserve.gov/monetarypolicy/files/FOMC_LongerRunGoals.pdf
+#'
+#'     Federal Open Market Committee reaffirms its "Statement on Longer-Run Goals and Monetary Policy Strategy"
+#'     January 30, 2019
+#'     https://www.federalreserve.gov/newsevents/pressreleases/monetary20190130b.htm
+#'
+#'   n_ask <- 2.0
+#'
+#' phi_u: coefficient on the unemployment rate gap
+#'        To reflect the flatness of the Phillips curve
+#'        this value is set to 0.1.
+#'
+#'   phi_u <- 0.1
+#'
+#' phi_n: coefficient on the inflation gap
+#'        This isequal to 1.5 and consistent with the 1993 Taylor rule.
+#'
+#'   phi_n <- 1.5
+#'
+#' GOAL
+#'
+#' i_t : nominal federal funds interest rate
+#'
+#' METHOD 3
+#'
+#' i_t_method3 <- rho * i_tm1 + (1 - rho) * (r_ask_t + n_ask + phi_n * n_GAP_t + phi_u * u_GAP_t)
+#' colnames(i_t_method3) <- "i_t_method3"
+#' dygraphs::dygraph(i_t_method3, main = ""More Modernized method 3 Nominal Federal Funds Interest Rate")
+#'
+#' }
+"_PACKAGE"
+
+#' @rdname moreModernFEDFundsTayorRule
+#' @return i_tm1: xts object; more modernized one quarter lag in the federal funds rate
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths
+i_tm1  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+
+  # Effective Federal Funds Rate (FEDFUNDS)
+  # https://fred.stlouisfed.org/series/FEDFUNDS
+  FEDFUNDS <- quantmod::getSymbols("FEDFUNDS", src = "FRED", auto.assign = F)
+  index(FEDFUNDS) <- DescTools::AddMonths(index(FEDFUNDS),1)
+  FEDFUNDS <- lag.xts(FEDFUNDS,3)
+  # Change "beginning of month dates" to "end of month dates".
+  index(FEDFUNDS) <- index(FEDFUNDS) - 1
+
+  i_tm1 <- FEDFUNDS; colnames(i_tm1) <- "i_tm1"
+  return(i_tm1)
+
+})}
+#' @rdname moreModernFEDFundsTayorRule
+#' @return u_GAP_t: xts object; more modernized "[unemployment] output gap"
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths LastDayOfMonth
+u_GAP_t  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+
+  # Civilian Unemployment Rate (UNRATE)
+  # https://fred.stlouisfed.org/series/UNRATE/
+  UNRATE <- quantmod::getSymbols("UNRATE", src = "FRED", auto.assign = F)
+  index(UNRATE) <- DescTools::AddMonths(index(UNRATE),1)
+  # Change "beginning of month dates" to "end of month dates".
+  index(UNRATE) <- index(UNRATE) - 1
+
+  unrate <- UNRATE; colnames(unrate) <- "unrate"
+
+  # Use (almost) the same math as "Real Gross Domestic Product (GDPC1)"
+
+  # Natural Rate of Unemployment (Long-Term) (NROU)
+  # https://fred.stlouisfed.org/series/NROU
+  NROU <- quantmod::getSymbols("NROU", src="FRED", auto.assign = F)
+  # "as of record date" to "last updated date"
+  # (four months and one week: round up to the end of five(5) months)
+  index(NROU) <- DescTools::AddMonths(index(NROU),5)
+  # first report
+  From <- head(index(NROU),1)
+  # last "useful"
+  To <- tail(index(NROU),1)
+  # create intermediate monthly observations
+  NROU <- merge(NROU, xts(, seq(from = From, to = To, by = "months")) )
+  # fill in intermediate months with last known data
+  NROU <- na.locf(NROU)
+  # Change "beginning of month dates" to "end of month dates".
+  index(NROU) <- index(NROU) - 1 # subtrace off one(1) day
+
+  nrou <- NROU; colnames(nrou) <- "nrou"
+
+  u_GAP_t <- unrate - nrou
+  colnames(u_GAP_t) <- "u_GAP_t"
+  return(u_GAP_t)
+
+})}
+#' @rdname moreModernFEDFundsTayorRule
+#' @return n_GAP_t: xts object; more modernized "inflation gap"
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths
+n_GAP_t  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+  # market inflation expectations
+  # 5-Year Breakeven Inflation Rate (T5YIE)
+  # https://fred.stlouisfed.org/series/T5YIE
+  T5YIE <- quantmod::getSymbols("T5YIE", src = "FRED", auto.assign = F)
+  # acquire the last observation of the month
+  # and re-date it to be the last day of the month
+  mkt_inf_exp <- (To.Monthly(T5YIE, OHLC = FALSE, indexAt = "lastof") - 0.30)
+  mkt_inf_exp <- mkt_inf_exp[index(mkt_inf_exp) <= Sys.Date()]
+
+  n_ask <- 2.00
+
+  n_GAP_t <- mkt_inf_exp - n_ask
+  colnames(n_GAP_t) <- "n_GAP_t"
+  return(n_GAP_t)
+
+})}
+#' @rdname moreModernFEDFundsTayorRule
+#' @return r_ask_t: xts object; more modernized "equilibrium real interest rate"
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom quantmod getSymbols
+#' @importFrom DescTools AddMonths
+r_ask_t  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # require(xts)
+
+  # 1-Year Treasury Constant Maturity Rate (GS1)
+  # https://fred.stlouisfed.org/series/GS1
+  GS1 <- quantmod::getSymbols("GS1", src = "FRED", auto.assign = F)
+  index(GS1) <- DescTools::AddMonths(index(GS1), 1)
+  # Change "beginning of month dates" to "end of month dates".
+  index(GS1) <-  index(GS1) - 1
+
+  # one year nominal constant maturity yield
+  year_1_nom_cm_yield <- GS1
+  colnames(year_1_nom_cm_yield) <- "year_1_nom_cm_yield"
+
+  # Less . . .
+
+  # Trimmed Mean PCE Inflation Rate (PCETRIM1M158SFRBDAL)
+  # https://fred.stlouisfed.org/series/PCETRIM1M158SFRBDAL
+  PCETRIM1M158SFRBDAL <- quantmod::getSymbols("PCETRIM1M158SFRBDAL", src="FRED", auto.assign = F)
+  index(PCETRIM1M158SFRBDAL) <- DescTools::AddMonths(index(PCETRIM1M158SFRBDAL),3)
+  index(PCETRIM1M158SFRBDAL) <- index(PCETRIM1M158SFRBDAL) - 1 # now at the end of the current month
+
+  # four quarter change of "trimmed mean PCE inflation rate"
+  change_of_tm_PCE_infl_rate <- PCETRIM1M158SFRBDAL - lag.xts(PCETRIM1M158SFRBDAL,12)
+  # four quarter [percent] change of "trimmed mean PCE inflation rate"
+  # change_of_tm_PCE_infl_rate <- (PCETRIM1M158SFRBDAL - lag.xts(PCETRIM1M158SFRBDAL,12))/abs(lag.xts(PCETRIM1M158SFRBDAL,12))
+  colnames(change_of_tm_PCE_infl_rate) <- "change_of_tm_PCE_infl_rate"
+
+  r_ask_t <- year_1_nom_cm_yield - change_of_tm_PCE_infl_rate
+  colnames(r_ask_t) <- "r_ask_t"
+
+  return(r_ask_t)
+
+})}
+#' @rdname moreModernFEDFundsTayorRule
+#' @return t_i_method3: xts object; version 3 of more modernized federal funds nominal interest rate
+#' @examples
+#' \dontrun{
+#' dygraphs::dygraph(i_t_method3(), main = "More Modernized method 3 Nominal Federal Funds Interest Rate")
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+i_t_method3  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  rho <- 0.85
+
+  n_ask <- 2.0
+
+  phi_u <- 0.1
+  phi_n <- 1.5
+
+  # METHOD 3
+
+  i_t_method3 <- rho * i_tm1() + (1 - rho) * (r_ask_t() + n_ask + phi_n * n_GAP_t() + phi_u * u_GAP_t())
+  colnames(i_t_method3) <- "i_t_method3"
+  # dygraphs::dygraph(i_t_method3, main = "More Modernized method 3 Nominal Federal Funds Interest Rate")
+  return(i_t_method3)
+
+})}
+#' @rdname moreModernFEDFundsTayorRule
+#' @return  MMFFTR: xts object; version 3 of more modernized federal funds nominal interest rate
+#' @examples
+#' \dontrun{
+#' # more(M) modern(M) Federal(F) Funds(F) Taylor(T) Rule(R): MMFTTR
+#' dygraphs::dygraph(MMFFTR(), main = "More Modernized method 3 Nominal Federal Funds Interest Rate")
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+MMFFTR  <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  res <- i_t_method3()
+  colnames(res) <- "MMFFTR"
+  return(res)
+
+})}
 
 
 
