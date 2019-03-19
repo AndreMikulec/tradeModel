@@ -6949,8 +6949,8 @@ initEnv();on.exit({uninitEnv()})
   # what makes the most sense is to use the
   # original (non-'added(removed) records) train/test data
   predictor = iml::Predictor$new(builtUnrateModel@fitted.model,
-    data = as.data.frame(xTs[DescTools::DoCall(get("c"),SlicesAllData),  colnames(xTs) %in% builtUnrateModel@model.inputs], stringsAsFactor = FALSE),
-    y =       c(coredata(xTs[DescTools::DoCall(get("c"),SlicesAllData),  colnames(xTs) %in% builtUnrateModel@model.target]))
+    data = as.data.frame(xTs[do.call(c,SlicesAllData),  colnames(xTs) %in% builtUnrateModel@model.inputs], stringsAsFactor = FALSE),
+    y =       c(coredata(xTs[do.call(c,SlicesAllData),  colnames(xTs) %in% builtUnrateModel@model.target]))
   )
   message("iml: Feature Importance; Shuffling each feature and measuring how much the performance drops")
   imp = iml::FeatureImp$new(predictor, loss = SortinoRatioLoss)
