@@ -12,7 +12,7 @@
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateEyeBalltradeModel <- function() {
+UnRateEyeBalltradeModelWILL5000IND <- function() {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -37,7 +37,90 @@ UnRateEyeBalltradeModel <- function() {
   printCalendar("UnRateEyeBall Performance Returns")
 
 })}
-# UnRateEyeBalltradeModel()
+# UnRateEyeBalltradeModelWILL5000IND()
+
+
+
+#' Predicts the Yahoo SP500 eom returns using UNRATE and the eyeball
+#'
+#' @return xts object of monthly return results
+#' \describe{
+#'   \item{One}{First item}
+#'   \item{Two}{Second item}
+#' }
+#' @examples
+#' \dontrun{
+#' EXAMPLE
+#' # EXAMPLE
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+UnRateEyeBalltradeModelGSPC <- function() {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  # (1) data 'value' (try to optimize)
+  addCurrLeadSP500LogReturns() %>%  #
+  addCurrLeadCashLogReturns %>%            #
+
+  # (2) indicator(s)
+  addUnRateEomData %>% # unrate
+
+  # (3) use indicator(s)(unrate) to make rules:signals(weights)
+  addSP500EyeBallWts %>%   #
+
+  appendCashWts              %>%      # (excess)
+
+  printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = Inf) %>%
+
+  # (4) apply in action
+  portfolioMonthlyReturns  %>%
+
+  # (5) evaluate performance
+  printCalendar("UnRateEyeBall Performance Returns")
+
+})}
+# UnRateEyeBalltradeModelGSPC()
+
+
+
+#' Predicts the SP500 eom returns using UNRATE and Machine learning
+#'
+#' @return xts object of monthly return results
+#' @examples
+#' \dontrun{
+#' EXAMPLE
+#' # EXAMPLE
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+UnRateMachinetradeModelGSPC <- function() {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  # (1) data 'value' (try to optimize)
+  addCurrLeadSP500LogReturns() %>%      #
+  addCurrLeadCashLogReturns           %>%      #
+
+  # (2) indicator(s)
+  addUnRateEomData %>%                 # unrate
+
+  # (3) use indicator(s)(unrate) to make rules:signals(weights)
+  addSP500MachineWts %>%       #
+  appendCashWts              %>%       # (excess)
+
+  printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
+
+  # (4) apply in action
+  portfolioMonthlyReturns %>%
+
+  # (5) evaluate performance
+  printCalendar("UnRateMachine Performance Returns")
+
+})}
+# UnRateMachinetradeModelGSPC()
+
+
 
 #' Predicts the FRED WILL5000IND eom returns using UNRATE and Machine learning
 #'
@@ -49,7 +132,7 @@ UnRateEyeBalltradeModel <- function() {
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateMachinetradeModel <- function() {
+UnRateMachinetradeModelWILL5000IND <- function() {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -73,5 +156,5 @@ UnRateMachinetradeModel <- function() {
   printCalendar("UnRateMachine Performance Returns")
 
 })}
-# UnRateMachinetradeModel()
+# UnRateMachinetradeModelWILL5000IND()
 

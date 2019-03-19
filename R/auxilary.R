@@ -4523,6 +4523,15 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   sp500 <- SP500EomData()
+  # WOULD prefer to add: 2% year for dividends
+  # actually:
+  #   for each element
+  #     divide by 220 working days of the year
+  #       continuously compound that value
+  #         and SUM the elements along the way
+  # I DO NOT know the math.
+  # Skip for now. Add in the future.
+  # Ask this questions in an online MATH/FINANCE forum
 
   logReturns(xTs = sp500)
 
@@ -4732,6 +4741,255 @@ initEnv();on.exit({uninitEnv()})
 
 })}
 
+
+
+#' add SP500 weights using eyeball
+#'
+#' @description
+#' \preformatted{
+#'
+#' This is the workhorse function. This is where the magic/logic happens.
+#' Use any other columns (called indicators) that do not have the weights (_wts)
+#' suffix and do not have the same root name compared to each and every
+#' other *_wts column.
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom stringr str_detect
+SP500EyeBallWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  unrate <- xTs[,"UNRATE"]
+  # can't do math on leading NAs
+  unrate <- unrate[!is.na(unrate),]
+
+  unrateleadingrets_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
+                                   ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
+                                   ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
+  unrateleadingrets_wts[is.na(unrateleadingrets_wts)] <- 1 # 100% allocated
+  colnames(unrateleadingrets_wts)[1] <- "GSPClogleadingrets_wts"
+
+  unratecurrentrets_wts <- lag.xts(unrateleadingrets_wts)
+  colnames(unratecurrentrets_wts)[1] <- "GSPClogcurrentrets_wts"
+
+  unrate_wts <- merge(unrateleadingrets_wts, unratecurrentrets_wts)
+  unrate_wts
+
+})}
+
+
+
+
+#' add Willshire 5000 Index weights using eyeball
+#'
+#' @description
+#' \preformatted{
+#'
+#' This is the workhorse function. This is where the magic/logic happens.
+#' Use any other columns (called indicators) that do not have the weights (_wts)
+#' suffix and do not have the same root name compared to each and every
+#' other *_wts column.
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom stringr str_detect
+willShire5000EyeBallWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  unrate <- xTs[,"UNRATE"]
+  # can't do math on leading NAs
+  unrate <- unrate[!is.na(unrate),]
+
+  unrateleadingrets_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
+                                   ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
+                                   ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
+  unrateleadingrets_wts[is.na(unrateleadingrets_wts)] <- 1 # 100% allocated
+  colnames(unrateleadingrets_wts)[1] <- "WILL5000INDlogleadingrets_wts"
+
+  unratecurrentrets_wts <- lag.xts(unrateleadingrets_wts)
+  colnames(unratecurrentrets_wts)[1] <- "WILL5000INDlogcurrentrets_wts"
+
+  unrate_wts <- merge(unrateleadingrets_wts, unratecurrentrets_wts)
+  unrate_wts
+
+})}
+
+
+
+#' add SP500 log weights returns using eyeball (GSPClogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addSP500EyeBallWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  addWts(xTs,SP500EyeBallWts(xTs))
+
+})}
+
+
+
+
+
+#' add Willshire 5000 Index log weights returns using eyeball (WILL5000INDlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addWillShire5000EyeBallWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  addWts(xTs,willShire5000EyeBallWts(xTs))
+
+})}
+
+
+
+#' add SP500 weights using Machine learning
+#'
+#' @param xTs xts object
+#' @param Predictee string of the name of the Predictee variable
+#' @param Predictors characters vector of the require columns needed in the
+#' indictor generator function: IndicatorGeneratorFUN
+#' @param IndicatorGeneratorFUN string of the name of the function
+#' or the function itself that generates more columns (to eventually
+#' be used in the model.)
+#' @param NumbReplicaCopiesMultiple passed to NumbReplicaCopies
+#' This means how much more ( e.g. "focused" data ) is replicated
+#' compared to "all" data.
+#' @param ... dots passed to the indicator generator function
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+SP500MachineWts <- function(xTs = NULL, Predictee = "GSPClogleadingrets", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators"
+                                    , NumbReplicaCopiesMultiple = NULL
+                                    , ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  Dots <- list(...)
+
+  if(is.null(Dots[["timeSliceMatrix"]]))
+    Dots <- c(list(), Dots, list(timeSliceMatrix = tis::nberDates()))
+
+  DescTools::DoCall(prepAndDoMachineWtsData, c(list(),
+                    list(xTs), Predictee = "GSPClogleadingrets"
+                             , Predictors = "UNRATE"
+                             , IndicatorGeneratorFUN = "unrateEyeballIndicators", Dots
+  ))
+
+})}
+
+
+
+#' add Willshire 5000 Index weights using Machine learning
+#'
+#' @param xTs xts object
+#' @param Predictee string of the name of the Predictee variable
+#' @param Predictors characters vector of the require columns needed in the
+#' indictor generator function: IndicatorGeneratorFUN
+#' @param IndicatorGeneratorFUN string of the name of the function
+#' or the function itself that generates more columns (to eventually
+#' be used in the model.)
+#' @param NumbReplicaCopiesMultiple passed to NumbReplicaCopies
+#' This means how much more ( e.g. "focused" data ) is replicated
+#' compared to "all" data.
+#' @param ... dots passed to the indicator generator function
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+willShire5000MachineWts <- function(xTs = NULL, Predictee = "WILL5000INDlogleadingrets", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators"
+                                    , NumbReplicaCopiesMultiple = NULL
+                                    , ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  Dots <- list(...)
+
+  if(is.null(Dots[["timeSliceMatrix"]]))
+    Dots <- c(list(), Dots, list(timeSliceMatrix = tis::nberDates()))
+
+  DescTools::DoCall(prepAndDoMachineWtsData, c(list(),
+                    list(xTs), Predictee = "WILL5000INDlogleadingrets"
+                             , Predictors = "UNRATE"
+                             , IndicatorGeneratorFUN = "unrateEyeballIndicators", Dots
+  ))
+
+})}
+
+
+
+#' add SP500 log weights returns using Machine learning (GSPClogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+addSP500MachineWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  addWts(xTs,SP500MachineWts(xTs))
+
+})}
+
+
+#' add Willshire 5000 Index log weights returns using Machine learning (WILL5000INDlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+addWillShire5000MachineWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  addWts(xTs,willShire5000MachineWts(xTs))
+
+})}
 
 
 
@@ -5834,46 +6092,7 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' add Willshire 5000 Index weights using eyeball
-#'
-#' @description
-#' \preformatted{
-#'
-#' This is the workhorse function. This is where the magic/logic happens.
-#' Use any other columns (called indicators) that do not have the weights (_wts)
-#' suffix and do not have the same root name compared to each and every
-#' other *_wts column.
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-#' @importFrom stringr str_c
-#' @importFrom stringr str_detect
-willShire5000EyeBallWts <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
 
-  xTs <- initXts(xTs)
-  unrate <- xTs[,"UNRATE"]
-  # can't do math on leading NAs
-  unrate <- unrate[!is.na(unrate),]
-
-  unrateleadingrets_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
-                                   ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
-                                   ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
-  unrateleadingrets_wts[is.na(unrateleadingrets_wts)] <- 1 # 100% allocated
-  colnames(unrateleadingrets_wts)[1] <- "WILL5000INDlogleadingrets_wts"
-
-  unratecurrentrets_wts <- lag.xts(unrateleadingrets_wts)
-  colnames(unratecurrentrets_wts)[1] <- "WILL5000INDlogcurrentrets_wts"
-
-  unrate_wts <- merge(unrateleadingrets_wts, unratecurrentrets_wts)
-  unrate_wts
-
-})}
 
 
 
@@ -6502,46 +6721,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add Willshire 5000 Index weights using Machine learning
-#'
-#' @param xTs xts object
-#' @param Predictee string of the name of the Predictee variable
-#' @param Predictors characters vector of the require columns needed in the
-#' indictor generator function: IndicatorGeneratorFUN
-#' @param IndicatorGeneratorFUN string of the name of the function
-#' or the function itself that generates more columns (to eventually
-#' be used in the model.)
-#' @param NumbReplicaCopiesMultiple passed to NumbReplicaCopies
-#' This means how much more ( e.g. "focused" data ) is replicated
-#' compared to "all" data.
-#' @param ... dots passed to the indicator generator function
-#' @return xts object
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-#' @importFrom stringr str_c
-willShire5000MachineWts <- function(xTs = NULL, Predictee = "WILL5000INDlogleadingrets", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators"
-                                    , NumbReplicaCopiesMultiple = NULL
-                                    , ...) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
 
-  Dots <- list(...)
-
-  if(is.null(Dots[["timeSliceMatrix"]]))
-    Dots <- c(list(), Dots, list(timeSliceMatrix = tis::nberDates()))
-
-  # prepAndDoMachineWtsData(xTs, Predictee = "WILL5000INDlogleadingrets"
-  #                            , Predictors = "UNRATE"
-  #                            , IndicatorGeneratorFUN = "unrateEyeballIndicators", ...)
-
-  DescTools::DoCall(prepAndDoMachineWtsData, c(list(),
-                    list(xTs), Predictee = "WILL5000INDlogleadingrets"
-                             , Predictors = "UNRATE"
-                             , IndicatorGeneratorFUN = "unrateEyeballIndicators", Dots
-
-  ))
-
-})}
 
 
 
@@ -6948,45 +7128,10 @@ ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
 
 
 
-#' add Willshire 5000 Index log weights returns using eyeball (WILL5000INDlogrets)
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-addWillShire5000EyeBallWts <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  xTs <- initXts(xTs)
-  addWts(xTs,willShire5000EyeBallWts(xTs))
-
-})}
 
 
-#' add Willshire 5000 Index log weights returns using Machine learning (WILL5000INDlogrets)
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @return xts object with merged data into xTs
-#' @export
-addWillShire5000MachineWts <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
 
-  xTs <- initXts(xTs)
-  addWts(xTs,willShire5000MachineWts(xTs))
 
-})}
 
 
 #' cash weights
