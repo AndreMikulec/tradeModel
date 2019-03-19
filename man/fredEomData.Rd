@@ -16,6 +16,9 @@ month date rounded up to the last day of the month
 \description{
 \preformatted{
 
+# Units: Index, Not Seasonally Adjusted
+# Frequency: Daily, Close
+
 }
 }
 \examples{

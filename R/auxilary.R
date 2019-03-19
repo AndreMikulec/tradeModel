@@ -979,47 +979,7 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
 })}
 
 
-#' get the latest value in the month
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs xts object.
-#' (currently) eomData only works on single column xtx objects.
-#' @return xts object of the last observation with the
-#' month date rounded up to the last day of the month
-#' @examples
-#' \dontrun{
-#' # library(xts)
-#' # > xTs <- xts(c(1,NA_real_,2), zoo::as.Date(c(1,11,21)))
-#' # > xTs
-#' #            [,1]
-#' # 1970-01-02    1
-#' # 1970-01-12   NA
-#' # 1970-01-22    2
-#' #
-#' # > eomData(xTs = xTs)
-#' #            [,1]
-#' # 1970-01-31    2
-#' }
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-eomData <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
 
-  xTs  <- initXts(xTs)
-  xTsOrig <- xTs
-
-  if(NCOL(xTs) > 1) stop("(currently) eomData only works on single column xtx objects")
-  xTs <- to.monthly(xTs[!is.na(xTs)], OHLC = FALSE, indexAt = "lastof")
-  xTs <- xTs[index(xTs) <= tail(index(xTsOrig),1)] # LEFT_OFF
-
-  xTs
-
-})}
 
 
 
@@ -3665,58 +3625,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' get the latest value in the month from FRED
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param Symbol FRED symbol as a string
-#' @return xts object of the last observation with the
-#' month date rounded up to the last day of the month
-#' @examples
-#' \dontrun{
-#' EXAMPLE
-#' # # weekly
-#' # > ff <- head(fredEomData("FF"),1)
-#' # > ff,
-#' #              ff
-#' # 1954-07-31 0.63
-#' }
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-fredEomData <- function(Symbol = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
 
-  if(is.null(Symbol)) stop("No fredData was requested")
-  fredData(Symbol = Symbol) %>%
-     eomData
-
-})}
-
-
-
-
-
-#' Get the Wilshire 5000 Index eom price from FRED
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @return xts object of end of month returns
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-wilshire5000indEomData <- function() {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  fredEomData(Symbol = "WILL5000IND")
-
-})}
 
 
 
@@ -4328,6 +4237,108 @@ initEnv();on.exit({uninitEnv()})
   xTs <- combineLogReturns(xTs, currentCashLogReturns(xTs))
   xTs <- combineLogReturns(xTs, leadingCashLogReturns(xTs))
   xTs
+
+})}
+
+
+
+#' get the latest value in the month
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object.
+#' (currently) eomData only works on single column xtx objects.
+#' @return xts object of the last observation with the
+#' month date rounded up to the last day of the month
+#' @examples
+#' \dontrun{
+#' # library(xts)
+#' # > xTs <- xts(c(1,NA_real_,2), zoo::as.Date(c(1,11,21)))
+#' # > xTs
+#' #            [,1]
+#' # 1970-01-02    1
+#' # 1970-01-12   NA
+#' # 1970-01-22    2
+#' #
+#' # > eomData(xTs = xTs)
+#' #            [,1]
+#' # 1970-01-31    2
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+eomData <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+  xTsOrig <- xTs
+
+  if(NCOL(xTs) > 1) stop("(currently) eomData only works on single column xtx objects")
+  xTs <- To.Monthly(xTs[!is.na(xTs)], OHLC = FALSE, indexAt = "lastof")
+  xTs <- xTs[index(xTs) <= tail(index(xTsOrig),1)] # LEFT_OFF
+
+  xTs
+
+})}
+
+
+
+#' get the latest value in the month from FRED
+#'
+#' @description
+#' \preformatted{
+#'
+#' # Units: Index, Not Seasonally Adjusted
+#' # Frequency: Daily, Close
+#'
+#' }
+#'
+#' @param Symbol FRED symbol as a string
+#' @return xts object of the last observation with the
+#' month date rounded up to the last day of the month
+#' @examples
+#' \dontrun{
+#' EXAMPLE
+#' # # weekly
+#' # > ff <- head(fredEomData("FF"),1)
+#' # > ff,
+#' #              ff
+#' # 1954-07-31 0.63
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+fredEomData <- function(Symbol = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  if(is.null(Symbol)) stop("No fredData was requested")
+  fredData(Symbol = Symbol) %>%
+     eomData
+
+})}
+
+
+
+#' Get the Wilshire 5000 Index eom price from FRED
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object of end of month returns
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+wilshire5000indEomData <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # Units: Index, Not Seasonally Adjusted
+  # Frequency: Daily, Close
+  fredEomData(Symbol = "WILL5000IND")
 
 })}
 
@@ -6595,8 +6606,6 @@ initEnv();on.exit({uninitEnv()})
   FittedOneSidedThreashold <- quantile(coredata(Fitted))[stringr::str_c(ExtremePct, "%")]
   message(stringr::str_c("\n", (1 - as.numeric(ExtremePct)/100)*100, "% of the time, I am 'IN' the market."))
   message(stringr::str_c("FittedSignal OneSidedThreashold threashold is ", FittedOneSidedThreashold, "\n"))
-
-  browser()
 
   # leading
   FittedSignal <- ifelse( Fitted > FittedOneSidedThreashold, rep(1,NROW(Fitted)), rep(0,NROW(Fitted)))
