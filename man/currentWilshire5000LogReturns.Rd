@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{currentWilshire5000LogReturns}
 \alias{currentWilshire5000LogReturns}
-\title{get the Wilshire 5000 Index lagging log returns}
+\title{get the Wilshire 5000 Index current log returns}
 \usage{
 currentWilshire5000LogReturns()
 }

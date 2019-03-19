@@ -5,11 +5,19 @@
 \title{get the Wilshare 5000 Index log returns}
 \usage{
 wilshire5000LogReturns()
+
+wilshire5000LogReturns()
 }
 \value{
 xts object
+
+xts object
 }
 \description{
+\preformatted{
+
+}
+
 \preformatted{
 
 }
