@@ -4902,7 +4902,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
-  addWts(xTs,SP500EyeBallWts(xTs))
+  combineXts(xTs,SP500EyeBallWts(xTs))
 
 })}
 
@@ -4926,7 +4926,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
-  addWts(xTs,willShire5000EyeBallWts(xTs))
+  combineXts(xTs,willShire5000EyeBallWts(xTs))
 
 })}
 
@@ -5023,7 +5023,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
-  addWts(xTs,SP500MachineWts(xTs))
+  combineXts(xTs,SP500MachineWts(xTs))
 
 })}
 
@@ -5043,7 +5043,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
-  addWts(xTs,willShire5000MachineWts(xTs))
+  combineXts(xTs,willShire5000MachineWts(xTs))
 
 })}
 
@@ -6122,33 +6122,6 @@ initEnv();on.exit({uninitEnv()})
   return(res)
 
 })}
-
-
-
-#' add weights (_wts)
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs target xts object
-#' @param xTs1 source xts object of new weights
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-addWts  <- function(xTs = NULL, xTs1 = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  xTs  <- initXts(xTs); xTs1 <- initXts(xTs1)
-
-  combineXts(xTs, xTs1)
-
-})}
-
-
-
 
 
 
@@ -7236,7 +7209,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
-  addWts(xTs, cashWts(xTs))
+  combineXts(xTs, cashWts(xTs))
 
 })}
 

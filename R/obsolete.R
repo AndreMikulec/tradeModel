@@ -563,3 +563,27 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' add weights (_wts)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs target xts object
+#' @param xTs1 source xts object of new weights
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addWts  <- function(xTs = NULL, xTs1 = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs); xTs1 <- initXts(xTs1)
+
+  combineXts(xTs, xTs1)
+
+})}
+
+
+
