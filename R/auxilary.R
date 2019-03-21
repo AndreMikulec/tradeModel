@@ -3178,6 +3178,33 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' absolute percent change
+#'
+#' @description
+#' \preformatted{
+#' "absolute proportional change" multiplied by 100.00
+#' See ? APC # absolute proportional change
+#' }
+#' @param x xts object
+#' @param base choose -1 (or less) to look into the future
+#' @param lag observations backwards
+#' @examples
+#' \dontrun{
+#' See ? APC
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+APCTC <- function(x, base = 0, lag = 1, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- x
+  xTs <- initXts(xTs)
+
+  APC(x, base = base, lag = lag, ...) * 100.000
+
+})}
+
+
 #' relative proportional change
 #'
 #' @description
@@ -3222,6 +3249,35 @@ initEnv();on.exit({uninitEnv()})
   xTs
 
 })}
+
+
+
+#' relative percent change
+#'
+#' @description
+#' \preformatted{
+#' "relative proportional change" multiplied by 100.00
+#' See ? RPC # absolute proportional change
+#' }
+#' @param x xts object
+#' @param base choose -1 (or less) to look into the future
+#' @param lag observations backwards
+#' @examples
+#' \dontrun{
+#' See ? RPC
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+RPCTC <- function(x, base = 0, lag = 1, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- x
+  xTs <- initXts(xTs)
+
+  RPC(x, base = base, lag = lag, ...) * 100.000
+
+})}
+
 
 
 
