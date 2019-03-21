@@ -835,6 +835,108 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+
+#' cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object (only takes the index)
+#' @return xts object with the same index as xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+cashLogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+  cashLogRets <- xts(rep(0,NROW(xTs)),index(xTs))
+  # must keep HARD coded
+  colnames(cashLogRets)[1] <- "CASHlogrets"
+
+  cashLogRets
+
+})}
+
+
+
+
+#' leading cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object (only takes the index)
+#' @return leading xts object
+#' @export
+leadingCashLogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+  cashLogReturns(xTs) %>%
+    Leading -> xTs
+  xTs
+
+})}
+
+
+
+
+#' current cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object (only takes the index)
+#' @return leading xts object
+#' @export
+currentCashLogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+  cashLogReturns(xTs) %>%
+    Current -> xTs
+  xTs
+
+})}
+
+
+
+#' add current cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+addCurrLeadCashLogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+                                # CASHlogrets
+  xTs <- combineXts(xTs, currentCashLogReturns(xTs))
+  xTs <- combineXts(xTs, leadingCashLogReturns(xTs))
+  xTs
+
+})}
+
+
+
 #' Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
 #'
 #' @return xts object of monthly return results
@@ -878,7 +980,29 @@ UnRateEyeBalltradeModelWILL5000IND <- function() {
 
 
 
-
+#' #' add cash log returns (CASHlogrets)
+#' #'
+#' #' @description
+#' #' \preformatted{
+#' #'
+#' #' CURRENTLY NOT USED ANYWHERE?
+#' #'
+#' #' }
+#' #'
+#' #' @param xTs xts object (only takes the index)
+#' #' @return xts object with merged data into xTs
+#' #' @export
+#' #' @importFrom tryCatchLog tryCatchLog
+#' addCashLogReturns <- function(xTs = NULL) {
+#' tryCatchLog::tryCatchLog({
+#' initEnv();on.exit({uninitEnv()})
+#'
+#'   xTs  <- initXts(xTs)
+#'
+#'                          # CASHlogrets
+#'   combineXts(xTs, cashLogReturns(xTs))
+#'
+#' })}
 
 
 

@@ -4350,7 +4350,9 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' cash log returns (CASHlogrets)
+
+
+#' cash APC returns (CASHapcrets)
 #'
 #' @description
 #' \preformatted{
@@ -4361,49 +4363,25 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with the same index as xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-cashLogReturns <- function(xTs = NULL) {
+cashAPCReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  cashLogRets <- xts(rep(0,NROW(xTs)),index(xTs))
+  cashAPCRets <- xts(rep(0,NROW(xTs)),index(xTs))
   # must keep HARD coded
-  colnames(cashLogRets)[1] <- "CASHlogrets"
+  colnames(cashAPCRets)[1] <- "CASHapcrets"
 
-  cashLogRets
-
-})}
-
-
-
-#' add cash log returns (CASHlogrets)
-#'
-#' @description
-#' \preformatted{
-#'
-#' CURRENTLY NOT USED ANYWHERE?
-#'
-#' }
-#'
-#' @param xTs xts object (only takes the index)
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-addCashLogReturns <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  xTs  <- initXts(xTs)
-
-                         # CASHlogrets
-  combineXts(xTs, cashLogReturns(xTs))
+  cashAPCRets
 
 })}
 
 
 
-#' leading cash log returns (CASHlogrets)
+
+
+#' leading cash APC returns (CASHapcrets)
 #'
 #' @description
 #' \preformatted{
@@ -4413,13 +4391,13 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object (only takes the index)
 #' @return leading xts object
 #' @export
-leadingCashLogReturns <- function(xTs = NULL) {
+leadingCashAPCReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  cashLogReturns(xTs) %>%
+  cashAPCReturns(xTs) %>%
     Leading -> xTs
   xTs
 
@@ -4427,7 +4405,10 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' current cash log returns (CASHlogrets)
+
+
+
+#' current cash APC returns (CASHapcrets)
 #'
 #' @description
 #' \preformatted{
@@ -4437,13 +4418,13 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object (only takes the index)
 #' @return leading xts object
 #' @export
-currentCashLogReturns <- function(xTs = NULL) {
+currentCashAPCReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  cashLogReturns(xTs) %>%
+  cashAPCReturns(xTs) %>%
     Current -> xTs
   xTs
 
@@ -4451,8 +4432,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-
-#' add current cash log returns (CASHlogrets)
+#' add current and leading cash APC returns (CASHapcrets)
 #'
 #' @description
 #' \preformatted{
@@ -4462,17 +4442,18 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @return xts object with merged data into xTs
 #' @export
-addCurrLeadCashLogReturns <- function(xTs = NULL) {
+addCurrLeadCashAPCReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
-                                # CASHlogrets
-  xTs <- combineXts(xTs, currentCashLogReturns(xTs))
-  xTs <- combineXts(xTs, leadingCashLogReturns(xTs))
+                         # CASHapcrets
+  xTs <- combineXts(xTs, currentCashAPCReturns(xTs))
+  xTs <- combineXts(xTs, leadingCashAPCReturns(xTs))
   xTs
 
 })}
+
 
 
 
