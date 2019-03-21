@@ -2860,7 +2860,7 @@ RRC <- function(x, base = 0, lag = 1, log = FALSE, ...) { abs(ARC(x = x, base = 
 
 
 
-#' absolute percent change
+#' absolute proportional change
 #'
 #' @description
 #' \preformatted{
@@ -2912,7 +2912,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' relative percent change
+#' relative proportional change
 #'
 #' @description
 #' \preformatted{
