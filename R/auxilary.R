@@ -4001,7 +4001,7 @@ initEnv();on.exit({uninitEnv()})
 
   # index adjust
   # last known unemployment rate: when I recieved it; one month later
-   fredData(Symbol = "UNRATE") %>%
+  symbolData(Symbol = "UNRATE", src = "FRED") %>%
     eomIndex
 
 })}
@@ -4123,11 +4123,11 @@ initEnv(); on.exit({uninitEnv()})
     # begin non-html area
 
     if(force) {
-      rs <- fredData(Symbol = "UMCSENT", New = TRUE, NewMaxAge = "0 secs")
+      rs <- symbolData(Symbol = "UMCSENT", src = "FRED", New = TRUE, NewMaxAge = "0 secs")
      if (verbose)
          cat("done.\n\n")
     } else {
-      rs <- fredData(Symbol = "UMCSENT")
+      rs <- symbolData(Symbol = "UMCSENT", src = "FRED")
      if (verbose)
          cat("done.\n\n")
     }

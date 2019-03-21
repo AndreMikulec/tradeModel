@@ -15,7 +15,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
 
   # (1) data 'value' (try to optimize)
   addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src)
-  addCurrLeadCashLogReturns %>%            #
+  addCurrLeadCashAPCReturns %>%            #
 
   # (2) indicator(s)
   addUnRateEomData %>% # unrate

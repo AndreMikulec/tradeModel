@@ -25,13 +25,13 @@ xts object of results
 }
 \description{
 \preformatted{
-
+RETIRED - NOT TO BE USED
 }
 }
 \examples{
 \dontrun{
 EXAMPLE
-# > head(fredData("GDP"),1)
+# > head(symbolData("GDP", src = "FRED"),1)
 #                           gdp
 # 1947-01-01 243.16399999999999
 
@@ -49,13 +49,13 @@ checks the xts "updated" attribute
   checks "pg": manually check database by using: SELECT * FROM "Symbols"."Symbols"
 then will get the new data from the "cache" or "pg".
 
-fredData(Symbol = "UNRATE")
+symbolData(Symbol = "UNRATE", src = "FRED")
 
 # full test
 # 1. remove cache data: rm(.UNRATE) (if there)
 # 2. drop database table "Symbols"."UNRATE"
 # 3. remove corresponding record from "Symbols"."Symbols"
-# 4. fredData(Symbol = "UNRATE")
+# 4. symbolData(Symbol = "UNRATE", src = "FRED")
 
 # partial tests
 
@@ -64,14 +64,14 @@ database table "Symbols"."UNRATE"
 just insert only-new (few) records
 # placeNewRecords == "AddOnlyNew" (default)
 
-fredData(Symbol = "UNRATE", NewMaxAge = "1 secs")
+symbolData(Symbol = "UNRATE", src = "FRED",NewMaxAge = "1 secs")
 
 # or
 
 # 2.2
 # placeNewRecords =="TruncateTable"
 
-fredData(Symbol = "UNRATE", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
+symbolData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
 
 # "AddNewUpdateOld"
 

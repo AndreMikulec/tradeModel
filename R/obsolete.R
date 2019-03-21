@@ -5,7 +5,7 @@
 #'
 #' @description
 #' \preformatted{
-#'
+#' RETIRED - NOT TO BE USED
 #' }
 #'
 #' @param Symbol FRED symbol as a string
@@ -21,7 +21,7 @@
 #' @examples
 #' \dontrun{
 #' EXAMPLE
-#' # > head(fredData("GDP"),1)
+#' # > head(symbolData("GDP", src = "FRED"),1)
 #' #                           gdp
 #' # 1947-01-01 243.16399999999999
 #'
@@ -39,13 +39,13 @@
 #'   checks "pg": manually check database by using: SELECT * FROM "Symbols"."Symbols"
 #' then will get the new data from the "cache" or "pg".
 #'
-#' fredData(Symbol = "UNRATE")
+#' symbolData(Symbol = "UNRATE", src = "FRED")
 #'
 #' # full test
 #' # 1. remove cache data: rm(.UNRATE) (if there)
 #' # 2. drop database table "Symbols"."UNRATE"
 #' # 3. remove corresponding record from "Symbols"."Symbols"
-#' # 4. fredData(Symbol = "UNRATE")
+#' # 4. symbolData(Symbol = "UNRATE", src = "FRED")
 #'
 #' # partial tests
 #'
@@ -54,14 +54,14 @@
 #' just insert only-new (few) records
 #' # placeNewRecords == "AddOnlyNew" (default)
 #'
-#' fredData(Symbol = "UNRATE", NewMaxAge = "1 secs")
+#' symbolData(Symbol = "UNRATE", src = "FRED",NewMaxAge = "1 secs")
 #'
 #' # or
 #'
 #' # 2.2
 #' # placeNewRecords =="TruncateTable"
 #'
-#' fredData(Symbol = "UNRATE", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
+#' symbolData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
 #'
 #' # "AddNewUpdateOld"
 #'
@@ -104,14 +104,12 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
 })}
 
 
-
 #' get data from Yahoo corporation
 #'
 #' @description
 #' \preformatted{
-#'
+#'  RETIRED - NOT TO BE USED
 #'  WORKS just like fredData
-#'
 #' }
 #'
 #' @param Symbol FRED symbol as a string
@@ -216,7 +214,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   if(is.null(Symbol)) stop("No fredData was requested")
-  fredData(Symbol = Symbol) %>%
+  symbolData(Symbol = Symbol, src = "FRED") %>%
      eomData
 
 })}

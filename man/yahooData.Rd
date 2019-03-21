@@ -25,9 +25,8 @@ xts object of results
 }
 \description{
 \preformatted{
-
+ RETIRED - NOT TO BE USED
  WORKS just like fredData
-
 }
 }
 \examples{
