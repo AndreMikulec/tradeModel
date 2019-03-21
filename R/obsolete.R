@@ -587,3 +587,89 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' add Willshire 5000 Index weights using eyeball
+#'
+#' @description
+#' \preformatted{
+#'
+#' This is the workhorse function. This is where the magic/logic happens.
+#' Use any other columns (called indicators) that do not have the weights (_wts)
+#' suffix and do not have the same root name compared to each and every
+#' other *_wts column.
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom stringr str_detect
+willShire5000EyeBallWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  unrate <- xTs[,"UNRATE"]
+  # can't do math on leading NAs
+  unrate <- unrate[!is.na(unrate),]
+
+  unrateleadingrets_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
+                                   ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
+                                   ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
+  unrateleadingrets_wts[is.na(unrateleadingrets_wts)] <- 1 # 100% allocated
+  colnames(unrateleadingrets_wts)[1] <- "WILL5000INDlogleadingrets_wts"
+
+  unratecurrentrets_wts <- lag.xts(unrateleadingrets_wts)
+  colnames(unratecurrentrets_wts)[1] <- "WILL5000INDlogcurrentrets_wts"
+
+  unrate_wts <- merge(unrateleadingrets_wts, unratecurrentrets_wts)
+  unrate_wts
+
+})}
+
+
+
+#' add SP500 weights using eyeball
+#'
+#' @description
+#' \preformatted{
+#'
+#' This is the workhorse function. This is where the magic/logic happens.
+#' Use any other columns (called indicators) that do not have the weights (_wts)
+#' suffix and do not have the same root name compared to each and every
+#' other *_wts column.
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+#' @importFrom stringr str_detect
+SP500EyeBallWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  unrate <- xTs[,"UNRATE"]
+  # can't do math on leading NAs
+  unrate <- unrate[!is.na(unrate),]
+
+  unrateleadingrets_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
+                                   ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
+                                   ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
+  unrateleadingrets_wts[is.na(unrateleadingrets_wts)] <- 1 # 100% allocated
+  colnames(unrateleadingrets_wts)[1] <- "GSPClogleadingrets_wts"
+
+  unratecurrentrets_wts <- lag.xts(unrateleadingrets_wts)
+  colnames(unratecurrentrets_wts)[1] <- "GSPClogcurrentrets_wts"
+
+  unrate_wts <- merge(unrateleadingrets_wts, unratecurrentrets_wts)
+  unrate_wts
+
+})}
+
+
+
