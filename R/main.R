@@ -15,15 +15,16 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
 
   # (1) data 'value' (try to optimize)
   addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src)
-  addCurrLeadCashAPCReturns %>%            #
+  # addCurrLeadCashAPCReturns %>%            #
 
   # (2) indicator(s)
   addUnRateEomData %>% # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addWillShire5000EyeBallWts %>%   #
+  # addWillShire5000EyeBallWts %>%   #
+  addSymbolEyeBallWts(Symbol = Symbol, Change = Change) %>%
 
-  appendCashWts              %>%      # (excess)
+  appendCashAPCWts      %>%      # (excess)
 
   printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = Inf) %>%
 

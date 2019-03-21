@@ -5963,7 +5963,10 @@ ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
 
 
 
-#' cash weights
+
+
+
+#' cash APC weights
 #'
 #' @description
 #' \preformatted{
@@ -5979,21 +5982,28 @@ ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c
 #' @importFrom stringr str_detect
-cashWts <- function(xTs = NULL) {
+cashAPCWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
    xTs <- initXts(xTs)
 
   # excess left over
   Cashwts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[ ,wtsLeadingRetsClms(xTs)], na.rm = TRUE)
-  colnames(Cashwts)[1] <- "CASHlogleadingrets_wts"
+  colnames(Cashwts)[1] <- "CASHapcleadingrets_wts"
 
   Cashwts
 
 })}
 
 
-#' add cash weights returns (CASHlogrets)
+
+
+
+
+
+
+
+#' add cash weights of apc returns (CASHapcrets)
 #'
 #' @description
 #' \preformatted{
@@ -6004,14 +6014,16 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-appendCashWts  <- function(xTs = NULL) {
+appendCashAPCWts  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
-  combineXts(xTs, cashWts(xTs))
+  combineXts(xTs, cashAPCWts(xTs))
 
 })}
+
+
 
 
 

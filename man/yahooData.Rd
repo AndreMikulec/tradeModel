@@ -34,7 +34,7 @@ xts object of results
 
 # WORKS just like fredData
 
-yahooData(Symbol = "^GSPC"
+yahooData(Symbol = "^GSPC")
 
 yahooData(Symbol = "^GSPC", NewMaxAge = "1 secs")
 
