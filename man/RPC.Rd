@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{RPC}
 \alias{RPC}
-\title{relative percent change}
+\title{relative proportional change}
 \usage{
 RPC(x, base = 0, lag = 1, ...)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{APC}
 \alias{APC}
-\title{absolute percent change}
+\title{absolute proportional change}
 \usage{
 APC(x, base = 0, lag = 1, ...)
 }
