@@ -4552,7 +4552,7 @@ initEnv();on.exit({uninitEnv()})
 #' # 1. remove cache data: rm(.UNRATE) (if there)
 #' # 2. drop database table "Symbols"."UNRATE"
 #' # 3. remove corresponding record from "Symbols"."Symbols"
-#' # 4. symbolsData(Symbol = "UNRATE", src = "FRED")
+#' # 4. symbolData(Symbol = "UNRATE", src = "FRED")
 #'
 #' # Partial tests
 #'
@@ -4568,7 +4568,7 @@ initEnv();on.exit({uninitEnv()})
 #' # 2.2
 #' # placeNewRecords =="TruncateTable"
 #'
-#' symbolsData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
+#' symbolData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
 #'
 #' # Yahoo
 #'
@@ -4586,7 +4586,7 @@ initEnv();on.exit({uninitEnv()})
 symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, ...) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
-  if(is.null(Symbol)) stop("No symbolsData was requested")
+  if(is.null(Symbol)) stop("No symbolData was requested")
 
   if(is.null(src)) src <- "yahoo"
 
@@ -4597,9 +4597,9 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
     } # else NewMaxAge <- NewMaxAge
   }
 
-  if(length(Symbol) > 1) stop ("symbolsData can only download one symbol at a time.")
+  if(length(Symbol) > 1) stop ("symbolData can only download one symbol at a time.")
 
-  message(stringr::str_c("Begin symbolsData - ",  src, " ", Symbol))
+  message(stringr::str_c("Begin symbolData - ",  src, " ", Symbol))
 
   src = "yahoo"
   from = "1900-01-01"
@@ -4617,14 +4617,14 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
       # there will ONLY be one column 'like' Close
       xTs <- xTs[, colnames(xTs) %Like% "Close$"]
       if(NVAR(xTs) > 1) {
-          stop(stringr::str_c("symbolsData in Symbol: ",  src, " ", Symbol, "has detected TOO MANY columns like 'Close'"))
+          stop(stringr::str_c("symbolData in Symbol: ",  src, " ", Symbol, "has detected TOO MANY columns like 'Close'"))
         }
       # a Yahoo [stock index] may(usually) has a caret(^)
       NewColName <- stringr::str_replace(Symbol, "\\^", "")
       colnames(xTs)[1] <- NewColName
   }
 
-  message(stringr::str_c("End   symbolsData - ",  src, " ", Symbol))
+  message(stringr::str_c("End   symbolData - ",  src, " ", Symbol))
 
   xTs
 
@@ -4640,7 +4640,7 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
 #' }
 #'
 #' @param Symbol target symbol as a string
-#' @param src See ? symbolsData
+#' @param src See ? symbolData
 #' @return xts object of the last observation with the
 #' month date rounded up to the last day of the month
 #' @examples
@@ -4681,7 +4681,7 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   if(is.null(Symbol)) stop("No Symbol Data was requested")
-  xTs <- symbolsData(Symbol = Symbol, src = src) %>% eomData
+  xTs <- symbolData(Symbol = Symbol, src = src) %>% eomData
   APCReturns(xTs = xTs)
 
 })}

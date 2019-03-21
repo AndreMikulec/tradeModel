@@ -60,7 +60,7 @@ symbolData(Symbol = "UNRATE", src = "FRED")
 # 1. remove cache data: rm(.UNRATE) (if there)
 # 2. drop database table "Symbols"."UNRATE"
 # 3. remove corresponding record from "Symbols"."Symbols"
-# 4. symbolsData(Symbol = "UNRATE", src = "FRED")
+# 4. symbolData(Symbol = "UNRATE", src = "FRED")
 
 # Partial tests
 
@@ -76,7 +76,7 @@ symbolData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs")
 # 2.2
 # placeNewRecords =="TruncateTable"
 
-symbolsData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
+symbolData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
 
 # Yahoo
 

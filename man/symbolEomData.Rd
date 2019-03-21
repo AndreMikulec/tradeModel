@@ -9,7 +9,7 @@ symbolEomData(Symbol = NULL, src = NULL)
 \arguments{
 \item{Symbol}{target symbol as a string}
 
-\item{src}{See ? symbolsData}
+\item{src}{See ? symbolData}
 }
 \value{
 xts object of the last observation with the
