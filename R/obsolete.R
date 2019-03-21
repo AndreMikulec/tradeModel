@@ -673,3 +673,164 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' add Willshire 5000 Index log weights returns using eyeball (WILL5000INDlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addWillShire5000EyeBallWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  combineXts(xTs,willShire5000EyeBallWts(xTs))
+
+})}
+
+
+
+#' add SP500 log weights returns using eyeball (GSPClogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addSP500EyeBallWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  combineXts(xTs,SP500EyeBallWts(xTs))
+
+})}
+
+
+
+#' add SP500 weights using Machine learning
+#'
+#' @param xTs xts object
+#' @param Predictee string of the name of the Predictee variable
+#' @param Predictors characters vector of the require columns needed in the
+#' indictor generator function: IndicatorGeneratorFUN
+#' @param IndicatorGeneratorFUN string of the name of the function
+#' or the function itself that generates more columns (to eventually
+#' be used in the model.)
+#' @param NumbReplicaCopiesMultiple passed to NumbReplicaCopies
+#' This means how much more ( e.g. "focused" data ) is replicated
+#' compared to "all" data.
+#' @param ... dots passed to the indicator generator function
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+SP500MachineWts <- function(xTs = NULL, Predictee = "GSPClogleadingrets", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators"
+                                    , NumbReplicaCopiesMultiple = NULL
+                                    , ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  Dots <- list(...)
+
+  if(is.null(Dots[["timeSliceMatrix"]]))
+    Dots <- c(list(), Dots, list(timeSliceMatrix = tis::nberDates()))
+
+  DescTools::DoCall(prepAndDoMachineWtsData, c(list(),
+                    list(xTs), Predictee = "GSPClogleadingrets"
+                             , Predictors = "UNRATE"
+                             , IndicatorGeneratorFUN = "unrateEyeballIndicators", Dots
+  ))
+
+})}
+
+
+
+#' add Willshire 5000 Index weights using Machine learning
+#'
+#' @param xTs xts object
+#' @param Predictee string of the name of the Predictee variable
+#' @param Predictors characters vector of the require columns needed in the
+#' indictor generator function: IndicatorGeneratorFUN
+#' @param IndicatorGeneratorFUN string of the name of the function
+#' or the function itself that generates more columns (to eventually
+#' be used in the model.)
+#' @param NumbReplicaCopiesMultiple passed to NumbReplicaCopies
+#' This means how much more ( e.g. "focused" data ) is replicated
+#' compared to "all" data.
+#' @param ... dots passed to the indicator generator function
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
+willShire5000MachineWts <- function(xTs = NULL, Predictee = "WILL5000INDlogleadingrets", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators"
+                                    , NumbReplicaCopiesMultiple = NULL
+                                    , ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  Dots <- list(...)
+
+  if(is.null(Dots[["timeSliceMatrix"]]))
+    Dots <- c(list(), Dots, list(timeSliceMatrix = tis::nberDates()))
+
+  DescTools::DoCall(prepAndDoMachineWtsData, c(list(),
+                    list(xTs), Predictee = "WILL5000INDlogleadingrets"
+                             , Predictors = "UNRATE"
+                             , IndicatorGeneratorFUN = "unrateEyeballIndicators", Dots
+  ))
+
+})}
+
+
+
+#' add SP500 log weights returns using Machine learning (GSPClogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+addSP500MachineWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  combineXts(xTs,SP500MachineWts(xTs))
+
+})}
+
+
+#' add Willshire 5000 Index log weights returns using Machine learning (WILL5000INDlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+addWillShire5000MachineWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- initXts(xTs)
+  combineXts(xTs,willShire5000MachineWts(xTs))
+
+})}
+
+
+
