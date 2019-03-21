@@ -1,23 +1,20 @@
-#' Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
+#' Predicts the Symbol eom returns using UNRATE and the eyeball
 #'
 #' @return xts object of monthly return results
-#' \describe{
-#'   \item{One}{First item}
-#'   \item{Two}{Second item}
-#' }
+#
 #' @examples
 #' \dontrun{
-#' EXAMPLE
-#' # EXAMPLE
+#' # Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
+#' # UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateEyeBalltradeModelWILL5000IND <- function() {
+UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadWilshire5000LogReturns() %>%  #
+  addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src)
   addCurrLeadCashLogReturns %>%            #
 
   # (2) indicator(s)
@@ -37,7 +34,7 @@ UnRateEyeBalltradeModelWILL5000IND <- function() {
   printCalendar("UnRateEyeBall Performance Returns")
 
 })}
-# UnRateEyeBalltradeModelWILL5000IND()
+# UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
 
 
 

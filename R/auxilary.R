@@ -4025,7 +4025,7 @@ initEnv();on.exit({uninitEnv()})
 
   unRate <- unRateEomData()
 
-  combineLogReturns(xTs, unRate)
+  combineXts(xTs, unRate)
 
 })}
 
@@ -4296,7 +4296,7 @@ initEnv();on.exit({uninitEnv()})
 
   UMCSentiment <- UMCSentimentEomData()
 
-  combineLogReturns(xTs, UMCSentiment)
+  combineXts(xTs, UMCSentiment)
 
 })}
 
@@ -4397,7 +4397,7 @@ initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
                          # CASHlogrets
-  combineLogReturns(xTs, cashLogReturns(xTs))
+  combineXts(xTs, cashLogReturns(xTs))
 
 })}
 
@@ -4468,8 +4468,8 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
                                 # CASHlogrets
-  xTs <- combineLogReturns(xTs, currentCashLogReturns(xTs))
-  xTs <- combineLogReturns(xTs, leadingCashLogReturns(xTs))
+  xTs <- combineXts(xTs, currentCashLogReturns(xTs))
+  xTs <- combineXts(xTs, leadingCashLogReturns(xTs))
   xTs
 
 })}
@@ -4747,7 +4747,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add leading and current Symbol APC returns (SYMBOLlogrets)
+#' add leading and current Symbol APC returns (SYMBOLapcrets)
 #'
 #' @description
 #' \preformatted{
@@ -4758,15 +4758,15 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-addCurrLeadSymbolAPCReturns <- function(xTs = NULL) {
+addCurrLeadSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
-  xTs  <- combineXts(xTs, leadingSymbolAPCReturns())
+  xTs  <- combineXts(xTs, leadingSymbolAPCReturns(Symbol = Symbol, src = src))
                                  # send to return.Portfolio and the calendar
-                                 # WILL5000INDlogrets
-  xTs  <- combineXts(xTs, currentSymbolAPCReturns())
+                                 # SYMBOLapcrets
+  xTs  <- combineXts(xTs, currentSymbolAPCReturns(Symbol = Symbol, src = src))
 
   xTs
 

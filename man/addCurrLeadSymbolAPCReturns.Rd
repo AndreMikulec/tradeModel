@@ -2,9 +2,9 @@
 % Please edit documentation in R/auxilary.R
 \name{addCurrLeadSymbolAPCReturns}
 \alias{addCurrLeadSymbolAPCReturns}
-\title{add leading and current Symbol APC returns (SYMBOLlogrets)}
+\title{add leading and current Symbol APC returns (SYMBOLapcrets)}
 \usage{
-addCurrLeadSymbolAPCReturns(xTs = NULL)
+addCurrLeadSymbolAPCReturns(xTs = NULL, Symbol = NULL, src = NULL)
 }
 \arguments{
 \item{xTs}{xts object}

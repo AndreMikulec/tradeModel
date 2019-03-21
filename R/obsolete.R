@@ -83,7 +83,7 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
 
   if(length(Symbol) > 1) stop ("fredData can only download one symbol at a time.")
 
-  message(stringr::str_c("Begin fredData - "), Symbol)
+  message(stringr::str_c("Begin fredData - ", Symbol))
 
   src = "FRED"
   from = "1950-01-01"
@@ -96,7 +96,7 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
     xTs <- getSymbols(Symbol, src = "FRED",
            from = from, auto.assign = FALSE, ...)
   }
-  message(stringr::str_c("End   fredData - "), Symbol)
+  message(stringr::str_c("End   fredData - ", Symbol))
 
   # colnames(xTs)[1] <- tolower(colnames(xTs))
   xTs
@@ -154,7 +154,7 @@ yahooData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
 
   if(length(Symbol) > 1) stop ("yahooData can only download one symbol at a time.")
 
-  message(stringr::str_c("Begin yahooData - "), Symbol)
+  message(stringr::str_c("Begin yahooData - ", Symbol))
 
   src = "yahoo"
   from = "1950-01-01"
@@ -179,7 +179,7 @@ yahooData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
       colnames(xTs)[1] <- NewColName
   }
 
-  message(stringr::str_c("End   yahooData - "), Symbol)
+  message(stringr::str_c("End   yahooData - ", Symbol))
 
   xTs
 
@@ -255,6 +255,7 @@ initEnv();on.exit({uninitEnv()})
      eomData
 
 })}
+
 
 
 #' Get the Wilshire 5000 Index eom price from FRED
@@ -525,10 +526,10 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
-  xTs  <- combineLogReturns(xTs, leadingSP500LogReturns())
+  xTs  <- combineXts(xTs, leadingSP500LogReturns())
                                  # send to return.Portfolio and the calendar
-                                 # WILL5000INDlogrets
-  xTs  <- combineLogReturns(xTs, currentSP500LogReturns())
+                                 # GSPClogrets
+  xTs  <- combineXts(xTs, currentSP500LogReturns())
 
   xTs
 
@@ -552,10 +553,10 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
-  xTs  <- combineLogReturns(xTs, leadingWilshire5000LogReturns())
+  xTs  <- combineXts(xTs, leadingWilshire5000LogReturns())
                                  # send to return.Portfolio and the calendar
                                  # WILL5000INDlogrets
-  xTs  <- combineLogReturns(xTs, currentWilshire5000LogReturns())
+  xTs  <- combineXts(xTs, currentWilshire5000LogReturns())
 
   xTs
 
@@ -831,6 +832,53 @@ initEnv();on.exit({uninitEnv()})
   combineXts(xTs,willShire5000MachineWts(xTs))
 
 })}
+
+
+
+#' Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
+#'
+#' @return xts object of monthly return results
+#' \describe{
+#'   \item{One}{First item}
+#'   \item{Two}{Second item}
+#' }
+#' @examples
+#' \dontrun{
+#' EXAMPLE
+#' # EXAMPLE
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+UnRateEyeBalltradeModelWILL5000IND <- function() {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  # (1) data 'value' (try to optimize)
+  addCurrLeadWilshire5000LogReturns() %>%  #
+  addCurrLeadCashLogReturns %>%            #
+
+  # (2) indicator(s)
+  addUnRateEomData %>% # unrate
+
+  # (3) use indicator(s)(unrate) to make rules:signals(weights)
+  addWillShire5000EyeBallWts %>%   #
+
+  appendCashWts              %>%      # (excess)
+
+  printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = Inf) %>%
+
+  # (4) apply in action
+  portfolioMonthlyReturns  %>%
+
+  # (5) evaluate performance
+  printCalendar("UnRateEyeBall Performance Returns")
+
+})}
+# UnRateEyeBalltradeModelWILL5000IND()
+
+
+
+
 
 
 
