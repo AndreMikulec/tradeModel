@@ -1101,19 +1101,19 @@ tryCatchLog::tryCatchLog({
 #'
 #' }
 #'
-#' @param xTs xts object of arithmatic returns
+#' @param xTs xts object of absolute values
 #' @return xts object of geometric returns
 #' @examples
 #' \dontrun{
-#' # > require(xts)
-#' # > xTs  <- xts(10:12,zoo::as.Date(0:2))
-#' # > lr <- logReturns(xTs)
-#' # > lr
+#' require(xts)
+#' xTs  <- xts(10:12,zoo::as.Date(0:2))
+#' lr <- logReturns(xTs)
+#' lr
 #' #                         logrets
 #' # 1970-01-01 0.000000000000000000
 #' # 1970-01-02 0.095310179804324768
 #' # 1970-01-03 0.087011376989629685
-#' #
+#'
 #' # > as.vector(coredata(exp(cumsum(lr)) * 10L))
 #' # [1] 10.000000000000000 10.999999999999998 11.999999999999996
 #' }
@@ -1130,7 +1130,7 @@ initEnv();on.exit({uninitEnv()})
   # percent change
   # also could have used: PerformanceAnalytics::Return.calculate()
   # SEE the references
-  xTsLogRets <- TTR::ROC(xTs)             # which(is.na(xTsindLogRets)) # logrithmic
+  xTsLogRets <- TTR::ROC(xTs)        # which(is.na(xTsLogRets)) # logrithmic
   xTsLogRets[is.na(xTsLogRets)] <- 0 # usually just the 1st observation
   colnames(xTsLogRets)[1] <- stringr::str_c(colnames(xTsLogRets)[1], "logrets")
 
@@ -1139,8 +1139,46 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+#' absolute proportional change results
+#'
+#' @description
+#' \preformatted{
+#'
+#' xTs values less that zero will generate a numeric error
+#'
+#' }
+#'
+#' @param xTs xts object of absolute values
+#' @return xts object of absolute proportional change returns
+#' @examples
+#' \dontrun{
+#' require(xts)
+#' xTs  <- xts(10:12,zoo::as.Date(0:2))
+#' apcr <- APCReturns(xTs)
+#' apcr
+#' #                         apcrets
+#' # 1970-01-01 0.000000000000000000
+#' # 1970-01-02 0.095310179804324768
+#' # 1970-01-03 0.087011376989629685
+#'
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c str_detect
+APCReturns <- function(xTs = NULL)  {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
 
+  xTs  <- initXts(xTs)
 
+  # absolute proportional change
+  xTsAPCRets <- APC(xTs)             # which(is.na(xTsAPCRets)) # "close to logrithmic
+  xTsAPCRets[is.na(xTsAPCRets)] <- 0 # usually just the 1st observation
+  colnames(xTsAPCRets)[1] <- "apcrets"
+
+  xTsAPCRets
+
+})}
 
 
 
@@ -3198,7 +3236,9 @@ initEnv();on.exit({uninitEnv()})
   xTs <- x
   xTs <- initXts(xTs)
 
-  APC(x, base = base, lag = lag, ...) * 100.000
+  xTs <- APC(x, base = base, lag = lag, ...) * 100.000
+  colnames(xTs) <- stringr::str_replace(colnames(xTs2), "apc", "apctc")
+  xTs
 
 })}
 
@@ -3273,9 +3313,10 @@ initEnv();on.exit({uninitEnv()})
   xTs <- initXts(xTs)
 
   RPC(x, base = base, lag = lag, ...) * 100.000
+  colnames(xTs) <- stringr::str_replace(colnames(xTs2), "rpc", "rpctc")
+  xTs
 
 })}
-
 
 
 
@@ -4308,28 +4349,6 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' join two Log Returned xts objects
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @param xTs1 xts object to merge into xTs
-#' @return xts object
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-combineLogReturns <- function(xTs = NULL, xTs1 = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  xTs  <- initXts(xTs); xTs1 <- initXts(xTs1)
-
-  combineXts(xTs, xTs1)
-
-})}
-
 
 #' cash log returns (CASHlogrets)
 #'
@@ -4505,7 +4524,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' getSymbols data from the target
+#' getSymbol data from the target
 #'
 #' @description
 #' \preformatted{
@@ -4528,7 +4547,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' # St. Louis FRED
 #'
-#' head(symbolsData("GDP", src = "FRED"),1)
+#' head(symbolData("GDP", src = "FRED"),1)
 #'                           GDP
 #' 1947-01-01 243.16399999999999
 #'
@@ -4546,7 +4565,7 @@ initEnv();on.exit({uninitEnv()})
 #'   checks "pg": manually check database by using: SELECT * FROM "Symbols"."Symbols"
 #' then will get the new data from the "cache" or "pg".
 #'
-#' symbolsData(Symbol = "UNRATE", src = "FRED")
+#' symbolData(Symbol = "UNRATE", src = "FRED")
 #'
 #' # Full test . . .
 #' # 1. remove cache data: rm(.UNRATE) (if there)
@@ -4561,7 +4580,7 @@ initEnv();on.exit({uninitEnv()})
 #' Below just insert only-new (few) records
 #' # placeNewRecords == "AddOnlyNew" (default)
 #'
-#' symbolsData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs")
+#' symbolData(Symbol = "UNRATE", src = "FRED", NewMaxAge = "1 secs")
 #'
 #' # or
 #'
@@ -4572,18 +4591,18 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' # Yahoo
 #'
-#' symbolsData(Symbol = "^GSPC"
+#' symbolData(Symbol = "^GSPC"
 #'
-#' symbolsData(Symbol = "^GSPC", NewMaxAge = "1 secs")
+#' symbolData(Symbol = "^GSPC", NewMaxAge = "1 secs")
 #'
-#' symbolsData(Symbol = "^GSPC", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
+#' symbolData(Symbol = "^GSPC", NewMaxAge = "1 secs", placeNewRecords = "TruncateTable")
 #'
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_replace str_c
 #' @importFrom stringr str_c
-symbolsData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, ...) {
+symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, ...) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
   if(is.null(Symbol)) stop("No symbolsData was requested")
@@ -4647,74 +4666,48 @@ symbolsData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL,
 #' \dontrun{
 #'
 #' # weekly
-#' ff <- head(symbolsEomData("FF", src = "FRED"),1)
+#' ff <- head(symbolEomData("FF", src = "FRED"),1)
 #' # ff
 #' #              FF
 #' # 1954-07-31 0.63
 #'
 #' # weekly
-#' gspc <- head(symbolsEomData("^GSPC"),1)
+#' gspc <- head(symbolEomData("^GSPC"),1)
 #' # gspc
 #'
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-symbolsEomData <- function(Symbol = NULL, src = NULL) {
+symbolEomData <- function(Symbol = NULL, src = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   if(is.null(Symbol)) stop("No symbolsEomData was requested")
-  symbolsData(Symbol = Symbol, src = src) %>%
+  symbolData(Symbol = Symbol, src = src) %>%
      eomData
 
 })}
 
 
 
-#' Get the Wilshire 5000 Index eom price from FRED
+
+#' symbols eom absolute proportional change from the previous month
 #'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @return xts object of end of month returns
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-wilshire5000indEomData <- function() {
+symbolAPCReturns <- function(Symbol = Symbol, src = src) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  # Units: Index, Not Seasonally Adjusted
-  # Frequency: Daily, Close
-  fredEomData(Symbol = "WILL5000IND")
-
-})}
-
-
-#' Get the S&P 500 Index eom price from Yahoo
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @return xts object of end of month returns
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-SP500EomData <- function() {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  # Units: Index, Not Seasonally Adjusted
-  # Frequency: Daily, Close
-  yahooEomData(Symbol = "^GSPC")
+  if(is.null(Symbol)) stop("No Symbol Data was requested")
+  xTs <- symbolsData(Symbol = Symbol, src = src) %>% eomData
+  APCReturns(xTs = xTs)
 
 })}
 
 
 
-#' get the Wilshare 5000 Index log returns
+#' get the Symbol current APC returns
 #'
 #' @description
 #' \preformatted{
@@ -4724,19 +4717,17 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-wilshire5000LogReturns <- function() {
+currentSymbolAPCReturns <- function(Symbol = Symbol, src = src) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  will5000ind <- wilshire5000indEomData()
-  # colnames(will5000ind)[1] <- "WILL5000IND"
-
-  logReturns(xTs = will5000ind)
+  symbolAPCReturns(Symbol = Symbol, src = src) %>% Current
 
 })}
 
 
-#' get the SP500 log returns
+
+#' get the Symbol leading APC returns
 #'
 #' @description
 #' \preformatted{
@@ -4746,50 +4737,17 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-SP500LogReturns <- function() {
+leadingSymbolAPCReturns <- function(Symbol = Symbol, src = src) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  sp500 <- SP500EomData()
-  # WOULD prefer to add: 2% year for dividends
-  # actually:
-  #   for each element
-  #     divide by 220 working days of the year
-  #       continuously compound that value
-  #         and SUM the elements along the way
-  # I DO NOT know the math.
-  # Skip for now. Add in the future.
-  # Ask this questions in an online MATH/FINANCE forum
-
-  logReturns(xTs = sp500)
+  symbolAPCReturns(Symbol = Symbol, src = src) %>% Leading
 
 })}
 
 
 
-#' get the Wilshare 5000 Index log returns
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @return xts object
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-wilshire5000LogReturns <- function() {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  will5000ind <- wilshire5000indEomData()
-  # colnames(will5000ind)[1] <- "WILL5000IND"
-
-  logReturns(xTs = will5000ind)
-
-})}
-
-
-#' add SP500 log returns (GSPClogrets)
+#' add leading and current Symbol APC returns (SYMBOLlogrets)
 #'
 #' @description
 #' \preformatted{
@@ -4800,143 +4758,15 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-addSP500LogReturns <- function(xTs = NULL) {
+addCurrLeadSymbolAPCReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
-
-                         # GSPClogrets
-  combineLogReturns(xTs, SP500LogReturns())
-
-})}
-
-
-
-#' add Willshire 5000 Index log returns (WILL5000INDlogrets)
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-addWilshire5000LogReturns <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  xTs  <- initXts(xTs)
-
-                         # WILL5000INDlogrets
-  combineLogReturns(xTs, wilshire5000LogReturns())
-
-})}
-
-
-#' get the SP500 leading log returns
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @return xts object
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-leadingSP500LogReturns <- function() {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  SP500LogReturns() %>% Leading
-
-})}
-
-
-
-#' get the Wilshire 5000 Index leading log returns
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @return xts object
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-leadingWilshire5000LogReturns <- function() {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  wilshire5000LogReturns() %>% Leading
-
-})}
-
-
-
-#' get the SP500 Index current log returns
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @return xts object
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-currentSP500LogReturns <- function() {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  SP500LogReturns() %>% Current
-
-})}
-
-
-
-
-#' get the Wilshire 5000 Index current log returns
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @return xts object
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-currentWilshire5000LogReturns <- function() {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  wilshire5000LogReturns() %>% Current
-
-})}
-
-
-
-#' add current SP500 log returns (SP500logrets)
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-addCurrLeadSP500LogReturns <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-
-  xTs  <- initXts(xTs)
-  xTs  <- combineLogReturns(xTs, leadingSP500LogReturns())
+  xTs  <- combineXts(xTs, leadingSymbolAPCReturns())
                                  # send to return.Portfolio and the calendar
                                  # WILL5000INDlogrets
-  xTs  <- combineLogReturns(xTs, currentSP500LogReturns())
+  xTs  <- combineXts(xTs, currentSymbolAPCReturns())
 
   xTs
 
@@ -4944,7 +4774,8 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add current Willshire 5000 Index log returns (WILL5000INDlogrets)
+
+#' add Symbol APC returns (SYMBOLlogrets)
 #'
 #' @description
 #' \preformatted{
@@ -4955,17 +4786,14 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-addCurrLeadWilshire5000LogReturns <- function(xTs = NULL) {
+addSymbolAPCReturns <- function(xTs = NULL, Symbol = Symbol, src = src) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
-  xTs  <- combineLogReturns(xTs, leadingWilshire5000LogReturns())
-                                 # send to return.Portfolio and the calendar
-                                 # WILL5000INDlogrets
-  xTs  <- combineLogReturns(xTs, currentWilshire5000LogReturns())
 
-  xTs
+                  # SYMBOLlogrets
+  combineXts(xTs, symbolAPCReturns(Symbol = Symbol, src = src))
 
 })}
 

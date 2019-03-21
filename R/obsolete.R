@@ -257,3 +257,309 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+#' Get the Wilshire 5000 Index eom price from FRED
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object of end of month returns
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+wilshire5000indEomData <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # Units: Index, Not Seasonally Adjusted
+  # Frequency: Daily, Close
+  fredEomData(Symbol = "WILL5000IND")
+
+})}
+
+
+#' Get the S&P 500 Index eom price from Yahoo
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object of end of month returns
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+SP500EomData <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # Units: Index, Not Seasonally Adjusted
+  # Frequency: Daily, Close
+  yahooEomData(Symbol = "^GSPC")
+
+})}
+
+
+
+#' get the Willshire 5000 Index log returns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+wilshire5000LogReturns <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  will5000ind <- wilshire5000indEomData()
+  # colnames(will5000ind)[1] <- "WILL5000IND"
+
+  logReturns(xTs = will5000ind)
+
+})}
+
+
+
+#' get the SP500 log returns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+SP500LogReturns <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  sp500 <- SP500EomData()
+  # WOULD prefer to add: 2% year for dividends
+  # actually:
+  #   for each element
+  #     divide by 220 working days of the year
+  #       continuously compound that value
+  #         and SUM the elements along the way
+  # I DO NOT know the math.
+  # Skip for now. Add in the future.
+  # Ask this questions in an online MATH/FINANCE forum
+
+  logReturns(xTs = sp500)
+
+})}
+
+
+
+#' add Willshire 5000 Index log returns (WILL5000INDlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addWilshire5000LogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+                         # WILL5000INDlogrets
+  combineXts(xTs, wilshire5000LogReturns())
+
+})}
+
+
+
+#' add SP500 log returns (GSPClogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addSP500LogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+                  # GSPClogrets
+  combineXts(xTs, SP500LogReturns())
+
+})}
+
+
+
+#' join two Log Returned xts objects
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @param xTs1 xts object to merge into xTs
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+combineLogReturns <- function(xTs = NULL, xTs1 = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs); xTs1 <- initXts(xTs1)
+
+  combineXts(xTs, xTs1)
+
+})}
+
+
+
+
+
+#' get the SP500 leading log returns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+leadingSP500LogReturns <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  SP500LogReturns() %>% Leading
+
+})}
+
+
+
+#' get the Wilshire 5000 Index leading log returns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+leadingWilshire5000LogReturns <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  wilshire5000LogReturns() %>% Leading
+
+})}
+
+
+
+#' get the SP500 Index current log returns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+currentSP500LogReturns <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  SP500LogReturns() %>% Current
+
+})}
+
+
+
+
+#' get the Wilshire 5000 Index current log returns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+currentWilshire5000LogReturns <- function() {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  wilshire5000LogReturns() %>% Current
+
+})}
+
+
+
+#' add current SP500 log returns (SP500logrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addCurrLeadSP500LogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+  xTs  <- combineLogReturns(xTs, leadingSP500LogReturns())
+                                 # send to return.Portfolio and the calendar
+                                 # WILL5000INDlogrets
+  xTs  <- combineLogReturns(xTs, currentSP500LogReturns())
+
+  xTs
+
+})}
+
+
+
+#' add current Willshire 5000 Index log returns (WILL5000INDlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addCurrLeadWilshire5000LogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+  xTs  <- combineLogReturns(xTs, leadingWilshire5000LogReturns())
+                                 # send to return.Portfolio and the calendar
+                                 # WILL5000INDlogrets
+  xTs  <- combineLogReturns(xTs, currentWilshire5000LogReturns())
+
+  xTs
+
+})}
+
+
+
