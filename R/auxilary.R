@@ -394,8 +394,6 @@ initEnv(); on.exit({uninitEnv()})
 
 
 
-
-
 #' Convert time series data to an monthly OHLC series
 #'
 #' @description
@@ -437,8 +435,8 @@ initEnv(); on.exit({uninitEnv()})
   fillMissing <- if(is.null(fillMissing)) { TRUE }
 
   if(indexAt == "yearmon") stop("To.Monthly does not suport class 'yearmon'")
-  # because no S3 seq.yearmon exists (I WROTE ONE somewhere)
-  # TODO [ ] put back "yearmon" after I re put-back seq.yearmon
+  # because not integrated-tested yet: S3 seq.yearmon
+  # MAYBE TODO [ ] put back "yearmon" after I re put-back seq.yearmon
 
   monthly <- xts::to.monthly(x = x,indexAt=indexAt,drop.time=drop.time,name=name,...)
   if(fillMissing && (NROW(monthly) > 1)) {
@@ -4495,6 +4493,7 @@ initEnv();on.exit({uninitEnv()})
 
   if(NCOL(xTs) > 1) stop("(currently) eomData only works on single column xtx objects")
   xTs <- To.Monthly(xTs[!is.na(xTs)], OHLC = FALSE, indexAt = "lastof")
+  # MAYBE TODO [ ] To.Monthly + na.locf
   xTs <- xTs[index(xTs) <= tail(index(xTsOrig),1)] # LEFT_OFF
 
   xTs
@@ -4605,6 +4604,8 @@ fredData <- function(Symbol = NULL, New = NULL, NewMaxAge = NULL, ...) {
   xTs
 
 })}
+
+
 
 
 
