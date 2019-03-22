@@ -6,15 +6,6 @@
 \usage{
 UnRateMachinetradeModelGSPC()
 }
-\value{
-xts object of monthly return results
-}
 \description{
 Predicts the SP500 eom returns using UNRATE and Machine learning
-}
-\examples{
-\dontrun{
-EXAMPLE
-# EXAMPLE
-}
 }

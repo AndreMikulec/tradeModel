@@ -6,9 +6,6 @@
 \usage{
 UnRateEyeBalltradeModel(Symbol = NULL, src = NULL, Change = NULL)
 }
-\value{
-xts object of monthly return results
-}
 \description{
 Predicts the Symbol eom returns using UNRATE and the eyeball
 }

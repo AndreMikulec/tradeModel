@@ -6,15 +6,6 @@
 \usage{
 UnRateMachinetradeModelWILL5000IND()
 }
-\value{
-xts object of monthly return results
-}
 \description{
 Predicts the FRED WILL5000IND eom returns using UNRATE and Machine learning
-}
-\examples{
-\dontrun{
-EXAMPLE
-# EXAMPLE
-}
 }

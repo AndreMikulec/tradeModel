@@ -990,15 +990,8 @@ initEnv();on.exit({uninitEnv()})
 
 #' Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
 #'
-#' @return xts object of monthly return results
-#' \describe{
-#'   \item{One}{First item}
-#'   \item{Two}{Second item}
-#' }
 #' @examples
 #' \dontrun{
-#' EXAMPLE
-#' # EXAMPLE
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -1007,21 +1000,21 @@ UnRateEyeBalltradeModelWILL5000IND <- function() {
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadWilshire5000LogReturns() %>%  #
-  addCurrLeadCashLogReturns %>%            #
+  addCurrLeadWilshire5000LogReturns()  %>%  #
+  addCurrLeadCashLogReturns            %>%  #
 
   # (2) indicator(s)
-  addUnRateEomData %>% # unrate
+  addUnRateEomData  %>% # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addWillShire5000EyeBallWts %>%   #
 
-  appendCashWts              %>%      # (excess)
+  appendCashWts              %>%   # (excess)
 
-  printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = Inf) %>%
+  printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10) %>%
 
   # (4) apply in action
-  portfolioMonthlyReturns  %>%
+  portfolioMonthlyReturns %>%
 
   # (5) evaluate performance
   printCalendar("UnRateEyeBall Performance Returns")
@@ -1029,6 +1022,37 @@ UnRateEyeBalltradeModelWILL5000IND <- function() {
 })}
 # UnRateEyeBalltradeModelWILL5000IND()
 
+
+#' Predicts the Yahoo SP500 eom returns using UNRATE and the eyeball
+#'
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+UnRateEyeBalltradeModelGSPC <- function() {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  # (1) data 'value' (try to optimize)
+  addCurrLeadSP500LogReturns() %>%  #
+  addCurrLeadCashLogReturns    %>%  #
+
+  # (2) indicator(s)
+  addUnRateEomData %>% # unrate
+
+  # (3) use indicator(s)(unrate) to make rules:signals(weights)
+  addSP500EyeBallWts %>%   #
+
+  appendCashWts      %>%   # (excess)
+
+  printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10) %>%
+
+  # (4) apply in action
+  portfolioMonthlyReturns %>%
+
+  # (5) evaluate performance
+  printCalendar("UnRateEyeBall Performance Returns")
+
+})}
+# UnRateEyeBalltradeModelGSPC()
 
 
 #' #' add cash log returns (CASHlogrets)

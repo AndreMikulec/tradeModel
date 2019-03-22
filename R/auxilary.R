@@ -1172,9 +1172,12 @@ initEnv();on.exit({uninitEnv()})
   xTs  <- initXts(xTs)
 
   # absolute proportional change
+  # just ONE column
+  Colnames <- colnames(xTs)
+  #             ORIG.apc.1
   xTsAPCRets <- APC(xTs)             # which(is.na(xTsAPCRets)) # "close to logrithmic
   xTsAPCRets[is.na(xTsAPCRets)] <- 0 # usually just the 1st observation
-  colnames(xTsAPCRets)[1] <- "apcrets"
+  colnames(xTsAPCRets)[1] <- stringr::str_c(Colnames, "apcrets")
 
   xTsAPCRets
 
@@ -4601,7 +4604,6 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
 
   message(stringr::str_c("Begin symbolData - ",  src, " ", Symbol))
 
-  src = "yahoo"
   from = "1900-01-01"
 
   if(New){
