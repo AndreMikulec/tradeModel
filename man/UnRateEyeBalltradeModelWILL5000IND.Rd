@@ -9,7 +9,3 @@ UnRateEyeBalltradeModelWILL5000IND()
 \description{
 Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
 }
-\examples{
-\dontrun{
-}
-}

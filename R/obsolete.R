@@ -988,11 +988,34 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' add cash log returns (CASHlogrets)
+#'
+#' @description
+#' \preformatted{
+#'
+#' NEVER USED - RETIRED - DO NOT USE
+#'
+#' }
+#'
+#' @param xTs xts object (only takes the index)
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+addCashLogReturns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs  <- initXts(xTs)
+
+                         # CASHlogrets
+  combineXts(xTs, cashLogReturns(xTs))
+
+})}
+
+
+
 #' Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
 #'
-#' @examples
-#' \dontrun{
-#' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 UnRateEyeBalltradeModelWILL5000IND <- function() {
@@ -1055,29 +1078,73 @@ UnRateEyeBalltradeModelGSPC <- function() {
 # UnRateEyeBalltradeModelGSPC()
 
 
-#' #' add cash log returns (CASHlogrets)
-#' #'
-#' #' @description
-#' #' \preformatted{
-#' #'
-#' #' CURRENTLY NOT USED ANYWHERE?
-#' #'
-#' #' }
-#' #'
-#' #' @param xTs xts object (only takes the index)
-#' #' @return xts object with merged data into xTs
-#' #' @export
-#' #' @importFrom tryCatchLog tryCatchLog
-#' addCashLogReturns <- function(xTs = NULL) {
-#' tryCatchLog::tryCatchLog({
-#' initEnv();on.exit({uninitEnv()})
+#' Predicts the FRED WILL5000IND eom returns using UNRATE and Machine learning
 #'
-#'   xTs  <- initXts(xTs)
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+UnRateMachinetradeModelWILL5000IND <- function() {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  # (1) data 'value' (try to optimize)
+  addCurrLeadWilshire5000LogReturns() %>%      #
+  addCurrLeadCashLogReturns           %>%      #
+
+  # (2) indicator(s)
+  addUnRateEomData %>%                 # unrate
+
+  # (3) use indicator(s)(unrate) to make rules:signals(weights)
+  addWillShire5000MachineWts %>%       #
+  appendCashWts              %>%       # (excess)
+
+  printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
+
+  # (4) apply in action
+  portfolioMonthlyReturns %>%
+
+  # (5) evaluate performance
+  printCalendar("UnRateMachine Performance Returns")
+
+})}
+# UnRateMachinetradeModelWILL5000IND()
+
+
+
+#' Predicts the SP500 eom returns using UNRATE and Machine learning
 #'
-#'                          # CASHlogrets
-#'   combineXts(xTs, cashLogReturns(xTs))
-#'
-#' })}
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+UnRateMachinetradeModelGSPC <- function() {
+  tryCatchLog::tryCatchLog({
+  initEnv();on.exit({uninitEnv()})
+
+  # (1) data 'value' (try to optimize)
+  addCurrLeadSP500LogReturns() %>%  #
+  addCurrLeadCashLogReturns    %>%  #
+
+  # (2) indicator(s)
+  addUnRateEomData %>%              # unrate
+
+  # (3) use indicator(s)(unrate) to make rules:signals(weights)
+  addSP500MachineWts %>%       #
+  appendCashWts      %>%       # (excess)
+
+  printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
+
+  # (4) apply in action
+  portfolioMonthlyReturns %>% #
+
+  # (5) evaluate performance
+  printCalendar("UnRateMachine Performance Returns")
+
+})}
+# UnRateMachinetradeModelGSPC()
+
+
+
+
+
+
 
 
 

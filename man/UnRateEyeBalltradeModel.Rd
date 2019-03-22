@@ -13,5 +13,6 @@ Predicts the Symbol eom returns using UNRATE and the eyeball
 \dontrun{
 # Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
 # UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
+# UnRateEyeBalltradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
 }
 }

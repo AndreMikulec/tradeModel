@@ -4,6 +4,7 @@
 #' \dontrun{
 #' # Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
 #' # UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
+#' # UnRateEyeBalltradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -12,53 +13,55 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src) -> res # %>%
-  addCurrLeadCashAPCReturns(res)  -> res # %>%
+  addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src) %>%
+  addCurrLeadCashAPCReturns  %>%
 
   # (2) indicator(s)
-  addUnRateEomData(res) -> res # %>% # unrate
+  addUnRateEomData  %>%   # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  # addWillShire5000EyeBallWts %>%   #
-  addSymbolEyeBallWts(res, Symbol = Symbol, Change = Change) -> res # %>%
+  addSymbolEyeBallWts(res, Symbol = Symbol, Change = Change) %>%
 
-  appendCashAPCWts(res) -> res # %>% # (excess)
+  appendCashAPCWts # (excess)
 
-  printTail(res, "Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10) -> res # %>%
+  printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)  %>%
 
   # (4) apply in action
-  portfolioMonthlyReturns(res) -> res # %>%
+  portfolioMonthlyReturns %>%
 
   # (5) evaluate performance
-  printCalendar(res, "UnRateEyeBall Performance Returns")
+  printCalendar("UnRateEyeBall Performance Returns")
 
 })}
 # UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
 # UnRateEyeBalltradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
 
 
-
-
-
-
-#' Predicts the SP500 eom returns using UNRATE and Machine learning
+#' Predicts Symbol eom returns using UNRATE and Machine learning
 #'
+#' @examples
+#' \dontrun{
+#' # Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
+#' # UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
+#' # UnRateMachinetradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
+#' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateMachinetradeModelGSPC <- function() {
+UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSP500LogReturns() %>%  #
-  addCurrLeadCashLogReturns    %>%  #
+  addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src)  #
+  addCurrLeadCashAPCReturns    %>%  #
 
   # (2) indicator(s)
   addUnRateEomData %>%              # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addSP500MachineWts %>%       #
-  appendCashWts      %>%       # (excess)
+  addSymbolMachineWts(res, Symbol = Symbol, Change = Change) %>%  #
+
+  appendCashAPCWts    %>%       # (excess)
 
   printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
 
@@ -69,37 +72,10 @@ UnRateMachinetradeModelGSPC <- function() {
   printCalendar("UnRateMachine Performance Returns")
 
 })}
-# UnRateMachinetradeModelGSPC()
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
+#' UnRateMachinetradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
 
 
 
-#' Predicts the FRED WILL5000IND eom returns using UNRATE and Machine learning
-#'
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-UnRateMachinetradeModelWILL5000IND <- function() {
-  tryCatchLog::tryCatchLog({
-  initEnv();on.exit({uninitEnv()})
 
-  # (1) data 'value' (try to optimize)
-  addCurrLeadWilshire5000LogReturns() %>%      #
-  addCurrLeadCashLogReturns           %>%      #
-
-  # (2) indicator(s)
-  addUnRateEomData %>%                 # unrate
-
-  # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addWillShire5000MachineWts %>%       #
-  appendCashWts              %>%       # (excess)
-
-  printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
-
-  # (4) apply in action
-  portfolioMonthlyReturns %>%
-
-  # (5) evaluate performance
-  printCalendar("UnRateMachine Performance Returns")
-
-})}
-# UnRateMachinetradeModelWILL5000IND()
 
