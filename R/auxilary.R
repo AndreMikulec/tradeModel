@@ -1131,6 +1131,8 @@ initEnv();on.exit({uninitEnv()})
   # also could have used: PerformanceAnalytics::Return.calculate()
   # SEE the references
   xTsLogRets <- TTR::ROC(xTs)        # which(is.na(xTsLogRets)) # logrithmic
+  warning("TTR::ROC may only be an approximation and 'not fully' correct.")
+  warning("See my package notes on PerformanceAnalytics::Return.calculate")
   xTsLogRets[is.na(xTsLogRets)] <- 0 # usually just the 1st observation
   colnames(xTsLogRets)[1] <- stringr::str_c(colnames(xTsLogRets)[1], "logrets")
 
@@ -1590,7 +1592,7 @@ initEnv();on.exit({uninitEnv()})
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
 #' colnames(gspc) <- "GSPC"
 #' # returns
-#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#' gspc.ret <- PerformanceAnalytics::Return.calculate(gspc)
 #'
 #' # top 20 worst monthly returns in the S&P500 history
 #' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
@@ -1650,7 +1652,7 @@ initEnv();on.exit({uninitEnv()})
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
 #' colnames(gspc) <- "GSPC"
 #' # returns
-#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#' gspc.ret <- PerformanceAnalytics::Return.calculate(gspc)
 #'
 #' # top 20 worst monthly returns in the S&P500 history
 #' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
@@ -1712,7 +1714,7 @@ initEnv();on.exit({uninitEnv()})
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
 #' colnames(gspc) <- "GSPC"
 #' # returns
-#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#' gspc.ret <- PerformanceAnalytics::Return.calculate(gspc)
 #'
 #' # top 20 worst monthly returns in the S&P500 history
 #' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
@@ -1769,7 +1771,7 @@ initEnv();on.exit({uninitEnv()})
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
 #' colnames(gspc) <- "GSPC"
 #' # returns
-#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#' gspc.ret <- PerformanceAnalytics::Return.calculate(gspc)
 #'
 #' # top 20 worst monthly returns in the S&P500 history
 #' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
@@ -2205,7 +2207,7 @@ initEnv();on.exit({uninitEnv()})
 #' gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
 #' colnames(gspc) <- "GSPC"
 #' # returns
-#' gspc.ret <- TTR::ROC(gspc, type = "discrete")
+#' gspc.ret <- PerformanceAnalytics::Return.calculate(gspc)
 #'
 #' # top 20 worst monthly returns in the S&P500 history
 #' CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))
@@ -4682,6 +4684,17 @@ symbolAPCReturns <- function(Symbol = Symbol, src = src) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  # Proportional change  seems more correct than log differenctes
+  #
+  # PerformanceAnalytics::Return.calculate
+  #
+  # AGGREGATE PORTFOLIO CONTRIBUTIONS THROUGH TIME
+  # # [absolute] proportional change is CORRECT
+  # Return.calculate(.) "Returns = pr/lag.xts(pr) - 1" ->  Return.portfolio
+  # https://tradeblotter.wordpress.com/2014/09/25/aggregate-portfolio-contributions-through-time/
+  # whereas
+  # TTR::ROC "roc <- diff(log(x), n, na.pad = na.pad)"
+
   if(is.null(Symbol)) stop("No Symbol Data was requested")
   xTs <- symbolData(Symbol = Symbol, src = src) %>% eomData
   APCReturns(xTs = xTs)
@@ -6447,6 +6460,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object of geometric returns
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom PerformanceAnalytics Return.portfolio
 portfolioLogReturns <- function(xTs = NULL, initVal = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -6466,7 +6480,7 @@ initEnv();on.exit({uninitEnv()})
   # I choose NOT to use it
   # index(wtsxTs) <- index(wtsxTs) + 1
 
-  Return.portfolio(
+  PerformanceAnalytics::Return.portfolio(
       R       = valuexTs
     , weights =   wtsxTs
     , value   = initVal
