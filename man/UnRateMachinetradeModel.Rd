@@ -4,7 +4,8 @@
 \alias{UnRateMachinetradeModel}
 \title{Predicts Symbol eom returns using UNRATE and Machine learning}
 \usage{
-UnRateMachinetradeModel(Symbol = NULL, src = NULL, Change = NULL)
+UnRateMachinetradeModel(Symbol = NULL, src = NULL, Change = NULL,
+  Predictee = NULL)
 }
 \description{
 Predicts Symbol eom returns using UNRATE and Machine learning
@@ -12,7 +13,7 @@ Predicts Symbol eom returns using UNRATE and Machine learning
 \examples{
 \dontrun{
 # Predicts the FRED WILL5000IND eom returns using UNRATE and the machine
-# UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
-# UnRateMachinetradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
+# UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc", Predictee = "WILL5000INDapcleadingrets")
+# UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc", Predictee = "GSPCapcleadingrets")
 }
 }

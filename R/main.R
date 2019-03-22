@@ -22,7 +22,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolEyeBallWts(Symbol = Symbol, Change = Change) %>%
 
-  appendCashAPCWts # (excess)
+  appendCashAPCWts %>% # (excess)
 
   printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)  %>%
 
@@ -43,24 +43,24 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
 #' @examples
 #' \dontrun{
 #' # Predicts the FRED WILL5000IND eom returns using UNRATE and the machine
-#' # UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
-#' # UnRateMachinetradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
+#' # UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc", Predictee = "WILL5000INDapcleadingrets")
+#' # UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc", Predictee = "GSPCapcleadingrets")
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
+UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL, Predictee = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src)  #
+  addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src) %>%  #
   addCurrLeadCashAPCReturns    %>%  #
 
   # (2) indicator(s)
   addUnRateEomData %>%              # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addSymbolMachineWts(Symbol = Symbol, Change = Change) %>%  #
+  addSymbolMachineWts(Predictee = Predictee, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators") %>%  #
 
   appendCashAPCWts    %>%       # (excess)
 
@@ -73,10 +73,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   printCalendar("UnRateMachine Performance Returns")
 
 })}
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
-#' UnRateMachinetradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
-
-
-
+# UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED" , Change = "apc", Predictee = "WILL5000INDapcleadingrets")
+# UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc", Predictee = "GSPCapcleadingrets")
 
 

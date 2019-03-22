@@ -4889,9 +4889,9 @@ initEnv();on.exit({uninitEnv()})
     Dots <- c(list(), Dots, list(timeSliceMatrix = tis::nberDates()))
 
   DescTools::DoCall(prepAndDoMachineWtsData, c(list(),
-                    list(xTs), Predictee = "GSPClogleadingrets"
-                             , Predictors = "UNRATE"
-                             , IndicatorGeneratorFUN = "unrateEyeballIndicators", Dots
+                    list(xTs), Predictee = Predictee
+                             , Predictors = Predictors
+                             , IndicatorGeneratorFUN = IndicatorGeneratorFUN, Dots
   ))
 
 })}
