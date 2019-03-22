@@ -11,7 +11,7 @@ Predicts Symbol eom returns using UNRATE and Machine learning
 }
 \examples{
 \dontrun{
-# Predicts the FRED WILL5000IND eom returns using UNRATE and the eyeball
+# Predicts the FRED WILL5000IND eom returns using UNRATE and the machine
 # UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
 # UnRateMachinetradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
 }
