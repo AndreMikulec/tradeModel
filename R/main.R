@@ -20,7 +20,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   addUnRateEomData  %>%   # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addSymbolEyeBallWts(res, Symbol = Symbol, Change = Change) %>%
+  addSymbolEyeBallWts(Symbol = Symbol, Change = Change) %>%
 
   appendCashAPCWts # (excess)
 
@@ -59,7 +59,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   addUnRateEomData %>%              # unrate
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addSymbolMachineWts(res, Symbol = Symbol, Change = Change) %>%  #
+  addSymbolMachineWts(Symbol = Symbol, Change = Change) %>%  #
 
   appendCashAPCWts    %>%       # (excess)
 
