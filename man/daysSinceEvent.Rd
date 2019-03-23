@@ -29,7 +29,7 @@ wraps doBy::timeSinceEvent
 gspc <- To.Monthly(Cl(getSymbols("^GSPC", auto.assign = FALSE, from = "1900-01-01")), indexAt = "lastof", OHLC = F)
 colnames(gspc) <- "GSPC"
 # returns
-gspc.ret <- TTR::ROC(gspc, type = "discrete")
+gspc.ret <- PerformanceAnalytics::Return.calculate(gspc)
 
 # top 20 worst monthly returns in the S&P500 history
 CrashDates <- zoo::as.Date(rownames(head(as.matrix(gspc.ret)[order(as.matrix(gspc.ret)),1, drop = F], 20)))

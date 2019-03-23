@@ -85,7 +85,7 @@
 #' Determining the Federal Funds Rate
 #' ----------------------------------
 #'
-#' Kliesen, Kevin L <kevin.l.kliesen@stls.frb.org> clarification
+#' Kliesen, Kevin L <kevin.l.kliesen@@stls.frb.org> clarification
 #'
 #' see HOTMAIL EMAIL (my "Sent" items box: I forwarded the reply to myself (for storage))
 #' Subject: RE: TWO QUICK QUESTIONS: Is the Fed Following a "Modernized" Version of the Taylor Rule? Part 1/2

@@ -62,6 +62,76 @@ should set its policy [federal funds interest] rate in the following manner.
 \details{
 \preformatted{
 
+
+BEGIN UNORGANZIED/UN(RE)INVESTIGATED/UNINTEGRATED
+
+natural rate
+OR
+non-accelerating inflation rate of unemployment, or NAIRU
+---------------------------------------------------------
+
+The concept of the natural rate is related to what is sometimes termed the
+non-accelerating inflation rate of unemployment, or NAIRU.
+
+In the long run, the two rates are expected to be equivalent; however, this need not be the
+case over a near-term forecasting horizon.
+
+The gap between the actual unemployment rate and the natural rate is just
+one of several factors CBO uses to make its near-term projections of inflation.
+
+Working Paper Series
+2007-06
+Congressional Budget Office
+Washington, D.C.
+April 2007
+The Natural Rate of Unemployment
+David Brauer
+(e-mail: davidb@cbo.gov)
+https://cbo.gov/sites/default/files/cbofiles/ftpdocs/80xx/doc8008/2007-06.pdf
+
+https://fred.stlouisfed.org/series/NROU
+https://fred.stlouisfed.org/series/NROU
+
+From the description, the case seems that (Short-Term)
+is the better choice
+
+Natural Rate of Unemployment (Short-Term)
+https://fred.stlouisfed.org/series/NROUST
+
+https://fred.stlouisfed.org/tags/series/?t=cbo%3Bnairu
+
+
+
+NAIRU theory
+------------
+
+According to the popular view,
+once the actual unemployment rate falls to below the NAIRU, or the natural unemployment rate,
+
+  the rate of inflation tends to accelerate and economic activity becomes overheated.
+  (This acceleration in the rate of inflation takes place through increases in the demand for goods and services.
+   It also lifts the demand for workers and puts pressure on wages, reinforcing the growth in inflation).
+
+The Fed's Confusion Over the "Natural Rate" of Unemployment and Inflation
+07/20/2015
+Frank Shostak
+https://mises.org/library/fed%E2%80%99s-confusion-over-natural-rate-unemployment-and-inflation
+
+
+
+Determining the Federal Funds Rate
+----------------------------------
+
+Kliesen, Kevin L <kevin.l.kliesen@stls.frb.org> clarification
+
+see HOTMAIL EMAIL (my "Sent" items box: I forwarded the reply to myself (for storage))
+Subject: RE: TWO QUICK QUESTIONS: Is the Fed Following a "Modernized" Version of the Taylor Rule? Part 1/2
+
+
+
+END UNORGANZIED/UN(RE)INVESTIGATED/UNINTEGRATED
+
+
 Authority (e.g., the Federal Reserve) should set its
 policy rate (federal funds rate i(t)) in the following manner:
 
