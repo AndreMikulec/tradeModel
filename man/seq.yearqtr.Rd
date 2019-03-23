@@ -12,7 +12,7 @@
 
 \item{to}{See ? seq.Date}
 
-\item{by}{See ? seq.Date}
+\item{by}{See ? seq.Date. See examples (below).}
 
 \item{length.out}{See ? seq.Date}
 
@@ -30,6 +30,10 @@ Based on the code of seq.Date.
 
 The situation of "no existing seq.yearqtr" drove me nuts!
 Therefore I programmed one.
+
+NOTE: this implementations complements the gist by adding "by methods"
+See. the examples.
+
 }
 }
 \examples{
@@ -48,13 +52,27 @@ seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), length.out = 3)
 seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), length.out = 4)
 # [1] "2000 Q1" "2000 Q4" "2001 Q2" "2002 Q1"
 
-seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = 0.25)
+seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = 1/4)
 # [1] "2000 Q1" "2000 Q2" "2000 Q3" "2000 Q4" "2001 Q1" "2001 Q2" "2001 Q3"
 # [8] "2001 Q4" "2002 Q1"
 
-seq.yearqtr(as.yearqtr("2002 Q1"), to = as.yearqtr("2000 Q1"), by = -0.25)
+seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = 2/4)
+# [1] "2000 Q1" "2000 Q3" "2001 Q1" "2001 Q3" "2002 Q1"
+
+seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = "2 yearqtrs")
+# [1] "2000 Q1" "2000 Q3" "2001 Q1" "2001 Q3" "2002 Q1"
+
+seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = "2 quarters")
+# [1] "2000 Q1" "2000 Q3" "2001 Q1" "2001 Q3" "2002 Q1"
+
+seq.yearqtr(as.yearqtr("2002 Q1"), to = as.yearqtr("2000 Q1"), by = -1/4)
 # [1] "2002 Q1" "2001 Q4" "2001 Q3" "2001 Q2" "2001 Q1" "2000 Q4" "2000 Q3"
 # [8] "2000 Q2" "2000 Q1"
+
+seq.yearqtr(as.yearqtr("2002 Q1"), to = as.yearqtr("2000 Q1"), by = "-1 yearqtrs")
+# [1] "2002 Q1" "2001 Q4" "2001 Q3" "2001 Q2" "2001 Q1" "2000 Q4" "2000 Q3"
+# [8] "2000 Q2" "2000 Q1"
+
 }
 }
 \references{

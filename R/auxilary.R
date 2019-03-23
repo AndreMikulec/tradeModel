@@ -140,13 +140,17 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' The situation of "no existing seq.yearqtr" drove me nuts!
 #' Therefore I programmed one.
+#'
+#' NOTE: this implementations complements the gist by adding "by methods"
+#' See. the examples.
+#'
 #' }
 #' @references
 #' \cite{R zoo S3 object seq.yearqtr seq.yearmon
 #' \url{https://gist.github.com/AndreMikulec/aceb20a0b6c170027b035519ca7a3adb}}
 #' @param from  See ? seq.Date
 #' @param to See ? seq.Date
-#' @param by See ? seq.Date
+#' @param by See ? seq.Date. See examples (below).
 #' @param length.out  See ? seq.Date
 #' @param along.with  See ? seq.Date
 #' @param ... See ? seq.Date
@@ -169,13 +173,27 @@ initEnv();on.exit({uninitEnv()})
 #' seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), length.out = 4)
 #' # [1] "2000 Q1" "2000 Q4" "2001 Q2" "2002 Q1"
 #'
-#' seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = 0.25)
+#' seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = 1/4)
 #' # [1] "2000 Q1" "2000 Q2" "2000 Q3" "2000 Q4" "2001 Q1" "2001 Q2" "2001 Q3"
 #' # [8] "2001 Q4" "2002 Q1"
 #'
-#' seq.yearqtr(as.yearqtr("2002 Q1"), to = as.yearqtr("2000 Q1"), by = -0.25)
+#' seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = 2/4)
+#' # [1] "2000 Q1" "2000 Q3" "2001 Q1" "2001 Q3" "2002 Q1"
+#'
+#' seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = "2 yearqtrs")
+#' # [1] "2000 Q1" "2000 Q3" "2001 Q1" "2001 Q3" "2002 Q1"
+#'
+#' seq.yearqtr(as.yearqtr("2000 Q1"), to = as.yearqtr("2002 Q1"), by = "2 quarters")
+#' # [1] "2000 Q1" "2000 Q3" "2001 Q1" "2001 Q3" "2002 Q1"
+#'
+#' seq.yearqtr(as.yearqtr("2002 Q1"), to = as.yearqtr("2000 Q1"), by = -1/4)
 #' # [1] "2002 Q1" "2001 Q4" "2001 Q3" "2001 Q2" "2001 Q1" "2000 Q4" "2000 Q3"
 #' # [8] "2000 Q2" "2000 Q1"
+#'
+#' seq.yearqtr(as.yearqtr("2002 Q1"), to = as.yearqtr("2000 Q1"), by = "-1 yearqtrs")
+#' # [1] "2002 Q1" "2001 Q4" "2001 Q3" "2001 Q2" "2001 Q1" "2000 Q4" "2000 Q3"
+#' # [8] "2000 Q2" "2000 Q1"
+#'
 #'}
 #' @export
 seq.yearqtr <- function(from, to, by, length.out = NULL, along.with = NULL, ...) {
@@ -183,8 +201,9 @@ tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
   # R version 3.3.1 (2016-06-21) -- "Bug in Your Hair"
-  #
-  # require(zoo) # zoo_1.7-13
+  # zoo_1.7-13
+  # R version 3.5.3 (2019-03-11)
+  # zoo_1.8-4
 
   # exactly two of 'to', 'by' and 'length.out' / 'along.with' must be specified
   # seq.Date - missing
@@ -221,22 +240,37 @@ initEnv(); on.exit({uninitEnv()})
       res <- seq.int(from, to, length.out = length.out)
       return(structure(res, class = "yearqtr"))
   }
+
+  # see seq.Date
   if (length(by) != 1L)
       stop("'by' must be of length 1")
-
-  # meant for inherited from "difftime" or was a "character" test and manipulation
-  # does not apply to this code
   valid <- 0L
-
-  if (!is.numeric(by))
-    stop("invalid mode for 'by'")
+  # # no implementation
+  # if (inherits(by, "difftime")) {
+  #     by <- switch(attr(by, "units"), secs = 1/86400, mins = 1/1440,
+  #     hours = 1/24, days = 1, weeks = 7) * unclass(by)
+  # }
+  # else
+  if (is.character(by)) {
+      by2 <- strsplit(by, " ", fixed = TRUE)[[1L]]
+      if (length(by2) > 2L || length(by2) < 1L)
+          stop("invalid 'by' string")
+      valid <- pmatch(by2[length(by2)], c("quarters", "yearqtrs"))
+      if (is.na(valid))
+          stop("invalid string for 'by'")
+      if (valid <= 2L) { # always
+          by <- c(1/4, 1/4)[valid]
+          if (length(by2) == 2L)
+              by <- by * as.integer(by2[1L])
+      }
+      else by <- if (length(by2) == 2L)
+          as.integer(by2[1L])
+      else 1
+  }
+  else if (!is.numeric(by))
+      stop("invalid mode for 'by'")
   if (is.na(by))
-    stop("'by' is NA")
-
-  # always TRUE because 'by' never inherited from "difftime" nor was a "character"
-  #
-  # never did the inherited from "difftime" or was a "character" test and manipulation
-  # . . .
+      stop("'by' is NA")
 
   if (valid <= 2L) {
       from <- unclass(zoo::as.yearqtr(from))
@@ -272,13 +306,17 @@ initEnv(); on.exit({uninitEnv()})
 #'
 #' The situation of "no existing seq.yearmon" drove me nuts!
 #' Therefore I programmed one.
+#'
+#' NOTE: this implementations complements the gist by adding "by methods"
+#' See. the examples.
+#'
 #' }
 #' @references
 #' \cite{R zoo S3 object seq.yearqtr seq.yearmon
 #' \url{https://gist.github.com/AndreMikulec/aceb20a0b6c170027b035519ca7a3adb}}
 #' @param from  See ? seq.Date
 #' @param to See ? seq.Date
-#' @param by See ? seq.Date
+#' @param by See ? seq.Date. See examples (below).
 #' @param length.out  See ? seq.Date
 #' @param along.with  See ? seq.Date
 #' @param ... See ? seq.Date
@@ -291,7 +329,7 @@ initEnv(); on.exit({uninitEnv()})
 #' seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"))
 #' # Error in seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"))  :
 #' #  exactly two of 'to', 'by' and 'length.out' / 'along.with' must be specified
-#' # That was the expected output!
+#' # That is the expected output!
 #'
 #' seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), length.out = 2)
 #' # [1] "Jan 2000" "Jul 2000"
@@ -305,8 +343,21 @@ initEnv(); on.exit({uninitEnv()})
 #' seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), by = 1/12)
 #' # [1] "Jan 2000" "Feb 2000" "Mar 2000" "Apr 2000" "May 2000" "Jun 2000" "Jul 2000"
 #'
+#' seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), by = 2/12)
+#' # [1] "Jan 2000" "Mar 2000" "May 2000" "Jul 2000"
+#'
+#' seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), by = "2 yearmons")
+#' # [1] "Jan 2000" "Mar 2000" "May 2000" "Jul 2000"
+#'
+#' seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), by = "2 months")
+#' # [1] "Jan 2000" "Mar 2000" "May 2000" "Jul 2000"
+#'
 #' seq.yearmon(as.yearmon("2000-07"), to = as.yearmon("2000-01"), by = -1/12)
 #' # [1] "Jul 2000" "Jun 2000" "May 2000" "Apr 2000" "Mar 2000" "Feb 2000" "Jan 2000"
+#'
+#' seq.yearmon(as.yearmon("2000-07"), to = as.yearmon("2000-01"), by = "-1 yearmons")
+#' # [1] "Jul 2000" "Jun 2000" "May 2000" "Apr 2000" "Mar 2000" "Feb 2000" "Jan 2000"
+#'
 #' }
 #' @export
 seq.yearmon <- function(from, to, by, length.out = NULL, along.with = NULL, ...) {
@@ -314,8 +365,9 @@ tryCatchLog::tryCatchLog({
 initEnv(); on.exit({uninitEnv()})
 
   # R version 3.3.1 (2016-06-21) -- "Bug in Your Hair"
-  #
-  # require(zoo) # zoo_1.7-13
+  # zoo_1.7-13
+  # R version 3.5.3 (2019-03-11)
+  # zoo_1.8-4
 
   # exactly two of 'to', 'by' and 'length.out' / 'along.with' must be specified
   # seq.Date - missing
@@ -352,22 +404,37 @@ initEnv(); on.exit({uninitEnv()})
       res <- seq.int(from, to, length.out = length.out)
       return(structure(res, class = "yearmon"))
   }
+
+  # see seq.Date
   if (length(by) != 1L)
       stop("'by' must be of length 1")
-
-  # meant for inherited from "difftime" or was a "character" test and manipulation
-  # does not apply to this code
   valid <- 0L
-
-  if (!is.numeric(by))
-    stop("invalid mode for 'by'")
+  # # no implementation
+  # if (inherits(by, "difftime")) {
+  #     by <- switch(attr(by, "units"), secs = 1/86400, mins = 1/1440,
+  #     hours = 1/24, days = 1, weeks = 7) * unclass(by)
+  # }
+  # else
+  if (is.character(by)) {
+      by2 <- strsplit(by, " ", fixed = TRUE)[[1L]]
+      if (length(by2) > 2L || length(by2) < 1L)
+          stop("invalid 'by' string")
+      valid <- pmatch(by2[length(by2)], c("months", "yearmons"))
+      if (is.na(valid))
+          stop("invalid string for 'by'")
+      if (valid <= 2L) { # always
+          by <- c(1/12, 1/12)[valid]
+      if (length(by2) == 2L)
+          by <- by * as.integer(by2[1L])
+      }
+      else by <- if (length(by2) == 2L)
+          as.integer(by2[1L])
+      else 1
+  }
+  else if (!is.numeric(by))
+      stop("invalid mode for 'by'")
   if (is.na(by))
-    stop("'by' is NA")
-
-  # always TRUE because 'by' never inherited from "difftime" nor was a "character"
-  #
-  # never did the inherited from "difftime" or was a "character" test and manipulation
-  # . . .
+      stop("'by' is NA")
 
   if (valid <= 2L) {
       from <- unclass(zoo::as.yearmon(from))

@@ -12,7 +12,7 @@
 
 \item{to}{See ? seq.Date}
 
-\item{by}{See ? seq.Date}
+\item{by}{See ? seq.Date. See examples (below).}
 
 \item{length.out}{See ? seq.Date}
 
@@ -30,6 +30,10 @@ Based on the code of seq.Date.
 
 The situation of "no existing seq.yearmon" drove me nuts!
 Therefore I programmed one.
+
+NOTE: this implementations complements the gist by adding "by methods"
+See. the examples.
+
 }
 }
 \examples{
@@ -38,7 +42,7 @@ Therefore I programmed one.
 seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"))
 # Error in seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"))  :
 #  exactly two of 'to', 'by' and 'length.out' / 'along.with' must be specified
-# That was the expected output!
+# That is the expected output!
 
 seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), length.out = 2)
 # [1] "Jan 2000" "Jul 2000"
@@ -52,8 +56,21 @@ seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), length.out = 4)
 seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), by = 1/12)
 # [1] "Jan 2000" "Feb 2000" "Mar 2000" "Apr 2000" "May 2000" "Jun 2000" "Jul 2000"
 
+seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), by = 2/12)
+# [1] "Jan 2000" "Mar 2000" "May 2000" "Jul 2000"
+
+seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), by = "2 yearmons")
+# [1] "Jan 2000" "Mar 2000" "May 2000" "Jul 2000"
+
+seq.yearmon(as.yearmon("2000-01"), to = as.yearmon("2000-07"), by = "2 months")
+# [1] "Jan 2000" "Mar 2000" "May 2000" "Jul 2000"
+
 seq.yearmon(as.yearmon("2000-07"), to = as.yearmon("2000-01"), by = -1/12)
 # [1] "Jul 2000" "Jun 2000" "May 2000" "Apr 2000" "Mar 2000" "Feb 2000" "Jan 2000"
+
+seq.yearmon(as.yearmon("2000-07"), to = as.yearmon("2000-01"), by = "-1 yearmons")
+# [1] "Jul 2000" "Jun 2000" "May 2000" "Apr 2000" "Mar 2000" "Feb 2000" "Jan 2000"
+
 }
 }
 \references{
