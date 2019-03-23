@@ -493,6 +493,8 @@ initEnv(); on.exit({uninitEnv()})
 #' \dontrun{
 #' x <- xts(c(1,140), zoo::as.Date(c(0,139)))
 #' To.Monthly(x, OHLC = FALSE, indexAt = "firstof")
+#' To.Monthly(x, OHLC = FALSE, indexAt = "lastof")
+#' To.Monthly(x, OHLC = FALSE, indexAt = "yearmon")
 #'}
 #' @export
 To.Monthly <- function(x,indexAt='firstof',drop.time=TRUE,name, fillMissing = NULL, ...) {
@@ -501,16 +503,17 @@ initEnv(); on.exit({uninitEnv()})
 
   fillMissing <- if(is.null(fillMissing)) { TRUE }
 
-  if(indexAt == "yearmon") stop("To.Monthly does not suport class 'yearmon'")
-  # because not integrated-tested yet: S3 seq.yearmon
-  # MAYBE TODO [ ] put back "yearmon" after I re put-back seq.yearmon
+  # note: needed
+  #  S3 seq.yearmon
 
   monthly <- xts::to.monthly(x = x,indexAt=indexAt,drop.time=drop.time,name=name,...)
   if(fillMissing && (NROW(monthly) > 1)) {
-    if(indexAt %in% c("firstof", "lastof")) {
+    if(indexAt %in% c("firstof", "lastof", "yearmon")) {
 
-    From <- head(index(monthly),1); DescTools::Day(From) <- 1
-    To   <- tail(index(monthly),1); DescTools::Day(To)   <- 1
+    # yearmon case: otherwise, pass-through
+    # zoo::as.Date.yearmon(., frac = 0)
+    From <- zoo::as.Date(head(index(monthly),1), frac = 0) ; DescTools::Day(From) <- 1
+    To   <- zoo::as.Date(tail(index(monthly),1), frac = 0) ; DescTools::Day(To)   <- 1
                      # S3 dispatch
     intermediates <- seq(from = From, to = To, by = "months")
 
@@ -519,10 +522,11 @@ initEnv(); on.exit({uninitEnv()})
     if(indexAt == "lastof") {
        intermediates <- DescTools::LastDayOfMonth(intermediates)
     }
-    # FUTURE ...
-    # if(indexAt == "yearmon") {
-    #    intermediates <- zoo::as.yearmon(intermediates)
-    # }
+    # further ...
+    if(indexAt == "yearmon") {
+    intermediates <- zoo::as.yearmon(intermediates)
+    }
+
     newDates <- setDiff(c(intermediates, index(monthly)),index(monthly))
     monthly <- merge(monthly, xts(, newDates))
   }

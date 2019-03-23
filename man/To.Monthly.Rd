@@ -43,5 +43,7 @@ months between dates as the same in the call.
 \dontrun{
 x <- xts(c(1,140), zoo::as.Date(c(0,139)))
 To.Monthly(x, OHLC = FALSE, indexAt = "firstof")
+To.Monthly(x, OHLC = FALSE, indexAt = "lastof")
+To.Monthly(x, OHLC = FALSE, indexAt = "yearmon")
 }
 }
