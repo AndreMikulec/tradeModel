@@ -372,6 +372,11 @@ dygraphs::dygraph(MMFFTR(), main = "More Modernized method 3 Nominal Federal Fun
 \cite{Kevin L. Kliesen - Business Economist and Research Officer \url{https://research.stlouisfed.org/econ/kliesen/sel/}}
 
 \cite{Economic Synopses \url{https://research.stlouisfed.org/publications/economic-synopses/}}
+
+\cite{Taylor Rule Utility \url{https://www.frbatlanta.org/cqer/research/taylor-rule}}
+
+\cite{The source data used for the Taylor Rule Utility is available
+\url{https://www.frbatlanta.org/-/media/documents/datafiles/cqer/research/taylor-rule/taylor-rule-data.xlsx}}
 }
 \author{
 St. Louis Federal Board of Governors President James Bullard

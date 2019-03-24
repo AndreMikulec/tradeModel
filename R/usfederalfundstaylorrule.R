@@ -14,6 +14,11 @@
 #' \cite{Kevin L. Kliesen - Business Economist and Research Officer \url{https://research.stlouisfed.org/econ/kliesen/sel/}}
 #' @references
 #' \cite{Economic Synopses \url{https://research.stlouisfed.org/publications/economic-synopses/}}
+#' @references
+#' \cite{Taylor Rule Utility \url{https://www.frbatlanta.org/cqer/research/taylor-rule}}
+#' @references
+#' \cite{The source data used for the Taylor Rule Utility is available
+#' \url{https://www.frbatlanta.org/-/media/documents/datafiles/cqer/research/taylor-rule/taylor-rule-data.xlsx}}
 #'
 #' @description
 #' \preformatted{
@@ -636,6 +641,11 @@ initEnv();on.exit({uninitEnv()})
 #' \cite{Kevin L. Kliesen - Business Economist and Research Officer \url{https://research.stlouisfed.org/econ/kliesen/sel/}}
 #' @references
 #' \cite{Economic Synopses \url{https://research.stlouisfed.org/publications/economic-synopses/}}
+#' @references
+#' \cite{Taylor Rule Utility \url{https://www.frbatlanta.org/cqer/research/taylor-rule}}
+#' @references
+#' \cite{The source data used for the Taylor Rule Utility is available
+#' \url{https://www.frbatlanta.org/-/media/documents/datafiles/cqer/research/taylor-rule/taylor-rule-data.xlsx}}
 #'
 #' @description
 #' \preformatted{
