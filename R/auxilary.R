@@ -5138,13 +5138,21 @@ addSymbolMachineWts <- function(xTs = NULL, Predictee = NULL, Predictors = NULL,
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  xTs <- initXts(xTs)
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
+
   combineXts(
       xTs
-    , symbolMachineWts(xTs, Predictee = Predictee, Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN
-                                        , NumbReplicaCopiesMultiple = NumbReplicaCopiesMultiple
-                                        , ...)
-  )
+    , symbolMachineWts(xTs, Predictee = Predictee, Predictors = Predictors
+                          , IndicatorGeneratorFUN = IndicatorGeneratorFUN
+                          , NumbReplicaCopiesMultiple = NumbReplicaCopiesMultiple
+                          , ...)
+  ) -> xTs
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
+
 })}
 
 
@@ -5895,8 +5903,6 @@ initEnv();on.exit({uninitEnv()})
 
   logging::loginfo("Begin: doMachineWts")
 
-  browser()
-
   xTs <- initXts(xTs)
 
   # ordered R environment of Symbols
@@ -6034,7 +6040,6 @@ initEnv();on.exit({uninitEnv()})
   # lastest data, ModelTarget data can ( and in very  last data will ) be NA
   ValidationPredictionEnd   <- as.character(tail(index(xTs),1))
 
-  browser()
   ValidationData <- modelData(UpdatedModelData, data.window = c(ValidationPredictionBegin, ValidationPredictionEnd), exclude.training = TRUE)
   ValidationDataCompleteCases <- complete.cases(ValidationData[, builtUnrateModel@model.inputs])
 

@@ -12,8 +12,10 @@ Predicts Symbol eom returns using UNRATE and Machine learning
 }
 \examples{
 \dontrun{
-# Predicts the FRED WILL5000IND eom returns using UNRATE and the machine
-# UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc", Predictee = "WILL5000INDapcleadingrets")
-# UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc", Predictee = "GSPCapcleadingrets")
+
+# Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the machine
+
+UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc", Predictee = "WILL5000INDapcleadingrets")
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc", Predictee = "GSPCapcleadingrets")
 }
 }
