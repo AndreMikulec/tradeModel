@@ -77,6 +77,127 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
+
+#' internally detect and process inbound variable or string named like "mkdata"
+#'
+#' @description
+#' \preformatted{
+#' Assign to the calling environment the variables:
+#'
+#'   xTs:
+#'     the result of work: could be the same as inbound xTs
+#'                         could be massaged by initXts()
+#'   InBndxTs:
+#'     the inbound xTs symbols or name
+#'     user must pre-call gather from "InBndxTs <- as.character(substitute(xTs))"
+#'
+#'   isInBndxTsMktData:
+#'     boolean: whether or not the name or symbol "InBndxTs" is like "mktdata"
+#'
+#' # NOTE: if one wants to intialize use
+#' data <-initXts(NULL) # default index class Date
+#' # do not use
+#' data <- xts::xts()   # default index class POSIXct,POSIXt
+#' # "YYYY-MM-DD" time ranges input into quantmod::modelData
+#' #  will cause error "unambigous data" error
+#' #  uantmod::modelData by default looks for "POSIXct,POSIXt"
+#'
+#' }
+#'
+#' @param xTs object or NULL or bare symbol or string like "mktdata"
+#' @param InBndxTs This is the xTs name as a symbol or a string
+#' @return to the parent's parent env:
+#' \describe{
+#' \item{xTs}{(class xts object)}
+#' \item{InBndxTs(Boolean)}{the string or symbol like "mktdata"}
+#' \item{isInBndxTsMktData(Boolean)}{is the string or symbol like "mktdata":}
+#' }
+#' @importFrom stringr str_detect
+#' @export
+initMktData <- function(xTs = NULL, InBndxTs = NULL) {
+initEnv();on.exit({uninitEnv()})
+  tryCatchLog::tryCatchLog({
+
+  isInBndxTsMktData <- stringr::str_detect(InBndxTs, "mktdata")
+  if(!length(isInBndxTsMktData)) isInBndxTsMktData <- FALSE
+  res <- try(is.null(xTs), silent = T)
+  if(inherits(res, "try-error")) {
+    xTs <- NULL
+  }
+  if(isInBndxTsMktData && is.character(xTs) &&
+     is.vector(xTs) && (length(xTs) == 1)) {
+     xTs  <- initXts(NULL)
+  }
+  xTs  <- initXts(xTs)
+
+  assign("xTs", xTs, envir = parent.frame())
+  assign("InBndxTs", InBndxTs, envir = parent.frame())
+  assign("isInBndxTsMktData", isInBndxTsMktData, envir = parent.frame())
+  invisible()
+
+})}
+
+
+
+#' Return internally processed outbound variable or string named like "mkdata"
+#'
+#'
+#' @description
+#' \preformatted{
+#' Processes initMktData variables xTs, InBndxTs, and isInBndxTsMktData
+#' Returns a "mktdata" variable to the caller's calling environment.
+#' }
+#'
+#' @param xTs object or NULL or bare symbol or string like "mktdata"
+#' @param InBndxTs This is the xTs name as a symbol or a string
+#' @param isInBndxTsMktData Boolean default(FALSE). This is whether or not
+#' xTs is a symbol or name that is a string like "mktdata"
+#' @param xTsInvisible FALSE(default) if were to return the xTs then
+#' do so invisibly.  Usefully TRUE in the case of printing.
+#' @return xts object or assign a variable name InBndxTs with xts value of the xts object
+#' @examples
+#' \dontrun{
+#'
+#' fooY <- function(xTs = NULL) {
+#'
+#'   InBndxTs <- as.character(substitute(xTs))
+#'   initMktData(xTs, InBndxTs)
+#'
+#'   # some work
+#'   xTs <- xts(0, zoo::as.Date(0))
+#'
+#'   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
+#' }
+#' # fooY("mktdata")
+#' # str(mktdata)
+#' # An ‘xts’ object . . .
+#' #
+#'
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom rlang caller_frame
+releaseMktData <- function(xTs = NULL, InBndxTs = NULL, isInBndxTsMktData = NULL, xTsInvisible = NULL) {
+initEnv();on.exit({uninitEnv()})
+  tryCatchLog::tryCatchLog({
+
+  if(is.null(xTsInvisible)) xTsInvisible = FALSE
+
+  if(isInBndxTsMktData) {
+    assign(InBndxTs, xTs, envir = rlang::caller_frame(n = 2)$env)
+    return(invisible())
+  } else {
+    if(xTsInvisible != TRUE) {
+      return(xTs)
+    } else {
+      return(invisible(xTs))
+    }
+  }
+
+})}
+
+
+
 #' garantees return value value is a 'matrix of at least one dimension'or NULL
 #'
 #' @description
@@ -4097,11 +4218,16 @@ initEnv();on.exit({uninitEnv()})
 addUnRateEomData <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-  xTs  <- initXts(xTs)
+
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
 
   unRate <- unRateEomData()
+  xTs <- combineXts(xTs, unRate)
 
-  combineXts(xTs, unRate)
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
 
 })}
 
@@ -4522,11 +4648,15 @@ addCurrLeadCashAPCReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  xTs  <- initXts(xTs)
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
                          # CASHapcrets
   xTs <- combineXts(xTs, currentCashAPCReturns(xTs))
   xTs <- combineXts(xTs, leadingCashAPCReturns(xTs))
-  xTs
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
 
 })}
 
@@ -4829,13 +4959,17 @@ addCurrLeadSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  xTs  <- initXts(xTs)
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
+
   xTs  <- combineXts(xTs, leadingSymbolAPCReturns(Symbol = Symbol, src = src))
                                  # send to return.Portfolio and the calendar
                                  # SYMBOLapcrets
   xTs  <- combineXts(xTs, currentSymbolAPCReturns(Symbol = Symbol, src = src))
 
-  xTs
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
 
 })}
 
@@ -4933,8 +5067,14 @@ addSymbolEyeBallWts <- function(xTs = NULL, Symbol = NULL, Change = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  xTs <- initXts(xTs)
-  combineXts(xTs, symbolEyeBallWts(xTs, Symbol = Symbol, Change = Change))
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
+
+  xTs <- combineXts(xTs, symbolEyeBallWts(xTs, Symbol = Symbol, Change = Change))
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
 
 })}
 
@@ -5755,6 +5895,8 @@ initEnv();on.exit({uninitEnv()})
 
   logging::loginfo("Begin: doMachineWts")
 
+  browser()
+
   xTs <- initXts(xTs)
 
   # ordered R environment of Symbols
@@ -5892,6 +6034,7 @@ initEnv();on.exit({uninitEnv()})
   # lastest data, ModelTarget data can ( and in very  last data will ) be NA
   ValidationPredictionEnd   <- as.character(tail(index(xTs),1))
 
+  browser()
   ValidationData <- modelData(UpdatedModelData, data.window = c(ValidationPredictionBegin, ValidationPredictionEnd), exclude.training = TRUE)
   ValidationDataCompleteCases <- complete.cases(ValidationData[, builtUnrateModel@model.inputs])
 
@@ -6103,9 +6246,15 @@ initEnv();on.exit({uninitEnv()})
 appendCashAPCWts  <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-  xTs  <- initXts(xTs)
 
-  combineXts(xTs, cashAPCWts(xTs))
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
+
+  xTs <- combineXts(xTs, cashAPCWts(xTs))
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
 
 })}
 
@@ -6130,7 +6279,10 @@ initEnv();on.exit({uninitEnv()})
 printTail <- function(xTs = NULL, title = NULL, n = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-  xTs  <- initXts(xTs)
+
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
 
   message(stringr::str_c("tail of ", title))
   if(is.null(n)) n = 6
@@ -6138,7 +6290,8 @@ initEnv();on.exit({uninitEnv()})
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
   print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
 
-  invisible(xTs)
+  # invisible(xTs)
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))
 
 })}
 
@@ -6578,7 +6731,11 @@ initEnv();on.exit({uninitEnv()})
 portfolioMonthlyReturns <- function(xTs = NULL, initVal = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-  xTs  <- initXts(xTs)
+
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
+
   initVal <- initPorfVal(initVal)
 
   # calls "Return.portfolio.geometric"
@@ -6586,7 +6743,9 @@ initEnv();on.exit({uninitEnv()})
   # the first record holds the decision of what to do next
   # then the "what to do next" is read "first", then "next"
   # the action is done
-  portLogRet1 <- portfolioLogReturns(xTs = xTs, initVal = initVal)
+
+  # portLogRet1
+  xTs <- portfolioLogReturns(xTs = xTs, initVal = initVal)
 
   # "monthlyReturn(exp(cumsum(portLogRet1)) * initVal)" produces the
   # same answer as "ret" in return.Portfolio.geometric
@@ -6596,7 +6755,10 @@ initEnv();on.exit({uninitEnv()})
   #
   # monthlyReturn(exp(cumsum(portLogRet1)) * initVal)
   #
-  portLogRet1
+  # portLogRet1
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
 
 })}
 
@@ -6625,13 +6787,17 @@ initEnv();on.exit({uninitEnv()})
 printCalendar <- function(xTs = NULL, title = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
-  xTs  <- initXts(xTs)
+
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
 
   message(stringr::str_c("calendar of ", title))
   options(digits = 5L)
   print(PerformanceAnalytics::table.CalendarReturns(xTs, digits = 1, as.perc = TRUE, geometric = TRUE))
 
-  invisible(xTs)
+  # invisible(xTs)
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))
 
 })}
 

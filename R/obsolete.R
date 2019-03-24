@@ -551,13 +551,17 @@ addCurrLeadWilshire5000LogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  xTs  <- initXts(xTs)
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
+
   xTs  <- combineXts(xTs, leadingWilshire5000LogReturns())
                                  # send to return.Portfolio and the calendar
                                  # WILL5000INDlogrets
   xTs  <- combineXts(xTs, currentWilshire5000LogReturns())
 
-  xTs
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
 
 })}
 
@@ -925,6 +929,8 @@ initEnv();on.exit({uninitEnv()})
 addCurrLeadCashLogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
+
+  browser()
 
   xTs  <- initXts(xTs)
                                 # CASHlogrets

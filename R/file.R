@@ -32,4 +32,31 @@ initEnv();on.exit({uninitEnv()})
 })}
 # foo5(Symbol = "IBM")
 
+fooX <- function(xTs = NULL) {
+initEnv();on.exit({uninitEnv()})
+  tryCatchLog::tryCatchLog({
+
+  InBndxTs          <- as.character(substitute(xTs))
+  isInBndxTsMktData <- stringr::str_detect(InBndxTs, "mktdata")
+  if(!length(isInBndxTsMktData)) isInBndxTsMktData <- FALSE
+  if(!(is.character(xTs) && is.vector(xTs) && (length(xTs) == 1)))
+    xTs  <- initXts(xTs)
+
+  # some activity
+  xTs <- xts::xts(0, zoo::as.Date(0))
+
+  if(isInBndxTsMktData) {
+    assign(InBndxTs, xTs, envir = parent.frame())
+    return(invisible())
+  } else {
+    return(xTs)
+  }
+
+})}
+
+
+
+
+
+
 
