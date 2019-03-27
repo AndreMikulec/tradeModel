@@ -4,10 +4,19 @@
 \alias{addCurrLeadSymbolAPCReturns}
 \title{add leading and current Symbol APC returns (SYMBOLapcrets)}
 \usage{
-addCurrLeadSymbolAPCReturns(xTs = NULL, Symbol = NULL, src = NULL)
+addCurrLeadSymbolAPCReturns(xTs = NULL, Symbol = NULL, src = NULL,
+  IsTarget = NULL, IsATarget = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
+
+\item{Symbol}{getSymbols Symbol}
+
+\item{src}{getSymbols source}
+
+\item{IsTarget}{is the objective}
+
+\item{IsATarget}{is a member of many possible objectives}
 }
 \value{
 xts object with merged data into xTs

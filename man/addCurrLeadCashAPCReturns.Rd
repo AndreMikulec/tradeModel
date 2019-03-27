@@ -4,10 +4,17 @@
 \alias{addCurrLeadCashAPCReturns}
 \title{add current and leading cash APC returns (CASHapcrets)}
 \usage{
-addCurrLeadCashAPCReturns(xTs = NULL)
+addCurrLeadCashAPCReturns(xTs = NULL, IsTarget = NULL,
+  IsATarget = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
+
+\item{IsTarget}{is the objective}
+
+\item{IsATarget}{is a member of many possible objectives}
+
+\item{Symbol}{getSymbols Symbol}
 }
 \value{
 xts object with merged data into xTs

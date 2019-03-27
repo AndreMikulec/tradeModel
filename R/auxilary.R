@@ -4642,18 +4642,35 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #'
 #' @param xTs xts object
+#' @param Symbol getSymbols Symbol
+#' @param IsTarget is the objective
+#' @param IsATarget is a member of many possible objectives
 #' @return xts object with merged data into xTs
 #' @export
-addCurrLeadCashAPCReturns <- function(xTs = NULL) {
+addCurrLeadCashAPCReturns <- function(xTs = NULL, IsTarget = NULL, IsATarget = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   InBndxTs <- as.character(substitute(xTs))
   initMktData(xTs, InBndxTs)
+
   # xTs  <- initXts(xTs)
+  if(is.null(IsTarget))   IsTarget = FALSE
+  if(is.null(IsATarget)) IsATarget = FALSE
+  if(IsTarget)           IsATarget <- TRUE
+
+  OrigClmns <- colnames(xTs)
                          # CASHapcrets
-  xTs <- combineXts(xTs, currentCashAPCReturns(xTs))
   xTs <- combineXts(xTs, leadingCashAPCReturns(xTs))
+  NewClmns  <- setdiff(colnames(xTs), OrigClmns)
+  if(IsTarget) {
+    xtsAttributes(xTs)$rettarget <- NewClmns
+  }
+  if(IsATarget) {
+    xtsAttributes(xTs)$rettargets <- unique(c(NewClmns, xtsAttributes(xTs)$rettargets))
+  }
+
+  xTs <- combineXts(xTs, currentCashAPCReturns(xTs))
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
@@ -4952,10 +4969,15 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #'
 #' @param xTs xts object
+#' @param Symbol getSymbols Symbol
+#' @param src getSymbols source
+#' @param IsTarget is the objective
+#' @param IsATarget is a member of many possible objectives
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-addCurrLeadSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL) {
+addCurrLeadSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL
+                                      , IsTarget = NULL, IsATarget = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -4963,9 +4985,22 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
+  if(is.null(IsTarget))   IsTarget = FALSE
+  if(is.null(IsATarget)) IsATarget = FALSE
+  if(IsTarget)           IsATarget <- TRUE
+
+  OrigClmns <- colnames(xTs)
   xTs  <- combineXts(xTs, leadingSymbolAPCReturns(Symbol = Symbol, src = src))
                                  # send to return.Portfolio and the calendar
                                  # SYMBOLapcrets
+  NewClmns  <- setdiff(colnames(xTs), OrigClmns)
+  if(IsTarget) {
+    xtsAttributes(xTs)$rettarget <- NewClmns
+  }
+  if(IsATarget) {
+    xtsAttributes(xTs)$rettargets <- unique(c(NewClmns, xtsAttributes(xTs)$rettargets))
+  }
+
   xTs  <- combineXts(xTs, currentSymbolAPCReturns(Symbol = Symbol, src = src))
 
   # xTs
