@@ -9,6 +9,17 @@ addSymbolMachineWts(xTs = NULL, Predictee = NULL, Predictors = NULL,
 }
 \arguments{
 \item{xTs}{xts object}
+
+\item{Predictee}{objective. Legacy. Modern: should instead be passed by
+the following; xtsAttributes(mktdata)$rettarget.}
+
+\item{Predictors}{Required fields. Passed to the 'weight determining function'}
+
+\item{IndicatorGeneratorFUN}{Function that determines the wieghts.
+Passed to 'weight determining function'.}
+
+\item{NumbReplicaCopiesMultiple}{Per each timeslice era.
+Adjusts the number of copies of the focused area.}
 }
 \value{
 xts object with merged data into xTs

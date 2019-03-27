@@ -5165,6 +5165,13 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #'
 #' @param xTs xts object
+#' @param Predictee objective. Legacy. Modern: should instead be passed by
+#' the following; xtsAttributes(mktdata)$rettarget.
+#' @param Predictors Required fields. Passed to the 'weight determining function'
+#' @param IndicatorGeneratorFUN Function that determines the wieghts.
+#' Passed to 'weight determining function'.
+#' @param NumbReplicaCopiesMultiple  Per each timeslice era.
+#' Adjusts the number of copies of the focused area.
 #' @return xts object with merged data into xTs
 #' @export
 addSymbolMachineWts <- function(xTs = NULL, Predictee = NULL, Predictors = NULL, IndicatorGeneratorFUN = NULL
@@ -5176,6 +5183,10 @@ initEnv();on.exit({uninitEnv()})
   InBndxTs <- as.character(substitute(xTs))
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
+
+  if(is.null(Predictee) && !is.null(xtsAttributes(xTs)$rettarget)) {
+    Predictee <- xtsAttributes(xTs)$rettarget
+  }
 
   combineXts(
       xTs

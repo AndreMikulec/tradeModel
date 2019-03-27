@@ -47,8 +47,8 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
 #'
 #' # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the machine
 #'
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc", Predictee = "WILL5000INDapcleadingrets")
-#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc", Predictee = "GSPCapcleadingrets")
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Change = "apc")
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc")
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -64,7 +64,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL, Pr
   addUnRateEomData(mktdata)
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addSymbolMachineWts(mktdata, Predictee = Predictee, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+  addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
   # appendCashAPCWts %>% # (excess)
   appendCashAPCWts(mktdata)

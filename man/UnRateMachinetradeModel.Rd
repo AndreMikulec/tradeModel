@@ -15,7 +15,7 @@ Predicts Symbol eom returns using UNRATE and Machine learning
 
 # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the machine
 
-UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc", Predictee = "WILL5000INDapcleadingrets")
-UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc", Predictee = "GSPCapcleadingrets")
+UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Change = "apc")
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc")
 }
 }
