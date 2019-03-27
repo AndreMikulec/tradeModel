@@ -5862,7 +5862,6 @@ initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
   Dots <- list(...)
-  browser()
 
   if(is.null(Predictee) || (length(Predictee) > 1)) stop("prepAndDoMachineWtsData needs only ONE Predictee")
   if(is.null(Predictors)) stop("prepAndDoMachineWtsData needs some Predictors")
@@ -5898,10 +5897,17 @@ initEnv();on.exit({uninitEnv()})
 
   ModelTarget_wts <-  stringr::str_c(formula.tools::lhs.vars(ModelFormula), "_wts")
 
+  browser()
   # fitting
   Fitted <- doMachineWts(xTs, ModelFormula = ModelFormula, ...)
+
+  browser()
   # deciding
-  doOneChoice(Fitted, ModelTarget_wts = ModelTarget_wts, ExtremePct = Dots[["ExtremePct"]])
+  RetFitted <- doOneChoice(Fitted, ModelTarget_wts = ModelTarget_wts, ExtremePct = Dots[["ExtremePct"]])
+
+  browser()
+
+  return(RetFitted)
 
 })}
 
@@ -5942,6 +5948,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom rlist list.zip
 #' @importFrom caret trainControl
 #' @importFrom formula.tools lhs.vars
+#' @importFrom quantmod modelData
 doMachineWts <- function(xTs = NULL,  ModelFormula = NULL, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -5961,6 +5968,8 @@ initEnv();on.exit({uninitEnv()})
             , na.rm = FALSE, source.envir = Symbols) ->
               # remove the last record(NO)
   specifiedUnrateModel
+
+  browser()
 
   # I can only train, test, validate where I have 'model target' predictee values
   ModelTarget          <- formula.tools::lhs.vars((formula(specifiedUnrateModel)))
@@ -6087,7 +6096,16 @@ initEnv();on.exit({uninitEnv()})
   # lastest data, ModelTarget data can ( and in very  last data will ) be NA
   ValidationPredictionEnd   <- as.character(tail(index(xTs),1))
 
-  ValidationData <- modelData(UpdatedModelData, data.window = c(ValidationPredictionBegin, ValidationPredictionEnd), exclude.training = TRUE)
+  browser()
+  # POSIX would consider the string "YYYY-MM-DD" to be ambiguous.
+  # So make it not-ambiguous
+  if(stringr::str_detect(ValidationPredictionBegin,"^\\d{4}-\\d{2}-\\d{2}$")) {
+      ValidationPredictionBegin <- zoo::as.Date(ValidationPredictionBegin)
+  }
+  if(stringr::str_detect(ValidationPredictionEnd,"^\\d{4}-\\d{2}-\\d{2}$")) {
+      ValidationPredictionEnd <- zoo::as.Date(ValidationPredictionEnd)
+  }
+  ValidationData <- quantmod::modelData(UpdatedModelData, data.window = c(ValidationPredictionBegin, ValidationPredictionEnd), exclude.training = TRUE)
   ValidationDataCompleteCases <- complete.cases(ValidationData[, builtUnrateModel@model.inputs])
 
   if(any(!ValidationDataCompleteCases)){
@@ -6106,11 +6124,13 @@ initEnv();on.exit({uninitEnv()})
     ValidationData <- cbind(ValidationData[, builtUnrateModel@model.target], na.locf(ValidationData[, builtUnrateModel@model.inputs]))
   }
   Fitted  <- predictModel(UpdatedModelData@fitted.model, ValidationData)
-  Fitted  <- as.xts(Fitted, index(ValidationData))
+  RetFitted  <- as.xts(Fitted, index(ValidationData))
 
   logging::loginfo("End:   doMachineWts")
 
-  return(Fitted)
+  browser()
+
+  return(RetFitted)
 
   # # uses S3 ifelse.xts
   # # strategy/rule weights
@@ -6165,6 +6185,8 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(ExtremePct)) ExtremePct <- "25"
 
+  browser()
+
   # uses S3 ifelse.xts
   # strategy/rule weights
   FittedOneSidedThreashold <- quantile(coredata(Fitted))[stringr::str_c(ExtremePct, "%")]
@@ -6179,9 +6201,11 @@ initEnv();on.exit({uninitEnv()})
   Current <- lag(FittedSignal)
   colnames(Current) <- stringr::str_replace(colnames(FittedSignal), "leading", "current")
 
-  FittedSignalAndCurrent <- merge(FittedSignal, Current)
+  RetFittedSignalAndCurrent <- merge(FittedSignal, Current)
 
-  FittedSignalAndCurrent
+  browser()
+
+  return(RetFittedSignalAndCurrent)
 
 })}
 
@@ -6336,11 +6360,15 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
+  browser()
+
   message(stringr::str_c("tail of ", title))
   if(is.null(n)) n = 6
   options(digits = 5L)
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
   print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
+
+  browser()
 
   # invisible(xTs)
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))
@@ -6788,6 +6816,8 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
+  browser()
+
   initVal <- initPorfVal(initVal)
 
   # calls "Return.portfolio.geometric"
@@ -6808,6 +6838,8 @@ initEnv();on.exit({uninitEnv()})
   # monthlyReturn(exp(cumsum(portLogRet1)) * initVal)
   #
   # portLogRet1
+
+  browser()
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
@@ -6844,9 +6876,13 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
+  browser()
+
   message(stringr::str_c("calendar of ", title))
   options(digits = 5L)
   print(PerformanceAnalytics::table.CalendarReturns(xTs, digits = 1, as.perc = TRUE, geometric = TRUE))
+
+  browser()
 
   # invisible(xTs)
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))
