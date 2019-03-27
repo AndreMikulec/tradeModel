@@ -4707,7 +4707,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-eomData <- function(xTs = NULL) {
+toMonthlyData <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -4854,42 +4854,126 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
 
 
 
-#' get the latest end of month value in the month from the target
+#' get the end of month data
 #'
 #' @description
 #' \preformatted{
 #'
 #' }
 #'
-#' @param Symbol target symbol as a string
-#' @param src See ? symbolData
-#' @return xts object of the last observation with the
-#' month date rounded up to the last day of the month
-#' @examples
-#' \dontrun{
-#'
-#' # weekly
-#' ff <- head(symbolEomData("FF", src = "FRED"),1)
-#' # ff
-#' #              FF
-#' # 1954-07-31 0.63
-#'
-#' # weekly
-#' gspc <- head(symbolEomData("^GSPC"),1)
-#' # gspc
-#'
-#' }
+#' @param xTs xts object
+#' @param Symbol getSymbols Symbol
+#' @param src getSymbols source
+#' @param SymplifyGeneratorFUN Function that Formats the output.
+## #' @param ... further instructions to be passed in the form: Symbols_src_INSTRUCTION
+#' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-symbolEomData <- function(Symbol = NULL, src = NULL) {
+## #' @importFrom stringr str_detect str_c
+addEomData <- function(xTs = NULL, Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  if(is.null(Symbol)) stop("No symbolsEomData was requested")
-  symbolData(Symbol = Symbol, src = src) %>%
-     eomData
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
+
+  if(is.null(Symbol)) stop("addEomData needs a Symbol")
+  if(is.null(src))    stop("addEomData needs a src")
+
+  ## # filter out dots
+  ## Dots <- list(...)
+  ## Dots <- Dots[stringr::str_detect(Names(Dots), stringr::str_c("^", Symbol, "_", src, "_"))]
+
+  xTs1 <- eomData(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN)
+  xTs  <- combineXts(xTs, xTs1)
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
 
 })}
+
+
+
+#' get the end of month data
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param Symbol getSymbols Symbol
+#' @param src getSymbols source
+#' @param SymplifyGeneratorFUN Function that Formats the output.
+#' @return xts object
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+eomData <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  if(is.null(Symbol)) stop("eomData needs a Symbol")
+  if(is.null(src))    stop("eomData needs a src")
+
+  if(!is.null(SymplifyGeneratorFUN)) {
+    if(mode(SymplifyGeneratorFUN) == "function") {
+      SymplifyGeneratorFUN = match.fun(SymplifyGeneratorFUN)
+    } else {
+      # character function
+      SymplifyGeneratorFUN <- get(SymplifyGeneratorFUN)
+    }
+  }
+
+  # index adjust
+  xTs <- symbolData(Symbol = Symbol, src = src)
+  if(!is.null(SymplifyGeneratorFUN)){
+    xTs <- SymplifyGeneratorFUN(xTs)
+  }
+
+  return(xTs)
+
+})}
+
+
+
+## # NOT USED ANYWHERE
+##
+## #' get the latest end of month value in the month from the target
+## #'
+## #' @description
+## #' \preformatted{
+## #'
+## #' }
+## #'
+## #' @param Symbol target symbol as a string
+## #' @param src See ? symbolData
+## #' @return xts object of the last observation with the
+## #' month date rounded up to the last day of the month
+## #' @examples
+## #' \dontrun{
+## #'
+## #' # weekly
+## #' ff <- head(symbolEomData("FF", src = "FRED"),1)
+## #' # ff
+## #' #              FF
+## #' # 1954-07-31 0.63
+## #'
+## #' # weekly
+## #' gspc <- head(symbolEomData("^GSPC"),1)
+## #' # gspc
+## #'
+## #' }
+## #' @export
+## #' @importFrom tryCatchLog tryCatchLog
+## symbolEomData <- function(Symbol = NULL, src = NULL) {
+## tryCatchLog::tryCatchLog({
+## initEnv();on.exit({uninitEnv()})
+##
+##   if(is.null(Symbol)) stop("No symbolsEomData was requested")
+##   symbolData(Symbol = Symbol, src = src) %>%
+##      eomData
+##
+## })}
 
 
 
@@ -4914,8 +4998,10 @@ initEnv();on.exit({uninitEnv()})
   # TTR::ROC "roc <- diff(log(x), n, na.pad = na.pad)"
 
   if(is.null(Symbol)) stop("No Symbol Data was requested")
-  xTs <- symbolData(Symbol = Symbol, src = src) %>% eomData
-  APCReturns(xTs = xTs)
+  xTs <- symbolData(Symbol = Symbol, src = src)
+  xTs <- toMonthlyData(xTs)
+  xTs <- APCReturns(xTs)
+  return(xTs)
 
 })}
 
@@ -5897,15 +5983,11 @@ initEnv();on.exit({uninitEnv()})
 
   ModelTarget_wts <-  stringr::str_c(formula.tools::lhs.vars(ModelFormula), "_wts")
 
-  browser()
   # fitting
   Fitted <- doMachineWts(xTs, ModelFormula = ModelFormula, ...)
 
-  browser()
   # deciding
   RetFitted <- doOneChoice(Fitted, ModelTarget_wts = ModelTarget_wts, ExtremePct = Dots[["ExtremePct"]])
-
-  browser()
 
   return(RetFitted)
 
@@ -5968,8 +6050,6 @@ initEnv();on.exit({uninitEnv()})
             , na.rm = FALSE, source.envir = Symbols) ->
               # remove the last record(NO)
   specifiedUnrateModel
-
-  browser()
 
   # I can only train, test, validate where I have 'model target' predictee values
   ModelTarget          <- formula.tools::lhs.vars((formula(specifiedUnrateModel)))
@@ -6096,7 +6176,6 @@ initEnv();on.exit({uninitEnv()})
   # lastest data, ModelTarget data can ( and in very  last data will ) be NA
   ValidationPredictionEnd   <- as.character(tail(index(xTs),1))
 
-  browser()
   # POSIX would consider the string "YYYY-MM-DD" to be ambiguous.
   # So make it not-ambiguous
   if(stringr::str_detect(ValidationPredictionBegin,"^\\d{4}-\\d{2}-\\d{2}$")) {
@@ -6127,8 +6206,6 @@ initEnv();on.exit({uninitEnv()})
   RetFitted  <- as.xts(Fitted, index(ValidationData))
 
   logging::loginfo("End:   doMachineWts")
-
-  browser()
 
   return(RetFitted)
 
@@ -6185,8 +6262,6 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(ExtremePct)) ExtremePct <- "25"
 
-  browser()
-
   # uses S3 ifelse.xts
   # strategy/rule weights
   FittedOneSidedThreashold <- quantile(coredata(Fitted))[stringr::str_c(ExtremePct, "%")]
@@ -6202,8 +6277,6 @@ initEnv();on.exit({uninitEnv()})
   colnames(Current) <- stringr::str_replace(colnames(FittedSignal), "leading", "current")
 
   RetFittedSignalAndCurrent <- merge(FittedSignal, Current)
-
-  browser()
 
   return(RetFittedSignalAndCurrent)
 
@@ -6360,15 +6433,11 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
-  browser()
-
   message(stringr::str_c("tail of ", title))
   if(is.null(n)) n = 6
   options(digits = 5L)
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
   print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
-
-  browser()
 
   # invisible(xTs)
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))
@@ -6816,8 +6885,6 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
-  browser()
-
   initVal <- initPorfVal(initVal)
 
   # calls "Return.portfolio.geometric"
@@ -6827,7 +6894,10 @@ initEnv();on.exit({uninitEnv()})
   # the action is done
 
   # portLogRet1
-  xTs <- portfolioLogReturns(xTs = xTs, initVal = initVal)
+  # portfolio.returns
+  #
+  xTs1 <- portfolioLogReturns(xTs = xTs, initVal = initVal)
+  xTs  <- combineXts(xTs, xTs1)
 
   # "monthlyReturn(exp(cumsum(portLogRet1)) * initVal)" produces the
   # same answer as "ret" in return.Portfolio.geometric
@@ -6838,8 +6908,6 @@ initEnv();on.exit({uninitEnv()})
   # monthlyReturn(exp(cumsum(portLogRet1)) * initVal)
   #
   # portLogRet1
-
-  browser()
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
@@ -6863,12 +6931,14 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param xTs xts object
 #' @param title heading
+#' @param PortFolioRetCol "portfolio.returns"(default). Column of the 'portfolio returns.'
 #' @return xts object of arithmatic returns
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom PerformanceAnalytics table.CalendarReturns
 #' @importFrom stringr str_c
-printCalendar <- function(xTs = NULL, title = NULL) {
+#' @importFrom zoo na.trim
+printCalendar <- function(xTs = NULL, title = NULL, PortFolioRetCol = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -6876,13 +6946,19 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
-  browser()
+  if(is.null(PortFolioRetCol)) PortFolioRetCol <- "portfolio.returns"
 
   message(stringr::str_c("calendar of ", title))
   options(digits = 5L)
-  print(PerformanceAnalytics::table.CalendarReturns(xTs, digits = 1, as.perc = TRUE, geometric = TRUE))
-
-  browser()
+  # horizonal reduction
+  PrintingXts <- xTs[, PortFolioRetCol]
+  # verticle reduction: remove leading NAs
+  PrintingXts <- zoo::na.trim(sides = "left", PrintingXts)
+  #
+  CalendarReturns <- PerformanceAnalytics::table.CalendarReturns(PrintingXts, digits = 1, as.perc = TRUE, geometric = TRUE)
+  print(CalendarReturns)
+  # currently JUST for display.
+  # Currently,  I am not adding data to xTs.
 
   # invisible(xTs)
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))

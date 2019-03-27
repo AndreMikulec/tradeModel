@@ -19,7 +19,8 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   addCurrLeadCashAPCReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
-  addUnRateEomData(mktdata)
+  ## addUnRateEomData(mktdata)
+  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolEyeBallWts(mktdata, Symbol = Symbol, Change = Change)
@@ -35,6 +36,8 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
 
   # (5) evaluate performance
   printCalendar(mktdata, "UnRateEyeBall Performance Returns")
+
+  return(invisible())
 
 })}
 
@@ -61,7 +64,8 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL, Pr
   addCurrLeadCashAPCReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
-  addUnRateEomData(mktdata)
+  ## addUnRateEomData(mktdata)
+  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
@@ -77,6 +81,8 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL, Pr
 
   # (5) evaluate performance
   printCalendar(mktdata, "UnRateMachine Performance Returns")
+
+  return(invisible())
 
 })}
 

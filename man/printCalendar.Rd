@@ -4,12 +4,14 @@
 \alias{printCalendar}
 \title{print calendar of month by mont returns}
 \usage{
-printCalendar(xTs = NULL, title = NULL)
+printCalendar(xTs = NULL, title = NULL, PortFolioRetCol = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
 
 \item{title}{heading}
+
+\item{PortFolioRetCol}{"portfolio.returns"(default). Column of the 'portfolio returns.'}
 }
 \value{
 xts object of arithmatic returns
