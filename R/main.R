@@ -15,17 +15,13 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  # addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src) %>%
-  # addCurrLeadCashAPCReturns  %>%
   addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src)
   addCurrLeadCashAPCReturns(mktdata)
 
   # (2) indicator(s)
-  # addUnRateEomData  %>%   # unrate
   addUnRateEomData(mktdata)
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  # addSymbolEyeBallWts(Symbol = Symbol, Change = Change) %>%
   addSymbolEyeBallWts(mktdata, Symbol = Symbol, Change = Change)
 
   # appendCashAPCWts %>% # (excess)
@@ -35,11 +31,9 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   printTail(mktdata, "Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)
 
   # (4) apply in action
-  # portfolioMonthlyReturns %>%
   portfolioMonthlyReturns(mktdata)
 
   # (5) evaluate performance
-  # printCalendar("UnRateEyeBall Performance Returns")
   printCalendar(mktdata, "UnRateEyeBall Performance Returns")
 
 })}
@@ -63,17 +57,13 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL, Pr
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  # addCurrLeadSymbolAPCReturns(Symbol = Symbol, src = src) %>%
-  # addCurrLeadCashAPCReturns  %>%
   addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src)
   addCurrLeadCashAPCReturns(mktdata)
 
   # (2) indicator(s)
-  # addUnRateEomData  %>%   # unrate
   addUnRateEomData(mktdata)
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  # addSymbolMachineWts(Predictee = Predictee, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators") %>%  #
   addSymbolMachineWts(mktdata, Predictee = Predictee, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
   # appendCashAPCWts %>% # (excess)
@@ -83,11 +73,9 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL, Pr
   printTail(mktdata, "Exact Schedule of Leading of UnRateMachine Returns and Decisions")
 
   # (4) apply in action
-  # portfolioMonthlyReturns %>%
   portfolioMonthlyReturns(mktdata)
 
   # (5) evaluate performance
-  # printCalendar("UnRateMachine Performance Returns")
   printCalendar(mktdata, "UnRateMachine Performance Returns")
 
 })}

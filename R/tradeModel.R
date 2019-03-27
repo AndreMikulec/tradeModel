@@ -6,14 +6,6 @@
 #' @references
 #' \cite{AGGREGATE PORTFOLIO CONTRIBUTIONS THROUGH TIME \url{https://tradeblotter.wordpress.com/2014/09/25/aggregate-portfolio-contributions-through-time/}}
 #'
-#' functions
-#'
-#' @section Safe Data:
-#'
-#' initDate
-#' initXts
-#' initEnv
-#'
 #' @section Data Aquisition:
 #'
 #' fredData
@@ -21,13 +13,12 @@
 #'
 #' @section Target and Indicator Aquisition:
 #'
-#' Willshire5000*
-#' Cash*
-#' UnRate*
+#' Add*
+#' Append*
 #'
 #' @section Quanitative Mathematical:
 #'
-#' *LogReturns
+#' *Returns
 #'
 #' @section Date Manipulation:
 #'
@@ -43,9 +34,7 @@
 #'
 #' @section Field Identification:
 #'
-#' valueClmns
-#' wtsClmns
-#' indClms
+#' *Clmns
 #'
 #' @section Total Return Calculating:
 #'

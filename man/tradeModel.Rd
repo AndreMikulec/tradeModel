@@ -8,14 +8,6 @@
 \description{
 Currently, this is EXPERIMENTAL and NOT WORKING.
 }
-\section{Safe Data}{
-
-
-initDate
-initXts
-initEnv
-}
-
 \section{Data Aquisition}{
 
 
@@ -26,15 +18,14 @@ fredEomData
 \section{Target and Indicator Aquisition}{
 
 
-Willshire5000*
-Cash*
-UnRate*
+Add*
+Append*
 }
 
 \section{Quanitative Mathematical}{
 
 
-*LogReturns
+*Returns
 }
 
 \section{Date Manipulation}{
@@ -58,9 +49,7 @@ combineXts
 \section{Field Identification}{
 
 
-valueClmns
-wtsClmns
-indClms
+*Clmns
 }
 
 \section{Total Return Calculating}{
@@ -88,6 +77,4 @@ UnRateMachinetradeModel
 \cite{How to backtest a strategy in R \url{http://blog.fosstrading.com/2011/03/how-to-backtest-strategy-in-r.html}}
 
 \cite{AGGREGATE PORTFOLIO CONTRIBUTIONS THROUGH TIME \url{https://tradeblotter.wordpress.com/2014/09/25/aggregate-portfolio-contributions-through-time/}}
-
-functions
 }
