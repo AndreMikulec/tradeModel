@@ -5188,13 +5188,13 @@ initEnv();on.exit({uninitEnv()})
     Predictee <- xtsAttributes(xTs)$rettarget
   }
 
-  combineXts(
-      xTs
-    , symbolMachineWts(xTs, Predictee = Predictee, Predictors = Predictors
-                          , IndicatorGeneratorFUN = IndicatorGeneratorFUN
-                          , NumbReplicaCopiesMultiple = NumbReplicaCopiesMultiple
-                          , ...)
-  ) -> xTs
+  symbolMachineWts(xTs, Predictee = Predictee, Predictors = Predictors
+                 , IndicatorGeneratorFUN = IndicatorGeneratorFUN
+                 , NumbReplicaCopiesMultiple = NumbReplicaCopiesMultiple
+                 , ...) -> xTs1
+
+
+  xTs <- combineXts(xTs, xTs1)
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
@@ -5862,6 +5862,7 @@ initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
   Dots <- list(...)
+  browser()
 
   if(is.null(Predictee) || (length(Predictee) > 1)) stop("prepAndDoMachineWtsData needs only ONE Predictee")
   if(is.null(Predictors)) stop("prepAndDoMachineWtsData needs some Predictors")
