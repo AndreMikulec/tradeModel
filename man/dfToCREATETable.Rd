@@ -44,6 +44,7 @@ This is a friendly function with dfGetPKEYNames.
 #   "Symbols" text NOT NULL,
 #   updated timestamp with time zone,
 #   "index_R_class" text,
+#   "xtsAttributes" text,
 #   src text,
 #   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
 # )

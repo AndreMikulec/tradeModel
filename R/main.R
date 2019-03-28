@@ -22,6 +22,9 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   ## addUnRateEomData(mktdata)
   addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
 
+  # fancifyXts(FRED2) requires extra FRED data: FRED2
+  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
+
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolEyeBallWts(mktdata, Symbol = Symbol, Change = Change)
 
@@ -66,6 +69,9 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL, Pr
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
   addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
+
+  # fancifyXts(FRED2) requires extra FRED data: FRED2
+  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")

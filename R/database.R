@@ -93,6 +93,7 @@ dfGetPKEYNames <- function(df, keys) {
 #'#   "Symbols" text NOT NULL,
 #'#   updated timestamp with time zone,
 #'#   "index_R_class" text,
+#'#   "xtsAttributes" text,
 #'#   src text,
 #'#   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
 #'# )
@@ -137,7 +138,8 @@ initEnv();on.exit({uninitEnv()})
                               DBI::dbQuoteIdentifier(con, "Symbols"),          " TEXT ", ", ",
                               DBI::dbQuoteIdentifier(con, "updated"),          " TIMESTAMP WITH TIMEZONE ", ", ",
                               DBI::dbQuoteIdentifier(con, "index_R_class"),    " TEXT ", ", ",
-                              DBI::dbQuoteIdentifier(con, "src"),              " TEXT " ,
+                              DBI::dbQuoteIdentifier(con, "src"),              " TEXT ", ", ",
+                              DBI::dbQuoteIdentifier(con, "xtsAttrib"),        " TEXT ",
                             ");")
       DBI::dbExecute(con, ddl)
 
@@ -5377,7 +5379,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom DBI dbSendQuery fetch  dbGetQuery dbDisconnect dbQuoteIdentifier dbQuoteString
-#' @importFrom stringr str_c
+#' @importFrom stringr str_c str_split
 #' @importFrom rlang eval_bare parse_expr
 getSymbols.PostgreSQL <- function(Symbols = NULL, con = NULL, env, return.class = 'xts',
                                db.fields=c('o','h','l','c','v','a'),
@@ -5469,6 +5471,12 @@ initEnv();on.exit({uninitEnv()})
     query <- stringr::str_c("SELECT ", " * ", " FROM ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols")," WHERE ", DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, Symbols[[i]]), ";")
     SymbolAttributes <- DBI::dbGetQuery(con, query)[,-1,drop =FALSE]
 
+    xtsAttrib <- NULL
+    if("xtsAttrib" %in% colnames(SymbolAttributes)) {
+       # rlang parse_expr will through a "parsing" error
+       xtsAttrib <- eval(parse(text = stringr::str_split(SymbolAttributes[["xtsAttrib"]], pattern = "NNN")[[1]]))
+    }
+
     updated <- NULL
     if("updated" %in% colnames(SymbolAttributes)) updated <- SymbolAttributes[["updated"]]
 
@@ -5492,7 +5500,7 @@ initEnv();on.exit({uninitEnv()})
     fr <- xts(as.matrix(fr[,-1]),
               order.by=order.by,
               src=src,updated=updated)
-    # MAY NOT HAVE VOLUME/ADJUSTED
+    xtsAttributes(fr) <- xtsAttrib[!Names(xtsAttrib) %in% c("updated", "src")]
 
     if(OHLCData) {
       colnames(fr) <- paste(Symbols[[i]],field.names[-1], sep='.')
@@ -5980,6 +5988,7 @@ initEnv();on.exit({uninitEnv()})
 #'#   updated timestamp with time zone,
 #'#   "index_R_class" text,
 #'#   src text,
+#'#   "xtsAttrib" text,
 #'#   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
 #'# )
 #'# WITH (
@@ -6214,6 +6223,17 @@ initEnv();on.exit({uninitEnv()})
         DBI::dbExecute(con, stringr::str_c("VACUUM (VERBOSE, ANALYZE) ", dotSchemaQuoted, DBI::dbQuoteIdentifier(con, each.symbol), ";"))
       }
 
+    }
+
+    xtsAttribText <- NULL
+    if(inherits(xTs, "xts")) {
+      xtsAttribText <- stringr::str_c(capture.output(dput(xtsAttributes(xTs))), collapse = "NNN")
+      DBI::dbExecute(con, stringr::str_c("UPDATE ", DBI::dbQuoteIdentifier(con, schname), ".", DBI::dbQuoteIdentifier(con, "Symbols"),
+                            " SET ",
+                            DBI::dbQuoteIdentifier(con, "xtsAttrib"), " = ", DBI::dbQuoteString(con, xtsAttribText),
+                            " WHERE ",
+                            DBI::dbQuoteIdentifier(con, "Symbols"), " = ", DBI::dbQuoteString(con, each.symbol),
+                            ";"))
     }
 
     updated <- NULL

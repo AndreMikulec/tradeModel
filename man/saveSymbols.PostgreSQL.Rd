@@ -90,6 +90,7 @@ CREATE SCHEMA "Symbols"
 #   updated timestamp with time zone,
 #   "index_R_class" text,
 #   src text,
+#   "xtsAttrib" text,
 #   CONSTRAINT "Symbols_pkey" PRIMARY KEY ("Symbols")
 # )
 # WITH (
