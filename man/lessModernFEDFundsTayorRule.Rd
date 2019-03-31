@@ -12,7 +12,8 @@
 \alias{i_t_method1}
 \alias{i_t_method2}
 \alias{LMFFTR}
-\title{less modernized FRB federal funds interest rate Taylor Rule}
+\title{# NOTES, ADJUSTMENTS, FIXES TO BE INTEGRATED
+# READ ( AND UNDERSTAND ) !ALL! FIRST BEFORE STARTING INTEGRATION}
 \usage{
 n_t()
 
@@ -60,6 +61,111 @@ should set its policy [federal funds interest] rate in the following manner.
 }
 }
 \details{
+[ ] Also add link to FED Funds Rate
+FOMC will target the headline inflation rate
+--------------------------------------------
+
+As St. Louis Fed President James Bullard detailed in a
+
+2012 Regional Economist article,
+  https://www.stlouisfed.org/publications/regional-economist/april-2012/recent-actions-increase-the-feds-transparency
+
+“The FOMC will target the
+
+"headline inflation rate" as opposed to any other measure
+  (e.g., core inflation, which excludes food and energy prices)
+
+because it makes sense to focus on the prices that U.S. households actually have to pay,” he wrote.
+
+Using Price Indexes to Measure the Inflation Rate
+Wednesday, January 9, 2019
+By Kristie Engemann, Public Affairs Staff
+https://www.stlouisfed.org/open-vault/2019/january/price-indexes-measure-inflation
+ORIG FROM
+How do price indexes help economists track inflation?  http://ow.ly/RaRR50nR5EN
+https://twitter.com/stlouisfed/status/1109273612471685120
+
+[ ] fix format abiguity (IF input can take in "Date" classed objects)
+fix: input into the quantmod tradeModel function
+if(format like "YYYY-MM-DD" ) { # "^\d{4}-[0-1][0-9]]-\d{2}$"
+  d <- zoo::as.Date(d) ...
+}
+
+[ ] fix see "Kevin L. Kliesen" email
+#' y_t_less_y_ask: ... CHANGE NAME: see below
+#'
+#'     METHOD 1
+FROM
+#'     y_t_less_y_ask <- 100*(y_t - y_ask)/abs(y_ask)  # 100*(a-b)/b
+#'     colnames(y_t_less_y_ask) <- "y_t_less_y_ask"
+TO
+#' 1993_TaylorRule_outputgap (JUST AS WRITTEN)
+#'     y_t_less_y_ask <- y_t - y_ask
+#'     colnames(y_t_less_y_ask) <- "y_t_less_y_ask"
+
+outputgap ... TO ....ouputgap_Taylor1993
+y_t   ... TO ... y_t_Taylor1993
+y_ask ... TO ... y_ask_Taylor1993
+
+outputgap ... TO ... modern_outputgap (less and more)
+
+y_t    ... TO ... y_t_modern
+y_ask  ... TO ... y_ask_modern
+
+u_GAP_t # (Math is correct: just swap out: NROU ... TO ... NROUST
+[ ] CHANGE . . .
+UNRATE subtract off "CBO measure of the natural unemployment rate (NAIRU)"
+
+CHANGE FROM
+         Natural Rate of Unemployment (Long-Term) (NROU)
+         https://fred.stlouisfed.org/series/NROU
+           To (NOTE: CURRENLTY 2018-2019: THESE NUMBERS ARE THE SAME)
+         Natural Rate of Unemployment (Short-Term)
+         https://fred.stlouisfed.org/series/NROUST
+
+[ ]
+         CHANGE
+           u_GAP_t <- unrate - nrou
+         TO (SEE BELOW: Okun's law)
+           u_GAP_t <- 2 * (unrate - nroust)
+
+u_GAP_t
+               Resource gap measures: gapt
+               A commonly used rule of thumb called Okun's law posits that the
+                 unemployment rate gap—the negative of the difference between the
+                 unemployment rate and its natural rate—is typically
+                   half as large as the output gap.
+                   We implement Okun's law by allowing users to choose twice the unemployment gap as the resource gap.
+
+Overview of Data tab
+               Taylor Rule Utility
+               https://www.frbatlanta.org/cqer/research/taylor-rule?panel=2
+
+[ ] Add a comment / parameter
+       0.30
+       adjusted_5Y_BEI = TRUE
+       Bullard's preferred measure: the 5Y BEI less 30 basis points (the adjusted 5Y BEI)
+       https://research.stlouisfed.org/publications/economic-synopses/2019/01/15/is-the-fed-following-a-modernized-version-of-the-taylor-rule-part-2
+
+Because the TIPS data are based on consumer price index (CPI) inflation,
+       I subtract 30 basis points to make this expectations measure more closely
+       correspond to the FOMC’s preferred measure of inflation, which is PCE inflation.
+       . . .
+       Incorporating real-time inflation expectations
+       https://www.stlouisfed.org/~/media/files/pdfs/bullard/remarks/2018/bullard_memphis_economic_club_18_october_2018.pdf?la=en
+
+Summary of Economic Projections (SEP)
+       A modernized monetary policy rule
+       https://www.stlouisfed.org/~/media/files/pdfs/bullard/remarks/2018/bullard_memphis_economic_club_18_october_2018.pdf?la=en
+
+[ ]
+       u_GAP_t passed parameter to i_t (seem to just NEED one function(i_t?))
+       [ ] : True: i_t: just ONE function
+             e.g. rho does not exist in "less modern version": So can be set to zero(0)
+       i_t
+less modernized FRB federal funds interest rate Taylor Rule
+
+
 \preformatted{
 
 

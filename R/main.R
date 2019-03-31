@@ -53,12 +53,12 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
 #'
 #' # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the machine
 #'
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Change = "apc")
-#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Change = "apc")
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED")
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo")
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Change = NULL, Predictee = NULL) {
+UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictee = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
