@@ -4,7 +4,8 @@
 \alias{symbolAPCReturns}
 \title{symbols eom absolute proportional change from the previous month}
 \usage{
-symbolAPCReturns(Symbol = Symbol, src = src)
+symbolAPCReturns(Symbol = NULL, src = NULL,
+  SymplifyGeneratorFUN = NULL)
 }
 \description{
 symbols eom absolute proportional change from the previous month

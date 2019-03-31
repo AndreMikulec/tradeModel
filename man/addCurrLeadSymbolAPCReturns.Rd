@@ -5,7 +5,7 @@
 \title{add leading and current Symbol APC returns (SYMBOLapcrets)}
 \usage{
 addCurrLeadSymbolAPCReturns(xTs = NULL, Symbol = NULL, src = NULL,
-  IsTarget = NULL, IsATarget = NULL)
+  IsTarget = NULL, IsATarget = NULL, SymplifyGeneratorFUN = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -17,6 +17,8 @@ addCurrLeadSymbolAPCReturns(xTs = NULL, Symbol = NULL, src = NULL,
 \item{IsTarget}{is the objective}
 
 \item{IsATarget}{is a member of many possible objectives}
+
+\item{SymplifyGeneratorFUN}{Function that Formats the output}
 }
 \value{
 xts object with merged data into xTs

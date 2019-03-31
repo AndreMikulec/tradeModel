@@ -4982,7 +4982,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-symbolAPCReturns <- function(Symbol = Symbol, src = src) {
+symbolAPCReturns <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -4997,9 +4997,22 @@ initEnv();on.exit({uninitEnv()})
   # whereas
   # TTR::ROC "roc <- diff(log(x), n, na.pad = na.pad)"
 
+  if(!is.null(SymplifyGeneratorFUN)) {
+    if(mode(SymplifyGeneratorFUN) == "function") {
+      SymplifyGeneratorFUN = match.fun(SymplifyGeneratorFUN)
+    } else {
+      # character function
+      SymplifyGeneratorFUN <- get(SymplifyGeneratorFUN)
+    }
+  }
+
   if(is.null(Symbol)) stop("No Symbol Data was requested")
   xTs <- symbolData(Symbol = Symbol, src = src)
-  xTs <- toMonthlyData(xTs)
+  # xTs <- toMonthlyData(xTs)
+  xTs <- SymplifyGeneratorFUN(xTs)
+  if(NVAR(xTs) > 1) {
+    xTs <- xTs[,1] # e.g. # SymplifyGeneratorFUN == fancifyXts
+  }
   xTs <- APCReturns(xTs)
   return(xTs)
 
@@ -5017,11 +5030,11 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-currentSymbolAPCReturns <- function(Symbol = Symbol, src = src) {
+currentSymbolAPCReturns <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  symbolAPCReturns(Symbol = Symbol, src = src) %>% Current
+  symbolAPCReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN) %>% Current
 
 })}
 
@@ -5037,11 +5050,11 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-leadingSymbolAPCReturns <- function(Symbol = Symbol, src = src) {
+leadingSymbolAPCReturns <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  symbolAPCReturns(Symbol = Symbol, src = src) %>% Leading
+  symbolAPCReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN) %>% Leading
 
 })}
 
@@ -5059,11 +5072,12 @@ initEnv();on.exit({uninitEnv()})
 #' @param src getSymbols source
 #' @param IsTarget is the objective
 #' @param IsATarget is a member of many possible objectives
+#' @param SymplifyGeneratorFUN Function that Formats the output
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 addCurrLeadSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL
-                                      , IsTarget = NULL, IsATarget = NULL) {
+                                      , IsTarget = NULL, IsATarget = NULL, SymplifyGeneratorFUN = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5076,7 +5090,7 @@ initEnv();on.exit({uninitEnv()})
   if(IsTarget)           IsATarget <- TRUE
 
   OrigClmns <- colnames(xTs)
-  xTs  <- combineXts(xTs, leadingSymbolAPCReturns(Symbol = Symbol, src = src))
+  xTs  <- combineXts(xTs, leadingSymbolAPCReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN))
                                  # send to return.Portfolio and the calendar
                                  # SYMBOLapcrets
   NewClmns  <- setdiff(colnames(xTs), OrigClmns)
@@ -5087,7 +5101,7 @@ initEnv();on.exit({uninitEnv()})
     xtsAttributes(xTs)$rettargets <- unique(c(NewClmns, xtsAttributes(xTs)$rettargets))
   }
 
-  xTs  <- combineXts(xTs, currentSymbolAPCReturns(Symbol = Symbol, src = src))
+  xTs  <- combineXts(xTs, currentSymbolAPCReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN))
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
@@ -5108,7 +5122,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-addSymbolAPCReturns <- function(xTs = NULL, Symbol = Symbol, src = src) {
+addSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 

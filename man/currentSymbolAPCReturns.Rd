@@ -4,7 +4,8 @@
 \alias{currentSymbolAPCReturns}
 \title{get the Symbol current APC returns}
 \usage{
-currentSymbolAPCReturns(Symbol = Symbol, src = src)
+currentSymbolAPCReturns(Symbol = NULL, src = NULL,
+  SymplifyGeneratorFUN = NULL)
 }
 \value{
 xts object

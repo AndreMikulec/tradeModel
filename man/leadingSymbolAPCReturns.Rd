@@ -4,7 +4,8 @@
 \alias{leadingSymbolAPCReturns}
 \title{get the Symbol leading APC returns}
 \usage{
-leadingSymbolAPCReturns(Symbol = Symbol, src = src)
+leadingSymbolAPCReturns(Symbol = NULL, src = NULL,
+  SymplifyGeneratorFUN = NULL)
 }
 \value{
 xts object

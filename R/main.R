@@ -15,7 +15,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE)
+  addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData")
   addCurrLeadCashAPCReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
@@ -63,7 +63,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictee = NULL)
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE)
+  addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData")
   addCurrLeadCashAPCReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)

@@ -4,7 +4,7 @@
 \alias{addSymbolAPCReturns}
 \title{add Symbol APC returns (SYMBOLlogrets)}
 \usage{
-addSymbolAPCReturns(xTs = NULL, Symbol = Symbol, src = src)
+addSymbolAPCReturns(xTs = NULL, Symbol = NULL, src = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
