@@ -4,14 +4,12 @@
 \alias{addSymbolEyeBallWts}
 \title{add Symbol Change weights returns using eyeball (SYMBOLCHANGErets)}
 \usage{
-addSymbolEyeBallWts(xTs = NULL, Symbol = NULL, Change = NULL)
+addSymbolEyeBallWts(xTs = NULL, Symbol = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
 
 \item{Symbol}{See ? symbolEyeBallWts}
-
-\item{Change}{See ? symbolEyeBallWts}
 }
 \value{
 xts object with merged data into xTs

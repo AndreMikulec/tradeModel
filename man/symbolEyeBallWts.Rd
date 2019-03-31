@@ -4,15 +4,12 @@
 \alias{symbolEyeBallWts}
 \title{Symbol weights using eyeball}
 \usage{
-symbolEyeBallWts(xTs = NULL, Symbol = NULL, Change = NULL)
+symbolEyeBallWts(xTs = NULL, Symbol = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
 
 \item{Symbol}{name prefix given to the generated output columns}
-
-\item{Change}{functon name prefix given to the generated output columns.
-E.g. "apc". A value that is NULL is converted to zero length string("")}
 }
 \value{
 xts object with merged data into xTs

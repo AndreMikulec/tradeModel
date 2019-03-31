@@ -5,12 +5,12 @@
 #'
 #' # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the eyeball
 #'
-#' UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
-#' UnRateEyeBalltradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
+#' UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED")
+#' UnRateEyeBalltradeModel(Symbol = "^GSPC", src = "yahoo")
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
+UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -26,7 +26,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL, Change = NULL) {
   addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addSymbolEyeBallWts(mktdata, Symbol = Symbol, Change = Change)
+  addSymbolEyeBallWts(mktdata, Symbol = Symbol)
 
   # appendCashAPCWts %>% # (excess)
   appendCashAPCWts(mktdata)

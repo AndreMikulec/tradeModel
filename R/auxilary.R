@@ -5135,21 +5135,24 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param xTs xts object
 #' @param Symbol name prefix given to the generated output columns
-#' @param Change functon name prefix given to the generated output columns.
-#' E.g. "apc". A value that is NULL is converted to zero length string("")
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-#' @importFrom stringr str_c
-symbolEyeBallWts <- function(xTs = NULL, Symbol = NULL, Change = NULL) {
+#' @importFrom stringr str_c str_replace
+symbolEyeBallWts <- function(xTs = NULL, Symbol = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs <- initXts(xTs)
+  if(!is.null(xtsAttributes(xTs)[["rettarget"]])) {
+    LeadingRetColName <- xtsAttributes(xTs)[["rettarget"]]
+  } else {
+    stop("symbolEyeBallWts needs xTs to have the attribute: rettarget")
+  }
+
   if(!"UNRATE" %in% colnames(xTs)) stop("symbolEyeBallWts needs UNRATE")
 
   if(is.null(Symbol)) stop("symbolEyeBallWts needs a Symbol to give names to the output columns")
-  if(is.null(Change)) Change <- ""
 
   unrate <- xTs[,"UNRATE"]
   # can't do math on leading NAs
@@ -5159,10 +5162,14 @@ initEnv();on.exit({uninitEnv()})
                                    ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
                                    ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
   unrateleadingrets_wts[is.na(unrateleadingrets_wts)] <- 1 # 100% allocated
-  colnames(unrateleadingrets_wts)[1] <- stringr::str_c(Symbol, Change, "leadingrets_wts")
+
+  LeadingRetWtsColName <-  stringr::str_c(LeadingRetColName, "_wts")
+  colnames(unrateleadingrets_wts)[1] <- LeadingRetWtsColName
 
   unratecurrentrets_wts <- lag.xts(unrateleadingrets_wts)
-  colnames(unratecurrentrets_wts)[1] <- stringr::str_c(Symbol, Change, "currentrets_wts")
+
+  CurrentRetWtsColName <-  stringr::str_replace(LeadingRetWtsColName, "leading", "current")
+  colnames(unratecurrentrets_wts)[1] <- CurrentRetWtsColName
 
   unrate_wts <- merge(unrateleadingrets_wts, unratecurrentrets_wts)
   unrate_wts
@@ -5180,11 +5187,10 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @param xTs xts object
 #' @param Symbol See ? symbolEyeBallWts
-#' @param Change See ? symbolEyeBallWts
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-addSymbolEyeBallWts <- function(xTs = NULL, Symbol = NULL, Change = NULL) {
+addSymbolEyeBallWts <- function(xTs = NULL, Symbol = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5192,7 +5198,7 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
-  xTs <- combineXts(xTs, symbolEyeBallWts(xTs, Symbol = Symbol, Change = Change))
+  xTs <- combineXts(xTs, symbolEyeBallWts(xTs, Symbol = Symbol))
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))

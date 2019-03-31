@@ -4,7 +4,7 @@
 \alias{UnRateEyeBalltradeModel}
 \title{Predicts the Symbol eom returns using UNRATE and the eyeball}
 \usage{
-UnRateEyeBalltradeModel(Symbol = NULL, src = NULL, Change = NULL)
+UnRateEyeBalltradeModel(Symbol = NULL, src = NULL)
 }
 \description{
 Predicts the Symbol eom returns using UNRATE and the eyeball
@@ -14,7 +14,7 @@ Predicts the Symbol eom returns using UNRATE and the eyeball
 
 # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the eyeball
 
-UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED", Change = "apc")
-UnRateEyeBalltradeModel(Symbol = "^GSPC", src = "yahoo", Change = "apc")
+UnRateEyeBalltradeModel(Symbol = "WILL5000IND", src = "FRED")
+UnRateEyeBalltradeModel(Symbol = "^GSPC", src = "yahoo")
 }
 }
