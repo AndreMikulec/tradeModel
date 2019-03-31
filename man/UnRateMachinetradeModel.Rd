@@ -4,7 +4,7 @@
 \alias{UnRateMachinetradeModel}
 \title{Predicts Symbol eom returns using UNRATE and Machine learning}
 \usage{
-UnRateMachinetradeModel(Symbol = NULL, src = NULL, Predictee = NULL)
+UnRateMachinetradeModel(Symbol = NULL, src = NULL)
 }
 \description{
 Predicts Symbol eom returns using UNRATE and Machine learning

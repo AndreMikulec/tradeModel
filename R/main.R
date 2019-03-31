@@ -58,7 +58,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictee = NULL) {
+UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
