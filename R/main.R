@@ -28,8 +28,10 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolEyeBallWts(mktdata, Symbol = Symbol)
 
-  # appendCashAPCWts %>% # (excess)
+  # excess
   appendCashAPCWts(mktdata)
+  # keep PerformanceAnalytics::Return.portfolio happy
+  appendAllOtherWts(mktdata)
 
   # printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)  %>%
   printTail(mktdata, "Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)
@@ -62,22 +64,31 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
+  # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2") # fancifyXts requires extra FRED data from FRED2
+  # addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "fancifyXts")
+
   # (1) data 'value' (try to optimize)
   addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData")
+
+  # fancifyXts requires extra FRED data from FRED2
+  addCurrLeadSymbolAPCReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts")
   addCurrLeadCashAPCReturns(mktdata, IsATarget = TRUE)
+
 
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
   addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
 
-  # fancifyXts(FRED2) requires extra FRED data: FRED2
+  # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
   addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
-  # appendCashAPCWts %>% # (excess)
+  # excess
   appendCashAPCWts(mktdata)
+  # keep PerformanceAnalytics::Return.portfolio happy
+  appendAllOtherWts(mktdata)
 
   # printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
   printTail(mktdata, "Exact Schedule of Leading of UnRateMachine Returns and Decisions")

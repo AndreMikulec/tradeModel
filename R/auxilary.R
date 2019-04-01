@@ -6378,8 +6378,7 @@ ErrorHandler <- function(e, useENVI = getOption("useENVI")) {
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-#' @importFrom stringr str_c
-#' @importFrom stringr str_detect
+#' @importFrom stringr str_c str_detect
 cashAPCWts <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -6392,12 +6391,6 @@ initEnv();on.exit({uninitEnv()})
   Cashwts
 
 })}
-
-
-
-
-
-
 
 
 
@@ -6427,6 +6420,72 @@ initEnv();on.exit({uninitEnv()})
 
 })}
 
+
+
+#' all other wts to make PerformanceAnalytics::Return.portfolio happy
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c str_detect
+allOtherWts <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  # If the [machine] model did not add these.
+  # then add these HERE
+  # to make (future) PerformanceAnalytics::Return.portfolio happy.
+  AllPossibleOtherWtsCols <- setdiff(
+                                stringr::str_replace(xtsAttributes(xTs)[["rettargets"]], "leadingrets", "leadingrets_wts")
+                              , wtsLeadingRetsClms(xTs)
+                              )
+
+  # I want the index Class
+  xTsNew <- xTs[FALSE,FALSE]
+  for(col in AllPossibleOtherWtsCols){
+
+    xTs1 <- xts(rep(0,NROW(xTs)),index(xTs))
+    colnames(xTs1)[1] <- col
+    xTsNew <- DescTools::DoCall(cbind, c(list(), list(xTsNew), list(xTs1)))
+
+  }
+  return(xTsNew)
+
+})}
+
+
+
+#' add all other wts to make PerformanceAnalytics::Return.portfolio happy
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return xts object with merged data into xTs
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+appendAllOtherWts  <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+  # xTs  <- initXts(xTs)
+
+  xTs <- combineXts(xTs, allOtherWts(xTs))
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
+
+})}
 
 
 
@@ -6865,13 +6924,21 @@ initEnv();on.exit({uninitEnv()})
   xTs <- xTs[complete.cases(xTs)]
 
   valuexTs <- xTs[, valueCurrentRetsClms(xTs)]
-
   wtsxTs   <- xTs[, wtsLeadingRetsClms(xTs)]
 
   # Return.portfolio
   # currently: it makes no difference: I tried both ways
   # I choose NOT to use it
   # index(wtsxTs) <- index(wtsxTs) + 1
+
+  # avoid
+  # Warning in PerformanceAnalytics::Return.portfolio(R = valuexTs, weights = wtsxTs,  :
+  # number of assets in beginning_weights is less than number of columns in returns, so subsetting returns.
+  #
+  # temp solutions? ... better to handle this earlier in the CODE
+  if(NVAR(valuexTs) != NVAR(wtsxTs)) {
+    stop("PerformanceAnalytics::Return.portfolio SHOULD HAVE NVAR(valuexTs) == NVAR(wtsxTs)")
+  }
 
   PerformanceAnalytics::Return.portfolio(
       R       = valuexTs
