@@ -4559,23 +4559,26 @@ initEnv();on.exit({uninitEnv()})
 #' @description
 #' \preformatted{
 #'
+#' all SYMBOLS must lead and be UPPERCASE
+#'
 #' }
 #'
 #' @param xTs xts object (only takes the index)
 #' @return xts object with the same index as xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-cashAPCReturns <- function(xTs = NULL) {
+cashReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  cashAPCRets <- xts(rep(0,NROW(xTs)),index(xTs))
+  cashRets <- xts(rep(0,NROW(xTs)),index(xTs))
   # must keep HARD coded
-  colnames(cashAPCRets)[1] <- "CASHapcrets"
+  # so all SYMBOLS must lead and be UPPERCASE
+  colnames(cashRets)[1] <- stringr::str_replace(xtsAttributes(xTs)[["rettarget"]], "^[A-Z]*", "CASH")
 
-  cashAPCRets
+  cashRets
 
 })}
 
@@ -4593,13 +4596,13 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object (only takes the index)
 #' @return leading xts object
 #' @export
-leadingCashAPCReturns <- function(xTs = NULL) {
+leadingCashReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  cashAPCReturns(xTs) %>%
+  cashReturns(xTs) %>%
     Leading -> xTs
   xTs
 
@@ -4620,13 +4623,13 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object (only takes the index)
 #' @return leading xts object
 #' @export
-currentCashAPCReturns <- function(xTs = NULL) {
+currentCashReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  cashAPCReturns(xTs) %>%
+  cashReturns(xTs) %>%
     Current -> xTs
   xTs
 
@@ -4647,7 +4650,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param IsATarget is a member of many possible objectives
 #' @return xts object with merged data into xTs
 #' @export
-addCurrLeadCashAPCReturns <- function(xTs = NULL, IsTarget = NULL, IsATarget = NULL) {
+addCurrLeadCashReturns <- function(xTs = NULL, IsTarget = NULL, IsATarget = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -4661,7 +4664,7 @@ initEnv();on.exit({uninitEnv()})
 
   OrigClmns <- colnames(xTs)
                          # CASHapcrets
-  xTs <- combineXts(xTs, leadingCashAPCReturns(xTs))
+  xTs <- combineXts(xTs, leadingCashReturns(xTs))
   NewClmns  <- setdiff(colnames(xTs), OrigClmns)
   if(IsTarget) {
     xtsAttributes(xTs)$rettarget <- NewClmns
@@ -4670,7 +4673,7 @@ initEnv();on.exit({uninitEnv()})
     xtsAttributes(xTs)$rettargets <- unique(c(NewClmns, xtsAttributes(xTs)$rettargets))
   }
 
-  xTs <- combineXts(xTs, currentCashAPCReturns(xTs))
+  xTs <- combineXts(xTs, currentCashReturns(xTs))
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))

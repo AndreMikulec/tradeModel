@@ -16,7 +16,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 
   # (1) data 'value' (try to optimize)
   addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData")
-  addCurrLeadCashAPCReturns(mktdata, IsATarget = TRUE)
+  addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
@@ -72,7 +72,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
 
   # fancifyXts requires extra FRED data from FRED2
   addCurrLeadSymbolAPCReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts")
-  addCurrLeadCashAPCReturns(mktdata, IsATarget = TRUE)
+  addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
