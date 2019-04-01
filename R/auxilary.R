@@ -6512,9 +6512,10 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
-  message(stringr::str_c("tail of ", title))
+  message(stringr::str_c("      tail of ", title))
   if(is.null(n)) n = 6
   options(digits = 5L)
+  message(stringr::str_c("      *** Should choose to invest OFTEN in One(1): ", xtsAttributes(xTs)[["rettarget"]], " ***      "))
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
   print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
 

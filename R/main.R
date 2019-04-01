@@ -74,7 +74,6 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   addCurrLeadSymbolAPCReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts")
   addCurrLeadCashAPCReturns(mktdata, IsATarget = TRUE)
 
-
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
   addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
