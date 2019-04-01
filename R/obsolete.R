@@ -941,56 +941,57 @@ initEnv();on.exit({uninitEnv()})
 })}
 
 
-#' cash weights
-#'
-#' @description
-#' \preformatted{
-#'
-#' Currently, this number is just only all of the other weight
-#' columns (*_wts) subtracted from one(1)
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-#' @importFrom stringr str_c
-#' @importFrom stringr str_detect
-cashWts <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-   xTs <- initXts(xTs)
+##
+## #' cash weights
+## #'
+## #' @description
+## #' \preformatted{
+## #'
+## #' Currently, this number is just only all of the other weight
+## #' columns (*_wts) subtracted from one(1)
+## #'
+## #' }
+## #'
+## #' @param xTs xts object
+## #' @return xts object with merged data into xTs
+## #' @export
+## #' @importFrom tryCatchLog tryCatchLog
+## #' @importFrom stringr str_c
+## #' @importFrom stringr str_detect
+## cashWts <- function(xTs = NULL) {
+## tryCatchLog::tryCatchLog({
+## initEnv();on.exit({uninitEnv()})
+##    xTs <- initXts(xTs)
+##
+##   # excess left over
+##   Cashwts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[ ,wtsLeadingRetsClms(xTs)], na.rm = TRUE)
+##   colnames(Cashwts)[1] <- "CASHlogleadingrets_wts"
+##
+##   Cashwts
+##
+## })}
 
-  # excess left over
-  Cashwts <- xts(rep(1,NROW(xTs)),index(xTs)) - rowSums(xTs[ ,wtsLeadingRetsClms(xTs)], na.rm = TRUE)
-  colnames(Cashwts)[1] <- "CASHlogleadingrets_wts"
-
-  Cashwts
-
-})}
 
 
-
-#' add cash weights of log returns (CASHlogrets)
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-appendCashWts  <- function(xTs = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
-  xTs  <- initXts(xTs)
-
-  combineXts(xTs, cashWts(xTs))
-
-})}
+## #' add cash weights of log returns (CASHlogrets)
+## #'
+## #' @description
+## #' \preformatted{
+## #'
+## #' }
+## #'
+## #' @param xTs xts object
+## #' @return xts object with merged data into xTs
+## #' @export
+## #' @importFrom tryCatchLog tryCatchLog
+## appendCashWts  <- function(xTs = NULL) {
+## tryCatchLog::tryCatchLog({
+## initEnv();on.exit({uninitEnv()})
+##   xTs  <- initXts(xTs)
+##
+##   combineXts(xTs, cashWts(xTs))
+##
+## })}
 
 
 

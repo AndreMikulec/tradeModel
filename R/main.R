@@ -29,7 +29,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   addSymbolEyeBallWts(mktdata, Symbol = Symbol)
 
   # excess
-  appendCashAPCWts(mktdata)
+  appendCashWts(mktdata)
   # keep PerformanceAnalytics::Return.portfolio happy
   appendAllOtherWts(mktdata)
 
@@ -85,7 +85,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
   # excess
-  appendCashAPCWts(mktdata)
+  appendCashWts(mktdata)
   # keep PerformanceAnalytics::Return.portfolio happy
   appendAllOtherWts(mktdata)
 
