@@ -4985,7 +4985,8 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-symbolAPCReturns <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
+symbolReturns <- function(Symbol = NULL, src = NULL
+                        , SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN =  NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5009,6 +5010,15 @@ initEnv();on.exit({uninitEnv()})
     }
   }
 
+  if(!is.null(ReturnsGeneratorFUN)) {
+    if(mode(ReturnsGeneratorFUN) == "function") {
+      ReturnsGeneratorFUN = match.fun(ReturnsGeneratorFUN)
+    } else {
+      # character function
+      ReturnsGeneratorFUN <- get(ReturnsGeneratorFUN)
+    }
+  }
+
   if(is.null(Symbol)) stop("No Symbol Data was requested")
   xTs <- symbolData(Symbol = Symbol, src = src)
   # xTs <- toMonthlyData(xTs)
@@ -5016,7 +5026,7 @@ initEnv();on.exit({uninitEnv()})
   if(NVAR(xTs) > 1) {
     xTs <- xTs[,1] # e.g. # SymplifyGeneratorFUN == fancifyXts
   }
-  xTs <- APCReturns(xTs)
+  xTs <- ReturnsGeneratorFUN(xTs)
   return(xTs)
 
 })}
@@ -5033,11 +5043,12 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-currentSymbolAPCReturns <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
+currentSymbolReturns <- function(Symbol = NULL, src = NULL
+                               , SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN =  NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  symbolAPCReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN) %>% Current
+  symbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN) %>% Current
 
 })}
 
@@ -5053,11 +5064,12 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-leadingSymbolAPCReturns <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
+leadingSymbolReturns <- function(Symbol = NULL, src = NULL
+                               , SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN =  NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  symbolAPCReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN) %>% Leading
+  symbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN) %>% Leading
 
 })}
 
@@ -5079,8 +5091,9 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-addCurrLeadSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL
-                                      , IsTarget = NULL, IsATarget = NULL, SymplifyGeneratorFUN = NULL) {
+addCurrLeadSymbolReturns <- function(xTs = NULL, Symbol = NULL, src = NULL
+                                      , IsTarget = NULL, IsATarget = NULL
+                                      , SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5093,7 +5106,7 @@ initEnv();on.exit({uninitEnv()})
   if(IsTarget)           IsATarget <- TRUE
 
   OrigClmns <- colnames(xTs)
-  xTs  <- combineXts(xTs, leadingSymbolAPCReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN))
+  xTs  <- combineXts(xTs, leadingSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN))
                                  # send to return.Portfolio and the calendar
                                  # SYMBOLapcrets
   NewClmns  <- setdiff(colnames(xTs), OrigClmns)
@@ -5104,7 +5117,7 @@ initEnv();on.exit({uninitEnv()})
     xtsAttributes(xTs)$rettargets <- unique(c(NewClmns, xtsAttributes(xTs)$rettargets))
   }
 
-  xTs  <- combineXts(xTs, currentSymbolAPCReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN))
+  xTs  <- combineXts(xTs, currentSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN))
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))

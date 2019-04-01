@@ -15,7 +15,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData")
+  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "APCReturns")
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
@@ -65,13 +65,13 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   initEnv();on.exit({uninitEnv()})
 
   # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2") # fancifyXts requires extra FRED data from FRED2
-  # addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "fancifyXts")
+  # addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "fancifyXts", ReturnsGeneratorFUN = "APCReturns")
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolAPCReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData")
+  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "APCReturns")
 
   # fancifyXts requires extra FRED data from FRED2
-  addCurrLeadSymbolAPCReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts")
+  addCurrLeadSymbolReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts", ReturnsGeneratorFUN = "APCReturns")
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
