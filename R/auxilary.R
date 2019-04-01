@@ -1338,42 +1338,89 @@ initEnv();on.exit({uninitEnv()})
 #' @description
 #' \preformatted{
 #'
+#' Must return SYMBOL*xxxrets,
+#' such that the zone of xxx * starts with a non-uppercase character.
+#' "xxx" is currently expected to "not be UPPERCASE characters"?
+#' Later, the xts return result is expected to be passed to "Current" and "Leading"
+#' where "rets" is replaced by "currentrets" and "leadingrets"
+#'
 #' xTs values less that zero will generate a numeric error
 #'
 #' }
 #'
 #' @param xTs xts object of absolute values
+#' @param ... dots if a 'returns generator' looks for the list
+#' named "ReturnsGeneratorFUNArgs".
 #' @return xts object of absolute proportional change returns
 #' @examples
 #' \dontrun{
+#'
 #' require(xts)
 #' xTs  <- xts(10:12,zoo::as.Date(0:2))
-#' apcr <- APCReturns(xTs)
+#' apcr <- Returns(xTs, ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 1)))
 #' apcr
-#' #                         apcrets
-#' # 1970-01-01 0.000000000000000000
-#' # 1970-01-02 0.095310179804324768
-#' # 1970-01-03 0.087011376989629685
+#'             V1apc.1rets
+#' 1970-01-01 0.000000
+#' 1970-01-02 0.100000
+#' 1970-01-03 0.090909
 #'
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_c str_detect
-APCReturns <- function(xTs = NULL)  {
+Returns <- function(xTs = NULL, ...)  {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
+  Dots <- list(...)
 
+  if(!is.null(Dots[["ReturnsGeneratorFUNArgs"]])) {
+    ReturnsGeneratorFUNArgs <- Dots[Names(Dots) %in% "ReturnsGeneratorFUNArgs"][["ReturnsGeneratorFUNArgs"]]
+  }
+
+  is.na.zero <- FALSE
+  if(!is.null(ReturnsGeneratorFUNArgs[["is.na.zero"]])) {
+    is.na.zero <- ReturnsGeneratorFUNArgs[["is.na.zero"]]
+  }
+
+  if(!is.null(ReturnsGeneratorFUNArgs[["Fun"]])) {
+    if(!is.null(ReturnsGeneratorFUNArgs[["Fun"]][["Fun"]])) {
+
+      Fun <- ReturnsGeneratorFUNArgs[["Fun"]][["Fun"]]
+
+      if(mode(Fun) == "function") {
+        Fun = match.fun(Fun)
+      } else {
+        # character function
+        Fun <- get(Fun)
+      }
+
+    } else {
+      stop("Returns did not find in dots ...: Fun.  So, do not know what to do.")
+    }
+  } else {
+    stop("Returns did not find in dots ...: Fun.  So, do not know what to do.")
+  }
+
+  DotsFun <- ReturnsGeneratorFUNArgs[["Fun"]][!Names(ReturnsGeneratorFUNArgs[["Fun"]]) %in% "Fun"]
+
+  # Colnames <- colnames(xTs)
   # absolute proportional change
   # just ONE column
-  Colnames <- colnames(xTs)
-  #             ORIG.apc.1
-  xTsAPCRets <- APC(xTs)             # which(is.na(xTsAPCRets)) # "close to logrithmic
-  xTsAPCRets[is.na(xTsAPCRets)] <- 0 # usually just the 1st observation
-  colnames(xTsAPCRets)[1] <- stringr::str_c(Colnames, "apcrets")
 
-  xTsAPCRets
+  #            ORIG.apc.1
+  #            GSPC.apc.1
+  #            GDP.apc.3
+  # xTsRets <- APC(xTs)
+  xTsRets <- DescTools::DoCall(Fun, c(list(), list(xTs), DotsFun))
+  if(is.na.zero) {               # which(is.na(xTsRets)) # "close to logrithmic
+    xTsRets[is.na(xTsRets)] <- 0 # usually just the 1st observation
+  }
+  # colnames(xTsRets)[1] <- stringr::str_c(Colnames, "apcrets")
+  colnames(xTsRets)[1] <- stringr::str_c(colnames(xTsRets)[1], "rets")
+
+  xTsRets
 
 })}
 
@@ -4986,7 +5033,8 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 symbolReturns <- function(Symbol = NULL, src = NULL
-                        , SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN =  NULL) {
+                        , SymplifyGeneratorFUN = NULL
+                        , ReturnsGeneratorFUN =  NULL, ReturnsGeneratorFUNArgs =  NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5026,7 +5074,7 @@ initEnv();on.exit({uninitEnv()})
   if(NVAR(xTs) > 1) {
     xTs <- xTs[,1] # e.g. # SymplifyGeneratorFUN == fancifyXts
   }
-  xTs <- ReturnsGeneratorFUN(xTs)
+  xTs <- ReturnsGeneratorFUN(xTs, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs)
   return(xTs)
 
 })}
@@ -5044,11 +5092,12 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 currentSymbolReturns <- function(Symbol = NULL, src = NULL
-                               , SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN =  NULL) {
+                               , SymplifyGeneratorFUN = NULL
+                               , ReturnsGeneratorFUN =  NULL, ReturnsGeneratorFUNArgs =  NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  symbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN) %>% Current
+  symbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs) %>% Current
 
 })}
 
@@ -5065,11 +5114,12 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 leadingSymbolReturns <- function(Symbol = NULL, src = NULL
-                               , SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN =  NULL) {
+                               , SymplifyGeneratorFUN = NULL
+                               , ReturnsGeneratorFUN =  NULL, ReturnsGeneratorFUNArgs =  NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  symbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN) %>% Leading
+  symbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs) %>% Leading
 
 })}
 
@@ -5093,7 +5143,8 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom tryCatchLog tryCatchLog
 addCurrLeadSymbolReturns <- function(xTs = NULL, Symbol = NULL, src = NULL
                                       , IsTarget = NULL, IsATarget = NULL
-                                      , SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN = NULL) {
+                                      , SymplifyGeneratorFUN = NULL
+                                      , ReturnsGeneratorFUN = NULL, ReturnsGeneratorFUNArgs =  NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5106,7 +5157,7 @@ initEnv();on.exit({uninitEnv()})
   if(IsTarget)           IsATarget <- TRUE
 
   OrigClmns <- colnames(xTs)
-  xTs  <- combineXts(xTs, leadingSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN))
+  xTs  <- combineXts(xTs, leadingSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs))
                                  # send to return.Portfolio and the calendar
                                  # SYMBOLapcrets
   NewClmns  <- setdiff(colnames(xTs), OrigClmns)
@@ -5117,7 +5168,7 @@ initEnv();on.exit({uninitEnv()})
     xtsAttributes(xTs)$rettargets <- unique(c(NewClmns, xtsAttributes(xTs)$rettargets))
   }
 
-  xTs  <- combineXts(xTs, currentSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN))
+  xTs  <- combineXts(xTs, currentSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs))
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
@@ -5127,27 +5178,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' add Symbol APC returns (SYMBOLlogrets)
-#'
-#' @description
-#' \preformatted{
-#'
-#' }
-#'
-#' @param xTs xts object
-#' @return xts object with merged data into xTs
-#' @export
-#' @importFrom tryCatchLog tryCatchLog
-addSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL) {
-tryCatchLog::tryCatchLog({
-initEnv();on.exit({uninitEnv()})
 
-  xTs  <- initXts(xTs)
-
-                  # SYMBOLlogrets
-  combineXts(xTs, symbolAPCReturns(Symbol = Symbol, src = src))
-
-})}
 
 
 

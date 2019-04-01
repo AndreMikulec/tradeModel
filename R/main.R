@@ -15,7 +15,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "APCReturns")
+  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list())
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
@@ -65,13 +65,29 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   initEnv();on.exit({uninitEnv()})
 
   # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2") # fancifyXts requires extra FRED data from FRED2
-  # addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "fancifyXts", ReturnsGeneratorFUN = "APCReturns")
+  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol,  src = src,     IsTarget = TRUE,  SymplifyGeneratorFUN = "fancifyXts",    ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 3)))
+  addCurrLeadSymbolReturns(mktdata, Symbol = "^GSPC", src = "yahoo", IsATarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 1)))
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "APCReturns")
+  # addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list())
+
+  # LEFT_OFF # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2")
+  browser() # LEFT_OFF: (1) choose the BEST 75% PREDICTED GDP.apc.3leadingrets
+  #         #           (2) assign GSPC.apc.1leadingrets to one(1) BEST 75% (ABOVE in the line above)
+  #                     (3) print INSTEAD ... calendar USING GSPC.apc.1currentrets (INSTEAD OF GDP)
+  #                     (4) print SECOND calendar USING GDP.apc.3currentrets (Discard Margins ... custom calendar)
+  #
+  # Browse[2]> tail(mktdata)
+  #            GDP.apc.3leadingrets GDP.apc.3currentrets GSPC.apc.1leadingrets GSPC.apc.1currentrets
+  # Browse[2]> str(mktdata)
+  #              ..$ : chr [1:4] "GDP.apc.3leadingrets" "GDP.apc.3currentrets" "GSPC.apc.1leadingrets" "GSPC.apc.1currentrets"
+  #   xts Attributes:
+  # List of 2
+  #  $ rettarget : chr "GDP.apc.3leadingrets"
+  #  $ rettargets: chr [1:2] "GSPC.apc.1leadingrets" "GDP.apc.3leadingrets"
 
   # fancifyXts requires extra FRED data from FRED2
-  addCurrLeadSymbolReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts", ReturnsGeneratorFUN = "APCReturns")
+  addCurrLeadSymbolReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list())
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)

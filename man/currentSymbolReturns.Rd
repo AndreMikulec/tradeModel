@@ -5,7 +5,8 @@
 \title{get the Symbol current APC returns}
 \usage{
 currentSymbolReturns(Symbol = NULL, src = NULL,
-  SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN = NULL)
+  SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN = NULL,
+  ReturnsGeneratorFUNArgs = NULL)
 }
 \value{
 xts object

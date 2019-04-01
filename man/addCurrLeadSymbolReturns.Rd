@@ -6,7 +6,7 @@
 \usage{
 addCurrLeadSymbolReturns(xTs = NULL, Symbol = NULL, src = NULL,
   IsTarget = NULL, IsATarget = NULL, SymplifyGeneratorFUN = NULL,
-  ReturnsGeneratorFUN = NULL)
+  ReturnsGeneratorFUN = NULL, ReturnsGeneratorFUNArgs = NULL)
 }
 \arguments{
 \item{xTs}{xts object}

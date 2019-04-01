@@ -1172,3 +1172,25 @@ initEnv();on.exit({uninitEnv()})
 ## # UnRateMachinetradeModelGSPC()
 
 
+## #' add Symbol APC returns (SYMBOLlogrets)
+## #'
+## #' @description
+## #' \preformatted{
+## #'
+## #' }
+## #'
+## #' @param xTs xts object
+## #' @return xts object with merged data into xTs
+## #' @export
+## #' @importFrom tryCatchLog tryCatchLog
+## addSymbolAPCReturns <- function(xTs = NULL, Symbol = NULL, src = NULL) {
+## tryCatchLog::tryCatchLog({
+## initEnv();on.exit({uninitEnv()})
+##
+##   xTs  <- initXts(xTs)
+##
+##                   # SYMBOLlogrets
+##   combineXts(xTs, symbolAPCReturns(Symbol = Symbol, src = src))
+##
+## })}
+
