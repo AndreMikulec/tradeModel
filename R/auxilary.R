@@ -6914,7 +6914,7 @@ initEnv();on.exit({uninitEnv()})
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom PerformanceAnalytics Return.portfolio
-portfolioLogReturns <- function(xTs = NULL, initVal = NULL) {
+portfolioAPCReturns <- function(xTs = NULL, initVal = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -6984,7 +6984,7 @@ initEnv();on.exit({uninitEnv()})
   # portLogRet1
   # portfolio.returns
   #
-  xTs1 <- portfolioLogReturns(xTs = xTs, initVal = initVal)
+  xTs1 <- portfolioAPCReturns(xTs = xTs, initVal = initVal)
   xTs  <- combineXts(xTs, xTs1)
 
   # "monthlyReturn(exp(cumsum(portLogRet1)) * initVal)" produces the
