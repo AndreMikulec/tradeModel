@@ -15,7 +15,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   initEnv();on.exit({uninitEnv()})
 
   # (1) data 'value' (try to optimize)
-  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list())
+  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 1)))
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
