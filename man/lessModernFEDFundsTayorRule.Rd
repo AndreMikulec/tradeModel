@@ -12,7 +12,8 @@
 \alias{i_t_method1}
 \alias{i_t_method2}
 \alias{LMFFTR}
-\title{# NOTES, ADJUSTMENTS, FIXES TO BE INTEGRATED
+\title{TODO [ ] replace merge.xts WITH combineXts
+# NOTES, ADJUSTMENTS, FIXES TO BE INTEGRATED
 # READ ( AND UNDERSTAND ) !ALL! FIRST BEFORE STARTING INTEGRATION}
 \usage{
 n_t()

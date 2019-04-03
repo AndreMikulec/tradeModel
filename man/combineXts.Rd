@@ -21,6 +21,14 @@ Handles the edge case: if BOTH have no coredata
 (then merge.xts produces ONE no-data no-index xts object)
 then instead, preserve the indexes.
 
+Also, right side xts (xTs1) attributes are preserved that
+contain the attribute name in the xtsAttribute
+"carry.xts.attributes" character vector.
+This means that right side xts (xTs1) attributes "add-to" and
+overwrite left side xts (xTs) attributes.
+
+FUTURE: make combineXts a replacement for xts:::merge.xts.
+
 }
 }
 \examples{

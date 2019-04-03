@@ -1367,7 +1367,7 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-#' @importFrom stringr str_c str_detect
+#' @importFrom stringr str_c str_locate str_sub
 Returns <- function(xTs = NULL, ...)  {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -1406,6 +1406,7 @@ initEnv();on.exit({uninitEnv()})
   DotsFun <- ReturnsGeneratorFUNArgs[["Fun"]][!Names(ReturnsGeneratorFUNArgs[["Fun"]]) %in% "Fun"]
 
   # Colnames <- colnames(xTs)
+  Colname <- colnames(xTs)[1]
   # absolute proportional change
   # just ONE column
 
@@ -1414,10 +1415,18 @@ initEnv();on.exit({uninitEnv()})
   #            GDP.apc.3
   # xTsRets <- APC(xTs)
   xTsRets <- DescTools::DoCall(Fun, c(list(), list(xTs), DotsFun))
+  xTsRetsColname <- colnames(xTsRets)[1]
   if(is.na.zero) {               # which(is.na(xTsRets)) # "close to logrithmic
     xTsRets[is.na(xTsRets)] <- 0 # usually just the 1st observation
   }
   # colnames(xTsRets)[1] <- stringr::str_c(Colnames, "apcrets")
+
+  NumbLoc <- stringr::str_locate(xTsRetsColname, Colname)
+  change  <- stringr::str_sub(xTsRetsColname, stringr::invert_match(NumbLoc))[2]
+
+  xtsAttributes(xTsRets)[["change"]] <- change
+  xtsAttributes(xTsRets)[["carry.xts.attributes"]] <- unique(c(xtsAttributes(xTsRets)[["carry.xts.attributes"]], "change"))
+  #
   colnames(xTsRets)[1] <- stringr::str_c(colnames(xTsRets)[1], "rets")
 
   xTsRets
@@ -4560,6 +4569,14 @@ initEnv();on.exit({uninitEnv()})
 #' (then merge.xts produces ONE no-data no-index xts object)
 #' then instead, preserve the indexes.
 #'
+#' Also, right side xts (xTs1) attributes are preserved that
+#' contain the attribute name in the xtsAttribute
+#' "carry.xts.attributes" character vector.
+#' This means that right side xts (xTs1) attributes "add-to" and
+#' overwrite left side xts (xTs) attributes.
+#'
+#' FUTURE: make combineXts a replacement for xts:::merge.xts.
+#'
 #' }
 #'
 #' @param xTs xts object
@@ -4587,13 +4604,36 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs); xTs1 <- initXts(xTs1)
+
+  xTsxtsAttr  <- xtsAttributes(xTs)
+  xTs1xtsAttr <- xtsAttributes(xTs1)
+
   # edge case: if BOTH have no coredata (then merge.xts produces
   # ONE no-data no-index xts object) then instead, preserve the indexes
   if(is.null(Coredata(xTs)) && is.null(Coredata(xTs1))) {
-    return(xts(, sort(unique(c(index(xTs),index(xTs1))))))
+    xTs <- xts(, sort(unique(c(index(xTs),index(xTs1)))))
   } else {
-    return(merge(xTs,xTs1))
+    xTs <- merge(xTs,xTs1)
   }
+
+  # NOTE: these does NOT remove xts attributes
+  # TO DO THAT, I would need my own function: `xtsAttributes[[<-.xts` to do that.
+
+  if("carry.xts.attributes" %in% Names(xTsxtsAttr)) {
+    for(carry.xts.attribute in xTsxtsAttr[["carry.xts.attributes"]]){
+      xtsAttributes(xTs)[[carry.xts.attribute]] <- xTsxtsAttr[[carry.xts.attribute]]
+    }
+  }
+
+  if("carry.xts.attributes" %in% Names(xTs1xtsAttr)) {
+    for(carry.xts.attribute in xTs1xtsAttr[["carry.xts.attributes"]]){
+      xtsAttributes(xTs)[[carry.xts.attribute]] <- xTs1xtsAttr[[carry.xts.attribute]]
+      # add
+      xtsAttributes(xTs)[["carry.xts.attributes"]] <- unique(c(xtsAttributes(xTs)[["carry.xts.attributes"]], carry.xts.attribute))
+    }
+  }
+
+  xTs
 
 })}
 
@@ -4614,6 +4654,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with the same index as xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_replace_all str_c str_replace
 cashReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -4623,7 +4664,10 @@ initEnv();on.exit({uninitEnv()})
   cashRets <- xts(rep(0,NROW(xTs)),index(xTs))
   # must keep HARD coded
   # so all SYMBOLS must lead and be UPPERCASE
-  colnames(cashRets)[1] <- stringr::str_replace(xtsAttributes(xTs)[["rettarget"]], "^[A-Z]*", "CASH")
+
+  RegExpr <- stringr::str_replace_all(xtsAttributes(xTs)[["change"]], "[.]", "[.]")
+  RegExpr <- stringr::str_c(".+(?=", RegExpr,")")
+  colnames(cashRets)[1] <- stringr::str_replace(xtsAttributes(xTs)[["rettarget"]], RegExpr, "CASH")
 
   cashRets
 
@@ -4714,10 +4758,10 @@ initEnv();on.exit({uninitEnv()})
   xTs <- combineXts(xTs, leadingCashReturns(xTs))
   NewClmns  <- setdiff(colnames(xTs), OrigClmns)
   if(IsTarget) {
-    xtsAttributes(xTs)$rettarget <- NewClmns
+    xtsAttributes(xTs)[["rettarget"]] <- NewClmns
   }
   if(IsATarget) {
-    xtsAttributes(xTs)$rettargets <- unique(c(NewClmns, xtsAttributes(xTs)$rettargets))
+    xtsAttributes(xTs)[["rettargets"]] <- unique(c(NewClmns, xtsAttributes(xTs)[["rettargets"]]))
   }
 
   xTs <- combineXts(xTs, currentCashReturns(xTs))
@@ -5162,10 +5206,10 @@ initEnv();on.exit({uninitEnv()})
                                  # SYMBOLapcrets
   NewClmns  <- setdiff(colnames(xTs), OrigClmns)
   if(IsTarget) {
-    xtsAttributes(xTs)$rettarget <- NewClmns
+    xtsAttributes(xTs)[["rettarget"]] <- NewClmns
   }
   if(IsATarget) {
-    xtsAttributes(xTs)$rettargets <- unique(c(NewClmns, xtsAttributes(xTs)$rettargets))
+    xtsAttributes(xTs)[["rettargets"]] <- unique(c(NewClmns, xtsAttributes(xTs)[["rettargets"]]))
   }
 
   xTs  <- combineXts(xTs, currentSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs))
@@ -5337,8 +5381,8 @@ initEnv();on.exit({uninitEnv()})
   initMktData(xTs, InBndxTs)
   # xTs  <- initXts(xTs)
 
-  if(is.null(Predictee) && !is.null(xtsAttributes(xTs)$rettarget)) {
-    Predictee <- xtsAttributes(xTs)$rettarget
+  if(is.null(Predictee) && !is.null(xtsAttributes(xTs)[["rettarget"]])) {
+    Predictee <- xtsAttributes(xTs)[["rettarget"]]
   }
 
   symbolMachineWts(xTs, Predictee = Predictee, Predictors = Predictors
