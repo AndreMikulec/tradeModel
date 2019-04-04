@@ -4,12 +4,15 @@
 \alias{combineXts}
 \title{join two xts objects}
 \usage{
-combineXts(xTs = NULL, xTs1 = NULL)
+combineXts(xTs = NULL, xTs1 = NULL, carryAppend = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
 
 \item{xTs1}{xts object to merge into xTs}
+
+\item{carryAppend}{FALSE(Default) Instead of overwriting left side xts attributes,
+append to the vector value to xtsAttribute vector}
 }
 \value{
 xts object
@@ -26,6 +29,8 @@ contain the attribute name in the xtsAttribute
 "carry.xts.attributes" character vector.
 This means that right side xts (xTs1) attributes "add-to" and
 overwrite left side xts (xTs) attributes.
+
+BADLY NEED AND EXAMPLE.
 
 FUTURE: make combineXts a replacement for xts:::merge.xts.
 

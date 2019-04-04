@@ -4575,12 +4575,16 @@ initEnv();on.exit({uninitEnv()})
 #' This means that right side xts (xTs1) attributes "add-to" and
 #' overwrite left side xts (xTs) attributes.
 #'
+#' BADLY NEED AND EXAMPLE.
+#'
 #' FUTURE: make combineXts a replacement for xts:::merge.xts.
 #'
 #' }
 #'
 #' @param xTs xts object
 #' @param xTs1 xts object to merge into xTs
+#' @param carryAppend FALSE(Default) Instead of overwriting left side xts attributes,
+#' append to the vector value to xtsAttribute vector
 #' @return xts object
 #' @examples
 #' \dontrun{
@@ -4599,11 +4603,13 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-combineXts <- function(xTs = NULL,xTs1 = NULL) {
+combineXts <- function(xTs = NULL,xTs1 = NULL, carryAppend = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs); xTs1 <- initXts(xTs1)
+
+  if(is.null(carryAppend)) carryAppend <- FALSE
 
   xTsxtsAttr  <- xtsAttributes(xTs)
   xTs1xtsAttr <- xtsAttributes(xTs1)
@@ -4621,13 +4627,22 @@ initEnv();on.exit({uninitEnv()})
 
   if("carry.xts.attributes" %in% Names(xTsxtsAttr)) {
     for(carry.xts.attribute in xTsxtsAttr[["carry.xts.attributes"]]){
-      xtsAttributes(xTs)[[carry.xts.attribute]] <- xTsxtsAttr[[carry.xts.attribute]]
+      if(carryAppend) {
+        xtsAttributes(xTs)[[carry.xts.attribute]] <- unique(c(xtsAttributes(xTs)[[carry.xts.attribute]], xTsxtsAttr[[carry.xts.attribute]]))
+      } else {
+        xtsAttributes(xTs)[[carry.xts.attribute]] <- xTsxtsAttr[[carry.xts.attribute]]
+      }
     }
   }
 
   if("carry.xts.attributes" %in% Names(xTs1xtsAttr)) {
     for(carry.xts.attribute in xTs1xtsAttr[["carry.xts.attributes"]]){
-      xtsAttributes(xTs)[[carry.xts.attribute]] <- xTs1xtsAttr[[carry.xts.attribute]]
+      if(carryAppend) {
+        xtsAttributes(xTs)[[carry.xts.attribute]] <- unique(c(xtsAttributes(xTs)[[carry.xts.attribute]], xTs1xtsAttr[[carry.xts.attribute]]))
+      } else {
+        xtsAttributes(xTs)[[carry.xts.attribute]] <- xTs1xtsAttr[[carry.xts.attribute]]
+      }
+
       # add
       xtsAttributes(xTs)[["carry.xts.attributes"]] <- unique(c(xtsAttributes(xTs)[["carry.xts.attributes"]], carry.xts.attribute))
     }
@@ -4666,6 +4681,8 @@ initEnv();on.exit({uninitEnv()})
   # so all SYMBOLS must lead and be UPPERCASE
 
   RegExpr <- stringr::str_replace_all(xtsAttributes(xTs)[["change"]], "[.]", "[.]")
+  # multiple targets (multiple change values)
+  RegExpr <- stringr::str_c(RegExpr, collapse = "|")
   RegExpr <- stringr::str_c(".+(?=", RegExpr,")")
   colnames(cashRets)[1] <- stringr::str_replace(xtsAttributes(xTs)[["rettarget"]], RegExpr, "CASH")
 
@@ -5201,7 +5218,7 @@ initEnv();on.exit({uninitEnv()})
   if(IsTarget)           IsATarget <- TRUE
 
   OrigClmns <- colnames(xTs)
-  xTs  <- combineXts(xTs, leadingSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs))
+  xTs  <- combineXts(xTs, leadingSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs), carryAppend = TRUE)
                                  # send to return.Portfolio and the calendar
                                  # SYMBOLapcrets
   NewClmns  <- setdiff(colnames(xTs), OrigClmns)
@@ -5212,7 +5229,7 @@ initEnv();on.exit({uninitEnv()})
     xtsAttributes(xTs)[["rettargets"]] <- unique(c(NewClmns, xtsAttributes(xTs)[["rettargets"]]))
   }
 
-  xTs  <- combineXts(xTs, currentSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs))
+  xTs  <- combineXts(xTs, currentSymbolReturns(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN, ReturnsGeneratorFUN =  ReturnsGeneratorFUN, ReturnsGeneratorFUNArgs = ReturnsGeneratorFUNArgs), carryAppend = TRUE)
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
