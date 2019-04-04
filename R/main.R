@@ -71,26 +71,12 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # (1) data 'value' (try to optimize)
   # addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list())
 
-  # LEFT_OFF # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2")
-  # LEFT_OFF:           (1) choose the BEST 75% PREDICTED GDP.apc.3leadingrets
-  #         #           (2) assign GSPC.apc.1leadingrets to one(1) BEST 75% (ABOVE in the line above)
-  #                     (3) print INSTEAD ... calendar USING GSPC.apc.1currentrets (INSTEAD OF GDP)
-  #                     (4) print SECOND calendar USING GDP.apc.3currentrets (Discard Margins ... custom calendar)
-  #
-  # Browse[2]> tail(mktdata)
-  #            GDP.apc.3leadingrets GDP.apc.3currentrets GSPC.apc.1leadingrets GSPC.apc.1currentrets
-  # Browse[2]> str(mktdata)
-  #              ..$ : chr [1:4] "GDP.apc.3leadingrets" "GDP.apc.3currentrets" "GSPC.apc.1leadingrets" "GSPC.apc.1currentrets"
-  #   xts Attributes:
-  # List of 2
-  #  $ rettarget : chr "GDP.apc.3leadingrets"
-  #  $ rettargets: chr [1:2] "GSPC.apc.1leadingrets" "GDP.apc.3leadingrets"
+
+
 
   # fancifyXts requires extra FRED data from FRED2
   ### addCurrLeadSymbolReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list())
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
-
-  browser()
 
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
@@ -99,8 +85,20 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
   addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
 
+  browser()  # need xts attributes separating what I AM PREDICTING(target) v.s. (investment)(investments)
+  # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
+
+  # LEFT_OFF # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2")
+  # LEFT_OFF:           (1) choose the BEST 75% PREDICTED GDP.apc.3leadingrets
+  #         #           (2) assign GSPC.apc.1leadingrets_wts <- 1: BEST 75% (ABOVE in the line above)
+  #                     (3) print INSTEAD ... calendar USING GSPC.apc.1currentrets (INSTEAD OF GDP) (investment)
+  #                     (4) print SECOND calendar USING GDP.apc.3currentrets (Discard Margins ... custom calendar)
+  #
+
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+
+  browser()
 
   # excess
   appendCashWts(mktdata)
