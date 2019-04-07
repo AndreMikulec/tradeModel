@@ -21,6 +21,10 @@ Value column names end in "currentrets" without "_wts".
 }
 \examples{
 \dontrun{
+
+# clms <- c("b_currentrets","b","a_currentrets","a", "c", "b_currentrets_wts", a_currentrets_wts")
+# stopifnot(valueCurrentRetsClms(clms),  c("a_currentrets","b_currentrets"))
+
 # xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_currentrets"))),zoo::as.Date(0))[0]
 # valueCurrentRetsClmsClms(xTs)
 # [1] "b_currentrets"

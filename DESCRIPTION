@@ -10,7 +10,7 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 3.5.0),
-    quantmod (>= 0.4-3)
+    xts
 Imports:
     foreign,
     fst,
@@ -26,6 +26,7 @@ Imports:
     timeSeries,
     mondate,
     zoo,
+    quantmod (>= 0.4-3),
     matrixStats,
     TTR,
     PerformanceAnalytics,

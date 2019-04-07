@@ -6642,7 +6642,8 @@ initEnv();on.exit({uninitEnv()})
   options(digits = 5L)
   message(stringr::str_c("      *** Should choose to invest OFTEN in One(1): ", xtsAttributes(xTs)[["rettarget"]], " ***      "))
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
-  print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
+  # print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
+  print(tail(xTs[, c(currentRetsClms(xTs), nonImportantClmns(xTs), leadingRetsWtsClms(xTs))]))
 
   # invisible(xTs)
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))
@@ -6910,6 +6911,10 @@ initEnv();on.exit({uninitEnv()})
 #' @return column names
 #' @examples
 #' \dontrun{
+#'
+#' # clms <- c("b_currentrets","b","a_currentrets","a", "c", "b_currentrets_wts", a_currentrets_wts")
+#' # stopifnot(valueCurrentRetsClms(clms),  c("a_currentrets","b_currentrets"))
+#'
 #' # xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_currentrets"))),zoo::as.Date(0))[0]
 #' # valueCurrentRetsClmsClms(xTs)
 #' # [1] "b_currentrets"
@@ -6928,8 +6933,7 @@ initEnv();on.exit({uninitEnv()})
   clms[stringr::str_detect(clms, "currentrets$")]
 
 })}
-# clms <- c("b_currentrets","b","a_currentrets","a", "c", "b_currentrets_wts", a_currentrets_wts")
-# stopifnot(valueCurrentRetsClms(clms),  c("a_currentrets","b_currentrets"))
+
 
 
 
@@ -6946,9 +6950,14 @@ initEnv();on.exit({uninitEnv()})
 #' @return column names
 #' @examples
 #' \dontrun{
+#'
+#' # clms <- c("b_leadingrets","b","a_leadingrets","a", "c", "b_leadingrets_wts", a_leadingrets_wts")
+#' # stopifnot(valueLeadingRetsClms(clms),  c("a_leadingrets","b_leadingrets"))
+#'
 #' # xTs <- xts(matrix(1:3, ncol = 3, dimnames = list(NULL,c("a","b","b_leadingrets"))),zoo::as.Date(0))[0]
 #' # valueLeadingRetsClmsClms(xTs)
 #' # [1] "b_leadingrets"
+#'
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -6964,14 +6973,91 @@ initEnv();on.exit({uninitEnv()})
   clms[stringr::str_detect(clms, "leadingrets$")]
 
 })}
-# clms <- c("b_leadingrets","b","a_leadingrets","a", "c", "b_leadingrets_wts", a_leadingrets_wts")
-# stopifnot(valueLeadingRetsClms(clms),  c("a_leadingrets","b_leadingrets"))
+
+
+
+
+#' get the currentrets columns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return column names
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+currentRetsClms <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  xTs  <- initXts(xTs)
+
+  clms <- safeClms(xTs)
+  clms <- sort(clms)
+
+  clms[stringr::str_detect(clms, "currentrets$")]
+
+})}
+
+
+
+#' get the leadingrets_wts columns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return column names
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+leadingRetsWtsClms <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  xTs  <- initXts(xTs)
+
+  clms <- safeClms(xTs)
+  clms <- sort(clms)
+
+  clms[stringr::str_detect(clms, "leadingrets_wts$")]
+
+})}
+
+
+
+#' get the non-[current/leading]rets[_wts] columns
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @return column names
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+nonImportantClmns <- function(xTs = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  xTs  <- initXts(xTs)
+
+  clms <- safeClms(xTs)
+  clms <- sort(clms)
+
+  clms[!stringr::str_detect(clms, "currentrets$|currentrets_wts$|leadingrets$|leadingrets_wts$")]
+
+})}
+
 
 
 #' get the CASH columns
 #'
 #' @description
 #' \preformatted{
+#'
+#' MAY NOT BE USED ANYMORE?
 #'
 #' }
 #'
