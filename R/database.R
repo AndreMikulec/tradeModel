@@ -2403,10 +2403,7 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(calcMonthlies)) { calcMonthlies <- TRUE }
 
   if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
-  if(is.null(Last_Updated)) stop("fancifyXts need parameter lastUpdatedDate")
-
-  if(is.null(Last_Updated)) Last_Updated <- xtsAttributes(xTs)[["Last_Updated"]]
-  if(is.null(Last_Updated)) stop("fancifyXts need parameter lastUpdatedDate")
+  if(is.null(Last_Updated)) stop("fancifyXts needs parameter lastUpdatedDate")
 
   if(is.null(CalendarAdj)) CalendarAdj <- "UnitedStates/GovernmentBond"
 

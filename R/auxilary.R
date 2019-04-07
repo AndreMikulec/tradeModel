@@ -5200,6 +5200,23 @@ initEnv();on.exit({uninitEnv()})
 #' @param IsATarget is a member of many possible objectives
 #' @param SymplifyGeneratorFUN Function that Formats the output
 #' @return xts object with merged data into xTs
+#' @examples
+#' \dontrun{
+#'
+#'
+#' addCurrLeadSymbolReturns(mktdata, Symbol = "^GSPC", src = "yahoo"
+#'   , IsATarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData"
+#'   , ReturnsGeneratorFUN = "Returns"
+#'   , ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 1))
+#' )
+#'
+#' addCurrLeadSymbolReturns(mktdata, Symbol = "GDP",  src = "FRED2"
+#'   , IsTarget = TRUE,  SymplifyGeneratorFUN = "fancifyXts"
+#'   , ReturnsGeneratorFUN = "Returns"
+#'   , ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 3))
+#' )
+#'
+#' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 addCurrLeadSymbolReturns <- function(xTs = NULL, Symbol = NULL, src = NULL

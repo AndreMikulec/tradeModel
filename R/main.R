@@ -64,23 +64,20 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
-  # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2") # fancifyXts requires extra FRED data from FRED2
-  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol,  src = src,     IsTarget = TRUE,  SymplifyGeneratorFUN = "fancifyXts",    ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 3)))
-  addCurrLeadSymbolReturns(mktdata, Symbol = "^GSPC", src = "yahoo", IsATarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 1)))
-
   # (1) data 'value' (try to optimize)
-  # addCurrLeadSymbolReturns(mktdata, Symbol = Symbol, src = src, IsTarget = TRUE, SymplifyGeneratorFUN = "toMonthlyData", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list())
+  addCurrLeadSymbolReturns(mktdata, Symbol = Symbol,  src = src, IsTarget = TRUE,  SymplifyGeneratorFUN = "toMonthlyData",    ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 1)))
+  #
+  # Symbol = "GDP", src = "FRED2" # fancifyXts requires extra FRED data from FRED2
+  # fancifyXts need parameter lastUpdatedDate
+  addCurrLeadSymbolReturns(mktdata, Symbol = "GDP",  src = "FRED2", IsATarget = TRUE,  SymplifyGeneratorFUN = "fancifyXts",    ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 3)))
 
-
-
-
-  # fancifyXts requires extra FRED data from FRED2
-  ### addCurrLeadSymbolReturns(mktdata, Symbol = "GDP", src = "FRED2", IsATarget = TRUE, SymplifyGeneratorFUN = "fancifyXts", ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list())
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
   addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
+
+  browser()
 
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
   addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
