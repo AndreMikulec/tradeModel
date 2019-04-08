@@ -5097,6 +5097,17 @@ initEnv();on.exit({uninitEnv()})
             FUN = function(x) {
                 Symbols[Symbols == x]
             })))
+        # .has1sym.
+        # Changes in 0.4-14 (2019-03-23)
+        # Extend getSymbols() to catch errors for individual ticker symbols and
+        # continue processing any remaining ticker symbols, instead of throwing an error.
+        # More useful error messages are also provided.
+        # NOTE: ** ALSO needs a TRY-CATCH in individual getSymbols.FUNCTION **
+        # SEE
+        # https://github.com/joshuaulrich/quantmod/commit/98e56df59bd98f45546639a4323cc97f5112068f
+        # https://github.com/joshuaulrich/quantmod/blame/master/R/getSymbols.R
+        # Thanks to @helgasoft for testing and feedback. #135
+        .has1sym. <- length(Symbols) < 2L
         all.symbols <- list()
         for (symbol.source in unique(as.character(Symbols))) {
             current.symbols <- names(Symbols[Symbols == symbol.source])
@@ -5130,10 +5141,20 @@ initEnv();on.exit({uninitEnv()})
             if(!is.null(Dots[["FunStr"]]) && !exists("FunStr", envir = environment(), inherits = FALSE))
               FunStr <- Dots[["FunStr"]]
             # END NEW CODE
+            # .has1sym.
+            # Changes in 0.4-14 (2019-03-23)
+            # Extend getSymbols() to catch errors for individual ticker symbols and
+            # continue processing any remaining ticker symbols, instead of throwing an error.
+            # More useful error messages are also provided.
+            # NOTE: ** ALSO needs a TRY-CATCH in individual getSymbols.FUNCTION **
+            # SEE
+            # https://github.com/joshuaulrich/quantmod/commit/98e56df59bd98f45546639a4323cc97f5112068f
+            # https://github.com/joshuaulrich/quantmod/blame/master/R/getSymbols.R
+            # Thanks to @helgasoft for testing and feedback. #135
             symbols.returned <- do.call(paste("getSymbols.",
                 symbol.source, sep = ""), list(Symbols = current.symbols,
                 env = env, verbose = verbose, warnings = warnings,
-                auto.assign = auto.assign, Fun = Fun, FunStr = FunStr, ...)) # NEW CODE , Fun = Fun, FunStr = FunStr
+                auto.assign = auto.assign, Fun = Fun, FunStr = FunStr, ..., .has1sym. = .has1sym.)) # NEW CODE , Fun = Fun, FunStr = FunStr
             # BEGIN NEW CODE
             }
             if(exists("symbols.returned.from.envir") && length(symbols.returned.from.envir)) {
