@@ -3306,7 +3306,7 @@ initEnv();on.exit({uninitEnv()})
 
   xTs <- x
   xTs <- initXts(xTs)
-  browser()
+
   xTs1 <- LagXts(xTs, k = base + rep(0,length(lag)), ...)
   xTs2 <- LagXts(xTs, k = base + lag               , ...)
 
@@ -3913,11 +3913,13 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom lubridate %m+%
 #' @importFrom DescTools Day
 #' @importFrom DescTools LastDayOfMonth
-Leading <- function(xTs = NULL, Shift = NULL) {
+Leading <- function(xTs = NULL, Shift = NULL, NoColNameChange = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   `%m+%` <- lubridate::`%m+%`
+
+  if(is.null(NoColNameChange)) NoColNameChange <- FALSE
 
   xTs <- initXts(xTs)
   if(is.null(Shift)) Shift = 1
@@ -3929,10 +3931,12 @@ initEnv();on.exit({uninitEnv()})
     }
   }
   xTs %>% { lag(.,-1 * Shift) } -> xTs
-  if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
-    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "laggingrets$", "rets")
-  } else {
-    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "leadingrets")
+  if(!NoColNameChange) {
+    if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
+      colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "laggingrets$", "rets")
+    } else {
+      colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "leadingrets")
+    }
   }
   xTs
 })}
@@ -3955,11 +3959,13 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom lubridate %m+%
 #' @importFrom DescTools Day
 #' @importFrom DescTools LastDayOfMonth
-Lagging <- function(xTs = NULL, Shift = NULL) {
+Lagging <- function(xTs = NULL, Shift = NULL, NoColNameChange = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   `%m+%` <- lubridate::`%m+%`
+
+  if(is.null(NoColNameChange)) NoColNameChange <- FALSE
 
   xTs <- initXts(xTs)
   if(is.null(Shift)) Shift = 1
@@ -3971,10 +3977,12 @@ initEnv();on.exit({uninitEnv()})
     }
   }
   xTs %>% { lag(., 1 * Shift) } -> xTs
-  if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
-    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "leadingrets$", "rets")
-  } else {
-    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "laggingrets")
+  if(!NoColNameChange){
+    if(stringr::str_detect(colnames(xTs)[1], "leadingrets$")) {
+      colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "leadingrets$", "rets")
+    } else {
+      colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "laggingrets")
+    }
   }
   xTs
 })}
@@ -3999,11 +4007,13 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom lubridate %m+%
 #' @importFrom DescTools Day
 #' @importFrom DescTools LastDayOfMonth
-Current <- function(xTs = NULL, Shift = NULL) {
+Current <- function(xTs = NULL, Shift = NULL, NoColNameChange = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   `%m+%` <- lubridate::`%m+%`
+
+  if(is.null(NoColNameChange)) NoColNameChange <- FALSE
 
   xTs <- initXts(xTs)
   if(is.null(Shift)) Shift = 0
@@ -4016,10 +4026,12 @@ initEnv();on.exit({uninitEnv()})
     # }
   }
   xTs %>% { lag(., 0 * Shift) } -> xTs
-  if(stringr::str_detect(colnames(xTs)[1], "currentrets$")) {
-    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "currentrets$", "rets")
-  } else {
-    colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "currentrets")
+  if(!NoColNameChange){
+    if(stringr::str_detect(colnames(xTs)[1], "currentrets$")) {
+      colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "currentrets$", "rets")
+    } else {
+      colnames(xTs)[1] <- stringr::str_replace(colnames(xTs)[1], "rets$", "currentrets")
+    }
   }
   xTs
 })}
@@ -4666,15 +4678,19 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #'
 #' @param xTs xts object (only takes the index)
+#' @param format default(NONE)(required) Choose "leading" or "current".
+#' Required 'string of characters' in replacement column.
 #' @return xts object with the same index as xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom stringr str_replace_all str_c str_replace
-cashReturns <- function(xTs = NULL) {
+cashReturns <- function(xTs = NULL, format = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
+
+  if(is.null(format)) stop("cashReturns needs parameter 'format'")
 
   cashRets <- xts(rep(0,NROW(xTs)),index(xTs))
   # must keep HARD coded
@@ -4684,7 +4700,26 @@ initEnv();on.exit({uninitEnv()})
   # multiple targets (multiple change values)
   RegExpr <- stringr::str_c(RegExpr, collapse = "|")
   RegExpr <- stringr::str_c(".+(?=", RegExpr,")")
-  colnames(cashRets)[1] <- stringr::str_replace(xtsAttributes(xTs)[["rettarget"]], RegExpr, "CASH")
+
+  # colnames(cashRets)[1] <- stringr::str_replace(xtsAttributes(xTs)[["rettarget"]], RegExpr, "CASH")
+
+  if(format == "leading") {
+    if(xtsAttributes(xTs)[["rettarget"]] %Like% "current") {
+      Leadingrettarget <- stringr::str_replace(xtsAttributes(xTs)[["rettarget"]], "current", "leading")
+    } else {
+      Leadingrettarget <- xtsAttributes(xTs)[["rettarget"]]
+    }
+    colnames(cashRets)[1] <- stringr::str_replace(Leadingrettarget, RegExpr, "CASH")
+  }
+
+  if(format == "current") {
+    if(xtsAttributes(xTs)[["rettarget"]] %Like% "leading") {
+      Currentrettarget <- stringr::str_replace(xtsAttributes(xTs)[["rettarget"]], "leading", "current")
+    } else {
+      Currentrettarget <- xtsAttributes(xTs)[["rettarget"]]
+    }
+    colnames(cashRets)[1] <- stringr::str_replace(Currentrettarget, RegExpr, "CASH")
+  }
 
   cashRets
 
@@ -4710,8 +4745,8 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  cashReturns(xTs) %>%
-    Leading -> xTs
+  cashReturns(xTs, format = "leading") %>%
+    Leading(NoColNameChange = TRUE) -> xTs
   xTs
 
 })}
@@ -4737,8 +4772,8 @@ initEnv();on.exit({uninitEnv()})
 
   xTs  <- initXts(xTs)
 
-  cashReturns(xTs) %>%
-    Current -> xTs
+  cashReturns(xTs, format = "current") %>%
+    Current(NoColNameChange = TRUE) -> xTs
   xTs
 
 })}

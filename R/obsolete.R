@@ -930,8 +930,6 @@ addCurrLeadCashLogReturns <- function(xTs = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  browser()
-
   xTs  <- initXts(xTs)
                                 # CASHlogrets
   xTs <- combineXts(xTs, currentCashLogReturns(xTs))

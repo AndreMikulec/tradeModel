@@ -4,7 +4,7 @@
 \alias{Leading}
 \title{leading}
 \usage{
-Leading(xTs = NULL, Shift = NULL)
+Leading(xTs = NULL, Shift = NULL, NoColNameChange = NULL)
 }
 \description{
 \preformatted{

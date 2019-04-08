@@ -4,7 +4,7 @@
 \alias{Current}
 \title{current}
 \usage{
-Current(xTs = NULL, Shift = NULL)
+Current(xTs = NULL, Shift = NULL, NoColNameChange = NULL)
 }
 \description{
 \preformatted{

@@ -4,7 +4,7 @@
 \alias{Lagging}
 \title{lagging}
 \usage{
-Lagging(xTs = NULL, Shift = NULL)
+Lagging(xTs = NULL, Shift = NULL, NoColNameChange = NULL)
 }
 \description{
 \preformatted{

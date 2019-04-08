@@ -4,10 +4,13 @@
 \alias{cashReturns}
 \title{cash APC returns (CASHapcrets)}
 \usage{
-cashReturns(xTs = NULL)
+cashReturns(xTs = NULL, format = NULL)
 }
 \arguments{
 \item{xTs}{xts object (only takes the index)}
+
+\item{format}{default(NONE)(required) Choose "leading" or "current".
+Required 'string of characters' in replacement column.}
 }
 \value{
 xts object with the same index as xTs

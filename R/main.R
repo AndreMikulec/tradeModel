@@ -80,7 +80,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
   addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
 
-  browser()  # need xts attributes separating what I AM PREDICTING(target) v.s. (investment)(investments)
+  # need xts attributes separating what I AM PREDICTING(target) v.s. (investment)(investments)
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
 
   # LEFT_OFF # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2")
@@ -95,8 +95,6 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   #
   ## eventually(but not SOON)
   ## addSymbolMachineWts(mktdata, Predictors = c("UNRATE", "GDP", "GDP_DLY"), IndicatorGeneratorFUN = "unrateAndGDPIndicators")
-
-  browser()
 
   # excess
   appendCashWts(mktdata)
