@@ -86,9 +86,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # LEFT_OFF # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2")
   # LEFT_OFF:           (1) choose the BEST 75% PREDICTED GDP.apc.3leadingrets
   #         #           (2) assign GSPC.apc.1leadingrets_wts <- 1: BEST 75% (ABOVE in the line above)
-  #                     (3) print INSTEAD ... calendar USING GSPC.apc.1currentrets (INSTEAD OF GDP) (investment)
-  #                     (4) print SECOND calendar USING GDP.apc.3currentrets (Discard Margins ... custom calendar)
-  #
+  #                     (3) buy GSPC.apc.1currentrets (INSTEAD OF GDP) investment
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
