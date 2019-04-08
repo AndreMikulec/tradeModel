@@ -2,9 +2,10 @@
 % Please edit documentation in R/auxilary.R
 \name{printCalendar}
 \alias{printCalendar}
-\title{print calendar of month by mont returns}
+\title{print calendar of month by month returns}
 \usage{
-printCalendar(xTs = NULL, title = NULL, PortFolioRetCol = NULL)
+printCalendar(xTs = NULL, title = NULL, PortFolioRetCol = NULL,
+  MarginReturns = NULL, start = NULL, end = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -12,6 +13,14 @@ printCalendar(xTs = NULL, title = NULL, PortFolioRetCol = NULL)
 \item{title}{heading}
 
 \item{PortFolioRetCol}{"portfolio.returns"(default). Column of the 'portfolio returns.'}
+
+\item{MarginReturns}{TRUE(Default) Print PerformanceAnalytics::table.CalendarReturns aggregates
+in the margin. If FALSE, is a simpleCalendar instead with no marginal data (because
+it may not make sense.  E.g. printing the GDP)}
+
+\item{start}{passed to window.xts}
+
+\item{end}{passed to window.xts}
 }
 \value{
 xts object of arithmatic returns

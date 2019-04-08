@@ -7250,7 +7250,7 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' print calendar of month by mont returns
+#' print calendar of month by month returns
 #'
 #' @description
 #' \preformatted{
@@ -7266,13 +7266,18 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @param title heading
 #' @param PortFolioRetCol "portfolio.returns"(default). Column of the 'portfolio returns.'
+#' @param start passed to window.xts
+#' @param end passed to window.xts
+#' @param MarginReturns TRUE(Default) Print PerformanceAnalytics::table.CalendarReturns aggregates
+#' in the margin. If FALSE, is a simpleCalendar instead with no marginal data (because
+#' it may not make sense.  E.g. printing the GDP)
 #' @return xts object of arithmatic returns
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom PerformanceAnalytics table.CalendarReturns
 #' @importFrom stringr str_c
 #' @importFrom zoo na.trim
-printCalendar <- function(xTs = NULL, title = NULL, PortFolioRetCol = NULL) {
+printCalendar <- function(xTs = NULL, title = NULL, PortFolioRetCol = NULL, MarginReturns = NULL, start = NULL, end = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -7281,16 +7286,25 @@ initEnv();on.exit({uninitEnv()})
   # xTs  <- initXts(xTs)
 
   if(is.null(PortFolioRetCol)) PortFolioRetCol <- "portfolio.returns"
+  if(is.null(MarginReturns)) MarginReturns <- TRUE
 
   message(stringr::str_c("calendar of ", title))
   options(digits = 5L)
   # horizonal reduction
-  PrintingXts <- xTs[, PortFolioRetCol]
+  if(!is.null(start) || !is.null(end)) {
+    PrintingXts <- window(xTs[, PortFolioRetCol], start = start, end = end)
+  } else {
+    PrintingXts <- xTs[, PortFolioRetCol]
+  }
   # verticle reduction: remove leading NAs
   PrintingXts <- zoo::na.trim(sides = "left", PrintingXts)
   #
-  CalendarReturns <- PerformanceAnalytics::table.CalendarReturns(PrintingXts, digits = 1, as.perc = TRUE, geometric = TRUE)
-  print(CalendarReturns)
+  if(MarginReturns) {
+    CalendarResult <- PerformanceAnalytics::table.CalendarReturns(PrintingXts, digits = 1, as.perc = TRUE, geometric = TRUE)
+  } else {
+    CalendarResult  <-                             simpleCalendar(PrintingXts, digits = 1, as.perc = TRUE, geometric = TRUE)
+  }
+  print(CalendarResult)
   # currently JUST for display.
   # Currently,  I am not adding data to xTs.
 
@@ -7298,4 +7312,77 @@ initEnv();on.exit({uninitEnv()})
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))
 
 })}
+
+
+
+#' print a simple Calendar
+#'
+#' @description
+#' \preformatted{
+#'
+#' Based on PerformanceAnalytics table.CalendarReturns.
+#' It does not do aggregate column marginals
+#' }
+#' @param R	an xts, vector, matrix, data frame, timeSeries or zoo object of asset returns
+#' @param digits	number of digits to round results to for presentation
+#' @param as.perc	TRUE/FALSE if TRUE, multiply simple returns by 100 to get %
+#' @param geometric	utilize geometric chaining (TRUE) or simple/arithmetic chaining (FALSE)
+#' to aggregate returns, default TRUE
+#' @return xts object of arithmatic returns
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom PerformanceAnalytics checkData
+simpleCalendar <- function (R, digits = 1, as.perc = TRUE, geometric = TRUE) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+    ri = PerformanceAnalytics::checkData(R, method = "zoo")
+    columns = ncol(ri)
+    columnnames = colnames(ri)
+    rownames = rownames(ri)
+    firstyear = as.numeric(format(strptime(as.POSIXct(time(ri)[1]), "%Y-%m-%d"), "%Y"))
+    lastyear = as.numeric(format(strptime(as.POSIXct(time(ri)[length(ri[, 1])]), "%Y-%m-%d"), "%Y"))
+    year = format(strptime(as.POSIXct(time(ri)), "%Y-%m-%d"), "%Y")
+    month = format(strptime(as.POSIXct(time(ri)), "%Y-%m-%d"), "%b")
+    monthlabels = strftime(seq.Date(as.Date("2000-01-01"), length.out = 12, by = "months"), format = "%b")
+    rowlabels = (firstyear:lastyear)
+
+    for (column in 1:columns) {
+        target.df = as.data.frame(matrix(data = as.numeric(NA),
+            length(rowlabels), length(monthlabels), dimnames = list(rowlabels, monthlabels)))
+        for (i in 1:length(ri[, 1])) {
+            if (!is.na(ri[i, column])) {
+                target.df[year[i], month[i]] = ri[i, column]
+            }
+        }
+        yearcol = as.data.frame(matrix(data = as.numeric(NA),
+            length(rowlabels), 1, dimnames = list(rowlabels,
+                columnnames[column])))
+        # for (i in 1:length(yearcol[, 1])) {
+        #     if (geometric)
+        #         yearcol[i, columnnames[column]] = prod(1 + na.omit(as.numeric(target.df[i,]))) - 1
+        #     else yearcol[i, columnnames[column]] = sum(as.numeric(target.df[i,
+        #         ]), na.rm = TRUE)
+        #     if (yearcol[i, columnnames[column]] == 0)
+        #         yearcol[i, columnnames[column]] = NA
+        # }
+        target.df = cbind(target.df, yearcol)
+        if (as.perc)
+            multiplier = 100
+        else multiplier = 1
+        target.df = target.df * multiplier
+        target.df = base::round(target.df, digits)
+        if (column == 1)
+            result.df = target.df
+        else {
+            result.df = cbind(result.df, target.df[, 13])
+        }
+    }
+    colnames(result.df) = c(monthlabels, columnnames)
+    result.df
+})}
+
+
+
+
 
