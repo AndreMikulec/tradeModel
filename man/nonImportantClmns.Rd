@@ -15,5 +15,7 @@ column names
 \description{
 \preformatted{
 
+Fitted" and "predictor columns"
+
 }
 }

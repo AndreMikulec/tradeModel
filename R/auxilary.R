@@ -5345,8 +5345,13 @@ initEnv();on.exit({uninitEnv()})
   CurrentRetWtsColName <-  stringr::str_replace(LeadingRetWtsColName, "leading", "current")
   colnames(unratecurrentrets_wts)[1] <- CurrentRetWtsColName
 
-  unrate_wts <- merge(unrateleadingrets_wts, unratecurrentrets_wts)
-  unrate_wts
+  unrate_wts <- combineXts(unrateleadingrets_wts, unratecurrentrets_wts)
+
+  Fitted <- unrateleadingrets_wts
+  colnames(Fitted) <- "Fitted"
+
+  return(combineXts(unrate_wts, Fitted))
+  # unrate_wts
 
 })}
 
@@ -6169,7 +6174,8 @@ initEnv();on.exit({uninitEnv()})
   # deciding
   RetFitted <- doOneChoice(Fitted, ModelTarget_wts = ModelTarget_wts, ExtremePct = Dots[["ExtremePct"]])
 
-  return(RetFitted)
+  # return(RetFitted)
+  return(combineXts(RetFitted, Fitted))
 
 })}
 
@@ -6382,12 +6388,15 @@ initEnv();on.exit({uninitEnv()})
     message(               "*** Now will do a na.locf() to complete it/them. ***")
     ValidationData <- cbind(ValidationData[, builtUnrateModel@model.target], na.locf(ValidationData[, builtUnrateModel@model.inputs]))
   }
-  Fitted  <- predictModel(UpdatedModelData@fitted.model, ValidationData)
-  RetFitted  <- as.xts(Fitted, index(ValidationData))
+
+  RawFitted  <- predictModel(UpdatedModelData@fitted.model, ValidationData)
+
+  Fitted  <- as.xts(RawFitted, index(ValidationData))
+  colnames(Fitted) <- "Fitted"
 
   logging::loginfo("End:   doMachineWts")
 
-  return(RetFitted)
+  return(Fitted)
 
   # # uses S3 ifelse.xts
   # # strategy/rule weights
@@ -6679,7 +6688,7 @@ initEnv();on.exit({uninitEnv()})
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
   print(tail(xTs[, c(currentRetsClms(xTs), nonImportantClmns(xTs), leadingRetsWtsClms(xTs))]))
-
+                                         # "Fitted" and "predictor columns" maybe later I should/could split this up
   # invisible(xTs)
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))
 
@@ -7067,6 +7076,8 @@ initEnv();on.exit({uninitEnv()})
 #' @description
 #' \preformatted{
 #'
+#' Fitted" and "predictor columns"
+#'
 #' }
 #'
 #' @param xTs xts object
@@ -7266,18 +7277,20 @@ initEnv();on.exit({uninitEnv()})
 #' @param xTs xts object
 #' @param title heading
 #' @param PortFolioRetCol "portfolio.returns"(default). Column of the 'portfolio returns.'
-#' @param start passed to window.xts
-#' @param end passed to window.xts
 #' @param MarginReturns TRUE(Default) Print PerformanceAnalytics::table.CalendarReturns aggregates
 #' in the margin. If FALSE, is a simpleCalendar instead with no marginal data (because
 #' it may not make sense.  E.g. printing the GDP)
+#' @param start passed to window.xts
+#' @param end passed to window.xts
+#' @param DivBy divide by this value before printing.
+#' Useful to divide Fitted by 100.
 #' @return xts object of arithmatic returns
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom PerformanceAnalytics table.CalendarReturns
 #' @importFrom stringr str_c
 #' @importFrom zoo na.trim
-printCalendar <- function(xTs = NULL, title = NULL, PortFolioRetCol = NULL, MarginReturns = NULL, start = NULL, end = NULL) {
+printCalendar <- function(xTs = NULL, title = NULL, PortFolioRetCol = NULL, MarginReturns = NULL, start = NULL, end = NULL, DivBy = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -7287,22 +7300,23 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(PortFolioRetCol)) PortFolioRetCol <- "portfolio.returns"
   if(is.null(MarginReturns)) MarginReturns <- TRUE
+  if(is.null(DivBy)) DivBy <- 1.0
 
   message(stringr::str_c("calendar of ", title))
   options(digits = 5L)
   # horizonal reduction
   if(!is.null(start) || !is.null(end)) {
-    PrintingXts <- window(xTs[, PortFolioRetCol], start = start, end = end)
+    PrintingXts <- window(xTs[, PortFolioRetCol], start = start, end = end) / DivBy
   } else {
-    PrintingXts <- xTs[, PortFolioRetCol]
+    PrintingXts <- xTs[, PortFolioRetCol] / DivBy
   }
   # verticle reduction: remove leading NAs
   PrintingXts <- zoo::na.trim(sides = "left", PrintingXts)
   #
   if(MarginReturns) {
-    CalendarResult <- PerformanceAnalytics::table.CalendarReturns(PrintingXts, digits = 1, as.perc = TRUE, geometric = TRUE)
+    CalendarResult <- PerformanceAnalytics::table.CalendarReturns(PrintingXts, digits = 2, as.perc = TRUE, geometric = TRUE)
   } else {
-    CalendarResult  <-                             simpleCalendar(PrintingXts, digits = 1, as.perc = TRUE, geometric = TRUE)
+    CalendarResult  <-                             simpleCalendar(PrintingXts, digits = 2, as.perc = TRUE, geometric = TRUE)
   }
   print(CalendarResult)
   # currently JUST for display.

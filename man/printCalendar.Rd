@@ -5,7 +5,7 @@
 \title{print calendar of month by month returns}
 \usage{
 printCalendar(xTs = NULL, title = NULL, PortFolioRetCol = NULL,
-  MarginReturns = NULL, start = NULL, end = NULL)
+  MarginReturns = NULL, start = NULL, end = NULL, DivBy = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -21,6 +21,9 @@ it may not make sense.  E.g. printing the GDP)}
 \item{start}{passed to window.xts}
 
 \item{end}{passed to window.xts}
+
+\item{DivBy}{divide by this value before printing.
+Useful to divide Fitted by 100.}
 }
 \value{
 xts object of arithmatic returns

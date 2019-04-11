@@ -40,6 +40,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   portfolioMonthlyReturns(mktdata)
 
   # (5) evaluate performance
+  printCalendar(mktdata, title = "Fitted Performance Returns predictions", PortFolioRetCol = "Fitted", MarginReturns = FALSE, start = Sys.Date() - 366*20, DivBy = 100.00)
   printCalendar(mktdata, title = "UnRateEyeBall Performance Returns")
 
   return(invisible())
@@ -107,6 +108,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
 
   # (5) evaluate performance
   printCalendar(mktdata, title = "GDP results", PortFolioRetCol = "GDP.apc.3currentrets", MarginReturns = FALSE, start = Sys.Date() - 366*20)
+  printCalendar(mktdata, title = "Fitted Performance Returns predictions", PortFolioRetCol = "Fitted", MarginReturns = FALSE, start = Sys.Date() - 366*20)
   printCalendar(mktdata, title = "UnRateMachine Performance Returns")
 
   return(invisible())
