@@ -29,6 +29,8 @@ means a lower rank number.}
 
 \item{na.pad}{passed to LagXts}
 
+\item{derivedDataDetailed}{FALSE(default) if TRUE, include the original data in the output.}
+
 \item{...}{dots passed to LagXts}
 }
 \value{

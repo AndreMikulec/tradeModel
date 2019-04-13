@@ -28,7 +28,7 @@ See ? TTR::runPercentRank}
 
 \item{originalData}{FALSE(default). If TRUE include original data in the output.}
 
-\item{derivedDataDetailed}{FALSE(default) if TRUE, include the rank as part of the derived data column name.}
+\item{derivedDataDetailed}{FALSE(default) if TRUE, include the original data in the output.}
 }
 \value{
 xts object
@@ -52,7 +52,7 @@ https://github.com/joshuaulrich/TTR/blob/9b30395f7604c37ea12a865961d81666bc16761
 \examples{
 \dontrun{
 
-# eXplode compatiable
+# explodeXts compatible
 runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
 #            runRanksTTR
 # 1970-01-01          NA

@@ -5,7 +5,7 @@
 \title{specific orders of n  (smallest/largest) of values within a range}
 \usage{
 sumOrdersXts(x, base = 0, r = 0:1, n = 1, View = "min",
-  na.pad = TRUE, ...)
+  na.pad = TRUE, derivedDataDetailed = FALSE, ...)
 }
 \arguments{
 \item{x}{xts object}
@@ -27,6 +27,8 @@ After the code is executed the coredata is re-multiplied by
 negative one(-1).}
 
 \item{na.pad}{passed to LagXts}
+
+\item{derivedDataDetailed}{FALSE(default) if TRUE, include the original data in the output.}
 
 \item{...}{dots passed to LagXts}
 

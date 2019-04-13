@@ -2649,7 +2649,7 @@ multitable___mouter <- function(x, ...){
 #' in the window. Must be between 0 and 1, inclusive.
 #' See ? TTR::runPercentRank
 #' @param originalData FALSE(default). If TRUE include original data in the output.
-#' @param derivedDataDetailed FALSE(default) if TRUE, include the rank as part of the derived data column name.
+#' @param derivedDataDetailed FALSE(default) if TRUE, include the original data in the output.
 #' @return xts object
 #' @examples
 #' \dontrun{
@@ -2746,6 +2746,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ranks 4(default) number of ranks. A lower value
 #' means a lower rank number.
 #' @param ties.method "average"(default). Passed to data.table::frank parameter ties.method.
+#' @param derivedDataDetailed FALSE(default) if TRUE, include the original data in the output.
 #' @return xts object
 #' @examples
 #' \dontrun{
@@ -2852,6 +2853,7 @@ initEnv();on.exit({uninitEnv()})
 #' means a lower rank number.
 #' @param ties.method "average"(default) passed to matrixStats::rowRanks parameter ties.method
 #' @param na.pad passed to LagXts
+#' @param derivedDataDetailed FALSE(default) if TRUE, include the original data in the output.
 #' @param ... dots passed to LagXts
 #' @return xts object
 #' @examples
@@ -3060,6 +3062,7 @@ tryCatchLog::tryCatchLog({
 #' nt == -2 means n == 2:1.  nt will override n.  This can be
 #' useful when passing to eXplodeXts.
 #' @param na.pad passed to LagXts
+#' @param derivedDataDetailed FALSE(default) if TRUE, include the original data in the output.
 #' @param ... dots passed to LagXts
 #' @examples
 #' \dontrun{
@@ -3092,10 +3095,18 @@ tryCatchLog::tryCatchLog({
 #' sumOrdersXts(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)),
 #'   r =  -3:-1, nt = 2)
 #'
-#'           Data_RAGG
-#' 1970-01-01         5 # lead2 + lead1
-#' 1970-01-02         7 # lead2 + lead1
+#' sumOrdersXts(xts(matrix(1:5,ncol = 1), zoo::as.Date(0:4)), r =  -3:-1, nt = 2)
+#'            sumOrdersXts
+#' 1970-01-01            5 # lead2 + lead1
+#' 1970-01-02            7 # lead2 + lead1
 #'
+#' sumOrdersXts(xts(matrix(1:5,ncol = 1), zoo::as.Date(0:4)), r =  -3:-1, nt = 2, derivedDataDetailed = TRUE)
+#'            Data sumOrdersXts
+#' 1970-01-01    1            5 # lead2 + lead1
+#' 1970-01-02    2            7 # lead2 + lead1
+#' 1970-01-03    3           NA
+#' 1970-01-04    4           NA
+#' 1970-01-05    5           NA
 #'
 #' # find two(2) of the three(2) best months and
 #' # sum their 'two' values together.
@@ -3105,9 +3116,12 @@ tryCatchLog::tryCatchLog({
 #' sumOrdersXts(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)),
 #'   r =  -3:-1, View = "max", nt = 2)
 #'
-#'            Data_RAGG
-#' 1970-01-01         7 # lead3 + lead2
-#' 1970-01-02         9 # lead3 + lead2
+#'            Data sumOrdersXts
+#' 1970-01-01    1            7
+#' 1970-01-02    2            9
+#' 1970-01-03    3           NA
+#' 1970-01-04    4           NA
+#' 1970-01-05    5           NA
 #'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
@@ -3115,7 +3129,7 @@ tryCatchLog::tryCatchLog({
 #' @importFrom matrixStats rowAnyNAs rowOrderStats rowSums2
 #' @importFrom DescTools DoCall
 #' @export
-sumOrdersXts <- function(x, base = 0, r = 0:1, n = 1, View = "min", na.pad = TRUE, ...) {
+sumOrdersXts <- function(x, base = 0, r = 0:1, n = 1, View = "min", na.pad = TRUE, derivedDataDetailed = FALSE, ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -3163,14 +3177,26 @@ initEnv();on.exit({uninitEnv()})
     x <- matrixStats::rowSums2(x)
   }
   xTs <- xts(x, index(xTs)[FullRowsXtsFnd])
-  if(!is.null(colnames(xOrig))) {
-    colnames(xTs) <- stringr::str_c(colnames(xOrig), "_RAGG")
-  } else {
-    colnames(xTs) <- "RAGG"
+
+  # if(!is.null(colnames(xOrig))) {
+  #   colnames(xTs) <- stringr::str_c(colnames(xOrig), "_RAGG")
+  # } else {
+  #   colnames(xTs) <- "RAGG"
+  # }
+
+  # sumOrdersXts explodeXts compatible
+  if(derivedDataDetailed) {
+    colnames(xOrig) <- "Data"
   }
+  colnames(xTs)   <- "sumOrdersXts"
+
   # n == 1 at largest value: now return to original values
   if(View == "max")
     coredata(xTs) <- -coredata(xTs)
+
+  if(derivedDataDetailed)
+    xTs <- cbind(xOrig, xTs)
+
   xTs
 })}
 

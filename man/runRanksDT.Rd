@@ -14,6 +14,8 @@ runRanksDT(x, ranks = 4, ties.method = "average",
 means a lower rank number.}
 
 \item{ties.method}{"average"(default). Passed to data.table::frank parameter ties.method.}
+
+\item{derivedDataDetailed}{FALSE(default) if TRUE, include the original data in the output.}
 }
 \value{
 xts object
