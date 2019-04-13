@@ -2540,7 +2540,7 @@ initEnv();on.exit({uninitEnv()})
   xOrigColName <- colnames(x)
   if(NVAR(res) == 1) {
 
-    # eXplode compatible
+    # explodeXts compatible
     if(derivedDataDetailed == TRUE) {
         colnames(res) <- stringr::str_c("rollEpochRanks", ranks)
     } else {
@@ -2557,7 +2557,7 @@ initEnv();on.exit({uninitEnv()})
 
   } else { # NVAR(res) > 1
 
-    # eXplode compatible
+    # explodeXts compatible
     if(derivedDataDetailed == TRUE) {
         colnames(res) <- stringr::str_c(stringr::str_c(colnames(res), "rollEpochRanks", sep = "."), ranks)
     } else {
@@ -2654,7 +2654,7 @@ multitable___mouter <- function(x, ...){
 #' @examples
 #' \dontrun{
 #'
-#' # eXplode compatiable
+#' # explodeXts compatible
 #' runRanksTTR(xts(sample(4,4,T), zoo::as.Date(0:3)), window = 4)
 #' #            runRanksTTR
 #' # 1970-01-01          NA
@@ -2712,7 +2712,7 @@ initEnv();on.exit({uninitEnv()})
 
   res <- xts(res, index(x))
 
-  # eXplode compatible
+  # explodeXts compatible
   if(derivedDataDetailed == TRUE) {
     colnames(res) <- stringr::str_c("runRanksTTR", ranks)
   } else {
@@ -2801,7 +2801,7 @@ initEnv();on.exit({uninitEnv()})
   # colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
   # x <- cbind(x, res)
 
-  # eXplode compatible
+  # explodeXts compatible
   if(derivedDataDetailed == TRUE) {
     colnames(res) <- stringr::str_c("runRanksDT", ranks)
   } else {
@@ -2914,7 +2914,7 @@ initEnv();on.exit({uninitEnv()})
   # colnames(res) <- stringr::str_c(xOrigColName, "_RNK", ranks)
   # x <- cbind(xOrig, res)
 
-  # eXplode compatible
+  # explodeXts compatible
   if(derivedDataDetailed == TRUE) {
     colnames(res) <- stringr::str_c("runRanksMS", ranks)
   } else {
@@ -6131,6 +6131,7 @@ prepAndDoMachineWtsData <- function(xTs = NULL,  ModelFormula = NULL, Predictee 
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  browser()
   xTs <- initXts(xTs)
   Dots <- list(...)
 
