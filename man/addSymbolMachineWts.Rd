@@ -5,7 +5,8 @@
 \title{add Symbol Change weights returns using Machine learning (SYMBOLCHANGErets)}
 \usage{
 addSymbolMachineWts(xTs = NULL, Predictee = NULL, Predictors = NULL,
-  IndicatorGeneratorFUN = NULL, NumbReplicaCopiesMultiple = NULL, ...)
+  IndicatorGeneratorFUN = NULL, NumbReplicaCopiesMultiple = NULL,
+  ModelTarget = NULL, ...)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -20,6 +21,9 @@ Passed to 'weight determining function'.}
 
 \item{NumbReplicaCopiesMultiple}{Per each timeslice era.
 Adjusts the number of copies of the focused area.}
+
+\item{ModelTarget}{Exact column name that I am (eventually) trying
+to 'financially' optimize}
 }
 \value{
 xts object with merged data into xTs

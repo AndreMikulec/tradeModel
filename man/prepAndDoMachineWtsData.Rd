@@ -6,7 +6,7 @@
 \usage{
 prepAndDoMachineWtsData(xTs = NULL, ModelFormula = NULL,
   Predictee = NULL, Predictors = NULL, IndicatorGeneratorFUN = NULL,
-  ...)
+  ModelTarget = NULL, ...)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -24,6 +24,9 @@ indictor generator function: IndicatorGeneratorFUN}
 \item{IndicatorGeneratorFUN}{string of the name of the function
 or the function itself that generates more columns (to eventually
 be used in the model.)}
+
+\item{ModelTarget}{Exact column name that I am (eventually) trying
+to 'financially' optimize. xtsAttributes(xTs)[["rettarget"]](Default)}
 
 \item{...}{dots passed to the indicator generator function IndicatorGeneratorFUN(dots)
 and to function doMachineWts(dots)}

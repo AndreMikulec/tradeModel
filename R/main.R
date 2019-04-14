@@ -93,14 +93,18 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
 
   # LEFT_OFF # UnRateMachinetradeModel
-  #                     (1) decide the *next line* using 'poor performance data (CRASHACML)'
-  #                     (2) choose the BEST 75% PREDICTED GSPC.apc.1leadingrets
-  #                     (3) assign GSPC.apc.1leadingrets_wts <- 1: BEST 75% (ABOVE in the line above)
-  #                     (4) buy GSPC.apc.1currentrets (INSTEAD OF GDP) investment
+  #                     (1) DONE. decide the *next line* using 'poor performance data (CRASHACML)'
+  #                     (2) DONE. choose the BEST 75% PREDICTED GSPC.apc.1leadingrets
+  #                     (3) DONE. assign GSPC.apc.1leadingrets_wts <- 1: BEST 75% (ABOVE in the line above)
+  #                     (4) DONE. buy GSPC.apc.1currentrets (INSTEAD OF GDP) investment
+  #                     (5) TODO ADD predictors: Predictors UNRATE, 'umich centiment', 'other recession indicators'
+  #                                              "GeneralMathIndicators" (similar to RecessionSight)
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
-  #
+  # addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+
+  addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+
   ## eventually(but not SOON)
   ## addSymbolMachineWts(mktdata, Predictors = c("UNRATE", "GDP", "GDP_DLY"), IndicatorGeneratorFUN = "unrateAndGDPIndicators")
 

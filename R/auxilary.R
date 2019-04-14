@@ -5466,6 +5466,8 @@ initEnv();on.exit({uninitEnv()})
 #' @param NumbReplicaCopiesMultiple passed to NumbReplicaCopies
 #' This means how much more ( e.g. "focused" data ) is replicated
 #' compared to "all" data.
+#' @param  ModelTarget Exact column name that I am (eventually) trying
+#' to 'financially' optimize
 #' @param ... dots passed to the indicator generator function
 #' @return xts object
 #' @export
@@ -5473,6 +5475,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom stringr str_c
 symbolMachineWts <- function(xTs = NULL, Predictee = NULL, Predictors = NULL, IndicatorGeneratorFUN = NULL
                                     , NumbReplicaCopiesMultiple = NULL
+                                    , ModelTarget = NULL
                                     , ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -5489,7 +5492,9 @@ initEnv();on.exit({uninitEnv()})
   DescTools::DoCall(prepAndDoMachineWtsData, c(list(),
                     list(xTs), Predictee = Predictee
                              , Predictors = Predictors
-                             , IndicatorGeneratorFUN = IndicatorGeneratorFUN, Dots
+                             , IndicatorGeneratorFUN = IndicatorGeneratorFUN
+                             , ModelTarget = ModelTarget
+                             , Dots
   ))
 
 })}
@@ -5511,10 +5516,13 @@ initEnv();on.exit({uninitEnv()})
 #' Passed to 'weight determining function'.
 #' @param NumbReplicaCopiesMultiple  Per each timeslice era.
 #' Adjusts the number of copies of the focused area.
+#' @param  ModelTarget Exact column name that I am (eventually) trying
+#' to 'financially' optimize
 #' @return xts object with merged data into xTs
 #' @export
 addSymbolMachineWts <- function(xTs = NULL, Predictee = NULL, Predictors = NULL, IndicatorGeneratorFUN = NULL
                                     , NumbReplicaCopiesMultiple = NULL
+                                    , ModelTarget = NULL
                                     , ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -5530,6 +5538,7 @@ initEnv();on.exit({uninitEnv()})
   symbolMachineWts(xTs, Predictee = Predictee, Predictors = Predictors
                  , IndicatorGeneratorFUN = IndicatorGeneratorFUN
                  , NumbReplicaCopiesMultiple = NumbReplicaCopiesMultiple
+                 , ModelTarget = ModelTarget
                  , ...) -> xTs1
 
 
@@ -6186,6 +6195,8 @@ initEnv();on.exit({uninitEnv()})
 #' @param IndicatorGeneratorFUN string of the name of the function
 #' or the function itself that generates more columns (to eventually
 #' be used in the model.)
+#' @param  ModelTarget Exact column name that I am (eventually) trying
+#' to 'financially' optimize. xtsAttributes(xTs)[["rettarget"]](Default)
 #' @param ExtremePct passed in dots to function doOneChoice
 #' @param ... dots passed to the indicator generator function IndicatorGeneratorFUN(dots)
 #' and to function doMachineWts(dots)
@@ -6195,6 +6206,7 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom stringr str_c
 prepAndDoMachineWtsData <- function(xTs = NULL,  ModelFormula = NULL, Predictee = NULL
                                     , Predictors = NULL, IndicatorGeneratorFUN = NULL
+                                    , ModelTarget = NULL
                                     , ...) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
@@ -6211,6 +6223,13 @@ initEnv();on.exit({uninitEnv()})
   } else {
     # character function
     IndicatorGeneratorFUN <- get(IndicatorGeneratorFUN)
+  }
+
+  if(is.null(ModelTarget)) {
+    ModelTarget_wts <- stringr::str_c(xtsAttributes(xTs)[["rettarget"]], "_wts")
+  } else {
+    # literally written derivation
+    ModelTarget_wts <- stringr::str_c(ModelTarget, "_wts")
   }
 
   # REM:ONE column of "valueLeadingRetsClms(xTs)" is what I am trying to predict
@@ -6234,10 +6253,11 @@ initEnv();on.exit({uninitEnv()})
     ModelFormula <- as.formula(stringr::str_c(Predictee, " ~ ", stringr::str_c(colnames(Indicators), collapse = " + ")))
   }
 
-  ModelTarget_wts <-  stringr::str_c(formula.tools::lhs.vars(ModelFormula), "_wts")
-
   # fitting
   Fitted <- doMachineWts(xTs, ModelFormula = ModelFormula, ...)
+
+  # NO! Now, detected_in/set_using xtsAttributes(xTs/mktdata)[["rettarget"]] SEE ABOVE
+  # ModelTarget_wts <-  stringr::str_c(formula.tools::lhs.vars(ModelFormula), "_wts")
 
   # deciding
   RetFitted <- doOneChoice(Fitted, ModelTarget_wts = ModelTarget_wts, ExtremePct = Dots[["ExtremePct"]])

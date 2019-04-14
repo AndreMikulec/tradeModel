@@ -5,7 +5,8 @@
 \title{add Symbol Change weights using Machine learning}
 \usage{
 symbolMachineWts(xTs = NULL, Predictee = NULL, Predictors = NULL,
-  IndicatorGeneratorFUN = NULL, NumbReplicaCopiesMultiple = NULL, ...)
+  IndicatorGeneratorFUN = NULL, NumbReplicaCopiesMultiple = NULL,
+  ModelTarget = NULL, ...)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -22,6 +23,9 @@ be used in the model.)}
 \item{NumbReplicaCopiesMultiple}{passed to NumbReplicaCopies
 This means how much more ( e.g. "focused" data ) is replicated
 compared to "all" data.}
+
+\item{ModelTarget}{Exact column name that I am (eventually) trying
+to 'financially' optimize}
 
 \item{...}{dots passed to the indicator generator function}
 }
