@@ -71,6 +71,14 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # Symbol = "GDP", src = "FRED2" # fancifyXts requires extra FRED data from FRED2
   # fancifyXts need parameter lastUpdatedDate
   addCurrLeadSymbolReturns(mktdata, Symbol = "GDP",  src = "FRED2", IsATarget = TRUE,  SymplifyGeneratorFUN = "fancifyXts",    ReturnsGeneratorFUN = "Returns", ReturnsGeneratorFUNArgs = list(is.na.zero = TRUE,  Fun = list(Fun = "APC", lag = 3)))
+  # SEEMS # XdepreciateX recorrect IsATarget usage.
+  # MEANT for competive assets that have
+  # both a "current" and "leading" value (and future _wts decision as an investment)
+  # e.g. bonds v.s. stocks vs. real_estate
+  # !!!"GDP" (is an example) but is improper USAGE!!
+
+  # add poor performance data (CRASHACML)
+  addCrashData(mktdata)
 
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
@@ -84,10 +92,11 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # need xts attributes separating what I AM PREDICTING(target) v.s. (investment)(investments)
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
 
-  # LEFT_OFF # UnRateMachinetradeModel(Symbol = "GDP", src = "FRED2")
-  # LEFT_OFF:           (1) choose the BEST 75% PREDICTED GDP.apc.3leadingrets
-  #         #           (2) assign GSPC.apc.1leadingrets_wts <- 1: BEST 75% (ABOVE in the line above)
-  #                     (3) buy GSPC.apc.1currentrets (INSTEAD OF GDP) investment
+  # LEFT_OFF # UnRateMachinetradeModel
+  #                     (1) decide the *next line* using 'poor performance data (CRASHACML)'
+  #                     (2) choose the BEST 75% PREDICTED GSPC.apc.1leadingrets
+  #                     (3) assign GSPC.apc.1leadingrets_wts <- 1: BEST 75% (ABOVE in the line above)
+  #                     (4) buy GSPC.apc.1currentrets (INSTEAD OF GDP) investment
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")

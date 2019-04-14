@@ -4851,6 +4851,48 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' add poor performance data (CRASHACML)
+#'
+#' @description
+#' \preformatted{
+#'
+#' Of the 'target', find the two(2) worst performing months
+#' over the next(future six(6)) months
+#' and then sum those two(2) bad worst performing months together.
+#'
+#' calls
+#'
+#' Predictee <- xtsAttributes(mktdata)[["rettarget"]]
+#' sumOrdersXts(mktdata[, Predictee], r =  -6:-1, nt = 2)
+#'
+#' see ? sumOrdersXts
+#'
+#' }
+#'
+#' @param xTs xts object
+#' @param Predictee target. xtsAttributes(mktdat)[["rettarget"]](Default)
+#' @return xts object with merged data into xTs
+#' @export
+addCrashData <- function(xTs = NULL, Predictee = NULL) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+
+  # xTs  <- initXts(xTs)
+  if(is.null(Predictee)) Predictee <- xtsAttributes(xTs)[["rettarget"]]
+
+  # sumOrdersXts
+  xTs1 <- sumOrdersXts(xTs[, Predictee], r =  -6:-1, nt = 2)
+  colnames(xTs1) <- "CRASHACML"
+  xTs <- combineXts(xTs, xTs1)
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
+
+})}
+
 
 #' get the latest value in the month
 #'
@@ -6157,7 +6199,6 @@ prepAndDoMachineWtsData <- function(xTs = NULL,  ModelFormula = NULL, Predictee 
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  browser()
   xTs <- initXts(xTs)
   Dots <- list(...)
 

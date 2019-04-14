@@ -306,7 +306,7 @@ initEnv();on.exit({uninitEnv()})
         sQuote('password'),sQuote('dbname'),
         ") is not set"))
   }
-  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 100),user=user,password=password,dbname=dbname,
+  con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(max.con = 1000),user=user,password=password,dbname=dbname,
                                      host=host,port=port,options=options,forceISOdate=forceISOdate)
 
   if(schname != "") {
