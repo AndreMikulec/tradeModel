@@ -686,7 +686,8 @@ NVAR <- function(x = NULL) {
 NVAR.default <- function(x = NULL) {
 tryCatchLog::tryCatchLog({
 
-  base::NCOL(x)
+  if(is.null(x)) return(0L)
+  NCOL(x)
 
 })}
 
@@ -1583,6 +1584,63 @@ initEnv();on.exit({uninitEnv()})
 #'#   xts Attributes:
 #'#  NULL
 #'#
+#'# > ibm <- quantmod::getSymbols("IBM", from = "1970-01-01", to = "1970-01-13", auto.assign = FALSE)
+#'#
+#'# > pairWise(tail(ibm[,c("IBM.Open","IBM.Close")]), xts(, zoo::as.Date(0)[0]))
+#'# [[1]]
+#'# [[1]]$IBM.Open
+#'# IBM.Open
+#'# 1970-01-05   18.300
+#'# 1970-01-06   18.413
+#'# 1970-01-07   18.425
+#'# 1970-01-08   18.438
+#'# 1970-01-09   18.475
+#'# 1970-01-12   18.450
+#'#
+#'# [[1]][[2]]
+#'# Data:
+#'#   numeric(0)
+#'#
+#'# Index:
+#'#   Date of length 0
+#'#
+#'#
+#'# [[2]]
+#'# [[2]]$IBM.Close
+#'# IBM.Close
+#'# 1970-01-05    18.413
+#'# 1970-01-06    18.425
+#'# 1970-01-07    18.438
+#'# 1970-01-08    18.475
+#'# 1970-01-09    18.450
+#'# 1970-01-12    18.388
+#'#
+#'# [[2]][[2]]
+#'# Data:
+#'#   numeric(0)
+#'#
+#'# Index:
+#'#   Date of length 0
+#'#
+#'# > pairWise(tail(ibm[,c("IBM.Open")]), initXts())
+#'# [[1]]
+#'# [[1]]$IBM.Open
+#'# IBM.Open
+#'# 1970-01-05   18.300
+#'# 1970-01-06   18.413
+#'# 1970-01-07   18.425
+#'# 1970-01-08   18.438
+#'# 1970-01-09   18.475
+#'# 1970-01-12   18.450
+#'#
+#'# [[1]][[2]]
+#'# Data:
+#'#   numeric(0)
+#'#
+#'# Index:
+#'#   Date of length 0
+#'#
+#'#
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -1590,27 +1648,75 @@ initEnv();on.exit({uninitEnv()})
 #' @importFrom plyr llply
 pairWise <- function(x1, x2) {
 
+  # # recycling 1 to N recycling
+  # #
+  # if((NVAR(x1) != NVAR(x2)) && NVAR(x2) == 1) {
+  #
+  #   x2 <- DescTools::DoCall(cbind, rep(list(x2),NVAR(x1)))
+  #   Names(x2) <- rep(Names(x2)[1], NVAR(x2))
+  #
+  # }
+  # if((NVAR(x1) != NVAR(x2)) && NVAR(x1) == 1) {
+  #
+  #   x1 <- DescTools::DoCall(cbind, rep(list(x1),NVAR(x2)))
+  #   Names(x1) <- rep(Names(x1)[1], NVAR(x1))
+  # }
+
   # recycling 1 to N recycling
   #
-  if((NVAR(x1) != NVAR(x2)) && NVAR(x2) == 1) {
+  RepDone <- FALSE
+  if(!RepDone && NVAR(x1) != NVAR(x2) && NVAR(x1) > 0 && NVAR(x2) == 1) {
 
     x2 <- DescTools::DoCall(cbind, rep(list(x2),NVAR(x1)))
     Names(x2) <- rep(Names(x2)[1], NVAR(x2))
-
+    RepDone <- TRUE
   }
-  if((NVAR(x1) != NVAR(x2)) && NVAR(x1) == 1) {
+  if(!RepDone && NVAR(x1) != NVAR(x2) && NVAR(x2) > 0 && NVAR(x1) == 1) {
 
     x1 <- DescTools::DoCall(cbind, rep(list(x1),NVAR(x2)))
     Names(x1) <- rep(Names(x1)[1], NVAR(x1))
+    RepDone <- TRUE
+  }
+  #
+  # if(!RepDone && NVAR(x1) != NVAR(x2) && (NVAR(x2) == 0 || NVAR(x1) == 0)) {
+  #
+  #   if(NVAR(x1) == 0) {
+  #     x1 <- NULL
+  #   }
+  #
+  #   if(NVAR(x2) == 0) {
+  #     x2 <- NULL
+  #   }
+  #
+  #   RepDone <- TRUE
+  # }
+
+
+  if(!RepDone && NVAR(x1) != NVAR(x2) && (NVAR(x2) == 0 || NVAR(x1) == 0)) {
+
+    if(!RepDone && NVAR(x1) == 0 && NVAR(x2) > 0) {
+      x1 <- rep(list(x1), NVAR(x2))
+       RepDone <- TRUE
+    }
+
+    if(!RepDone && NVAR(x1) > 0  && NVAR(x2) == 0) {
+      x2 <- rep(list(x2), NVAR(x1))
+      RepDone <- TRUE
+    }
 
   }
 
   List <- c(list(),plyr::llply(x1, identity), plyr::llply(x2, identity))
 
-  L1coord <- seq(from = 1, by = 2, length.out = 0.5*length(List))
-  L2coord <- seq(from = 2, by = 2, length.out = 0.5*length(List))
+  if(length(List) > 2 ) { # e.g. 4, 6, 8, ...
+    L1coord <- seq(from = 1, by = 2, length.out = 0.5*length(List))
+    L2coord <- seq(from = 2, by = 2, length.out = 0.5*length(List))
+    res <- c(list(List[L1coord]),list(List[L2coord]))
+  } else { # i.e. 2
+    res <- list(List)
+  }
 
-  c(list(List[L1coord]),list(List[L2coord]))
+  return(res)
 
 }
 
@@ -3863,6 +3969,16 @@ initEnv();on.exit({uninitEnv()})
 #' # 1970-01-09               18.456                18.463               18.446                18.454
 #' # 1970-01-12               18.463                18.419               18.454                18.438
 #'
+#' # > explodeXts(ibm[,c("IBM.Open")], Fun = "TTR::SMA", Whiches = list(n = 2:3))
+#' # IBM.Open.TTR.SMA.n.2 IBM.Open.TTR.SMA.n.3
+#' # 1970-01-02                   NA                   NA
+#' # 1970-01-05               18.262                   NA
+#' # 1970-01-06               18.356               18.312
+#' # 1970-01-07               18.419               18.379
+#' # 1970-01-08               18.431               18.425
+#' # 1970-01-09               18.456               18.446
+#' # 1970-01-12               18.463               18.454
+#'
 #' }
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom purrr transpose
@@ -3899,7 +4015,11 @@ initEnv();on.exit({uninitEnv()})
   plyr::llply(WhichesCombinations, function(WhichCombo) {
 
     plyr::llply(pairWise(xTs1, xTs2), function(xTsColumnSet) {
-      xTs1 <- xTsColumnSet[[1]]; xTs2 <- xTsColumnSet[[2]]
+
+      xTs1 <- xTsColumnSet[[1]]
+      xTs2 <- xTsColumnSet[[2]]
+      # will no longer happen: pairWise always returns a 'list of pairs'
+      # if(length(xTsColumnSet) >= 2) { xTs2 <- xTsColumnSet[[2]] } else { xTs2 <- NULL }
 
       if(NVAR(xTs2)) { xTs2List <- list(xTs2) } else { xTs2List <- NULL }
       Temp <- DescTools::DoCall(Fun, args = c(list(), list(xTs1), xTs2List, WhichCombo, list(...)), quote = quote, envir = envir)

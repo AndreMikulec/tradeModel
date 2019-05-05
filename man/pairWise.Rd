@@ -100,5 +100,62 @@ Helper to eXplode.
 #   xts Attributes:
 #  NULL
 #
+# > ibm <- quantmod::getSymbols("IBM", from = "1970-01-01", to = "1970-01-13", auto.assign = FALSE)
+#
+# > pairWise(tail(ibm[,c("IBM.Open","IBM.Close")]), xts(, zoo::as.Date(0)[0]))
+# [[1]]
+# [[1]]$IBM.Open
+# IBM.Open
+# 1970-01-05   18.300
+# 1970-01-06   18.413
+# 1970-01-07   18.425
+# 1970-01-08   18.438
+# 1970-01-09   18.475
+# 1970-01-12   18.450
+#
+# [[1]][[2]]
+# Data:
+#   numeric(0)
+#
+# Index:
+#   Date of length 0
+#
+#
+# [[2]]
+# [[2]]$IBM.Close
+# IBM.Close
+# 1970-01-05    18.413
+# 1970-01-06    18.425
+# 1970-01-07    18.438
+# 1970-01-08    18.475
+# 1970-01-09    18.450
+# 1970-01-12    18.388
+#
+# [[2]][[2]]
+# Data:
+#   numeric(0)
+#
+# Index:
+#   Date of length 0
+#
+# > pairWise(tail(ibm[,c("IBM.Open")]), initXts())
+# [[1]]
+# [[1]]$IBM.Open
+# IBM.Open
+# 1970-01-05   18.300
+# 1970-01-06   18.413
+# 1970-01-07   18.425
+# 1970-01-08   18.438
+# 1970-01-09   18.475
+# 1970-01-12   18.450
+#
+# [[1]][[2]]
+# Data:
+#   numeric(0)
+#
+# Index:
+#   Date of length 0
+#
+#
 }
 }

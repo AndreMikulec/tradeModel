@@ -68,5 +68,15 @@ NOTE: if any xTs2, then xTs1 and xTs2 are paired/matched column position to colu
 # 1970-01-09               18.456                18.463               18.446                18.454
 # 1970-01-12               18.463                18.419               18.454                18.438
 
+# > explodeXts(ibm[,c("IBM.Open")], Fun = "TTR::SMA", Whiches = list(n = 2:3))
+# IBM.Open.TTR.SMA.n.2 IBM.Open.TTR.SMA.n.3
+# 1970-01-02                   NA                   NA
+# 1970-01-05               18.262                   NA
+# 1970-01-06               18.356               18.312
+# 1970-01-07               18.419               18.379
+# 1970-01-08               18.431               18.425
+# 1970-01-09               18.456               18.446
+# 1970-01-12               18.463               18.454
+
 }
 }

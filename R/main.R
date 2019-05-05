@@ -38,9 +38,9 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 
   # [ ] ANY future WORK_ON_THIS?
   message(" ")
-  message("futuredate: WILL5000IND\GSPC.apc.1leadingrets_wts is NA so WILL5000IND\CASH.apc.1leadingrets_wts == 1, see function cashWts()")
-  message("WILL5000IND\GSPC.apc.1leadingrets_wts HAS NOTHING to calculate it")
-  message("because ONLY doing (past and now): buildModel - WILL5000IND\GSPC.apc.1leadingrets_wts ~ unrate1 + unrate2 + unrate3")
+  message("futuredate: WILL5000IND GSPC.apc.1leadingrets_wts is NA so WILL5000IND CASH.apc.1leadingrets_wts == 1, see function cashWts()")
+  message("WILL5000IND GSPC.apc.1leadingrets_wts HAS NOTHING to calculate it")
+  message("because ONLY doing (past and now): buildModel - WILL5000IND GSPC.apc.1leadingrets_wts ~ unrate1 + unrate2 + unrate3")
   message("ALTERNATIVE FUTURE CODE?: if ALL OF wtsLeadingRetsClms(xTs) are NA then Cashwts is ALSO NA")
   message(" ")
   message(" ")
@@ -117,6 +117,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   # addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
+  browser()
   addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
   ## eventually(but not SOON)
