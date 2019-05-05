@@ -5400,13 +5400,27 @@ initEnv();on.exit({uninitEnv()})
   # can't do math on leading NAs
   unrate <- unrate[!is.na(unrate),]
 
-  unrateleadingrets_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
-                                   ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
-                                   ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
+  # unrateleadingrets_wts <- ifelse( ((SMA(unrate,2)        - SMA(    unrate   ,6)) <= 0)              |
+  #                                  ((SMA(lag(unrate),2)   - SMA(lag(unrate  ),6)) <= 0)              |
+  #                                  ((SMA(lag(unrate,2),2) - SMA(lag(unrate,2),6)) <= 0), 1.00, 0.00)
+
+  unrate1Indicator <- Less(SMA(    unrate   ,2), SMA(    unrate   ,6))
+  colnames(unrate1Indicator) <- "unrate1"
+  unrate2Indicator <- Less(SMA(lag(unrate)  ,2), SMA(lag(unrate  ),6))
+  colnames(unrate2Indicator) <- "unrate2"
+  unrate3Indicator <- Less(SMA(lag(unrate,2),2), SMA(lag(unrate,2),6))
+  colnames(unrate3Indicator) <- "unrate3"
+
+  unrateleadingrets_wts <-   ifelse( (unrate1Indicator <= 0)              |
+                                     (unrate2Indicator <= 0)              |
+                                     (unrate3Indicator <= 0), 1.00, 0.00)
+
   unrateleadingrets_wts[is.na(unrateleadingrets_wts)] <- 1 # 100% allocated
 
   LeadingRetWtsColName <-  stringr::str_c(LeadingRetColName, "_wts")
   colnames(unrateleadingrets_wts)[1] <- LeadingRetWtsColName
+
+  message(stringr::str_c("End   buildModel - ", LeadingRetWtsColName, " ~ unrate1 + unrate2 + unrate3"))
 
   unratecurrentrets_wts <- lag.xts(unrateleadingrets_wts)
 

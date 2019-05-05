@@ -78,9 +78,9 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # !!!"GDP" (is an example) but is improper USAGE!!
 
   # add poor performance data (CRASHACML)
-  #' Of the 'target', find the two(2) worst performing months
-  #' over the next(future six(6)) months
-  #' and then sum those two(2) bad worst performing months together.
+  # Of the 'target', find the two(2) worst performing months
+  # over the next(future six(6)) months
+  # and then sum those two(2) bad worst performing months together.
   addCrashData(mktdata)
 
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
