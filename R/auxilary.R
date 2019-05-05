@@ -6775,7 +6775,7 @@ initEnv();on.exit({uninitEnv()})
   message(stringr::str_c("      *** Should choose to invest OFTEN in One(1): ", xtsAttributes(xTs)[["rettarget"]], " ***      "))
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
   # print(tail(xTs[, setdiff(safeClms(xTs),  c(valueLeadingRetsClms(xTs), wtsCurrentRetsClms(xTs), CASHClms(xTs)))], n = n))
-  print(tail(xTs[, c(currentRetsClms(xTs), nonImportantClmns(xTs), leadingRetsWtsClms(xTs))]))
+  print(tail(xTs[, c(currentRetsClms(xTs), nonImportantClmns(xTs), leadingRetsWtsClms(xTs))], n = n))
                                          # "Fitted" and "predictor columns" maybe later I should/could split this up
   # invisible(xTs)
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData, xTsInvisible = TRUE))

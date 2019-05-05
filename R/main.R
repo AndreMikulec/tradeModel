@@ -34,7 +34,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   appendAllOtherWts(mktdata)
 
   # printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)  %>%
-  printTail(mktdata, "Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)
+  printTail(mktdata, title = "Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)
 
   # (4) apply in action
   portfolioMonthlyReturns(mktdata)
@@ -78,6 +78,9 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # !!!"GDP" (is an example) but is improper USAGE!!
 
   # add poor performance data (CRASHACML)
+  #' Of the 'target', find the two(2) worst performing months
+  #' over the next(future six(6)) months
+  #' and then sum those two(2) bad worst performing months together.
   addCrashData(mktdata)
 
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
@@ -97,7 +100,9 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   #                     (2) DONE. choose the BEST 75% PREDICTED GSPC.apc.1leadingrets
   #                     (3) DONE. assign GSPC.apc.1leadingrets_wts <- 1: BEST 75% (ABOVE in the line above)
   #                     (4) DONE. buy GSPC.apc.1currentrets (INSTEAD OF GDP) investment
-  #                     (5) TODO ADD predictors: Predictors UNRATE, 'umich centiment', 'other recession indicators'
+  #                     (5) TODO [ ] VERIFY/FIX: machine optimization function: TO BE COMPATIBLE WITH CRASHACML
+  #                     (6) TODO [ ] ADD predictors: Predictors UNRATE, 'umich centiment', 'other recession indicators'
+
   #                                              "GeneralMathIndicators" (similar to RecessionSight)
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
@@ -114,7 +119,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   appendAllOtherWts(mktdata)
 
   # printTail("Exact Schedule of Leading of UnRateMachine Returns and Decisions") %>%
-  printTail(mktdata, "Exact Schedule of Leading of UnRateMachine Returns and Decisions")
+  printTail(mktdata, title = "Exact Schedule of Leading of UnRateMachine Returns and Decisions", n = 10)
 
   # (4) apply in action
   portfolioMonthlyReturns(mktdata)
