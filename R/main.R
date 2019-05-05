@@ -36,6 +36,15 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
   # printTail("Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)  %>%
   printTail(mktdata, title = "Exact Schedule of Leading of Eye Ball Returns and Decisions", n = 10)
 
+  # [ ] ANY future WORK_ON_THIS?
+  message(" ")
+  message("futuredate: WILL5000IND\GSPC.apc.1leadingrets_wts is NA so WILL5000IND\CASH.apc.1leadingrets_wts == 1, see function cashWts()")
+  message("WILL5000IND\GSPC.apc.1leadingrets_wts HAS NOTHING to calculate it")
+  message("because ONLY doing (past and now): buildModel - WILL5000IND\GSPC.apc.1leadingrets_wts ~ unrate1 + unrate2 + unrate3")
+  message("ALTERNATIVE FUTURE CODE?: if ALL OF wtsLeadingRetsClms(xTs) are NA then Cashwts is ALSO NA")
+  message(" ")
+  message(" ")
+
   # (4) apply in action
   portfolioMonthlyReturns(mktdata)
 
