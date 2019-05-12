@@ -2856,6 +2856,49 @@ RNKS <- runRanksTTR
 
 
 
+#' trends
+#'
+#' @param x mktdata object
+#' @param col column of the mktdata object to perform the trends
+#' @examples
+#' \dontrun{
+#'
+#' # called from a 'main'
+#' trends(mktdata, "UNRATE", UseAOMX = TRUE)
+#'
+#'}
+#' @importFrom tryCatchLog tryCatchLog
+#' @export
+trends <- function(xTs, col = NULL, UseAOMX = FALSE) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  InBndxTs <- as.character(substitute(xTs))
+  initMktData(xTs, InBndxTs)
+
+  if(is.null(col)) stop("trends: user must provide a column name")
+
+  if(UseAOMX) {
+    xTs1 <- explodeXts(xTs[, col], Fun = "AOMX", Whiches = list(mm = 4, m = 3))
+  } else {
+    xTs1 <- xTs[, col]
+  }
+
+  merge(
+      explodeXts(xTs1, Fun = "RNKS", Whiches = list(w = 16, r = c(2,4,8)))
+    , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  8, r = c(2,4  )))
+    , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  4, r = c(2    )))
+  ) -> xTs1
+
+  xTs <- combineXts(xTs, xTs1)
+
+  # xTs
+  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
+
+})}
+
+
+
 #' backward looking and forward looking Ranks using data.table
 #'
 #' @description

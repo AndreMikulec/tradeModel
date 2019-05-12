@@ -117,7 +117,8 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   # addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
-  browser()
+  trends(mktdata, "UNRATE", UseAOMX = TRUE)
+
   addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
   ## eventually(but not SOON)
