@@ -3308,6 +3308,52 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' average order max (AOMX)
+#'
+#' @description
+#' \preformatted{
+#' Of the last mm observations(including self), find the hightest m observations,
+#' and then average those m observations
+#' }
+#' @examples
+#' \dontrun{
+#' Of the last three(3) observations(including self), find the hightest two(2) observations,
+#' and then average those two(2) observations.
+#'
+#' xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4))
+#'
+#' Data
+#' 1970-01-01    1
+#' 1970-01-02    2
+#' 1970-01-03    3
+#' 1970-01-04    4
+#' 1970-01-05    5
+#'
+#' AOMX(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)), mm = 3, m  = 2)
+#'
+#' AOMX
+#' 1970-01-03  2.5
+#' 1970-01-04  3.5
+#' 1970-01-05  4.5
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo na.trim
+#' @export
+AOMX <- function(x, mm = 4, m = 3) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  xTs <- sumOrdersXts(zoo::na.trim(x),  r = 0:(mm-1), View = "max", nt = m)/m
+  colnames(xTs)[1] <- "AOMX"
+  xTs
+
+})}
+
+
+
+
+
 #' annualized an xts object
 #'
 #'
