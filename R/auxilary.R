@@ -2726,6 +2726,8 @@ multitable___mouter <- function(x, ...){
 
 #' rolling ranks using TTR::runPercentRank
 #'
+#' @rdname runRanksTTR
+#'
 #' @description
 #' \preformatted{
 #'
@@ -2797,9 +2799,12 @@ runRanksTTR <- function(x, window = 10, ranks = 4, cumulative = F, exact.multipl
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
+  # "runRanksTTR" xor "RNKS"
+  MatchCallFnctName <- as.character(as.list(match.call())[[1]])
+
   x <- initXts(x)
   # NOT required for eXplode
-  if(NVAR(x) > 1) stop("runRanksTTR only allows a single column xts object")
+  if(NVAR(x) > 1) stop(stringr::str_c(MatchCallFnctName, " only allows a single column xts object"))
 
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
@@ -2807,7 +2812,7 @@ initEnv();on.exit({uninitEnv()})
   if(!is.null(w)) window <- w
   if(!is.null(r)) ranks <- r
 
-  if(ranks <= 1 || window <= 1) stop("runRanksTTR: parameters \"windows\" and \"ranks\" must be greater than one(1)")
+  if(ranks <= 1 || window <= 1) stop(stringr::str_c(MatchCallFnctName, ": parameters \"windows\" and \"ranks\" must be greater than one(1)"))
 
   if(window <= NROW(x)) {
     x %>%
@@ -2825,9 +2830,9 @@ initEnv();on.exit({uninitEnv()})
 
   # explodeXts compatible
   if(derivedDataDetailed == TRUE) {
-    colnames(res) <- stringr::str_c("runRanksTTR", ranks)
+    colnames(res) <- stringr::str_c(MatchCallFnctName, ranks)
   } else {
-    colnames(res) <- "runRanksTTR"
+    colnames(res) <-  MatchCallFnctName
   }
   if(originalData == TRUE) {
     x <- x[,1, drop = F]
@@ -2840,7 +2845,10 @@ initEnv();on.exit({uninitEnv()})
   return(x)
 
 })}
-
+#' @rdname runRanksTTR
+#'
+#'@export
+RNKS <- runRanksTTR
 
 
 

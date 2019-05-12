@@ -2,9 +2,14 @@
 % Please edit documentation in R/auxilary.R
 \name{runRanksTTR}
 \alias{runRanksTTR}
+\alias{RNKS}
 \title{rolling ranks using TTR::runPercentRank}
 \usage{
 runRanksTTR(x, window = 10, ranks = 4, cumulative = F,
+  exact.multiplier = 0.5, originalData = FALSE,
+  derivedDataDetailed = FALSE, w = NULL, r = NULL)
+
+RNKS(x, window = 10, ranks = 4, cumulative = F,
   exact.multiplier = 0.5, originalData = FALSE,
   derivedDataDetailed = FALSE, w = NULL, r = NULL)
 }
