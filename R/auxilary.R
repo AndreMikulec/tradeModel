@@ -2800,7 +2800,11 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   # "runRanksTTR" xor "RNKS"
-  MatchCallFnctName <- as.character(as.list(match.call())[[1]])
+  MatchCallFnctName <- try( {as.character(as.list(match.call())[[1]])}, silent = T)
+  if(inherits(MatchCallFnctName, "try-error")) {
+    # may not-be-directly literally called (e.g. DescTools::DoCall)
+    MatchCallFnctName <- "RNKS"
+  }
 
   x <- initXts(x)
   # NOT required for eXplode
