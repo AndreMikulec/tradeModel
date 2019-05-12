@@ -2756,6 +2756,8 @@ multitable___mouter <- function(x, ...){
 #' See ? TTR::runPercentRank
 #' @param originalData FALSE(default). If TRUE include original data in the output.
 #' @param derivedDataDetailed FALSE(default) if TRUE, include the original data in the output.
+#' @param w alternative name for 'window'. Overrides window.
+#' @param r alternative name for ranks.  Overrides ranks.
 #' @return xts object
 #' @examples
 #' \dontrun{
@@ -2791,7 +2793,7 @@ multitable___mouter <- function(x, ...){
 #' @importFrom TTR runPercentRank
 #' @importFrom stringr str_c
 #' @export
-runRanksTTR <- function(x, window = 10, ranks = 4, cumulative = F, exact.multiplier = 0.5, originalData = FALSE, derivedDataDetailed = FALSE) {
+runRanksTTR <- function(x, window = 10, ranks = 4, cumulative = F, exact.multiplier = 0.5, originalData = FALSE, derivedDataDetailed = FALSE, w = NULL, r = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -2801,6 +2803,9 @@ initEnv();on.exit({uninitEnv()})
 
   xOrig <- x
   xOrigColName <- colnames(xOrig)[1]
+
+  if(!is.null(w)) window <- w
+  if(!is.null(r)) ranks <- r
 
   if(ranks <= 1 || window <= 1) stop("runRanksTTR: parameters \"windows\" and \"ranks\" must be greater than one(1)")
 
@@ -2835,6 +2840,8 @@ initEnv();on.exit({uninitEnv()})
   return(x)
 
 })}
+
+
 
 
 #' backward looking and forward looking Ranks using data.table
@@ -3315,6 +3322,9 @@ initEnv();on.exit({uninitEnv()})
 #' Of the last mm observations(including self), find the hightest m observations,
 #' and then average those m observations
 #' }
+#' @param x  xts object
+#' @param mm  numer of last mm observations(including self)
+#' @param m number of hightest m observations
 #' @examples
 #' \dontrun{
 #' Of the last three(3) observations(including self), find the hightest two(2) observations,
@@ -3344,7 +3354,7 @@ AOMX <- function(x, mm = 4, m = 3) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  xTs <- sumOrdersXts(zoo::na.trim(x),  r = 0:(mm-1), View = "max", nt = m)/m
+  xTs <- sumOrdersXts(x,  r = 0:(mm-1), View = "max", nt = m)/m
   colnames(xTs)[1] <- "AOMX"
   xTs
 

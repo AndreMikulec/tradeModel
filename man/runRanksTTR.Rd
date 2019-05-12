@@ -6,7 +6,7 @@
 \usage{
 runRanksTTR(x, window = 10, ranks = 4, cumulative = F,
   exact.multiplier = 0.5, originalData = FALSE,
-  derivedDataDetailed = FALSE)
+  derivedDataDetailed = FALSE, w = NULL, r = NULL)
 }
 \arguments{
 \item{x}{xts object}
@@ -29,6 +29,10 @@ See ? TTR::runPercentRank}
 \item{originalData}{FALSE(default). If TRUE include original data in the output.}
 
 \item{derivedDataDetailed}{FALSE(default) if TRUE, include the original data in the output.}
+
+\item{w}{alternative name for 'window'. Overrides window.}
+
+\item{r}{alternative name for ranks.  Overrides ranks.}
 }
 \value{
 xts object

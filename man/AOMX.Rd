@@ -6,6 +6,13 @@
 \usage{
 AOMX(x, mm = 4, m = 3)
 }
+\arguments{
+\item{x}{xts object}
+
+\item{mm}{numer of last mm observations(including self)}
+
+\item{m}{number of hightest m observations}
+}
 \description{
 \preformatted{
 Of the last mm observations(including self), find the hightest m observations,
