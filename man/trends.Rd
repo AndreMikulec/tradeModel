@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxilary.R
 \name{trends}
 \alias{trends}
-\title{trends}
+\title{collection of curves of the trends}
 \usage{
 trends(xTs, col = NULL, UseAOMX = FALSE)
 }
@@ -12,13 +12,13 @@ trends(xTs, col = NULL, UseAOMX = FALSE)
 \item{x}{mktdata object}
 }
 \description{
-trends
+collection of curves of the trends
 }
 \examples{
 \dontrun{
 
-# called from a 'main'
-trends(mktdata, "UNRATE", UseAOMX = TRUE)
+# called
+trends(xTs, "UNRATE", UseAOMX = TRUE)
 
 }
 }

@@ -2856,15 +2856,15 @@ RNKS <- runRanksTTR
 
 
 
-#' trends
+#' collection of curves of the trends
 #'
 #' @param x mktdata object
 #' @param col column of the mktdata object to perform the trends
 #' @examples
 #' \dontrun{
 #'
-#' # called from a 'main'
-#' trends(mktdata, "UNRATE", UseAOMX = TRUE)
+#' # called
+#' trends(xTs, "UNRATE", UseAOMX = TRUE)
 #'
 #'}
 #' @importFrom tryCatchLog tryCatchLog
@@ -2873,8 +2873,9 @@ trends <- function(xTs, col = NULL, UseAOMX = FALSE) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  InBndxTs <- as.character(substitute(xTs))
-  initMktData(xTs, InBndxTs)
+  # no longer works on mktdata
+  # InBndxTs <- as.character(substitute(xTs))
+  # initMktData(xTs, InBndxTs)
 
   if(is.null(col)) stop("trends: user must provide a column name")
 
@@ -2890,10 +2891,15 @@ initEnv();on.exit({uninitEnv()})
     , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  4, r = c(2    )))
   ) -> xTs1
 
-  xTs <- combineXts(xTs, xTs1)
+  # no longer works on mktdata
+  # mktdata legacy
+  # xTs <- combineXts(xTs, xTs1)
+  xTs <- xTs1
 
+  # no longer works on mktdata
   # xTs
-  return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
+  # return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
+  return(xTs)
 
 })}
 
@@ -5828,6 +5834,37 @@ initEnv();on.exit({uninitEnv()})
   merge(unrate1Indicator, unrate2Indicator, unrate3Indicator)
 
 })}
+
+
+
+#' collection of curves of the trends Indicator using average order max (AOMX)
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo na.trim
+trendsWithAOMIndicators <- function(x = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+
+  x <- initXts(x)
+
+  # can not do math on leading NAs
+  # (actually can not do any math on 'any' NAs)
+  x <- zoo::na.trim(x)
+
+  # xTs <- trends(x, col = "UNRATE", UseAOMX = TRUE)
+  # 'col' WOULD HAVE already BEEN filtered by the caller of trendsWithAOMIndicators
+  xTs <- trends(x, rep(TRUE, NVAR(x)), UseAOMX = TRUE)
+
+  return(xTs)
+
+})}
+
 
 
 

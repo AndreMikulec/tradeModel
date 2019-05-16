@@ -4,7 +4,8 @@
 \alias{UnRateMachinetradeModel}
 \title{Predicts Symbol eom returns using UNRATE and Machine learning}
 \usage{
-UnRateMachinetradeModel(Symbol = NULL, src = NULL)
+UnRateMachinetradeModel(Symbol = NULL, src = NULL,
+  IndicatorGeneratorFUN = NULL)
 }
 \description{
 Predicts Symbol eom returns using UNRATE and Machine learning
@@ -14,7 +15,15 @@ Predicts Symbol eom returns using UNRATE and Machine learning
 
 # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the machine
 
-UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED")
-UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo")
+UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "unrateEyeballIndicators")
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+
+same as above but uses trends
+technically works: but gives VERY BAD predictions or OLD xgboost upside down predictions
+alt derived data(columns) from 'trends'
+
+UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMIndicators")
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMIndicators")
+
 }
 }

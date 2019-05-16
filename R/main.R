@@ -65,12 +65,20 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #'
 #' # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the machine
 #'
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED")
-#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo")
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "unrateEyeballIndicators")
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+#'
+#' same as above but uses trends
+#' technically works: but gives VERY BAD predictions or OLD xgboost upside down predictions
+#' alt derived data(columns) from 'trends'
+#'
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMIndicators")
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMIndicators")
+#'
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
+UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGeneratorFUN = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -105,24 +113,27 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
 
   # LEFT_OFF # UnRateMachinetradeModel
-  #                     (1) DONE. decide the *next line* using 'poor performance data (CRASHACML)'
-  #                     (2) DONE. choose the BEST 75% PREDICTED GSPC.apc.1leadingrets
-  #                     (3) DONE. assign GSPC.apc.1leadingrets_wts <- 1: BEST 75% (ABOVE in the line above)
-  #                     (4) DONE. buy GSPC.apc.1currentrets (INSTEAD OF GDP) investment
-  #                     (5) TODO [ ] VERIFY/FIX: machine optimization function: TO BE COMPATIBLE WITH CRASHACML
-  #                     (6) TODO [ ] ADD predictors: Predictors UNRATE, 'umich centiment', 'other recession indicators'
+  #                     (1) TODO [ ] VERIFY/FIX: machine optimization function: TO BE COMPATIBLE WITH CRASHACML
+  #                     (2) TODO: FIND/INTEGERATE: 'rank since last crash' (WHERE IS THAT?)
+  #                     (3) TODO [ ] ADD predictors: Predictors UNRATE, 'umich centiment', 'other recession indicators'
 
   #                                              "GeneralMathIndicators" (similar to RecessionSight)
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   # addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
-  trends(mktdata, "UNRATE", UseAOMX = TRUE)
+  ### (no longer callable from 'main' (no longer works here))
+  ### trends(mktdata, "UNRATE", UseAOMX = TRUE)
 
-  ### LEFT_OFF: TODO: get addSymbolMachineWts: to use the new data(columns) from 'trends ###
-  addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+  # (still works)
+  # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+  #
+  # (technically works: but gives VERY BAD predictions: alt derived data(columns) from 'trends) ###
+  # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "trendsWithAOMIndicators")
+  #
+  addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = IndicatorGeneratorFUN)
 
-  ## eventually(but not SOON)
+  ## eventually(someday: but UNRATE+UMICH may be better?)
   ## addSymbolMachineWts(mktdata, Predictors = c("UNRATE", "GDP", "GDP_DLY"), IndicatorGeneratorFUN = "unrateAndGDPIndicators")
 
   # excess
