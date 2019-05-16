@@ -6481,7 +6481,7 @@ initEnv();on.exit({uninitEnv()})
   InitialMachineWtsData <- xTs[ , c(valueLeadingRetsClms(xTs), valuePredictorClms(xTs))]
 
   if(!all(Predictors %in% colnames(InitialMachineWtsData))) {
-    stop(stringr::str_c("prepAndDoMachineWtsData is missing Predictors:", stringr::str_c(Predictors[!Predictors %in% colnames(InitialMachineWtsData)], collapse = ", "), collapse = " "))
+    stop(stringr::str_c("prepAndDoMachineWtsData is missing Predictors:", stringr::str_c(Predictors[!Predictors %Like% colnames(InitialMachineWtsData)], collapse = ", "), collapse = " "))
   }
   if(!Predictee %in% colnames(InitialMachineWtsData))
     stop(stringr::str_c("prepAndDoMachineWtsData needs Predictee: ", Predictee, collapse = " "))
