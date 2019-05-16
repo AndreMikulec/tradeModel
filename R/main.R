@@ -119,6 +119,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL) {
 
   trends(mktdata, "UNRATE", UseAOMX = TRUE)
 
+  ### LEFT_OFF: TODO: get addSymbolMachineWts: to use the new data(columns) from 'trends ###
   addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
   ## eventually(but not SOON)
