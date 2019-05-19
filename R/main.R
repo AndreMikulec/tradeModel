@@ -20,10 +20,10 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
-  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
+  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = FALSE)
 
   # fancifyXts(FRED2) requires extra FRED data: FRED2
-  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
+  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts", NA.LOCF = FALSE)
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolEyeBallWts(mktdata, Symbol = Symbol)
@@ -104,10 +104,12 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGenerato
 
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
-  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
+  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = FALSE)
+
+  addEomData(mktdata, Symbol = "UMCSENT", src = "UMich", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = TRUE)
 
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
-  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
+  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts", NA.LOCF = FALSE)
 
   # need xts attributes separating what I AM PREDICTING(target) v.s. (investment)(investments)
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)

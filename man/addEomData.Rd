@@ -5,7 +5,7 @@
 \title{get the end of month data}
 \usage{
 addEomData(xTs = NULL, Symbol = NULL, src = NULL,
-  SymplifyGeneratorFUN = NULL)
+  SymplifyGeneratorFUN = NULL, NA.LOCF = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -15,6 +15,8 @@ addEomData(xTs = NULL, Symbol = NULL, src = NULL,
 \item{src}{getSymbols source}
 
 \item{SymplifyGeneratorFUN}{Function that Formats the output.}
+
+\item{NA.LOCF}{after simplification performe zoo::na.locf}
 }
 \value{
 xts object with merged data into xTs
