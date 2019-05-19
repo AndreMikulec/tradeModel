@@ -5910,13 +5910,14 @@ initEnv();on.exit({uninitEnv()})
 
 
 
-#' collection of curves of the trends Indicator using average order max (AOMX)
+#' collection of curves of the trends Indicator using average order
 #'
 #' @description
 #' \preformatted{
 #'
 #' }
-#'
+#' @param x xts object
+#' @rdname trendsWithAOMIndicators
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo na.trim
@@ -5927,12 +5928,12 @@ initEnv();on.exit({uninitEnv()})
   x <- initXts(x)
   Dots <- list(...)
 
-  if("UseAOMX" %in% Names(Dots)) {
+  if("UseAOMX" %in% names(Dots)) {
     UseAOMX <- Dots[["UseAOMX"]]
   } else {
     UseAOMX <- FALSE
   }
-  if("UseAOMN" %in% Names(Dots)) {
+  if("UseAOMN" %in% names(Dots)) {
     UseAOMN <- Dots[["UseAOMN"]]
   } else {
     UseAOMN <- FALSE
@@ -5949,8 +5950,25 @@ initEnv();on.exit({uninitEnv()})
   return(xTs)
 
 })}
+#' collection of curves of the trends Indicator using average order max
+#'
+#' @rdname trendsWithAOMIndicators
+#' @export
+trendsWithAOMXIndicators <- function(x = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  trendsWithAOMIndicators(x = x, UseAOMX = TRUE, ...)
+})}
 
-
+#' collection of curves of the trends Indicator using average order min
+#'
+#' @rdname trendsWithAOMIndicators
+#' @export
+trendsWithAOMNIndicators <- function(x = NULL, ...) {
+tryCatchLog::tryCatchLog({
+initEnv();on.exit({uninitEnv()})
+  trendsWithAOMIndicators(x = x, UseAOMN = TRUE, ...)
+})}
 
 
 #' True Sortino Ratio "summary function"

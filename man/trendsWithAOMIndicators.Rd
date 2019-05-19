@@ -2,9 +2,18 @@
 % Please edit documentation in R/auxilary.R
 \name{trendsWithAOMIndicators}
 \alias{trendsWithAOMIndicators}
-\title{collection of curves of the trends Indicator using average order max (AOMX)}
+\alias{trendsWithAOMXIndicators}
+\alias{trendsWithAOMNIndicators}
+\title{collection of curves of the trends Indicator using average order}
 \usage{
 trendsWithAOMIndicators(x = NULL, ...)
+
+trendsWithAOMXIndicators(x = NULL, ...)
+
+trendsWithAOMNIndicators(x = NULL, ...)
+}
+\arguments{
+\item{x}{xts object}
 }
 \description{
 \preformatted{

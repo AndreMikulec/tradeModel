@@ -22,8 +22,8 @@ same as above but uses trends
 technically works: but gives VERY BAD predictions or OLD xgboost upside down predictions
 alt derived data(columns) from 'trends'
 
-UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMIndicators")
-UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMIndicators")
+UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 
 }
 }

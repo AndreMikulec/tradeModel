@@ -72,8 +72,8 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #' technically works: but gives VERY BAD predictions or OLD xgboost upside down predictions
 #' alt derived data(columns) from 'trends'
 #'
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMIndicators")
-#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMIndicators")
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 #'
 #' }
 #' @export
@@ -133,7 +133,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGenerato
   # (technically works: but gives VERY BAD predictions: alt derived data(columns) from 'trends) ###
   # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "trendsWithAOMIndicators")
   #
-  addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = IndicatorGeneratorFUN, UseAOMX = TRUE)
+  addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = IndicatorGeneratorFUN)
 
   ## eventually(someday: but UNRATE+UMICH may be better?)
   ## addSymbolMachineWts(mktdata, Predictors = c("UNRATE", "GDP", "GDP_DLY"), IndicatorGeneratorFUN = "unrateAndGDPIndicators")
