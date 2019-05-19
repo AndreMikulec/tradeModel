@@ -4,15 +4,23 @@
 \alias{trends}
 \title{collection of curves of the trends}
 \usage{
-trends(xTs, col = NULL, UseAOMX = FALSE)
+trends(xTs, col = NULL, UseAOMX = FALSE, UseAOMN = FALSE)
 }
 \arguments{
 \item{col}{column of the mktdata object to perform the trends}
 
+\item{UseAOMX}{FALSE(default) use average order max}
+
+\item{UseAOMN}{FALSE(default) use average order min}
+
 \item{x}{mktdata object}
 }
 \description{
-collection of curves of the trends
+\preformatted{
+Of average order max/min, . . .
+if UseAOMX = TRUE and UseAOMN = TRUE, then just after
+AOMX is called, then AOMN is called.
+}
 }
 \examples{
 \dontrun{

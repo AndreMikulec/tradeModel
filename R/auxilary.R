@@ -2858,8 +2858,17 @@ RNKS <- runRanksTTR
 
 #' collection of curves of the trends
 #'
+#' @description
+#' \preformatted{
+#' Of average order max/min, . . .
+#' if UseAOMX = TRUE and UseAOMN = TRUE, then just after
+#' AOMX is called, then AOMN is called.
+#' }
+#'
 #' @param x mktdata object
 #' @param col column of the mktdata object to perform the trends
+#' @param UseAOMX FALSE(default) use average order max
+#' @param UseAOMN FALSE(default) use average order min
 #' @examples
 #' \dontrun{
 #'
@@ -2869,7 +2878,7 @@ RNKS <- runRanksTTR
 #'}
 #' @importFrom tryCatchLog tryCatchLog
 #' @export
-trends <- function(xTs, col = NULL, UseAOMX = FALSE) {
+trends <- function(xTs, col = NULL, UseAOMX = FALSE, UseAOMN = FALSE) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -2877,12 +2886,23 @@ initEnv();on.exit({uninitEnv()})
   # InBndxTs <- as.character(substitute(xTs))
   # initMktData(xTs, InBndxTs)
 
-  if(is.null(col)) stop("trends: user must provide a column name")
+  if(is.null(col)) stop("trends: user must provide [a] column names vector or a TRUE/FALSE vector")
 
+  xTs1 <- xTs
+  AnyHasExploded <- FALSE
   if(UseAOMX) {
-    xTs1 <- explodeXts(xTs[, col], Fun = "AOMX", Whiches = list(mm = 4, m = 3))
-  } else {
-    xTs1 <- xTs[, col]
+    if(AnyHasExploded) col <- colnames(xTs1)
+    xTs1 <- explodeXts(xTs1[, col], Fun = "AOMX", Whiches = list(mm = 4, m = 3))
+    AnyHasExploded <- TRUE
+  }
+  if(UseAOMN) {
+    if(AnyHasExploded) col <- colnames(xTs1)
+    xTs1 <- explodeXts(xTs1[, col], Fun = "AOMN", Whiches = list(mm = 4, m = 3))
+    AnyHasExploded <- TRUE
+  }
+  if(!AnyHasExploded)
+  {
+    xTs1 <- xTs1[, col]
   }
 
   merge(
@@ -3420,6 +3440,53 @@ initEnv();on.exit({uninitEnv()})
   xTs
 
 })}
+
+
+
+#' average order minimum (AOMN)
+#'
+#' @description
+#' \preformatted{
+#' Of the last mm observations(including self), find the lowest m observations,
+#' and then average those m observations
+#' }
+#' @param x  xts object
+#' @param mm  numer of last mm observations(including self)
+#' @param m number of lowest m observations
+#' @examples
+#' \dontrun{
+#' Of the last three(3) observations(including self), find the lowest two(2) observations,
+#' and then average those two(2) observations.
+#'
+#' xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4))
+#'
+#' Data
+#' 1970-01-01    1
+#' 1970-01-02    2
+#' 1970-01-03    3
+#' 1970-01-04    4
+#' 1970-01-05    5
+#'
+#' AOMN(xts(matrix(1:5,ncol = 1, dimnames = list(list(), list("Data"))), zoo::as.Date(0:4)), mm = 3, m  = 2)
+#'
+#' AOMN
+#' 1970-01-03  1.5
+#' 1970-01-04  2.5
+#' 1970-01-05  3.5
+#'
+#' }
+#' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo na.trim
+#' @export
+AOMN <- function(x, mm = 4, m = 3) {
+  tryCatchLog::tryCatchLog({
+    initEnv();on.exit({uninitEnv()})
+
+    xTs <- sumOrdersXts(x,  r = 0:(mm-1), View = "min", nt = m)/m
+    colnames(xTs)[1] <- "AOMN"
+    xTs
+
+  })}
 
 
 
@@ -5858,6 +5925,18 @@ tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
   x <- initXts(x)
+  Dots <- list(...)
+
+  if("UseAOMX" %in% Names(Dots)) {
+    UseAOMX <- Dots[["UseAOMX"]]
+  } else {
+    UseAOMX <- FALSE
+  }
+  if("UseAOMN" %in% Names(Dots)) {
+    UseAOMN <- Dots[["UseAOMN"]]
+  } else {
+    UseAOMN <- FALSE
+  }
 
   # can not do math on leading NAs
   # (actually can not do any math on 'any' NAs)
@@ -5865,7 +5944,7 @@ initEnv();on.exit({uninitEnv()})
 
   # xTs <- trends(x, col = "UNRATE", UseAOMX = TRUE)
   # 'col' WOULD HAVE already BEEN filtered by the caller of trendsWithAOMIndicators
-  xTs <- trends(x, rep(TRUE, NVAR(x)), UseAOMX = TRUE)
+  xTs <- trends(x, rep(TRUE, NVAR(x)), UseAOMX = UseAOMX, UseAOMN = UseAOMN)
 
   return(xTs)
 
