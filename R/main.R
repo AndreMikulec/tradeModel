@@ -115,11 +115,9 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGenerato
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
 
   # LEFT_OFF # UnRateMachinetradeModel
-  #                     (1) TODO [ ] VERIFY/FIX: machine optimization function: TO BE COMPATIBLE WITH CRASHACML
-  #                     (2) TODO: FIND/INTEGERATE: 'rank since last crash' (WHERE IS THAT?)
-  #                     (3) TODO [ ] ADD predictors: Predictors UNRATE, 'umich centiment', 'other recession indicators'
 
-  #                                              "GeneralMathIndicators" (similar to RecessionSight)
+  #                     (2) TODO: [ ] FIND/INTEGERATE: 'rank since last crash' (WHERE IS THAT?)
+  #                     (3) TODO  [ ] ADD predictors: other recession indicators': WHAT DOES ** chavet/piger USE? **
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   # addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
@@ -130,7 +128,6 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGenerato
   # (still works)
   # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
   #
-
 
   ### REGULAR
   if(IndicatorGeneratorFUN == "unrateEyeballIndicators") {
