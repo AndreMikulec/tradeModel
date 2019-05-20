@@ -130,10 +130,19 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGenerato
   # (still works)
   # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
   #
-  # (technically works: but gives VERY BAD predictions: alt derived data(columns) from 'trends) ###
-  # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "trendsWithAOMIndicators")
-  #
-  addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = IndicatorGeneratorFUN)
+
+
+  ### REGULAR
+  if(IndicatorGeneratorFUN == "unrateEyeballIndicators") {
+    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = IndicatorGeneratorFUN)
+  } else {
+
+    ### (technically works: but gives UPSIDE DOWN predictions: alt derived data(columns) from 'trends) ###
+    # WORKS(SORT OF)
+    # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+
+    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c(IndicatorGeneratorFUN, "trendsWithAOMNIndicators"))
+  }
 
   ## eventually(someday: but UNRATE+UMICH may be better?)
   ## addSymbolMachineWts(mktdata, Predictors = c("UNRATE", "GDP", "GDP_DLY"), IndicatorGeneratorFUN = "unrateAndGDPIndicators")

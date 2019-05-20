@@ -5815,8 +5815,8 @@ initEnv();on.exit({uninitEnv()})
 
   DescTools::DoCall(prepAndDoMachineWtsData, c(list(),
                     list(xTs), Predictee = Predictee
-                             , Predictors = Predictors
-                             , IndicatorGeneratorFUN = IndicatorGeneratorFUN
+                             , list(Predictors = Predictors)
+                             , list(IndicatorGeneratorFUN = IndicatorGeneratorFUN)
                              , ModelTarget = ModelTarget
                              , Dots
   ))
@@ -6603,19 +6603,44 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(Predictors)) stop("prepAndDoMachineWtsData needs some Predictors")
   if(is.null(IndicatorGeneratorFUN)) stop("prepAndDoMachineWtsData needs an IndicatorGeneratorFUN function")
 
-  if(mode(IndicatorGeneratorFUN) == "function") {
-    IndicatorGeneratorFUN = match.fun(IndicatorGeneratorFUN)
-  } else {
-    # character function
-    IndicatorGeneratorFUN <- get(IndicatorGeneratorFUN)
-  }
-
   if(is.null(ModelTarget)) {
     ModelTarget_wts <- stringr::str_c(xtsAttributes(xTs)[["rettarget"]], "_wts")
   } else {
     # literally written derivation
     ModelTarget_wts <- stringr::str_c(ModelTarget, "_wts")
   }
+
+  # if(mode(IndicatorGeneratorFUN) == "function") {
+  #   IndicatorGeneratorFUN = match.fun(IndicatorGeneratorFUN)
+  # } else {
+  #   # character function
+  #   IndicatorGeneratorFUN <- get(IndicatorGeneratorFUN)
+  # }
+
+  if(length(IndicatorGeneratorFUN) > 1) {
+    IndicatorGeneratorFUN <- as.list(IndicatorGeneratorFUN)
+    IndicatorGeneratorFUNLIST <- list()
+    for(IndicatorGeneratorFUN1 in IndicatorGeneratorFUN) {
+      if(mode(IndicatorGeneratorFUN1) == "function") {
+        IndicatorGeneratorFUN1 = match.fun(IndicatorGeneratorFUN1)
+      } else {
+        # character function
+        IndicatorGeneratorFUN1 <- get(IndicatorGeneratorFUN1)
+      }
+      # list of elements
+      IndicatorGeneratorFUNLIST <- c(list(), IndicatorGeneratorFUNLIST, IndicatorGeneratorFUN1)
+    }
+    IndicatorGeneratorFUN <- IndicatorGeneratorFUNLIST
+  } else {
+    if(mode(IndicatorGeneratorFUN) == "function") {
+      IndicatorGeneratorFUN = match.fun(IndicatorGeneratorFUN)
+    } else {
+      # character function
+      IndicatorGeneratorFUN <- get(IndicatorGeneratorFUN)
+    }
+    # single element vector
+  }
+
 
   # REM:ONE column of "valueLeadingRetsClms(xTs)" is what I am trying to predict
   InitialMachineWtsData <- xTs[ , c(valueLeadingRetsClms(xTs), valuePredictorClms(xTs))]
@@ -6626,8 +6651,29 @@ initEnv();on.exit({uninitEnv()})
   if(!Predictee %in% colnames(InitialMachineWtsData))
     stop(stringr::str_c("prepAndDoMachineWtsData needs Predictee: ", Predictee, collapse = " "))
 
-                # unrateEyeballIndicators
-  Indicators <- IndicatorGeneratorFUN(InitialMachineWtsData[, Predictors], ...)
+  #               # unrateEyeballIndicators
+  # Indicators <- IndicatorGeneratorFUN(InitialMachineWtsData[, Predictors], ...)
+
+
+  if(length(Predictors) > 1) {
+    Predictors <- as.list(Predictors)
+    IndicatorsLIST <- list()
+    Predictors_iter <- 0L
+    for(Predictor in Predictors) {
+      Predictors_iter <- Predictors_iter + 1L
+      Indicator <-  IndicatorGeneratorFUN[[Predictors_iter]](InitialMachineWtsData[, Predictor], ...)
+      # list of vectors
+      # I did not bother to name each xts object(Indicator) (To do that I could have used Predictor)
+      IndicatorsLIST <- c(list(), IndicatorsLIST, list(Indicator))
+    }
+    Indicators <- IndicatorsLIST
+  } else {
+    # xts columns
+    Indicators <- IndicatorGeneratorFUN(InitialMachineWtsData[, Predictors], ...)
+  }
+  if(is.list(Indicators)) {Indicators <-  DescTools::DoCall(merge, Indicators) }
+
+
 
   # all indicators
   xTs <- merge(xTs, Indicators)
@@ -6677,6 +6723,7 @@ initEnv();on.exit({uninitEnv()})
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom zoo na.trim
 #' @importFrom logging loginfo
 #' @importFrom tis nberDates
 #' @importFrom plyr llply
@@ -6699,6 +6746,16 @@ initEnv();on.exit({uninitEnv()})
   logging::loginfo("Begin: doMachineWts")
 
   xTs <- initXts(xTs)
+
+  if(!complete.cases(xTs)[1]) {
+    message("NOTE: in doMachineWts, xTs is missing some EARLY data.")
+    message(stringr::str_c("OLD Earliest xTs index observation index time-date: ", min(index(xTs))))
+    message("NOTE: NOW applying 'zoo::na.trim(xTs, sides = \"left\")': *** BUT YOU PROBABLY *WANT* TO FIX THIS!! ***")
+    message("NOTE: incomplete cases busts caret.train (but does not? bust raw xgboost?)")
+    # PERHAPS some 'early' data does not exist'
+    xTs <- zoo::na.trim(xTs, sides = "left")
+    message(stringr::str_c("NEW Earliest xTs index observation index time-date: ", min(index(xTs))))
+  }
 
   # ordered R environment of Symbols
   Symbols <- xTsCols2SymbolsEnv(xTs)

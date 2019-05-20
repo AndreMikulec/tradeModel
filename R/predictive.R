@@ -717,6 +717,7 @@ initEnv();on.exit({uninitEnv()})
 #'
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
+#' @importFrom stringr str_c
 #' @importFrom caret trainControl train
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
@@ -788,7 +789,10 @@ initEnv();on.exit({uninitEnv()})
     # for a sample (size 86) # xgboost ONLY made one(1) distinct numeric prediction
     # therefore, Rsquared could not be calculated therefore it is set to NA
     # This happens in ~ 30% of all samples sent
-    if(!all(complete.cases(training.data))) print("NOTE: in buildModel.train, training.data is missing some data.")
+    if(!all(complete.cases(training.data))) {
+      message("NOTE: in buildModel.train, training.data is missing some data: caret::train.train WILL NOT fail.")
+    }
+
     # sampling(index/indexOut) done in parallel ( default: allowParallel = T )
     #   for 'fast' modeling, the overhead is 'too slow'
     #   nominalTrainWorkflow
