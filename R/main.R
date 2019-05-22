@@ -74,10 +74,15 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #' # technically works: but (Symbol = "^GSPC") gives UPSIDE DOWN predictions
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 #'
-#' good
+#' # good
 #'
 #' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
+#'
+#' # NEW(WORK IN PROGRESS)
+#'
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 #'
 #' }
 #' @export
@@ -116,6 +121,11 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
     addEomData(mktdata, Symbol = "UMCSENT", src = "UMich", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = TRUE)
   }
 
+  # NEW(WORK IN PROGRESS)
+  if("Earnings" %in% Predictors) {   # NEED: LEFT_OFF [ ] remove NA.LOCF and pull data forward to this months (or? last months) end date CarryForward = NULL
+     addEomData(mktdata, Symbol = "Earnings", src = "YaleU", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = TRUE)
+  }
+
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
   addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts", NA.LOCF = FALSE)
 
@@ -143,6 +153,14 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
   if(
     identical(Predictors, c("UNRATE","UMCSENT"))                                                 &&
     identical(IndicatorGeneratorFUN, c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
+  ) {
+    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
+  }
+
+  # NEW(WORK IN PROGRESS)
+  if(
+    identical(Predictors, c("UNRATE","UMCSENT","Earnings"))                                                 &&
+    identical(IndicatorGeneratorFUN, c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
   ) {
     addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
   }

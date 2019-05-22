@@ -24,10 +24,15 @@ UnRateMachinetradeModel(Symbol = "WILL5000IND", Predictors = "UNRATE", src = "FR
 # technically works: but (Symbol = "^GSPC") gives UPSIDE DOWN predictions
 UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 
-good
+# good
 
 UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
+
+# NEW(WORK IN PROGRESS)
+
+UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 
 }
 }
