@@ -63,22 +63,26 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #' @examples
 #' \dontrun{
 #'
-#' # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the machine
+#' # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE (and/or 'others') and the machine
 #'
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "unrateEyeballIndicators")
-#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+#' # still works
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", Predictors = "UNRATE", src = "FRED",  IndicatorGeneratorFUN = "unrateEyeballIndicators")
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 #'
-#' same as above but uses trends
-#' technically works: but gives VERY BAD predictions or OLD xgboost upside down predictions
-#' alt derived data(columns) from 'trends'
+#' # alt derived data columns from 'trends'
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", Predictors = "UNRATE", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+#' # technically works: but (Symbol = "^GSPC") gives UPSIDE DOWN predictions
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 #'
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
-#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+#' good
+#'
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 #'
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGeneratorFUN = NULL) {
+UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL, IndicatorGeneratorFUN = NULL) {
   tryCatchLog::tryCatchLog({
   initEnv();on.exit({uninitEnv()})
 
@@ -103,10 +107,14 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGenerato
   addCurrLeadCashReturns(mktdata, IsATarget = TRUE)
 
   # (2) indicator(s)
-  ## addUnRateEomData(mktdata)
-  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = FALSE)
+  if("UNRATE" %in% Predictors) {
+    ## addUnRateEomData(mktdata)
+    addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = FALSE)
+  }
 
-  addEomData(mktdata, Symbol = "UMCSENT", src = "UMich", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = TRUE)
+  if("UMCSENT" %in% Predictors) {
+    addEomData(mktdata, Symbol = "UMCSENT", src = "UMich", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = TRUE)
+  }
 
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
   addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts", NA.LOCF = FALSE)
@@ -114,35 +122,30 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, IndicatorGenerato
   # need xts attributes separating what I AM PREDICTING(target) v.s. (investment)(investments)
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
 
-  # LEFT_OFF # UnRateMachinetradeModel
+  # LEFT_OFF (but SEE: tradeModel_SCRATCH.txt)
 
-  #                     (2) TODO: [ ] FIND/INTEGERATE: 'rank since last crash' (WHERE IS THAT?)
-  #                     (3) TODO  [ ] ADD predictors: other recession indicators': WHAT DOES ** chavet/piger USE? **
+  # (1) TODO: [ ] FIND/INTEGERATE: 'rank since last crash' (WHERE IS THAT?)
+  # (2) TODO  [ ] ADD predictors: other recession indicators': WHAT DOES ** chavet/piger USE? **
 
-  # (3) use indicator(s)(unrate) to make rules:signals(weights)
-  # addSymbolMachineWts(mktdata, Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
-
-  ### (no longer callable from 'main' (no longer works here))
-  ### trends(mktdata, "UNRATE", UseAOMX = TRUE)
-
-  # (still works)
-  # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
-  #
-
-  ### REGULAR
-  if(IndicatorGeneratorFUN == "unrateEyeballIndicators") {
-    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = IndicatorGeneratorFUN)
-  } else {
-
-    ### (technically works: but gives UPSIDE DOWN predictions: alt derived data(columns) from 'trends) ###
-    # WORKS(SORT OF)
-    # addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = "UNRATE", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
-
-    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c(IndicatorGeneratorFUN, "trendsWithAOMNIndicators"))
+  if(identical(Predictors, "UNRATE") && identical(IndicatorGeneratorFUN, "unrateEyeballIndicators")) {
+    # still works
+    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
   }
 
-  ## eventually(someday: but UNRATE+UMICH may be better?)
-  ## addSymbolMachineWts(mktdata, Predictors = c("UNRATE", "GDP", "GDP_DLY"), IndicatorGeneratorFUN = "unrateAndGDPIndicators")
+  # alt derived data columns from 'trends'
+  # technically works
+  # technically works: but (Symbol = "^GSPC") gives UPSIDE DOWN predictions
+  if(identical(Predictors, "UNRATE") && identical(IndicatorGeneratorFUN, "trendsWithAOMXIndicators")) {
+    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
+  }
+
+  # good
+  if(
+    identical(Predictors, c("UNRATE","UMCSENT"))                                                 &&
+    identical(IndicatorGeneratorFUN, c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
+  ) {
+    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
+  }
 
   # excess
   appendCashWts(mktdata)

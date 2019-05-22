@@ -4,7 +4,7 @@
 \alias{UnRateMachinetradeModel}
 \title{Predicts Symbol eom returns using UNRATE and Machine learning}
 \usage{
-UnRateMachinetradeModel(Symbol = NULL, src = NULL,
+UnRateMachinetradeModel(Symbol = NULL, src = NULL, Predictors = NULL,
   IndicatorGeneratorFUN = NULL)
 }
 \description{
@@ -13,17 +13,21 @@ Predicts Symbol eom returns using UNRATE and Machine learning
 \examples{
 \dontrun{
 
-# Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE and the machine
+# Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE (and/or 'others') and the machine
 
-UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "unrateEyeballIndicators")
-UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+# still works
+UnRateMachinetradeModel(Symbol = "WILL5000IND", Predictors = "UNRATE", src = "FRED",  IndicatorGeneratorFUN = "unrateEyeballIndicators")
+UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
-same as above but uses trends
-technically works: but gives VERY BAD predictions or OLD xgboost upside down predictions
-alt derived data(columns) from 'trends'
+# alt derived data columns from 'trends'
+UnRateMachinetradeModel(Symbol = "WILL5000IND", Predictors = "UNRATE", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+# technically works: but (Symbol = "^GSPC") gives UPSIDE DOWN predictions
+UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 
-UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
-UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+good
+
+UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 
 }
 }
