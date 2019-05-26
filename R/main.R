@@ -84,10 +84,10 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 #'
 #'
-#' # good: captures entire 2008 recession but not early 2019(current time data)
+#' # good: captures entire 2008 recession 'and' early 2019(current time data: just before edge)
 #' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 #' #
-#' # done: !!! misses entire 2008 recession !!!
+#' # good: captures entire 2008 recession 'and' early 2019(current time data: just before edge)
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 #'
 #'
@@ -160,7 +160,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
     addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
   }
 
-  # good
+  # tech working
   if(
     identical(Predictors, c("UNRATE","UMCSENT"))                                                 &&
     identical(IndicatorGeneratorFUN, c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
@@ -168,7 +168,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
     addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
   }
 
-  # good
+  # tech working
   if(
     identical(Predictors, c("UNRATE","UMCSENT","Earnings"))                                                 &&
     identical(IndicatorGeneratorFUN, c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
@@ -176,7 +176,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
     addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
   }
 
-  # NEW(WORK IN PROGRESS)
+  # tech working
   if(
     identical(Predictors, c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"))                                                 &&
     identical(IndicatorGeneratorFUN, c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
