@@ -94,6 +94,8 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #'
 #' # done: extra SP500PriceEarningsRat !!! misses entire 2008 recession !!!
 #' # SP500PriceEarningsRat (not as much impact as I originally thought or 'wrong' impact)
+#' # SP500PriceEarningsRat SHOULD BE trendsWithAOMXIndicators ( AND NOT trendsWithAOMNIndicators )
+#' #   BUT WHEN I CHOOSE trendsWithAOMXIndicators all the prediction ends up being CASH (FIX THIS)
 #' #
 #' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
@@ -198,6 +200,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
 
   # (5) evaluate performance
   printCalendar(mktdata, title = "GDP results", PortFolioRetCol = "GDP.apc.3currentrets", MarginReturns = FALSE, start = Sys.Date() - 366*20)
+  browser()
   printCalendar(mktdata, title = "Fitted Performance Returns predictions", PortFolioRetCol = "Fitted", MarginReturns = FALSE, start = Sys.Date() - 366*20)
   printCalendar(mktdata, title = "UnRateMachine Performance Returns")
 

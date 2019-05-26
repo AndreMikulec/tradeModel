@@ -20,9 +20,10 @@ UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = "UNR
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 
 
-# alt derived data columns from 'trends'
+# good captures entire 2008 recession 'and' early 2019
 UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Predictors = "UNRATE",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 #
+# good captures entire 2008 recession 'and' early 2019
 # technically works: but (Symbol = "^GSPC") gives UPSIDE DOWN predictions
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = "UNRATE", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 

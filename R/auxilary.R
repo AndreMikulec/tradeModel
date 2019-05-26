@@ -6705,7 +6705,6 @@ initEnv();on.exit({uninitEnv()})
   }
   if(is.list(Indicators)) {Indicators <-  DescTools::DoCall(merge, Indicators) }
 
-  browser()
   ColNamesIndicators <- colnames(Indicators)
   # all + indicators
   xTs <- merge(xTs, Indicators)
