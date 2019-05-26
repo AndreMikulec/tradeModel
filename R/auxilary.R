@@ -2906,10 +2906,10 @@ initEnv();on.exit({uninitEnv()})
   }
 
   merge(
-        explodeXts(xTs1, Fun = "RNKS", Whiches = list(w = 16, r = c(8)))
-    #   explodeXts(xTs1, Fun = "RNKS", Whiches = list(w = 16, r = c(2,4,8)))
-    # , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  8, r = c(2,4  )))
-    # , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  4, r = c(2    )))
+    #   explodeXts(xTs1, Fun = "RNKS", Whiches = list(w = 16, r = c(8)))
+        explodeXts(xTs1, Fun = "RNKS", Whiches = list(w = 16, r = c(2,4,8)))
+      , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  8, r = c(2,4  )))
+      , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  4, r = c(2    )))
   ) -> xTs1
 
   # no longer works on mktdata

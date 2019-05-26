@@ -45,8 +45,16 @@ UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("U
 # done: extra SP500PriceEarningsRat !!! misses entire 2008 recession !!!
 # SP500PriceEarningsRat (not as much impact as I originally thought or 'wrong' impact)
 #
-UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
-UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
+UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMXIndicators"))
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMXIndicators"))
+
+
+# add hoc (kept perfectly out of late 2007, 2008, and 1st half of 2009)
+# but also kept out of 2013-2016
+# therefore: SP500PriceEarningsRat NEEDS competition from BONDS: what is it? equivalent: Of Zimmermann Equity Premium: [ ] FIND & FIX
+#
+UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators"))
+
 
 }
 }
