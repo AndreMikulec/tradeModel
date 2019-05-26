@@ -20,10 +20,10 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 
   # (2) indicator(s)
   ## addUnRateEomData(mktdata)
-  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = FALSE)
+  addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
 
   # fancifyXts(FRED2) requires extra FRED data: FRED2
-  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts", NA.LOCF = FALSE)
+  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
 
   # (3) use indicator(s)(unrate) to make rules:signals(weights)
   addSymbolEyeBallWts(mktdata, Symbol = Symbol)
@@ -114,20 +114,20 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
   # (2) indicator(s)
   if("UNRATE" %in% Predictors) {
     ## addUnRateEomData(mktdata)
-    addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = FALSE)
+    addEomData(mktdata, Symbol = "UNRATE", src = "FRED", SymplifyGeneratorFUN = "eomIndex")
   }
 
   if("UMCSENT" %in% Predictors) {
-    addEomData(mktdata, Symbol = "UMCSENT", src = "UMich", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = TRUE)
+    addEomData(mktdata, Symbol = "UMCSENT", src = "UMich", SymplifyGeneratorFUN = "eomIndex", CarryForward = "NA.LOCF")
   }
 
   # NEW(WORK IN PROGRESS)
   if("Earnings" %in% Predictors) {   # NEED: LEFT_OFF [ ] remove NA.LOCF and pull data forward to this months (or? last months) end date CarryForward = NULL
-     addEomData(mktdata, Symbol = "Earnings", src = "YaleU", SymplifyGeneratorFUN = "eomIndex", NA.LOCF = TRUE)
+     addEomData(mktdata, Symbol = "Earnings", src = "YaleU", SymplifyGeneratorFUN = "eomIndex", CarryForward = "NA.LOCF")
   }
 
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
-  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts", NA.LOCF = FALSE)
+  addEomData(mktdata, Symbol = "GDP",    src = "FRED2", SymplifyGeneratorFUN = "fancifyXts")
 
   # need xts attributes separating what I AM PREDICTING(target) v.s. (investment)(investments)
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
@@ -136,6 +136,7 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
 
   # (1) TODO: [ ] FIND/INTEGERATE: 'rank since last crash' (WHERE IS THAT?)
   # (2) TODO  [ ] ADD predictors: other recession indicators': WHAT DOES ** chavet/piger USE? **
+  # (3) TODO: [ ] SOME EXPLICIT? VOLITILITY
 
   if(identical(Predictors, "UNRATE") && identical(IndicatorGeneratorFUN, "unrateEyeballIndicators")) {
     # still works

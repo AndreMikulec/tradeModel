@@ -5384,13 +5384,14 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
 #' @param src getSymbols source
 #' @param SymplifyGeneratorFUN Function that Formats the output.
 ## #' @param ... further instructions to be passed in the form: Symbols_src_INSTRUCTION
-#' @param NA.LOCF after simplification performe zoo::na.locf
+#' @param CarryForward default(NULL) after simplification perform carry forward method(if any)
+#' of data to replace future missing values
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 #' @importFrom zoo na.locf
 ## #' @importFrom stringr str_detect str_c
-addEomData <- function(xTs = NULL, Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL, NA.LOCF = NULL) {
+addEomData <- function(xTs = NULL, Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL,  CarryForward = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5400,14 +5401,15 @@ initEnv();on.exit({uninitEnv()})
 
   if(is.null(Symbol)) stop("addEomData needs a Symbol")
   if(is.null(src))    stop("addEomData needs a src")
-  if(is.null(NA.LOCF)) NA.LOCF <- FALSE
+
+  ### if(is.null(NA.LOCF)) NA.LOCF <- FALSE
 
   ## # filter out dots
   ## Dots <- list(...)
   ## Dots <- Dots[stringr::str_detect(Names(Dots), stringr::str_c("^", Symbol, "_", src, "_"))]
 
   xTs1 <- eomData(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN)
-  if(NA.LOCF) {
+  if(!is.null(CarryForward) && CarryForward == "NA.LOCF") {
     xTs1 <- zoo::na.locf(xTs1)
   }
   xTs  <- combineXts(xTs, xTs1)

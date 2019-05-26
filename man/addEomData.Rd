@@ -5,7 +5,7 @@
 \title{get the end of month data}
 \usage{
 addEomData(xTs = NULL, Symbol = NULL, src = NULL,
-  SymplifyGeneratorFUN = NULL, NA.LOCF = NULL)
+  SymplifyGeneratorFUN = NULL, CarryForward = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -16,7 +16,8 @@ addEomData(xTs = NULL, Symbol = NULL, src = NULL,
 
 \item{SymplifyGeneratorFUN}{Function that Formats the output.}
 
-\item{NA.LOCF}{after simplification performe zoo::na.locf}
+\item{CarryForward}{default(NULL) after simplification perform carry forward method(if any)
+of data to replace future missing values}
 }
 \value{
 xts object with merged data into xTs
