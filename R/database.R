@@ -3914,7 +3914,8 @@ initEnv(); on.exit({uninitEnv()})
 #' "SP500Price", "Dividends", "Earnings",
 #' "CPIAUCNSY" (Consumer Price Index for All Urban Consumers: All Items (of Yale)),
 #  "DateFY" (Date Fraction of Yale), "GS10Y" (Long Interest Rate of Yale),
-#  "RealPrice", "RealDividends", "RealEarnings", "CAPE"
+#  "RealPrice", "RealDividends", "RealEarnings", "CAPE",
+#' "SP500PriceEarningsRat"(SP500Price/Earnings)
 #' @param env where to create objects. (.GlobalEnv)
 #' @param return.class desired class of returned object.
 #' Can be xts, zoo, data.frame, or xts (default)
@@ -4027,6 +4028,9 @@ initEnv(); on.exit({uninitEnv()})
            col_names = col_names,
            col_types = c("numeric", rep("numeric",10)), skip = 8L,
            n_max = length(Dates)))
+
+    # common usege derived value
+    fr["SP500PriceEarningsRat"] <- fr["SP500Price"]/fr["Earnings"]
 
     # optimistic: but the last record
     # (current month 'not yet reported') may be all NAs

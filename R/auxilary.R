@@ -5428,8 +5428,12 @@ initEnv();on.exit({uninitEnv()})
 #' @param Symbol getSymbols Symbol
 #' @param src getSymbols source
 #' @param SymplifyGeneratorFUN Function that Formats the output.
-#' @param CarryForward default(NULL) after simplification perform carry forward method(if any)
-#' of data to replace future missing values
+#' @param CarryForward default(NULL) after simplification perform
+#' carry forward method(if any)
+#' of data to replace future missing values.
+#' Typical values may be the following. "NA.LOCF"; carry forward the last NA.
+#' "NA.Shift.EOLM"; shift the entire series up (to the future) to the
+#' last day of the previous month.
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
@@ -5457,9 +5461,30 @@ initEnv();on.exit({uninitEnv()})
   }
 
   # would have been better to for-loop through 'massagers.'
-  if(!is.null(CarryForward) && "NA.LOCF" %in% CarryForward) {
-    xTs <- zoo::na.locf(xTs)
+  if(!is.null(CarryForward)) {
+
+    # a massager may chang the column name
+    ColNamesXts <- colnames(xTs)
+
+    if("NA.Shift.EOLM" %in% CarryForward) {
+      IndexXts <- index(xTs)
+      EOLMDate <- max(index(xTs[IndexXts <= max(IndexXts[IndexXts <= Sys.Date()])]))
+      LagAmt   <- tail(delaySinceLastObs(xTs[IndexXts <= EOLMDate]),1)
+      xTs <- LagXts(xTs,LagAmt)
+      # think about
+      # could have modified the column name to be ColnameDelay[LagXtsInEnglish]
+    }
+
+    if("NA.LOCF" %in% CarryForward) {
+      xTs <- zoo::na.locf(xTs)
+    }
+
+    # change back the column name to the original
+    colnames(xTs) <- ColNamesXts
+
   }
+
+
 
   return(xTs)
 

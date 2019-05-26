@@ -12,7 +12,8 @@ Possible Symbols are the following:
 "YaleUStockMarketData" (means get all of the columns);
 otherwise, get specific columns;
 "SP500Price", "Dividends", "Earnings",
-"CPIAUCNSY" (Consumer Price Index for All Urban Consumers: All Items (of Yale)),}
+"CPIAUCNSY" (Consumer Price Index for All Urban Consumers: All Items (of Yale)),
+"SP500PriceEarningsRat"(SP500Price/Earnings)}
 
 \item{env}{where to create objects. (.GlobalEnv)}
 

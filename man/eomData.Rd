@@ -14,8 +14,12 @@ eomData(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL,
 
 \item{SymplifyGeneratorFUN}{Function that Formats the output.}
 
-\item{CarryForward}{default(NULL) after simplification perform carry forward method(if any)
-of data to replace future missing values}
+\item{CarryForward}{default(NULL) after simplification perform
+carry forward method(if any)
+of data to replace future missing values.
+Typical values may be the following. "NA.LOCF"; carry forward the last NA.
+"NA.Shift.EOLM"; shift the entire series up (to the future) to the
+last day of the previous month.}
 }
 \value{
 xts object

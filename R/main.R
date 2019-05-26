@@ -79,10 +79,16 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 #'
-#' # NEW(WORK IN PROGRESS)
+#' # good
 #'
 #' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
+#'
+#' # done: extra SP500PriceEarningsRat misses entire 2008 recession
+#' # SP500PriceEarningsRat (not as much impact as I originally thought or 'wrong' impact)
+#'
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 #'
 #' }
 #' @export
@@ -121,9 +127,12 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
     addEomData(mktdata, Symbol = "UMCSENT", src = "UMich", SymplifyGeneratorFUN = "eomIndex", CarryForward = "NA.LOCF")
   }
 
-  # NEW(WORK IN PROGRESS)
-  if("Earnings" %in% Predictors) {   # NEED: LEFT_OFF [ ] remove NA.LOCF and pull data forward to this months (or? last months) end date CarryForward = NULL
-     addEomData(mktdata, Symbol = "Earnings", src = "YaleU", SymplifyGeneratorFUN = "eomIndex", CarryForward = "NA.LOCF")
+  if("Earnings" %in% Predictors) {
+     addEomData(mktdata, Symbol = "Earnings", src = "YaleU", SymplifyGeneratorFUN = "eomIndex", CarryForward = "NA.Shift.EOLM")
+  }
+
+  if("SP500PriceEarningsRat" %in% Predictors) {
+    addEomData(mktdata, Symbol = "SP500PriceEarningsRat", src = "YaleU", SymplifyGeneratorFUN = "eomIndex", CarryForward = "NA.Shift.EOLM")
   }
 
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2
@@ -131,12 +140,6 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
 
   # need xts attributes separating what I AM PREDICTING(target) v.s. (investment)(investments)
   # Note: STRONG POSSIBILITY GET RID OF currentrets_wts (NEVER IN PERFORMANCE ANALYTICS MATH)
-
-  # LEFT_OFF (but SEE: tradeModel_SCRATCH.txt)
-
-  # (1) TODO: [ ] FIND/INTEGERATE: 'rank since last crash' (WHERE IS THAT?)
-  # (2) TODO  [ ] ADD predictors: other recession indicators': WHAT DOES ** chavet/piger USE? **
-  # (3) TODO: [ ] SOME EXPLICIT? VOLITILITY
 
   if(identical(Predictors, "UNRATE") && identical(IndicatorGeneratorFUN, "unrateEyeballIndicators")) {
     # still works
@@ -158,10 +161,18 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
     addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
   }
 
-  # NEW(WORK IN PROGRESS)
+  # good
   if(
     identical(Predictors, c("UNRATE","UMCSENT","Earnings"))                                                 &&
     identical(IndicatorGeneratorFUN, c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
+  ) {
+    addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
+  }
+
+  # NEW(WORK IN PROGRESS)
+  if(
+    identical(Predictors, c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"))                                                 &&
+    identical(IndicatorGeneratorFUN, c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
   ) {
     addSymbolMachineWts(mktdata, Predictee = "CRASHACML", Predictors = Predictors, IndicatorGeneratorFUN = IndicatorGeneratorFUN)
   }

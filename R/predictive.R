@@ -171,6 +171,117 @@ ifelse.xts    <- function(test, yes, no) {
 
 
 
+#' is.na about xts objects
+#'
+#' @description
+#' \preformatted{
+#'
+#' NOT CURRRENTLY USED ANYWHERE
+#'
+#' }
+#'
+#' @param x xts object
+#' @return xts object of T/F values
+#' @examples
+#' \dontrun{
+#'
+#' library(xts)
+#'
+#' xts(c(NA_real_, 0, NA_real_), zoo::as.Date(0:2))
+#'
+#'            [,1]
+#' 1970-01-01   NA
+#' 1970-01-02    0
+#' 1970-01-03   NA
+#'
+#' is.na(xts(c(NA_real_, 0, NA_real_), zoo::as.Date(0:2)))
+#'
+#'             [,1]
+#' 1970-01-01  TRUE
+#' 1970-01-02 FALSE
+#' 1970-01-03  TRUE
+#'
+#' NOTE
+#' is.na(xts::xts(matrix(c(NA_real_, 0, NA_real_,0), ncol = 2), zoo::as.Date(0:1)))
+#'             [,1]  [,2]
+#' 1970-01-01  TRUE  TRUE
+#' 1970-01-02 FALSE FALSE
+#'
+#' }
+#' @export
+#' @importFrom tryCatchLog tryCatchLog
+is.na.xts <- function(x) {
+
+  # without this function, is.na(xts) strips the index
+  # probably this function should be an xts enhancement
+  #
+  xts(is.na(coredata(x)), index(x))
+
+}
+
+
+
+#' get the number of consecutive NA values since the last non-NA observations
+#'
+#' @description
+#' \preformatted{
+#'
+#' }
+#'
+#' @param x vector or single column zoo/xts object
+#' @return vector of distances from the last non-NA observation
+#' @examples
+#' \dontrun{
+#'
+#' library(xts)
+#'
+#' delaySinceLastObs(c(101,NA,NA,NA,102,NA,NA))
+#' [1] 0 1 2 3 0 1 2
+#'
+#' delaySinceLastObs(xts(matrix(c(101,NA,NA,NA,102,NA,NA), ncol = 1), zoo::as.Date(0:6)))
+#' [1] 0 1 2 3 0 1 2
+#'
+#' }
+#' @export
+#' @importFrom rowr rowApply
+delaySinceLastObs <- function(x) {
+
+  # help from  StreamMetabolism::contiguous.zoo
+
+  if(1 < NVAR(x)) stop("delaySinceLastObs param x can only be a vector or single column zoo/xts object")
+
+  StreamMetabolism__noncontiguous.zoo <- function(x)   {
+    z.rle <- rle(is.na(rowSums(coredata(x))))  # CAN BE EXTENDED HERE
+    ends <- cumsum(z.rle$lengths)
+    starts <- ends - z.rle$lengths + 1
+    indexes <- with(z.rle, data.frame(starts, ends, lengths,
+                                      values))
+    indexes.sort <- indexes[order(-indexes$lengths), ]
+    indexes.sort[indexes.sort$values, ]
+  }
+
+  Vec <- x   #  Vec <- c(101,NA,NA,NA,102,NA,NA)
+  NewVec <- rep(0,length(Vec)) # output of all values found
+  # ( optimistic ): zeros : no delays found of elements found
+
+  # 100% opposite of the below ( delays found )
+
+  current.env <- environment()
+
+  Snc <- StreamMetabolism__noncontiguous.zoo(data.frame(Vec))
+  if(NROW(Snc)>0) {
+    rowr::rowApply(Snc, fun = function(x) {
+      with( x, { NewVec[starts:ends] <- seq(1,lengths,1)
+      assign("NewVec", NewVec , envir = current.env)
+      } ) -> Discard ; NULL
+    }) -> Discard
+  }
+
+  return(NewVec)
+
+}
+
+
 
 #' difference of two xTs objects
 #'
