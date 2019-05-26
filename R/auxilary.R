@@ -2906,9 +2906,10 @@ initEnv();on.exit({uninitEnv()})
   }
 
   merge(
-      explodeXts(xTs1, Fun = "RNKS", Whiches = list(w = 16, r = c(2,4,8)))
-    , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  8, r = c(2,4  )))
-    , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  4, r = c(2    )))
+        explodeXts(xTs1, Fun = "RNKS", Whiches = list(w = 16, r = c(8)))
+    #   explodeXts(xTs1, Fun = "RNKS", Whiches = list(w = 16, r = c(2,4,8)))
+    # , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  8, r = c(2,4  )))
+    # , explodeXts(xTs1, Fun = "RNKS", Whiches = list(w =  4, r = c(2    )))
   ) -> xTs1
 
   # no longer works on mktdata
@@ -6686,7 +6687,6 @@ initEnv();on.exit({uninitEnv()})
   #               # unrateEyeballIndicators
   # Indicators <- IndicatorGeneratorFUN(InitialMachineWtsData[, Predictors], ...)
 
-
   if(length(Predictors) > 1) {
     Predictors <- as.list(Predictors)
     IndicatorsLIST <- list()
@@ -6705,15 +6705,29 @@ initEnv();on.exit({uninitEnv()})
   }
   if(is.list(Indicators)) {Indicators <-  DescTools::DoCall(merge, Indicators) }
 
-
-
-  # all indicators
+  browser()
+  ColNamesIndicators <- colnames(Indicators)
+  # all + indicators
   xTs <- merge(xTs, Indicators)
+
+  addedDummyColumn <- FALSE
+  if(length(ColNamesIndicators) == 1) {
+    # some models e.g. xgboost need at least two(2) indicators (predictors)
+    xTs <- cbind(xTs, DUMMY = rep(0L, NROW(xTs)))
+    addedDummyColumn <- TRUE
+    ColNamesIndicators <- c(ColNamesIndicators, "DUMMY")
+  }
 
   # traditionally the first column is the target variable # OLD: colnames(xTs)[1]
                                              # no longer match by positions
+
   if(is.null(ModelFormula)) {
-    ModelFormula <- as.formula(stringr::str_c(Predictee, " ~ ", stringr::str_c(colnames(Indicators), collapse = " + ")))
+    # ModelFormula <- as.formula(stringr::str_c(Predictee, " ~ ", stringr::str_c(colnames(Indicators), collapse = " + ")))
+    ModelFormula <- as.formula(stringr::str_c(Predictee, " ~ ", stringr::str_c(ColNamesIndicators, collapse = " + ")))
+  } else {
+    # if the user arleady sen the ModelFormula
+    # and if I added the DUMMY column, then just add it to the formula
+    if(addedDummyColumn) ModelFormula <- stringr::str_c(ModelFormula, " + DUMMY")
   }
 
   # fitting

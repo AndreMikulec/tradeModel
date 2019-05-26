@@ -65,16 +65,16 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #'
 #' # Predicts the FRED WILL5000IND / yahoo S&P500 eom returns using UNRATE (and/or 'others') and the machine
 #'
-#' # still works
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", Predictors = "UNRATE", src = "FRED",  IndicatorGeneratorFUN = "unrateEyeballIndicators")
-#' UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+#' # done: !!! misses entire 2008 recession !!!
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = "UNRATE", IndicatorGeneratorFUN = "unrateEyeballIndicators")
 #'
 #'
 #' # alt derived data columns from 'trends'
-#' UnRateMachinetradeModel(Symbol = "WILL5000IND", Predictors = "UNRATE", src = "FRED",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+#' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED", Predictors = "UNRATE",  IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 #' #
 #' # technically works: but (Symbol = "^GSPC") gives UPSIDE DOWN predictions
-#' UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = "UNRATE", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 #'
 #'
 #' # good captures entire 2008 recession 'and' early 2019(current time data: just before edge)
