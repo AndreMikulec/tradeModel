@@ -95,7 +95,7 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #' # done: extra SP500PriceEarningsRat !!! misses entire 2008 recession !!!
 #' # SP500PriceEarningsRat (not as much impact as I originally thought or 'wrong' impact)
 #' # SP500PriceEarningsRat SHOULD BE trendsWithAOMXIndicators ( AND NOT trendsWithAOMNIndicators )
-#' #   BUT WHEN I CHOOSE trendsWithAOMXIndicators all the prediction ends up being CASH (FIX THIS)
+#' #   BUT WHEN I CHOOSE trendsWithAOMXIndicators all the prediction ends up being CASH ([ ] FIX THIS)
 #' #
 #' UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
