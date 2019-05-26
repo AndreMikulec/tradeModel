@@ -5389,7 +5389,6 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
 #' @return xts object with merged data into xTs
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-#' @importFrom zoo na.locf
 ## #' @importFrom stringr str_detect str_c
 addEomData <- function(xTs = NULL, Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL,  CarryForward = NULL) {
 tryCatchLog::tryCatchLog({
@@ -5408,10 +5407,8 @@ initEnv();on.exit({uninitEnv()})
   ## Dots <- list(...)
   ## Dots <- Dots[stringr::str_detect(Names(Dots), stringr::str_c("^", Symbol, "_", src, "_"))]
 
-  xTs1 <- eomData(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN)
-  if(!is.null(CarryForward) && CarryForward == "NA.LOCF") {
-    xTs1 <- zoo::na.locf(xTs1)
-  }
+  xTs1 <- eomData(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN,  CarryForward = CarryForward)
+
   xTs  <- combineXts(xTs, xTs1)
 
   # xTs
@@ -5431,10 +5428,13 @@ initEnv();on.exit({uninitEnv()})
 #' @param Symbol getSymbols Symbol
 #' @param src getSymbols source
 #' @param SymplifyGeneratorFUN Function that Formats the output.
+#' @param CarryForward default(NULL) after simplification perform carry forward method(if any)
+#' of data to replace future missing values
 #' @return xts object
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-eomData <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL) {
+#' @importFrom zoo na.locf
+eomData <- function(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL,  CarryForward = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5454,6 +5454,11 @@ initEnv();on.exit({uninitEnv()})
   xTs <- symbolData(Symbol = Symbol, src = src)
   if(!is.null(SymplifyGeneratorFUN)){
     xTs <- SymplifyGeneratorFUN(xTs)
+  }
+
+  # would have been better to for-loop through 'massagers.'
+  if(!is.null(CarryForward) && "NA.LOCF" %in% CarryForward) {
+    xTs <- zoo::na.locf(xTs)
   }
 
   return(xTs)

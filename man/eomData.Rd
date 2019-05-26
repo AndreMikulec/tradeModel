@@ -4,7 +4,8 @@
 \alias{eomData}
 \title{get the end of month data}
 \usage{
-eomData(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL)
+eomData(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL,
+  CarryForward = NULL)
 }
 \arguments{
 \item{Symbol}{getSymbols Symbol}
@@ -12,6 +13,9 @@ eomData(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL)
 \item{src}{getSymbols source}
 
 \item{SymplifyGeneratorFUN}{Function that Formats the output.}
+
+\item{CarryForward}{default(NULL) after simplification perform carry forward method(if any)
+of data to replace future missing values}
 }
 \value{
 xts object
