@@ -25,17 +25,20 @@ UnRateMachinetradeModel(Symbol = "WILL5000IND", Predictors = "UNRATE", src = "FR
 UnRateMachinetradeModel(Symbol = "^GSPC"      , Predictors = "UNRATE", src = "yahoo", IndicatorGeneratorFUN = "trendsWithAOMXIndicators")
 
 # good
-
+#
 UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 
-# good
-
+# good: captures entire 2008 recession but not early 2019(current time data)
 UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
+#
+# done: !!! misses entire 2008 recession !!!
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 
-# good: SP500PriceEarningsRat (not as much impact as I originally thought)
 
+# done: extra SP500PriceEarningsRat !!! misses entire 2008 recession !!!
+# SP500PriceEarningsRat (not as much impact as I originally thought or 'wrong' impact)
+#
 UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 
