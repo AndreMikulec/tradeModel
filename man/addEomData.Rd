@@ -4,13 +4,23 @@
 \alias{addEomData}
 \title{get the end of month data}
 \usage{
-addEomData(xTs = NULL, Symbol = NULL, src = NULL,
-  SymplifyGeneratorFUN = NULL, CarryForward = NULL)
+addEomData(xTs = NULL, Symbol = NULL, Components = NULL,
+  ComponentsFormula = NULL, src = NULL, SymplifyGeneratorFUN = NULL,
+  CarryForward = NULL)
 }
 \arguments{
 \item{xTs}{xts object}
 
-\item{Symbol}{getSymbols Symbol}
+\item{Symbol}{getSymbols Symbol.
+Also,if Components is not null, then this Symbols is not searched.
+Rather this symbol is the arbitrary name given the result of applying
+the ComponentsFormula upon the Components.}
+
+\item{Components}{sub-Symbols}
+
+\item{ComponentsFormula}{math of the Components(sub-Symbols) (not an 'R formula').
+If Components is not null, then vector ComponentsFormula and vector Symbol
+have a one-to-one correspondence}
 
 \item{src}{getSymbols source}
 

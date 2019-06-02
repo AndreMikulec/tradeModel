@@ -105,6 +105,10 @@ UnRateEyeBalltradeModel <- function(Symbol = NULL, src = NULL) {
 #' #
 #' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators"))
 #'
+#' # I WAS TOO MUCH IN-A-HURRY (JUNK OUTPUT)
+#' # Year over year change in "Real Gross Private Domestic Investment: Fixed Investment: Nonresidential: Equipment"
+#' # SEEMS 'STILL TOO NOISY':I REGRET trying; FRED Y033RL1Q225SBEA
+#' UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","YOYChangeInRGPDIFINRE"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 #'
 #' }
 #' @export
@@ -149,6 +153,17 @@ UnRateMachinetradeModel <- function(Symbol = NULL, src = NULL, Predictors = NULL
 
   if("SP500PriceEarningsRat" %in% Predictors) {
     addEomData(mktdata, Symbol = "SP500PriceEarningsRat", src = "YaleU", SymplifyGeneratorFUN = "eomIndex", CarryForward = "NA.Shift.EOLM")
+  }
+
+  # I WAS TOO MUCH IN-A-HURRY (JUNK OUTPUT)
+  # Year over year change in "Real Gross Private Domestic Investment: Fixed Investment: Nonresidential: Equipment"
+  # SEEMS 'STILL TOO NOISY':I REGRET trying; FRED Y033RL1Q225SBEA
+  if("YOYChangeInRGPDIFINRE" %in% Predictors) {
+    addEomData(mktdata, Symbol = c("YOYChangeInRGPDIFINRE", "YOYChangeInRGPDIFINRE_DLY"), Components = "Y033RL1Q225SBEA"
+               # (or use MY relative/absolute change functions)
+               , ComponentsFormula = c("(TTR::SMA(cumprod(1 + zoo::na.trim(Y033RL1Q225SBEA)/100),2) - xts::lag.xts(TTR::SMA(cumprod(1 + zoo::na.trim(Y033RL1Q225SBEA)/100),2), 4)) / xts::lag.xts(TTR::SMA(cumprod(1 + zoo::na.trim(Y033RL1Q225SBEA)/100),2), 4) * 100"
+                                     , "Y033RL1Q225SBEA_DLY")
+               , src = c("FRED2"), SymplifyGeneratorFUN = c("fancifyXts"))
   }
 
   # fancifyXts(FRED2) # fancifyXts requires extra FRED data from FRED2

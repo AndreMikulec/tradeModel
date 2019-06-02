@@ -5384,7 +5384,14 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
 #' }
 #'
 #' @param xTs xts object
-#' @param Symbol getSymbols Symbol
+#' @param Symbol getSymbols Symbol.
+#' Also,if Components is not null, then this Symbols is not searched.
+#' Rather this symbol is the arbitrary name given the result of applying
+#' the ComponentsFormula upon the Components.
+#' @param Components sub-Symbols
+#' @param ComponentsFormula math of the Components(sub-Symbols) (not an 'R formula').
+#' If Components is not null, then vector ComponentsFormula and vector Symbol
+#' have a one-to-one correspondence
 #' @param src getSymbols source
 #' @param SymplifyGeneratorFUN Function that Formats the output.
 ## #' @param ... further instructions to be passed in the form: Symbols_src_INSTRUCTION
@@ -5394,7 +5401,8 @@ symbolData <- function(Symbol = NULL, src = NULL, New = NULL, NewMaxAge = NULL, 
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
 ## #' @importFrom stringr str_detect str_c
-addEomData <- function(xTs = NULL, Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL,  CarryForward = NULL) {
+#' @importFrom  rlang eval_bare parse_expr
+addEomData <- function(xTs = NULL, Symbol = NULL,  Components = NULL, ComponentsFormula = NULL, src = NULL, SymplifyGeneratorFUN = NULL,  CarryForward = NULL) {
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
@@ -5411,9 +5419,41 @@ initEnv();on.exit({uninitEnv()})
   ## Dots <- list(...)
   ## Dots <- Dots[stringr::str_detect(Names(Dots), stringr::str_c("^", Symbol, "_", src, "_"))]
 
-  xTs1 <- eomData(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN,  CarryForward = CarryForward)
+  if(is.null(Components)) {
 
-  xTs  <- combineXts(xTs, xTs1)
+    xTs1 <- eomData(Symbol = Symbol, src = src, SymplifyGeneratorFUN = SymplifyGeneratorFUN,  CarryForward = CarryForward)
+    xTs  <- combineXts(xTs, xTs1)
+
+  } else {
+
+    xTs1List <- list()
+    Component_i <- 0L
+    for(Component in Components) {
+      Component_i <- Component_i + 1L
+      xTs1Ele <- eomData(Symbol = Component, src = src[Component_i], SymplifyGeneratorFUN = SymplifyGeneratorFUN[Component_i],  CarryForward = CarryForward[Component_i])
+      # e.g. fancifyXts returns more that one column
+      Colname_i <- 0L
+      for(Colname in colnames(xTs1Ele)) {
+        Colname_i <- Colname_i + 1L
+        xTs1EleSub<- list(xTs1Ele[, Colname])
+        Names(xTs1EleSub)[1] <- Colname
+        xTs1List <- c(xTs1List, xTs1EleSub)
+      }
+
+    }
+    browser()
+    # ComponentsEnv <- xTsCols2SymbolsEnv(xTs1List)
+    ComponentsEnv <- list2env(xTs1List)
+
+    # SO, I CAN 'get _DLY'
+    ComponentsFormulaEle_i <- 0L
+    for(ComponentsFormulaEle in ComponentsFormula) {
+      ComponentsFormulaEle_i <-  ComponentsFormulaEle_i + 1
+      xTs1 <- with(ComponentsEnv, {  rlang::eval_bare(rlang::parse_expr(ComponentsFormula[ComponentsFormulaEle_i]), environment()) })
+        colnames(xTs1) <- Symbol[ComponentsFormulaEle_i]
+        xTs  <- combineXts(xTs, xTs1)
+    }
+  }
 
   # xTs
   return(releaseMktData(xTs, InBndxTs, isInBndxTsMktData))
