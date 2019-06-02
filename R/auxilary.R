@@ -5235,8 +5235,11 @@ initEnv();on.exit({uninitEnv()})
 
   if(NCOL(xTs) > 1) stop("(currently) eomData only works on single column xtx objects")
   xTs <- To.Monthly(xTs[!is.na(xTs)], OHLC = FALSE, indexAt = "lastof")
-  # MAYBE TODO [ ] To.Monthly + na.locf
-  xTs <- xTs[index(xTs) <= tail(index(xTsOrig),1)] # LEFT_OFF
+  # xTs <- xTs[index(xTs) <= tail(index(xTsOrig),1)]
+  # last To.Monthly date is no greater than the last 'source data' date
+  # or
+  # last To.Monthly date is no greater than today's date ( as.Date in case the index type is 'not Date class')
+  xTs <- xTs[index(xTs) <= tail(index(xTsOrig),1) | as.Date(index(xTs)) <= Sys.Date()]
 
   xTs
 
