@@ -1,11 +1,53 @@
 
 #' TODO [ ] replace merge.xts WITH combineXts
 
-
 #' # NOTES, ADJUSTMENTS, FIXES TO BE INTEGRATED
 #' # READ ( AND UNDERSTAND ) !ALL! FIRST BEFORE STARTING INTEGRATION
 #'
 #' [ ] Also add link to FED Funds Rate
+#'
+#' Era III, 2010 and After: Monetary Policy and the Emerging New Normal
+#' --------------------------------------------------------------------
+#'
+#'   long-running issue that I discussed here last year:
+#'   #' tracking the "stars" that serve as
+#'   guideposts for monetary policy.10 These include
+#'
+#' u*, the natural rate of unemployment, and
+#' r*, the neutral real rate of interest.
+#'
+#' Unlike celestial stars, these stars move unpredictably and
+#' cannot be directly observed. We must judge their locations as
+#' best we can based on incoming data and then add an
+#' element of risk management to be able to use them as guides.
+#'
+#' Since 2012, declining unemployment has had surprisingly
+#' little effect on inflation, prompting a steady decline in estimates of u* (figure 3).11
+#'
+#' Standard estimates of r* have declined
+#' between 2 and 3 percentage points over the past two decades.
+#'
+#' Some argue that the effective decline is even larger.12
+#'
+#' A lower r* combined with low inflation means that
+#' interest rates will run, on average,
+#' significantly closer to their effective lower bound.
+#'
+#' how, in this low r* world, the Fed can best support the economy. ??
+#'
+#' OTHER . . .
+#'
+#' cannot provide a settled rulebook for international trade.
+#' We can, however, try to look through what may be
+#' passing events, focus on how trade developments are affecting the outlook,
+#' and adjust policy to promote our objectives.
+#'
+#' August 23, 2019
+#' Challenges for Monetary Policy
+#' Chair Jerome H. Powell
+#' https://www.federalreserve.gov/newsevents/speech/powell20190823a.htm
+#'
+#'
 #' FOMC will target the headline inflation rate
 #' --------------------------------------------
 #'

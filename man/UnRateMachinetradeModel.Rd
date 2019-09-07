@@ -55,7 +55,7 @@ UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("U
 #
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators"))
 
-# I WAS TOO MUCH IN-A-HURRY
+# I WAS TOO MUCH IN-A-HURRY (JUNK OUTPUT)
 # Year over year change in "Real Gross Private Domestic Investment: Fixed Investment: Nonresidential: Equipment"
 # SEEMS 'STILL TOO NOISY':I REGRET trying; FRED Y033RL1Q225SBEA
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","YOYChangeInRGPDIFINRE"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
