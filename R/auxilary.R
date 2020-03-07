@@ -4103,7 +4103,7 @@ initEnv();on.exit({uninitEnv()})
   }
 
   if(is.logical(x))
-    x <- .xts(matrix(as.integer(x),ncol=NCOL(x)), .index(x), indexClass(x))
+    x <- .xts(matrix(as.integer(x),ncol=NCOL(x)), .index(x), tclass(x))
 
   # if the use is to wants to do some differencing
   if(!is.null(differences) && !is.na(differences) && is.numeric(differences)) {
@@ -6607,8 +6607,8 @@ initEnv();on.exit({uninitEnv()})
 
   # redefine
   TrainingData <- as.xts(as.matrix(UBLResults), order.by = UBLResultsIndex)
-  indexClass(TrainingData)  <- indexClass(xTs)
-  indexFormat(TrainingData) <- indexFormat(xTs)
+  tclass(TrainingData)  <- tclass(xTs)
+  tformat(TrainingData) <- tformat(xTs)
   # (+) non-core attributes (user) [if any]
   xtsAttributes(TrainingData) <- xtsAttributes(xTs)
 
