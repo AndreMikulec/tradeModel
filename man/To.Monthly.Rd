@@ -4,8 +4,14 @@
 \alias{To.Monthly}
 \title{Convert time series data to an monthly OHLC series}
 \usage{
-To.Monthly(x, indexAt = "firstof", drop.time = TRUE, name,
-  fillMissing = NULL, ...)
+To.Monthly(
+  x,
+  indexAt = "firstof",
+  drop.time = TRUE,
+  name,
+  fillMissing = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{? xts::to.monthly and the index(x) class must

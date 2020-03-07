@@ -4,8 +4,14 @@
 \alias{balanceByUBLData}
 \title{create/remove more or less observations determined by an UBL function}
 \usage{
-balanceByUBLData(xTs, Fmla, TrainStart = NULL, TrainEnd = NULL,
-  UBLFunction = NULL, ...)
+balanceByUBLData(
+  xTs,
+  Fmla,
+  TrainStart = NULL,
+  TrainEnd = NULL,
+  UBLFunction = NULL,
+  ...
+)
 }
 \arguments{
 \item{xTs}{xts object of training data}

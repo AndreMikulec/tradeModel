@@ -16,8 +16,6 @@ eomIndex(x = NULL)
 \method{eomIndex}{xts}(x = NULL)
 }
 \arguments{
-\item{x}{xts object or Date object}
-
 \item{x}{date object}
 }
 \value{

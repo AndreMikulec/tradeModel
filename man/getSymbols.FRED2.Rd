@@ -4,9 +4,17 @@
 \alias{getSymbols.FRED2}
 \title{economic data from the St. Louis FRED}
 \usage{
-getSymbols.FRED2(Symbols, env, from = "1800-01-01", to = Sys.Date(),
-  Edit = NULL, NewName = NULL, transformReqExtraInfo = NULL,
-  return.class = "xts", ...)
+getSymbols.FRED2(
+  Symbols,
+  env,
+  from = "1800-01-01",
+  to = Sys.Date(),
+  Edit = NULL,
+  NewName = NULL,
+  transformReqExtraInfo = NULL,
+  return.class = "xts",
+  ...
+)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
@@ -99,8 +107,8 @@ Formula: fml
 
 # The first time series is (a).
 # The second time series is (b). Etc. . . .
-# The final time series the \\*result\\* of all of the individual
-# time series and it is  \\*not\\* the last time series ( e.g. not "z")
+# The final time series the \*result\* of all of the individual
+# time series and it is  \*not\* the last time series ( e.g. not "z")
 
 # Underscores separate each Time Series from each other
 

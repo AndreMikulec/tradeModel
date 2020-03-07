@@ -8,11 +8,9 @@
 \usage{
 as.quantmod(x, outcomename, order.by, na.rm = TRUE, ...)
 
-\method{as.quantmod}{default}(x, outcomename, order.by, na.rm = TRUE,
-  ...)
+\method{as.quantmod}{default}(x, outcomename, order.by, na.rm = TRUE, ...)
 
-\method{as.quantmod}{data.frame}(x, outcomename, order.by, na.rm = TRUE,
-  ...)
+\method{as.quantmod}{data.frame}(x, outcomename, order.by, na.rm = TRUE, ...)
 }
 \description{
 \preformatted{

@@ -4,9 +4,17 @@
 \alias{newXtsColName}
 \title{generate a good xts column name}
 \usage{
-newXtsColName(xTs = NULL, Fun = NULL, isCharFun = NULL,
-  xTs1 = NULL, xTs2 = NULL, WhichCombo = NULL, AltName = NULL,
-  Prefix = NULL, FixedSep = NULL)
+newXtsColName(
+  xTs = NULL,
+  Fun = NULL,
+  isCharFun = NULL,
+  xTs1 = NULL,
+  xTs2 = NULL,
+  WhichCombo = NULL,
+  AltName = NULL,
+  Prefix = NULL,
+  FixedSep = NULL
+)
 }
 \arguments{
 \item{x}{single column xts with the old column name}

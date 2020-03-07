@@ -10,8 +10,6 @@ SortinoRatioLoss(actual, predicted, ...)
 \item{...}{lev = NULL, model = NULL : passed to SortinoRatioSummary}
 
 \item{see}{? iml::FeatureImp}
-
-\item{see}{? iml::FeatureImp}
 }
 \description{
 \preformatted{

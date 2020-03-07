@@ -4,8 +4,16 @@
 \alias{pgUpsize}
 \title{addto/update a database with new information}
 \usage{
-pgUpsize(con, trgt = NULL, keys = NULL, schname = NULL, df = NULL,
-  varHint = NULL, valHint = NULL, ...)
+pgUpsize(
+  con,
+  trgt = NULL,
+  keys = NULL,
+  schname = NULL,
+  df = NULL,
+  varHint = NULL,
+  valHint = NULL,
+  ...
+)
 }
 \arguments{
 \item{con}{DBI connection PostgreSQL}

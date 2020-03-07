@@ -4,8 +4,16 @@
 \alias{pgInsert}
 \title{insert into a database table 'new' data}
 \usage{
-pgInsert(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
-  varHint = NULL, valHint = NULL, ...)
+pgInsert(
+  con,
+  trgt = NULL,
+  keys = c("rn"),
+  schname,
+  df = NULL,
+  varHint = NULL,
+  valHint = NULL,
+  ...
+)
 }
 \arguments{
 \item{con}{DBI connection PostgreSQL}

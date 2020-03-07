@@ -4,12 +4,23 @@
 \alias{getSymbols.PostgreSQL}
 \title{retrieve data from PostgreSQL Database}
 \usage{
-getSymbols.PostgreSQL(Symbols = NULL, con = NULL, env,
-  return.class = "xts", db.fields = c("o", "h", "l", "c", "v", "a"),
+getSymbols.PostgreSQL(
+  Symbols = NULL,
+  con = NULL,
+  env,
+  return.class = "xts",
+  db.fields = c("o", "h", "l", "c", "v", "a"),
   field.names = c("Open", "High", "Low", "Close", "Volume", "Adjusted"),
-  user = NULL, password = NULL, dbname = NULL, schname = NULL,
-  host = "localhost", port = 5432, options = NULL,
-  forceISOdate = TRUE, ...)
+  user = NULL,
+  password = NULL,
+  dbname = NULL,
+  schname = NULL,
+  host = "localhost",
+  port = 5432,
+  options = NULL,
+  forceISOdate = TRUE,
+  ...
+)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded}

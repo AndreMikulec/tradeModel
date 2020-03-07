@@ -4,12 +4,20 @@
 \alias{getNewSymbols}
 \title{get a recent Symbol (if I do not have one)}
 \usage{
-getNewSymbols(Symbols = NULL, env = parent.frame(),
-  reload.Symbols = FALSE, verbose = FALSE, warnings = TRUE,
-  src = "yahoo", symbol.lookup = TRUE,
+getNewSymbols(
+  Symbols = NULL,
+  env = parent.frame(),
+  reload.Symbols = FALSE,
+  verbose = FALSE,
+  warnings = TRUE,
+  src = "yahoo",
+  symbol.lookup = TRUE,
   auto.assign = getOption("getSymbols.auto.assign", TRUE),
-  source.envir = NULL, nextsrc = c("cache", "pg"), MaxAge = NULL,
-  ...)
+  source.envir = NULL,
+  nextsrc = c("cache", "pg"),
+  MaxAge = NULL,
+  ...
+)
 }
 \arguments{
 \item{Symbols}{as quantmod getSymbols: a character vector specifying the names of each symbol to be loaded}

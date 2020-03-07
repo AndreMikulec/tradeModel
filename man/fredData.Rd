@@ -42,7 +42,7 @@ and loaded into the "pg" and the "cache" and returned
 to the user.
 
 default New == TRUE (default)
-means use the function get\\*New\\*Symbols
+means use the function get\*New\*Symbols
 checks the xts "updated" attribute
   checks (1)cache then (2)pg if data is older than NewMaxAge = "4 hours"
   checks "cache": manually check cache by ls(all.names = TRUE)

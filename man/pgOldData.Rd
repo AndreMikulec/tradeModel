@@ -4,8 +4,16 @@
 \alias{pgOldData}
 \title{collect from the Server DB a limited amount of data restricted by df and VarHint}
 \usage{
-pgOldData(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
-  varHint = NULL, valHint = NULL, IntentionFor = NULL)
+pgOldData(
+  con,
+  trgt = NULL,
+  keys = c("rn"),
+  schname,
+  df = NULL,
+  varHint = NULL,
+  valHint = NULL,
+  IntentionFor = NULL
+)
 }
 \arguments{
 \item{con}{DBI connection PostgreSQL}

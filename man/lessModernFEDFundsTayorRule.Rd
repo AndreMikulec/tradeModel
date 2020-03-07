@@ -63,17 +63,60 @@ should set its policy [federal funds interest] rate in the following manner.
 }
 \details{
 [ ] Also add link to FED Funds Rate
+
+Era III, 2010 and After: Monetary Policy and the Emerging New Normal
+--------------------------------------------------------------------
+
+  long-running issue that I discussed here last year:
+  #' tracking the "stars" that serve as
+  guideposts for monetary policy.10 These include
+
+u*, the natural rate of unemployment, and
+r*, the neutral real rate of interest.
+
+Unlike celestial stars, these stars move unpredictably and
+cannot be directly observed. We must judge their locations as
+best we can based on incoming data and then add an
+element of risk management to be able to use them as guides.
+
+Since 2012, declining unemployment has had surprisingly
+little effect on inflation, prompting a steady decline in estimates of u* (figure 3).11
+
+Standard estimates of r* have declined
+between 2 and 3 percentage points over the past two decades.
+
+Some argue that the effective decline is even larger.12
+
+A lower r* combined with low inflation means that
+interest rates will run, on average,
+significantly closer to their effective lower bound.
+
+how, in this low r* world, the Fed can best support the economy. ??
+
+OTHER . . .
+
+cannot provide a settled rulebook for international trade.
+We can, however, try to look through what may be
+passing events, focus on how trade developments are affecting the outlook,
+and adjust policy to promote our objectives.
+
+August 23, 2019
+Challenges for Monetary Policy
+Chair Jerome H. Powell
+https://www.federalreserve.gov/newsevents/speech/powell20190823a.htm
+
+
 FOMC will target the headline inflation rate
 --------------------------------------------
 
 As St. Louis Fed President James Bullard detailed in a
 
-2012 Regional Economist article,
+  2012 Regional Economist article,
   https://www.stlouisfed.org/publications/regional-economist/april-2012/recent-actions-increase-the-feds-transparency
 
 “The FOMC will target the
 
-"headline inflation rate" as opposed to any other measure
+  "headline inflation rate" as opposed to any other measure
   (e.g., core inflation, which excludes food and energy prices)
 
 because it makes sense to focus on the prices that U.S. households actually have to pay,” he wrote.
@@ -117,20 +160,20 @@ u_GAP_t # (Math is correct: just swap out: NROU ... TO ... NROUST
 [ ] CHANGE . . .
 UNRATE subtract off "CBO measure of the natural unemployment rate (NAIRU)"
 
-CHANGE FROM
+         CHANGE FROM
          Natural Rate of Unemployment (Long-Term) (NROU)
          https://fred.stlouisfed.org/series/NROU
            To (NOTE: CURRENLTY 2018-2019: THESE NUMBERS ARE THE SAME)
          Natural Rate of Unemployment (Short-Term)
          https://fred.stlouisfed.org/series/NROUST
 
-[ ]
+         [ ]
          CHANGE
            u_GAP_t <- unrate - nrou
          TO (SEE BELOW: Okun's law)
            u_GAP_t <- 2 * (unrate - nroust)
 
-u_GAP_t
+           u_GAP_t
                Resource gap measures: gapt
                A commonly used rule of thumb called Okun's law posits that the
                  unemployment rate gap—the negative of the difference between the
@@ -138,28 +181,28 @@ u_GAP_t
                    half as large as the output gap.
                    We implement Okun's law by allowing users to choose twice the unemployment gap as the resource gap.
 
-Overview of Data tab
+               Overview of Data tab
                Taylor Rule Utility
                https://www.frbatlanta.org/cqer/research/taylor-rule?panel=2
 
-[ ] Add a comment / parameter
+       [ ] Add a comment / parameter
        0.30
        adjusted_5Y_BEI = TRUE
        Bullard's preferred measure: the 5Y BEI less 30 basis points (the adjusted 5Y BEI)
        https://research.stlouisfed.org/publications/economic-synopses/2019/01/15/is-the-fed-following-a-modernized-version-of-the-taylor-rule-part-2
 
-Because the TIPS data are based on consumer price index (CPI) inflation,
+       Because the TIPS data are based on consumer price index (CPI) inflation,
        I subtract 30 basis points to make this expectations measure more closely
        correspond to the FOMC’s preferred measure of inflation, which is PCE inflation.
        . . .
        Incorporating real-time inflation expectations
        https://www.stlouisfed.org/~/media/files/pdfs/bullard/remarks/2018/bullard_memphis_economic_club_18_october_2018.pdf?la=en
 
-Summary of Economic Projections (SEP)
+       Summary of Economic Projections (SEP)
        A modernized monetary policy rule
        https://www.stlouisfed.org/~/media/files/pdfs/bullard/remarks/2018/bullard_memphis_economic_club_18_october_2018.pdf?la=en
 
-[ ]
+       [ ]
        u_GAP_t passed parameter to i_t (seem to just NEED one function(i_t?))
        [ ] : True: i_t: just ONE function
              e.g. rho does not exist in "less modern version": So can be set to zero(0)

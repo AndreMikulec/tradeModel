@@ -17,11 +17,23 @@ customSorting(x, ...)
 
 \method{customSorting}{default}(x, ...)
 
-\method{customSorting}{character}(x, InitOrder, CI = FALSE,
-  sortVectorExcess = TRUE, chopVectorExcess = FALSE, ...)
+\method{customSorting}{character}(
+  x,
+  InitOrder,
+  CI = FALSE,
+  sortVectorExcess = TRUE,
+  chopVectorExcess = FALSE,
+  ...
+)
 
-\method{customSorting}{numeric}(x, InitOrder, CI = FALSE,
-  sortVectorExcess = TRUE, chopVectorExcess = FALSE, ...)
+\method{customSorting}{numeric}(
+  x,
+  InitOrder,
+  CI = FALSE,
+  sortVectorExcess = TRUE,
+  chopVectorExcess = FALSE,
+  ...
+)
 
 \method{customSorting}{Date}(x, InitOrder, ...)
 

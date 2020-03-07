@@ -4,8 +4,13 @@
 \alias{symbolReturns}
 \title{symbols eom absolute proportional change from the previous month}
 \usage{
-symbolReturns(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL,
-  ReturnsGeneratorFUN = NULL, ReturnsGeneratorFUNArgs = NULL)
+symbolReturns(
+  Symbol = NULL,
+  src = NULL,
+  SymplifyGeneratorFUN = NULL,
+  ReturnsGeneratorFUN = NULL,
+  ReturnsGeneratorFUNArgs = NULL
+)
 }
 \description{
 symbols eom absolute proportional change from the previous month

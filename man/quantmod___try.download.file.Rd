@@ -4,9 +4,16 @@
 \alias{quantmod___try.download.file}
 \title{try to download a file}
 \usage{
-quantmod___try.download.file(url, destfile, method, quiet = FALSE,
-  mode = "w", cacheOK = TRUE,
-  extra = getOption("download.file.extra"), ...)
+quantmod___try.download.file(
+  url,
+  destfile,
+  method,
+  quiet = FALSE,
+  mode = "w",
+  cacheOK = TRUE,
+  extra = getOption("download.file.extra"),
+  ...
+)
 }
 \arguments{
 \item{url}{as quantmod:::try.download.file}

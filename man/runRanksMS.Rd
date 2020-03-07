@@ -4,9 +4,18 @@
 \alias{runRanksMS}
 \title{rolling ranks using package matrixStats}
 \usage{
-runRanksMS(x, laggedCols = NULL, base = 0, window = 10, ranks = 4,
-  ties.method = "average", na.pad = TRUE, originalData = FALSE,
-  derivedDataDetailed = FALSE, ...)
+runRanksMS(
+  x,
+  laggedCols = NULL,
+  base = 0,
+  window = 10,
+  ranks = 4,
+  ties.method = "average",
+  na.pad = TRUE,
+  originalData = FALSE,
+  derivedDataDetailed = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{xts object}

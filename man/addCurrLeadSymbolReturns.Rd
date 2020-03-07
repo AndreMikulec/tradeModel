@@ -4,9 +4,16 @@
 \alias{addCurrLeadSymbolReturns}
 \title{add leading and current Symbol APC returns (SYMBOLapcrets)}
 \usage{
-addCurrLeadSymbolReturns(xTs = NULL, Symbol = NULL, src = NULL,
-  IsTarget = NULL, IsATarget = NULL, SymplifyGeneratorFUN = NULL,
-  ReturnsGeneratorFUN = NULL, ReturnsGeneratorFUNArgs = NULL)
+addCurrLeadSymbolReturns(
+  xTs = NULL,
+  Symbol = NULL,
+  src = NULL,
+  IsTarget = NULL,
+  IsATarget = NULL,
+  SymplifyGeneratorFUN = NULL,
+  ReturnsGeneratorFUN = NULL,
+  ReturnsGeneratorFUNArgs = NULL
+)
 }
 \arguments{
 \item{xTs}{xts object}

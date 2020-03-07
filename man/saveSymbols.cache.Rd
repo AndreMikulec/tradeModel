@@ -4,8 +4,7 @@
 \alias{saveSymbols.cache}
 \title{save xts objects as .xts in source.envir ( cache )}
 \usage{
-saveSymbols.cache(Symbols = NULL, source.envir = NULL,
-  cache.envir = NULL, ...)
+saveSymbols.cache(Symbols = NULL, source.envir = NULL, cache.envir = NULL, ...)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}

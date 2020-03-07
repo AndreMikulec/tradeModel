@@ -4,9 +4,13 @@
 \alias{leadingSymbolReturns}
 \title{get the Symbol leading APC returns}
 \usage{
-leadingSymbolReturns(Symbol = NULL, src = NULL,
-  SymplifyGeneratorFUN = NULL, ReturnsGeneratorFUN = NULL,
-  ReturnsGeneratorFUNArgs = NULL)
+leadingSymbolReturns(
+  Symbol = NULL,
+  src = NULL,
+  SymplifyGeneratorFUN = NULL,
+  ReturnsGeneratorFUN = NULL,
+  ReturnsGeneratorFUNArgs = NULL
+)
 }
 \value{
 xts object

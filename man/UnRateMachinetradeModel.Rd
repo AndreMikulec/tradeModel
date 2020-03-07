@@ -4,8 +4,12 @@
 \alias{UnRateMachinetradeModel}
 \title{Predicts Symbol eom returns using UNRATE and Machine learning}
 \usage{
-UnRateMachinetradeModel(Symbol = NULL, src = NULL, Predictors = NULL,
-  IndicatorGeneratorFUN = NULL)
+UnRateMachinetradeModel(
+  Symbol = NULL,
+  src = NULL,
+  Predictors = NULL,
+  IndicatorGeneratorFUN = NULL
+)
 }
 \description{
 Predicts Symbol eom returns using UNRATE and Machine learning
@@ -35,27 +39,28 @@ UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("U
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))
 
 
-# good: captures entire 2008 recession 'and' early 2019(current time data: just before edge)
+# less good: barely misses entire 2008 recession 'and' early 2019(current time data: just before edge)
 UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 #
-# good: captures entire 2008 recession 'and' early 2019(current time data: just before edge)
+# less good: barely misses entire 2008 recession 'and' early 2019(current time data: just before edge)
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators"))
 
 
-# done: extra SP500PriceEarningsRat !!! misses entire 2008 recession !!!
 # SP500PriceEarningsRat (not as much impact as I originally thought or 'wrong' impact)
-#
+# less less good: : extra SP500PriceEarningsRat !!! badly misses entire 2008 recession !!!
 UnRateMachinetradeModel(Symbol = "WILL5000IND", src = "FRED",  Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMXIndicators"))
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","UMCSENT","Earnings", "SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators", "trendsWithAOMNIndicators", "trendsWithAOMXIndicators"))
 
 
-# add hoc (kept perfectly out of late 2007, 2008, and 1st half of 2009)
-# but also kept out of 2013-2016
-# therefore: SP500PriceEarningsRat NEEDS competition from BONDS: what is it? equivalent: Of Zimmermann Equity Premium: [ ] FIND & FIX
 #
+#
+# therefore: SP500PriceEarningsRat !NEEDS! competition from BONDS: what is it? equivalent: Of Zimmermann Equity Premium: [ ] FIND & FIX
+#
+# mixed: add hoc (kept perfectly out of late 2007, 2008, and 1st half of 2009)
+# mixed: but also kept out of 2013-2016 (strangly long range)
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("SP500PriceEarningsRat"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators"))
 
-# I WAS TOO MUCH IN-A-HURRY (JUNK OUTPUT)
+# I WAS TOO MUCH IN-A-HURRY (JUNK OUTPUT) - TYPICALLY I DO NOT R UN THIS
 # Year over year change in "Real Gross Private Domestic Investment: Fixed Investment: Nonresidential: Equipment"
 # SEEMS 'STILL TOO NOISY':I REGRET trying; FRED Y033RL1Q225SBEA
 UnRateMachinetradeModel(Symbol = "^GSPC"      , src = "yahoo", Predictors = c("UNRATE","YOYChangeInRGPDIFINRE"), IndicatorGeneratorFUN = c("trendsWithAOMXIndicators", "trendsWithAOMNIndicators"))

@@ -4,11 +4,17 @@
 \alias{liquifyDF}
 \title{liquify a data.frame}
 \usage{
-liquifyDF(x, UniqueIDRegex = "^dateindexid$",
-  ConstColsRegex = "^dateindex", FactorColsRegex = "Fact$",
-  FactorColsNAReplace = NULL, FactorColsFixedSep = ".",
-  DetailColsFixedSep = ".", SpaceFixedSep = ".",
-  AmperstandFixedSep = "And")
+liquifyDF(
+  x,
+  UniqueIDRegex = "^dateindexid$",
+  ConstColsRegex = "^dateindex",
+  FactorColsRegex = "Fact$",
+  FactorColsNAReplace = NULL,
+  FactorColsFixedSep = ".",
+  DetailColsFixedSep = ".",
+  SpaceFixedSep = ".",
+  AmperstandFixedSep = "And"
+)
 }
 \arguments{
 \item{UniqueIDRegex}{unique IDs column names regular expression: determines the

@@ -4,12 +4,23 @@
 \alias{getSymbols.pg}
 \title{getSymbols pg}
 \usage{
-getSymbols.pg(Symbols = NULL, con = NULL, env, return.class = "xts",
-  db.fields = c("o", "h", "l", "c", "v", "a"), field.names = c("Open",
-  "High", "Low", "Close", "Volume", "Adjusted"), user = NULL,
-  password = NULL, dbname = NULL, schname = NULL,
-  host = "localhost", port = 5432, options = NULL,
-  forceISOdate = TRUE, ...)
+getSymbols.pg(
+  Symbols = NULL,
+  con = NULL,
+  env,
+  return.class = "xts",
+  db.fields = c("o", "h", "l", "c", "v", "a"),
+  field.names = c("Open", "High", "Low", "Close", "Volume", "Adjusted"),
+  user = NULL,
+  password = NULL,
+  dbname = NULL,
+  schname = NULL,
+  host = "localhost",
+  port = 5432,
+  options = NULL,
+  forceISOdate = TRUE,
+  ...
+)
 }
 \description{
 getSymbols pg

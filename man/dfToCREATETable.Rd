@@ -4,8 +4,7 @@
 \alias{dfToCREATETable}
 \title{from column names and datatypes, make a CREATE TABLE statement}
 \usage{
-dfToCREATETable(df, con, Symbol, schname, keys = NULL,
-  SymbolsTable = NULL)
+dfToCREATETable(df, con, Symbol, schname, keys = NULL, SymbolsTable = NULL)
 }
 \arguments{
 \item{df}{data.frame (with column names)}

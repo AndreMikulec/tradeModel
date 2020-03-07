@@ -4,8 +4,13 @@
 \alias{runRanksDT}
 \title{backward looking and forward looking Ranks using data.table}
 \usage{
-runRanksDT(x, ranks = 4, ties.method = "average",
-  originalData = FALSE, derivedDataDetailed = FALSE)
+runRanksDT(
+  x,
+  ranks = 4,
+  ties.method = "average",
+  originalData = FALSE,
+  derivedDataDetailed = FALSE
+)
 }
 \arguments{
 \item{x}{xts object}

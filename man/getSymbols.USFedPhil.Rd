@@ -4,9 +4,17 @@
 \alias{getSymbols.USFedPhil}
 \title{Survey of Professional Forecasters data from the Philadelphia FED}
 \usage{
-getSymbols.USFedPhil(Symbols, env, return.class = "xts",
-  SurveyDecades = "All", DataPath = "./USFedPhilForecastersData",
-  MaxAge = NULL, UseFST = TRUE, Fun = NULL, ...)
+getSymbols.USFedPhil(
+  Symbols,
+  env,
+  return.class = "xts",
+  SurveyDecades = "All",
+  DataPath = "./USFedPhilForecastersData",
+  MaxAge = NULL,
+  UseFST = TRUE,
+  Fun = NULL,
+  ...
+)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded

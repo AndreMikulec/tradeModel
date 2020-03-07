@@ -4,9 +4,15 @@
 \alias{prepAndDoMachineWtsData}
 \title{prep Machine weights data then call doMachineWts}
 \usage{
-prepAndDoMachineWtsData(xTs = NULL, ModelFormula = NULL,
-  Predictee = NULL, Predictors = NULL, IndicatorGeneratorFUN = NULL,
-  ModelTarget = NULL, ...)
+prepAndDoMachineWtsData(
+  xTs = NULL,
+  ModelFormula = NULL,
+  Predictee = NULL,
+  Predictors = NULL,
+  IndicatorGeneratorFUN = NULL,
+  ModelTarget = NULL,
+  ...
+)
 }
 \arguments{
 \item{xTs}{xts object}

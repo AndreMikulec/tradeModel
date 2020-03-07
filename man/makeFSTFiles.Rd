@@ -4,8 +4,13 @@
 \alias{makeFSTFiles}
 \title{From source files, create .fst files}
 \usage{
-makeFSTFiles(Dirs = NULL, SubDirExpr = NULL, FileExpr = NULL,
-  ColRmExpr = NULL, Force = NULL)
+makeFSTFiles(
+  Dirs = NULL,
+  SubDirExpr = NULL,
+  FileExpr = NULL,
+  ColRmExpr = NULL,
+  Force = NULL
+)
 }
 \arguments{
 \item{Dirs}{character vector of directories}

@@ -4,8 +4,17 @@
 \alias{pgUpdate}
 \title{update a database table with 'updated' data}
 \usage{
-pgUpdate(con, trgt = NULL, keys = c("rn"), schname, df = NULL,
-  varHint = NULL, valHint = NULL, AppendConditions = NULL, ...)
+pgUpdate(
+  con,
+  trgt = NULL,
+  keys = c("rn"),
+  schname,
+  df = NULL,
+  varHint = NULL,
+  valHint = NULL,
+  AppendConditions = NULL,
+  ...
+)
 }
 \arguments{
 \item{con}{DBI connection PostgreSQL}

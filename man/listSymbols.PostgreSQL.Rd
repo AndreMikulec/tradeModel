@@ -4,9 +4,18 @@
 \alias{listSymbols.PostgreSQL}
 \title{xts object symbols in the PostgreSQL (pg) database}
 \usage{
-listSymbols.PostgreSQL(con = NULL, user = NULL, password = NULL,
-  dbname = NULL, schname = NULL, host = "localhost", port = 5432,
-  options = NULL, forceISOdate = TRUE, ...)
+listSymbols.PostgreSQL(
+  con = NULL,
+  user = NULL,
+  password = NULL,
+  dbname = NULL,
+  schname = NULL,
+  host = "localhost",
+  port = 5432,
+  options = NULL,
+  forceISOdate = TRUE,
+  ...
+)
 }
 \arguments{
 \item{con}{PostgreSQL DBI connection}

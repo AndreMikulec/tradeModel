@@ -4,8 +4,14 @@
 \alias{ReCode}
 \title{Recodes values in a vector.}
 \usage{
-ReCode(x, oldcode = sort(unique(x)), new2oldcode = NULL, newcode,
-  ComepareStrict = FALSE, AssnStrict = FALSE)
+ReCode(
+  x,
+  oldcode = sort(unique(x)),
+  new2oldcode = NULL,
+  newcode,
+  ComepareStrict = FALSE,
+  AssnStrict = FALSE
+)
 }
 \arguments{
 \item{x}{vector or list}

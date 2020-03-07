@@ -4,10 +4,18 @@
 \alias{fancifyXts}
 \title{number of days since Last Published}
 \usage{
-fancifyXts(x, AsOfToday = NULL, calcMonthlies = NULL,
-  Last_Updated = NULL, CalendarAdj = NULL,
-  FixLastLastTrueUpDated = NULL, NaCol = NULL, NaLOCF = NULL,
-  Frequency = NULL, mkAsOfToday2LastObs = NULL)
+fancifyXts(
+  x,
+  AsOfToday = NULL,
+  calcMonthlies = NULL,
+  Last_Updated = NULL,
+  CalendarAdj = NULL,
+  FixLastLastTrueUpDated = NULL,
+  NaCol = NULL,
+  NaLOCF = NULL,
+  Frequency = NULL,
+  mkAsOfToday2LastObs = NULL
+)
 }
 \arguments{
 \item{x}{xts object returned by getSymbols.FRED2 or

@@ -4,8 +4,7 @@
 \alias{seq.yearqtr}
 \title{zoo seq.yearqtr}
 \usage{
-\method{seq}{yearqtr}(from, to, by, length.out = NULL,
-  along.with = NULL, ...)
+\method{seq}{yearqtr}(from, to, by, length.out = NULL, along.with = NULL, ...)
 }
 \arguments{
 \item{from}{See ? seq.Date}

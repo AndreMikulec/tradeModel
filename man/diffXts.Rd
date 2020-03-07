@@ -4,8 +4,16 @@
 \alias{diffXts}
 \title{lag and/or difference and/or use a function(Fun) upon and xts object}
 \usage{
-diffXts(x, lag = 1, differences = 1, arithmetic = TRUE,
-  log = FALSE, na.pad = TRUE, Fun = diff, ...)
+diffXts(
+  x,
+  lag = 1,
+  differences = 1,
+  arithmetic = TRUE,
+  log = FALSE,
+  na.pad = TRUE,
+  Fun = diff,
+  ...
+)
 }
 \arguments{
 \item{x}{as diff.xts}

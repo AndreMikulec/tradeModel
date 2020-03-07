@@ -4,9 +4,20 @@
 \alias{rollApply}
 \title{apply rolling}
 \usage{
-rollApply(xTs = NULL, width = NULL, partial = NULL, align = NULL,
-  Fun = NULL, by = NULL, by.column = NULL, fill = NULL,
-  coredata = NULL, AltName = NULL, FixedSep = NULL, ...)
+rollApply(
+  xTs = NULL,
+  width = NULL,
+  partial = NULL,
+  align = NULL,
+  Fun = NULL,
+  by = NULL,
+  by.column = NULL,
+  fill = NULL,
+  coredata = NULL,
+  AltName = NULL,
+  FixedSep = NULL,
+  ...
+)
 }
 \arguments{
 \item{xTs}{xts object}
@@ -96,7 +107,7 @@ before that data reaches TTR functions
 #            SMA
 # 1970-01-01  NA
 # 1970-01-02 0.5  # I programmed to loose NA observations ( and its index entries)
-# 1970-01-04 2.0  # unless, I come up with a \\*better way\\* to re-organize 'around' the [NA] data
+# 1970-01-04 2.0  # unless, I come up with a \*better way\* to re-organize 'around' the [NA] data
 # 1970-01-05 3.5  # then that is the best answer I have NOW.
 #
 # rollApply(xts(c(0,1,NA,3,4), zoo::as.Date(0:4))

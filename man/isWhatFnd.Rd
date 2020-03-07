@@ -37,9 +37,9 @@ isWhatFnd("TAB_X_COL_Y_EXISTS", TRUE)
 isWhatFnd("TAB_X_COL_Y_EXISTS", "TRUE")
 # not 'preferred test location'
 isWhatFnd("TAB_X_COL_Y_EXISTS", TRUE, Storage = "Options")
-# \\*any\\* one or \\*both\\* of the two
+# \*any\* one or \*both\* of the two
 isWhatFnd("TAB_X_COL_Y_EXISTS", TRUE, Storage = "Both")
-# \\*any\\* one or \\*both\\* of the two
+# \*any\* one or \*both\* of the two
 isWhatFnd("TAB_X_COL_Y_EXISTS", TRUE, Storage = c("OS","Options")
 
 }

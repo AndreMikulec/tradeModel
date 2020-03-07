@@ -4,9 +4,16 @@
 \alias{pgConnect}
 \title{smartly connect to PostgreSQL database}
 \usage{
-pgConnect(user = NULL, password = NULL, dbname = NULL,
-  schname = NULL, host = NULL, port = NULL, options = NULL,
-  forceISOdate = TRUE)
+pgConnect(
+  user = NULL,
+  password = NULL,
+  dbname = NULL,
+  schname = NULL,
+  host = NULL,
+  port = NULL,
+  options = NULL,
+  forceISOdate = TRUE
+)
 }
 \arguments{
 \item{user}{username(default "Symbols") to access database}

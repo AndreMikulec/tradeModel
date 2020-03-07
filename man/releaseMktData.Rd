@@ -4,8 +4,12 @@
 \alias{releaseMktData}
 \title{Return internally processed outbound variable or string named like "mkdata"}
 \usage{
-releaseMktData(xTs = NULL, InBndxTs = NULL, isInBndxTsMktData = NULL,
-  xTsInvisible = NULL)
+releaseMktData(
+  xTs = NULL,
+  InBndxTs = NULL,
+  isInBndxTsMktData = NULL,
+  xTsInvisible = NULL
+)
 }
 \arguments{
 \item{xTs}{object or NULL or bare symbol or string like "mktdata"}

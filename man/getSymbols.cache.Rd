@@ -4,8 +4,13 @@
 \alias{getSymbols.cache}
 \title{downloads Symbols to specified env from a local R environment}
 \usage{
-getSymbols.cache(Symbols = NULL, env, return.class = "xts",
-  cache.envir = NULL, ...)
+getSymbols.cache(
+  Symbols = NULL,
+  env,
+  return.class = "xts",
+  cache.envir = NULL,
+  ...
+)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol to be loaded}

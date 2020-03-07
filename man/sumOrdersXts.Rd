@@ -4,8 +4,16 @@
 \alias{sumOrdersXts}
 \title{specific orders of n  (smallest/largest) of values within a range}
 \usage{
-sumOrdersXts(x, base = 0, r = 0:1, n = 1, View = "min",
-  na.pad = TRUE, derivedDataDetailed = FALSE, ...)
+sumOrdersXts(
+  x,
+  base = 0,
+  r = 0:1,
+  n = 1,
+  View = "min",
+  na.pad = TRUE,
+  derivedDataDetailed = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{xts object}

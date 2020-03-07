@@ -4,9 +4,15 @@
 \alias{addEomData}
 \title{get the end of month data}
 \usage{
-addEomData(xTs = NULL, Symbol = NULL, Components = NULL,
-  ComponentsFormula = NULL, src = NULL, SymplifyGeneratorFUN = NULL,
-  CarryForward = NULL)
+addEomData(
+  xTs = NULL,
+  Symbol = NULL,
+  Components = NULL,
+  ComponentsFormula = NULL,
+  src = NULL,
+  SymplifyGeneratorFUN = NULL,
+  CarryForward = NULL
+)
 }
 \arguments{
 \item{xTs}{xts object}

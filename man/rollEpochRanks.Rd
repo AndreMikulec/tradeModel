@@ -4,9 +4,15 @@
 \alias{rollEpochRanks}
 \title{rolling percent ranks grouped by epoch}
 \usage{
-rollEpochRanks(xTs1, xTs2, window = 10, ranks = 4,
-  incBeforeEpochLags = FALSE, originalData = FALSE,
-  derivedDataDetailed = FALSE)
+rollEpochRanks(
+  xTs1,
+  xTs2,
+  window = 10,
+  ranks = 4,
+  incBeforeEpochLags = FALSE,
+  originalData = FALSE,
+  derivedDataDetailed = FALSE
+)
 }
 \arguments{
 \item{xTs1}{xts object}

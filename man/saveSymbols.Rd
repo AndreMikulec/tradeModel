@@ -4,8 +4,13 @@
 \alias{saveSymbols}
 \title{saves xts object symbols to a persistent location (dispatcher)}
 \usage{
-saveSymbols(Symbols = NULL, env = parent.frame(),
-  source.envir = NULL, Gathering = "source.envir", ...)
+saveSymbols(
+  Symbols = NULL,
+  env = parent.frame(),
+  source.envir = NULL,
+  Gathering = "source.envir",
+  ...
+)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}

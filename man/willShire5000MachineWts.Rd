@@ -4,10 +4,14 @@
 \alias{willShire5000MachineWts}
 \title{add Willshire 5000 Index weights using Machine learning}
 \usage{
-willShire5000MachineWts(xTs = NULL,
-  Predictee = "WILL5000INDlogleadingrets", Predictors = "UNRATE",
+willShire5000MachineWts(
+  xTs = NULL,
+  Predictee = "WILL5000INDlogleadingrets",
+  Predictors = "UNRATE",
   IndicatorGeneratorFUN = "unrateEyeballIndicators",
-  NumbReplicaCopiesMultiple = NULL, ...)
+  NumbReplicaCopiesMultiple = NULL,
+  ...
+)
 }
 \arguments{
 \item{xTs}{xts object}

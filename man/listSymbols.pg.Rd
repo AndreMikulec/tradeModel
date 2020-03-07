@@ -4,9 +4,18 @@
 \alias{listSymbols.pg}
 \title{listSymbols pg}
 \usage{
-listSymbols.pg(con = NULL, user = NULL, password = NULL,
-  dbname = NULL, schname = NULL, host = "localhost", port = 5432,
-  options = NULL, forceISOdate = TRUE, ...)
+listSymbols.pg(
+  con = NULL,
+  user = NULL,
+  password = NULL,
+  dbname = NULL,
+  schname = NULL,
+  host = "localhost",
+  port = 5432,
+  options = NULL,
+  forceISOdate = TRUE,
+  ...
+)
 }
 \description{
 \preformatted{

@@ -4,9 +4,15 @@
 \alias{symbolMachineWts}
 \title{add Symbol Change weights using Machine learning}
 \usage{
-symbolMachineWts(xTs = NULL, Predictee = NULL, Predictors = NULL,
-  IndicatorGeneratorFUN = NULL, NumbReplicaCopiesMultiple = NULL,
-  ModelTarget = NULL, ...)
+symbolMachineWts(
+  xTs = NULL,
+  Predictee = NULL,
+  Predictors = NULL,
+  IndicatorGeneratorFUN = NULL,
+  NumbReplicaCopiesMultiple = NULL,
+  ModelTarget = NULL,
+  ...
+)
 }
 \arguments{
 \item{xTs}{xts object}

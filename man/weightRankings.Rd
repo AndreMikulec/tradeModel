@@ -4,8 +4,15 @@
 \alias{weightRankings}
 \title{model weights}
 \usage{
-weightRankings(xTs, target, TrainStart, TrainEnd, weightings = NULL,
-  probs = NULL, CaseAdj = NULL)
+weightRankings(
+  xTs,
+  target,
+  TrainStart,
+  TrainEnd,
+  weightings = NULL,
+  probs = NULL,
+  CaseAdj = NULL
+)
 }
 \arguments{
 \item{xTs}{data}

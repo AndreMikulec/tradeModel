@@ -139,6 +139,22 @@ initEnv();on.exit({uninitEnv()})
 
 
 
+#' Get caller frame
+#'
+#' @description
+#' \preformatted{
+#' Get caller frame
+#' caller_frame() is deprecated as of rlang 0.3.0.
+#' }
+#' @param n	Number of frames to go back.
+#' @importFrom rlang call_frame
+rlang__caller_frame <- function(n = 1) {
+  ### warn_deprecated("`caller_frame()` is deprecated as of rlang 0.3.0.")
+  rlang::call_frame(n + 2)
+}
+
+
+
 #' Return internally processed outbound variable or string named like "mkdata"
 #'
 #'
@@ -176,7 +192,8 @@ initEnv();on.exit({uninitEnv()})
 #' }
 #' @export
 #' @importFrom tryCatchLog tryCatchLog
-#' @importFrom rlang caller_frame
+### #' @importFrom rlang caller_frame
+### #' @importFrom rlang call_frame
 releaseMktData <- function(xTs = NULL, InBndxTs = NULL, isInBndxTsMktData = NULL, xTsInvisible = NULL) {
 initEnv();on.exit({uninitEnv()})
   tryCatchLog::tryCatchLog({
@@ -184,7 +201,10 @@ initEnv();on.exit({uninitEnv()})
   if(is.null(xTsInvisible)) xTsInvisible = FALSE
 
   if(isInBndxTsMktData) {
-    assign(InBndxTs, xTs, envir = rlang::caller_frame(n = 2)$env)
+    # assign(InBndxTs, xTs, envir = rlang::caller_frame(n = 2)$env)
+    assign(InBndxTs, xTs, envir = rlang__caller_frame(n = 2)$env)
+    # caller_frame()` is deprecated as of rlang 0.3.0.
+    # assign(InBndxTs, xTs, envir = rlang::call_frame(n = 2)$env)
     return(invisible())
   } else {
     if(xTsInvisible != TRUE) {

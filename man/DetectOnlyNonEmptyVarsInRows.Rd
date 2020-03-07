@@ -12,9 +12,6 @@ DetectOnlyNonEmptyVarsInRows(x, Var = NULL, Ele = NULL, EleO = NULL)
 \item{Var}{columns determining complete cases.
 Can be column names or positions.}
 
-\item{Ele}{"All"(default), of elements in Var, the test results.
-Other option is "Any".}
-
 \item{Ele}{"All"(default), of elements in 'other than Var', the test results.
 The other option is "Any".}
 }

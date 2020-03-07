@@ -4,10 +4,19 @@
 \alias{existSymbols.pg}
 \title{existSymbols pg}
 \usage{
-existSymbols.pg(Symbols = NULL, con = NULL, user = NULL,
-  password = NULL, dbname = NULL, schname = NULL,
-  host = "localhost", port = 5432, options = NULL,
-  forceISOdate = TRUE, ...)
+existSymbols.pg(
+  Symbols = NULL,
+  con = NULL,
+  user = NULL,
+  password = NULL,
+  dbname = NULL,
+  schname = NULL,
+  host = "localhost",
+  port = 5432,
+  options = NULL,
+  forceISOdate = TRUE,
+  ...
+)
 }
 \description{
 existSymbols pg

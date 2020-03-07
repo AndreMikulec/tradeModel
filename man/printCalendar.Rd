@@ -4,8 +4,15 @@
 \alias{printCalendar}
 \title{print calendar of month by month returns}
 \usage{
-printCalendar(xTs = NULL, title = NULL, PortFolioRetCol = NULL,
-  MarginReturns = NULL, start = NULL, end = NULL, DivBy = NULL)
+printCalendar(
+  xTs = NULL,
+  title = NULL,
+  PortFolioRetCol = NULL,
+  MarginReturns = NULL,
+  start = NULL,
+  end = NULL,
+  DivBy = NULL
+)
 }
 \arguments{
 \item{xTs}{xts object}

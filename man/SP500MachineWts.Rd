@@ -4,10 +4,14 @@
 \alias{SP500MachineWts}
 \title{add SP500 weights using Machine learning}
 \usage{
-SP500MachineWts(xTs = NULL, Predictee = "GSPClogleadingrets",
+SP500MachineWts(
+  xTs = NULL,
+  Predictee = "GSPClogleadingrets",
   Predictors = "UNRATE",
   IndicatorGeneratorFUN = "unrateEyeballIndicators",
-  NumbReplicaCopiesMultiple = NULL, ...)
+  NumbReplicaCopiesMultiple = NULL,
+  ...
+)
 }
 \arguments{
 \item{xTs}{xts object}

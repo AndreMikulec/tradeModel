@@ -4,8 +4,12 @@
 \alias{eomData}
 \title{get the end of month data}
 \usage{
-eomData(Symbol = NULL, src = NULL, SymplifyGeneratorFUN = NULL,
-  CarryForward = NULL)
+eomData(
+  Symbol = NULL,
+  src = NULL,
+  SymplifyGeneratorFUN = NULL,
+  CarryForward = NULL
+)
 }
 \arguments{
 \item{Symbol}{getSymbols Symbol}

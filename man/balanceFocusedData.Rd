@@ -4,8 +4,14 @@
 \alias{balanceFocusedData}
 \title{give more observations to the focused data}
 \usage{
-balanceFocusedData(xTs, NumbReplicaCopiesMultiple = NULL,
-  SlicesFocusedData, SlicesAllData, TrainStart, TrainEnd)
+balanceFocusedData(
+  xTs,
+  NumbReplicaCopiesMultiple = NULL,
+  SlicesFocusedData,
+  SlicesAllData,
+  TrainStart,
+  TrainEnd
+)
 }
 \arguments{
 \item{xTs}{xts object of training data}

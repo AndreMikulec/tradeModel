@@ -4,8 +4,13 @@
 \alias{buildData}
 \title{create one data object from multiple sources}
 \usage{
-buildData(formula, na.rm = TRUE, return.class = "zoo",
-  source.envir = NULL, ...)
+buildData(
+  formula,
+  na.rm = TRUE,
+  return.class = "zoo",
+  source.envir = NULL,
+  ...
+)
 }
 \arguments{
 \item{formula}{as quantmod buildData}

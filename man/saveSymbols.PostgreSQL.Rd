@@ -4,13 +4,26 @@
 \alias{saveSymbols.PostgreSQL}
 \title{saves xts object symbols to a persistent location (database: PostgreSQL)}
 \usage{
-saveSymbols.PostgreSQL(Symbols = NULL, con = NULL,
-  source.envir = NULL, field.names = c("Open", "High", "Low", "Close",
-  "Volume", "Adjusted"), db.fields = c("o", "h", "l", "c", "v", "a"),
-  keys = NULL, placeNewRecords = NULL, varHint = NULL,
-  valHint = NULL, user = NULL, password = NULL, dbname = NULL,
-  schname = NULL, host = "localhost", port = 5432, options = NULL,
-  forceISOdate = TRUE, ...)
+saveSymbols.PostgreSQL(
+  Symbols = NULL,
+  con = NULL,
+  source.envir = NULL,
+  field.names = c("Open", "High", "Low", "Close", "Volume", "Adjusted"),
+  db.fields = c("o", "h", "l", "c", "v", "a"),
+  keys = NULL,
+  placeNewRecords = NULL,
+  varHint = NULL,
+  valHint = NULL,
+  user = NULL,
+  password = NULL,
+  dbname = NULL,
+  schname = NULL,
+  host = "localhost",
+  port = 5432,
+  options = NULL,
+  forceISOdate = TRUE,
+  ...
+)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}

@@ -4,9 +4,14 @@
 \alias{timeSlices}
 \title{time slices}
 \usage{
-timeSlices(timeSliceMatrix = NULL, allSlicesStart = NULL,
-  allSlicesEnd = NULL, LongTimeSlices = NULL,
-  LongestTimeSlice = NULL, OmitSliceFirstDate = NULL)
+timeSlices(
+  timeSliceMatrix = NULL,
+  allSlicesStart = NULL,
+  allSlicesEnd = NULL,
+  LongTimeSlices = NULL,
+  LongestTimeSlice = NULL,
+  OmitSliceFirstDate = NULL
+)
 }
 \arguments{
 \item{timeSliceMatrix}{NULL(default) required.

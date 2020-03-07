@@ -4,8 +4,7 @@
 \alias{seq.yearmon}
 \title{zoo seq.yearmon}
 \usage{
-\method{seq}{yearmon}(from, to, by, length.out = NULL,
-  along.with = NULL, ...)
+\method{seq}{yearmon}(from, to, by, length.out = NULL, along.with = NULL, ...)
 }
 \arguments{
 \item{from}{See ? seq.Date}

@@ -4,9 +4,12 @@
 \alias{saveSymbols.RData}
 \title{saves xts object symbols to a persistent location (disk: Symbol.RData file)}
 \usage{
-saveSymbols.RData(Symbols = NULL,
-  file.path = stop("must specify 'file.path'"), source.envir = NULL,
-  ...)
+saveSymbols.RData(
+  Symbols = NULL,
+  file.path = stop("must specify 'file.path'"),
+  source.envir = NULL,
+  ...
+)
 }
 \arguments{
 \item{Symbols}{a character vector specifying the names of each symbol}
