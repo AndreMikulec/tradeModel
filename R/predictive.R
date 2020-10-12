@@ -1,5 +1,38 @@
 
 
+# SEEN APR 2020
+# Package ‘rowr’ was removed from the CRAN repository.
+# Formerly available versions can be obtained from the archive.
+# Archived on 2020-01-28 as check problems were not corrected despite reminders.
+# Please use the canonical form https://CRAN.R-project.org/package=rowr to link to this page.
+# https://cran.r-project.org/web/packages/rowr/
+# https://cran.r-project.org/src/contrib/Archive/rowr/
+# https://cran.r-project.org/src/contrib/Archive/rowr/rowr_1.1.3.tar.gz # 2016-12-22 00:27	6.0K
+#
+rowr__len <- function (data)
+{
+  result <- ifelse(is.null(nrow(data)), length(data), nrow(data))
+  return(result)
+}
+
+rowr__rows <- function (data, rownums)
+{
+  if (is.null(dim(data))) {
+    result <- data[rownums]
+  }
+  else {
+    result <- data[rownums, ]
+  }
+  return((result))
+}
+
+rowr__rowApply <- function (data, fun, ...)
+{
+  sapply(1:rowr__len(data), function(x) fun(rowr__rows(data, x), ...))
+}
+
+
+
 
 #' setdiff any dimension-less  object
 #'
@@ -226,6 +259,8 @@ is.na.xts <- function(x) {
 #' @description
 #' \preformatted{
 #'
+#' At one time imported from the archived package/function rowr rowApply
+#'
 #' }
 #'
 #' @param x vector or single column zoo/xts object
@@ -243,7 +278,6 @@ is.na.xts <- function(x) {
 #'
 #' }
 #' @export
-#' @importFrom rowr rowApply
 delaySinceLastObs <- function(x) {
 
   # help from  StreamMetabolism::contiguous.zoo
@@ -270,7 +304,7 @@ delaySinceLastObs <- function(x) {
 
   Snc <- StreamMetabolism__noncontiguous.zoo(data.frame(Vec))
   if(NROW(Snc)>0) {
-    rowr::rowApply(Snc, fun = function(x) {
+    rowr__rowApply(Snc, fun = function(x) {
       with( x, { NewVec[starts:ends] <- seq(1,lengths,1)
       assign("NewVec", NewVec , envir = current.env)
       } ) -> Discard ; NULL

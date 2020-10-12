@@ -25,6 +25,7 @@ Imports:
     tis,
     timeSeries,
     mondate,
+    chron,
     zoo,
     quantmod (>= 0.4-3),
     matrixStats,
@@ -34,8 +35,7 @@ Imports:
     RPostgreSQL,
     RPostgres,
     stringr,
-    lubridate, 
-    rowr,
+    lubridate,
     data.table,
     plyr,
     dplyr,
@@ -49,14 +49,14 @@ Imports:
     rlist,
     purrr,
     RQuantLib,
-    Hmisc, 
+    Hmisc,
     DescTools,
     DataCombine,
-    R.utils,    
+    R.utils,
     caret,
     DMwR,
     UBL,
     iml
-RoxygenNote: 7.0.2
-Suggests: 
+RoxygenNote: 7.1.0
+Suggests:
       testthat

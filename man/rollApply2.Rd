@@ -25,14 +25,14 @@ at the end of the data set}
 \description{
 \preformatted{
 
-This is based on package rowr function rollApply (rollapply anything).
+This is based on archived package rowr archived function rollApply (rollapply anything).
 Uses Rows so single dimension objects are not dropped to vectors.
 
 }
 }
 \examples{
 \dontrun{
-all examples of rowr::rollApply work
+all examples of archived package/function rowr::rollApply work
 
 rollApply2(state.x77, function(x) { browser() }, window = 3, min = 3, align = "right")
 Called from:

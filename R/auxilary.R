@@ -2349,7 +2349,7 @@ rollApply <- function(
 tryCatchLog::tryCatchLog({
 initEnv();on.exit({uninitEnv()})
 
-  # NOTE: POSSIBLY to be rewritten with rowr::rollApply
+  # NOTE: POSSIBLY to be rewritten with the archived package/function rowr::rollApply
 
   xTsOrig <- xTs
   tryXtsSuccess <- FALSE
@@ -2413,7 +2413,7 @@ initEnv();on.exit({uninitEnv()})
 #' @description
 #' \preformatted{
 #'
-#' This is an improved version of rowr::rows.
+#' This is an improved version of the archived package/function rowr::rows.
 #' This will not drop tables/arrays/data.frames
 #' of one dimension down to dimensionless vectors.
 #'
@@ -2484,7 +2484,7 @@ initEnv();on.exit({uninitEnv()})
 #' @description
 #' \preformatted{
 #'
-#' This is based on package rowr function rollApply (rollapply anything).
+#' This is based on archived package rowr archived function rollApply (rollapply anything).
 #' Uses Rows so single dimension objects are not dropped to vectors.
 #'
 #' }
@@ -2500,7 +2500,7 @@ initEnv();on.exit({uninitEnv()})
 #' @param ...	additional arguments to pass to fun
 #' @examples
 #' \dontrun{
-#' all examples of rowr::rollApply work
+#' all examples of archived package/function rowr::rollApply work
 #'
 #' rollApply2(state.x77, function(x) { browser() }, window = 3, min = 3, align = "right")
 #' Called from:

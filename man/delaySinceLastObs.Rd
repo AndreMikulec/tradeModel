@@ -15,6 +15,8 @@ vector of distances from the last non-NA observation
 \description{
 \preformatted{
 
+At one time imported from the archived package/function rowr rowApply
+
 }
 }
 \examples{

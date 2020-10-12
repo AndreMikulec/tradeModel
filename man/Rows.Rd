@@ -16,7 +16,7 @@ Rows(data, rownums, ...)
 \description{
 \preformatted{
 
-This is an improved version of rowr::rows.
+This is an improved version of the archived package/function rowr::rows.
 This will not drop tables/arrays/data.frames
 of one dimension down to dimensionless vectors.
 
